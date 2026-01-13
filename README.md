@@ -82,18 +82,7 @@ The focus is currently on:
 
 ## 📁 Project Structure
 
-carry4me/
-├─ apps/
-│  └─ web/
-│     └─ src/
-│        ├─ app/          # App setup, routing, providers
-│        ├─ components/   # Shared UI components
-│        ├─ features/     # Feature-based modules (auth, trips, parcels, matches)
-│        ├─ lib/          # Utilities and helpers
-│        ├─ styles/       # Global styles
-│        └─ types/        # Shared TypeScript types
-├─ docs/
-│  └─ product/            # Vision, rules, edge cases
+<img width="669" height="280" alt="image" src="https://github.com/user-attachments/assets/bd3ec85b-a46d-4544-83b1-c0210a5ba103" />
 
 This structure supports scalability while keeping development focused and maintainable.
 
