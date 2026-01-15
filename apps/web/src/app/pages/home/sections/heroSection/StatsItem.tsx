@@ -1,12 +1,7 @@
 import { CicleBadge } from "@/components/ui/CircleBadge";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
-
-type Stat = {
-  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  label: string;
-  value: string;
-};
+import type { Stat } from "@/types/Ui";
 
 type StatProps = {
   stat: Stat;

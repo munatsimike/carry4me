@@ -1,10 +1,5 @@
+import type { Stat } from "@/types/Ui";
 import { StatItem } from "./StatsItem";
-
-type Stat = {
-  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  label: string;
-  value: string;
-};
 
 type StatItemProps = {
   stats: Stat[];

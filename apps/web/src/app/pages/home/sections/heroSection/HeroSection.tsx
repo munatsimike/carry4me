@@ -6,17 +6,12 @@ import DefualtContianer from "@/components/ui/DefualtContianer";
 import ParcelIcon from "@/assets/parcelIcon.svg?react";
 import TravelIcon from "@/assets/travelerIcon.svg?react";
 import Globe from "@/assets/globe.svg?react";
+import type { Stat } from "@/types/Ui";
 
 export function HeroSection() {
   const heading = "We match travelers with parcels that need to go home.";
   const subHeading =
     "Share your parcel or trip and match with a traveler or sender. Travelers earn, senders save.";
-
-  type Stat = {
-    Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-    label: string;
-    value: string;
-  };
 
   const stats: Stat[] = [
     {
