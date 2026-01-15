@@ -1,0 +1,24 @@
+import { StatItem } from "./StatsItem";
+
+type Stat = {
+  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  label: string;
+  value: string;
+};
+
+type StatItemProps = {
+  stats: Stat[];
+};
+
+export default function StatsSection({ stats }: StatItemProps) {
+  return (
+    <section
+      className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-20"
+      aria-label="Platform statistics"
+    >
+      {stats.map((s) => (
+        <StatItem key={s.label} stat={s} />
+      ))}
+    </section>
+  );
+}
