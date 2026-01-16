@@ -9,8 +9,10 @@ type StepProps = {
 export default function StepItem({ step }: StepProps) {
   return (
     <div className="flex flex-col gap-4">
-      <CircleBadge bgColor="primary" size="md">
-        {step.step}
+      <CircleBadge bgColor="primary" size="lg">
+        <CustomText as="h3" textSize="md" textVariant="primary">
+          {step.step}
+        </CustomText>
       </CircleBadge>
       <CustomText as="h3" textVariant="primary" textSize="lg">
         {step.title}

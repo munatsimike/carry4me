@@ -7,8 +7,16 @@ export type InfoItem = {
   value: string;
 };
 
+export type InfoItemsProps = {
+  items: InfoItem[];
+};
+
 export type Step = {
   step: number;
   title: string;
   description: string;
+};
+
+export type StepsPros = {
+  steps: Step[];
 };

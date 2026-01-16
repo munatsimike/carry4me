@@ -1,11 +1,7 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import type { Step } from "@/types/Ui";
+import type { StepsPros } from "@/types/Ui";
 import StepItem from "./StepItem";
 import CustomText from "@/components/ui/CustomText";
-
-type StepsPros = {
-  steps: Step[];
-};
 
 export default function HowItWorks({ steps }: StepsPros) {
   return (
