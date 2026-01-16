@@ -12,7 +12,7 @@ type CirleBadgeProps = {
 
 export function CircleBadge({
   children,
-  bgColor,
+  bgColor = "primary",
   paddingClassName = "p-1.5",
   className = "",
   size = "md",

@@ -4,7 +4,13 @@ import Eye from "@/assets/eye.svg?react";
 import Globe from "@/assets/globe.svg?react";
 import Hands from "@/assets/hands.svg?react";
 import Hand from "@/assets/hand.svg?react";
+import Wallet from "@/assets/wallet.svg?react";
+import Rocket from "@/assets/rocket.svg?react";
+import Money from "@/assets/money.svg?react";
+import Flight from "@/assets/plan.svg?react";
+import LoveHands from "@/assets/lovehands.svg?react";
 import User from "@/assets/userwithtick.svg?react";
+import Lock from "@/assets/lock.svg?react";
 import type { InfoItem } from "@/types/Ui";
 
 export const steps = [
@@ -60,7 +66,7 @@ export const safetyRules: InfoItem[] = [
     label: "Inspection required",
     value: "Travelers only carry items they can inspect and confirm.",
   },
-    {
+  {
     Icon: Hand,
     label: "No prohibited items",
     value: "Illegal drugs, weapons, cash, and hazardous goods are not allowed",
@@ -76,5 +82,50 @@ export const safetyRules: InfoItem[] = [
     Icon: Hands,
     label: "Clear responsibility",
     value: "Both sender and traveler confirm handover.",
+  },
+];
+
+export const benefits: InfoItem[] = [
+  {
+    Icon: Wallet,
+    label: "Save Money",
+    value:
+      "Much cheaper than traditional shipping. You negotiate the delivery fee.",
+    tag: "sender",
+  },
+  {
+    Icon: Flight,
+    label: "Travel for free or less ",
+    value: "Parcels you carry can help lower your travel expenses.",
+    tag: "traveler",
+  },
+  {
+    Icon: Lock,
+    label: "Pay After Delivery",
+    value:
+      "Your payment is only released once the parcel is successfully delivered.",
+    tag: "sender",
+  },
+
+  {
+    Icon: Money,
+    label: "Earn Extra Money",
+    value: "Make money delivering packages on your existing trip.",
+    tag: "traveler",
+  },
+
+  {
+    Icon: Rocket,
+    label: "Flexible & Fast",
+    value:
+      "Personalized delivery options based on real travelers going your way.",
+    tag: "sender",
+  },
+
+  {
+    Icon: LoveHands,
+    label: "Help Family & Community",
+    value: "Support people needing to send items home safely.",
+    tag: "traveler",
   },
 ];
