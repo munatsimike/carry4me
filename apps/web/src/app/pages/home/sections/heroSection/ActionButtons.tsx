@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import { CicleBadge } from "@/components/ui/CircleBadge";
+import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
 import TravelerIcon from "@/assets/travelerIcon.svg?react";
 import ArrowIcon from "@/assets/arrow.svg?react";
@@ -8,15 +8,21 @@ import CustomText from "@/components/ui/CustomText";
 
 export default function ActionButtons() {
   const size = "xl";
+  const titleSize = "md";
+  const subtitleSize = "xsm";
   return (
     <section className="flex gap-10 mt-16">
       <Button
         className="w-[335px]"
-        subtitle="See items that need to be sent."
+        subtitle={
+          <CustomText as="span" textSize={subtitleSize}>
+            See items that need to be sent.
+          </CustomText>
+        }
         variant={"secondary"}
         size={size}
         leadingIcon={
-          <CicleBadge
+          <CircleBadge
             size={size}
             bgColor="parcel"
             children={<SvgIcon size="xl" Icon={ParcelIcon} color={"primary"} />}
@@ -24,16 +30,22 @@ export default function ActionButtons() {
         }
         trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} />}
       >
-        <CustomText as="span" textSize="sm">Browse Parcels</CustomText>
+        <CustomText as="span" textSize={titleSize} textVariant="primary">
+          Browse Parcels
+        </CustomText>
       </Button>
 
       <Button
         className="w-[310px]"
-        subtitle="See who is traveling soon."
+        subtitle={
+          <CustomText as="span" textSize={subtitleSize}>
+            See who is traveling soon.
+          </CustomText>
+        }
         variant={"trip"}
         size={"xl"}
         leadingIcon={
-          <CicleBadge
+          <CircleBadge
             size={size}
             bgColor="trip"
             children={<SvgIcon size="xl" Icon={TravelerIcon} color={"trip"} />}
@@ -41,7 +53,9 @@ export default function ActionButtons() {
         }
         trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} />}
       >
-        <CustomText as="span" textSize="sm">Browse Trips</CustomText>
+        <CustomText as="span" textSize={titleSize} textVariant="primary">
+          Browse Trips
+        </CustomText>
       </Button>
     </section>
   );

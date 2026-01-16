@@ -1,5 +1,5 @@
 type CircleSize = "sm" | "md" | "lg" | "xl";
-type CirleBgColor = "trip" | "parcel" | "neutral";
+type CirleBgColor = "trip" | "parcel" | "neutral" | "primary";
 
 type CirleBadgeProps = {
   size?: CircleSize;
@@ -10,7 +10,7 @@ type CirleBadgeProps = {
   className?: string;
 };
 
-export function CicleBadge({
+export function CircleBadge({
   children,
   bgColor,
   paddingClassName = "p-1.5",
@@ -18,16 +18,17 @@ export function CicleBadge({
   size = "md",
 }: CirleBadgeProps) {
   const circleSizes: Record<CircleSize, string> = {
-    sm: "h-7",
-    md: "h-8",
-    lg: "h-9",
-    xl: "h-14",
+    sm: "h-7 w-7",
+    md: "h-8 w-8",
+    lg: "h-9 w-9",
+    xl: "h-14 w-14",
   };
 
   const bgColors: Record<CirleBgColor, string> = {
     trip: "bg-trip-100",
     parcel: "bg-secondary-100",
     neutral: "bg-neutral-50",
+    primary: "bg-primary-200"
   };
   return (
     <span

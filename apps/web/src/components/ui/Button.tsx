@@ -6,7 +6,7 @@ type ButtonProps = React.HtmlHTMLAttributes<HTMLButtonElement> & {
   size: ButtonSize;
   leadingIcon: React.ReactNode;
   trailingIcon: React.ReactNode;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
 };
 
 export function Button({

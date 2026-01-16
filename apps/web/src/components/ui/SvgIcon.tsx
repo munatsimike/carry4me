@@ -1,9 +1,11 @@
+import type { SvgIconComponent } from "@/types/Ui";
+
 type IconSize = "sm" | "md" | "lg" | "xl";
 type IconColor = "primary" | "tertiary" | "trip" | "neutral";
 
 type IconProps = {
   size: IconSize;
-  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  Icon: SvgIconComponent;
   color?: IconColor;
   className?: string;
 };

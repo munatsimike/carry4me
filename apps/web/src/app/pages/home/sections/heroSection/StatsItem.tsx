@@ -1,20 +1,20 @@
-import { CicleBadge } from "@/components/ui/CircleBadge";
+import { CircleBadge } from "@/components/ui/CircleBadge";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
-import type { Stat } from "@/types/Ui";
+import type { InfoItem } from "@/types/Ui";
 
 type StatProps = {
-  stat: Stat;
+  stat: InfoItem;
 };
 
 export function StatItem({ stat }: StatProps) {
   return (
     <section className="flex flex-col gap-1">
       <div className="flex items-center gap-3">
-        <CicleBadge bgColor="neutral" size="lg">
+        <CircleBadge bgColor="neutral" size="lg">
           <SvgIcon size="lg" Icon={stat.Icon} color="neutral" />
-        </CicleBadge>
-        <CustomText as="h4" className="text-[17px]">
+        </CircleBadge>
+        <CustomText as="h4" textSize="sm">
           {stat.label}
         </CustomText>
       </div>

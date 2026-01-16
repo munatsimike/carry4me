@@ -1,8 +1,9 @@
-import type { Stat } from "@/types/Ui";
+import type {} from "@/types/Ui";
 import { StatItem } from "./StatsItem";
+import type { InfoItem } from "@/types/Ui";
 
 type StatItemProps = {
-  stats: Stat[];
+  stats: InfoItem[];
 };
 
 export default function StatsSection({ stats }: StatItemProps) {

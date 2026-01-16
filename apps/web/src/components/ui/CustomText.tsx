@@ -1,4 +1,4 @@
-type TextSize = "xxl" | "xl" | "lg" | "md" | "sm" | "xsm";
+type TextSize = "xxl" | "xl" | "lg" | "md" | "sm" | "xsm" | "display";
 type TextVariant = "primary" | "secondary" | "neutral";
 
 type PrimaryTextProps = {
@@ -22,13 +22,13 @@ export default function Text({
     neutral: "text-neutral-100",
   };
   const sizes: Record<TextSize, string> = {
-    xxl: "text-4xl",
-    xl: "text-3xl",
-    lg: "text-2xl",
-
-    md: "text-xl",
-    sm: "text-[18px]",
-    xsm: "text-base",
+    xsm: "text-sm", // 14px
+    sm: "text-base", // 16px
+    md: "text-lg", // 18px
+    lg: "text-xl", // 20px
+    xl: "text-2xl", // 24px
+    xxl: "text-3xl", // 30px (primary section headers)
+    display: "text-4xl",
   };
 
   const Component = as ?? "h1";
