@@ -11,6 +11,7 @@ import Flight from "@/assets/plan.svg?react";
 import LoveHands from "@/assets/lovehands.svg?react";
 import User from "@/assets/userwithtick.svg?react";
 import Lock from "@/assets/lock.svg?react";
+import QuestionsArrow from "@/assets/questionArrow.svg?react";
 import type { InfoItem } from "@/types/Ui";
 
 export const steps = [
@@ -126,6 +127,50 @@ export const benefits: InfoItem[] = [
     Icon: LoveHands,
     label: "Help Family & Community",
     value: "Support people needing to send items home safely.",
+    tag: "traveler",
+  },
+];
+export const questions: InfoItem[] = [
+  {
+    label: "What items can I send ?",
+    value:
+      "You can send common personal items such as clothes, documents, and small electronics. All items must be legal and allowed for transport.",
+    tag: "sender",
+  },
+    {
+    label: "How is payment handled ? ",
+    value:
+      "The sender pays after you accept a request. Carry4Me securely holds the funds and releases them to you after delivery is confirmed.",
+    tag: "traveler",
+  },
+  {
+    label: "How do I send a parcel ?",
+    value:
+      "Post your parcel details, browse available travelers, and send a carry request. Once accepted, make payment and hand over the parcel.",
+    tag: "sender",
+  },
+
+  {
+    label: "Can I choose what parcels I carry ?",
+    value:
+      "Yes. You decide which requests to accept and can choose parcels that fit your space, preferences, and travel plans.",
+    tag: "traveler",
+  },
+ 
+
+  {
+    label: "How does pricing work ?",
+    value:
+      "Travelers set a price per kilogram. You see the total cost before requesting, so there are no surprises.",
+    tag: "sender",
+  },
+
+
+
+   {
+    label: "When do I get paid ?",
+    value:
+      "You get paid after delivery using a payout code provided by the sender or recipient.",
     tag: "traveler",
   },
 ];

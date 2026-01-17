@@ -4,7 +4,7 @@ export type SvgIconComponent = React.ComponentType<
 type Tag = "traveler" | "sender";
 export type InfoItem = {
   tag?: Tag;
-  Icon: SvgIconComponent;
+  Icon?: SvgIconComponent;
   label: string;
   value: string;
 };
@@ -12,7 +12,6 @@ export type InfoItem = {
 export type InfoItemsProps = {
   tag?: Tag;
   items: InfoItem[];
-  iconCirlce?: boolean;
 };
 
 export type Step = {
@@ -23,4 +22,9 @@ export type Step = {
 
 export type StepsPros = {
   steps: Step[];
+};
+
+export type ContainerProps = {
+  children: React.ReactNode;
+  className?: string
 };
