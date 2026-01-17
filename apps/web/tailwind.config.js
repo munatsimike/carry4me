@@ -31,6 +31,7 @@ export default {
         ink: {
           primary: "#0A2148",
           secondary: "#4F5B67",
+          trip: "#079656",
         },
 
         error: {

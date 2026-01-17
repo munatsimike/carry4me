@@ -11,7 +11,11 @@ export default function DefaultContainer({
 }: ContainerProps) {
   return (
     <section className={`${outerClassName} py-12 md:py-16`}>
-      <div className={`mx-auto max-w-container px-4 ${className ?? ""}`}>
+      <div
+        className={`mx-auto max-w-container px-4${
+          className ?? ""
+        }`}
+      >
         {children}
       </div>
     </section>
