@@ -1,6 +1,6 @@
 import type { SvgIconComponent } from "@/types/Ui";
 
-type IconSize = "sm" | "md" | "lg" | "xl";
+export type IconSize = "xsm" | "sm" | "md" | "lg" | "xl";
 type IconColor = "primary" | "tertiary" | "trip" | "neutral";
 
 type IconProps = {
@@ -12,10 +12,11 @@ type IconProps = {
 
 export default function SvgIcon({ size, Icon, color, className }: IconProps) {
   const sizes: Record<IconSize, string> = {
+    xsm: "h-2.5 w-auto",
     sm: "h-4 w-auto",
     md: "h-5 w-auto",
     lg: "h-6 w-auto",
-    xl: "h-9 w-auto",
+    xl: "h-7 w-auto",
   };
 
   const iconColors: Record<IconColor, string> = {

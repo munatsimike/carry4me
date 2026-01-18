@@ -6,3 +6,18 @@
 body {
   @apply font-body;
 }
+
+@layer base {
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+}

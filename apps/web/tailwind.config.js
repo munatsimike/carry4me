@@ -8,6 +8,7 @@ export default {
           50: "#EFF6FF",
           100: "#DBEAFE",
           200: "#E4EDFD",
+          300: "#D5E4FF",
           500: "#3B82F6", // main brand blue
           600: "#2563EB",
           700: "#1D4ED8",
@@ -24,6 +25,8 @@ export default {
         trip: {
           50: "#D8F5E8",
           100: "#C1F0DB",
+          200: "#BDEAD3",
+          300: "#61e4a0",
           500: "#0DBF6F",
           600: "#12B76D",
         },

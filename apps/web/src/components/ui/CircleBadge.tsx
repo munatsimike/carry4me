@@ -21,7 +21,7 @@ export function CircleBadge({
     sm: "h-7 w-7",
     md: "h-8 w-8",
     lg: "h-9 w-9",
-    xl: "h-14 w-14",
+    xl: "h-11 w-11",
   };
 
   const bgColors: Record<CirleBgColor, string> = {

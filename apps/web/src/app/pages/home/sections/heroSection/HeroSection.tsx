@@ -15,7 +15,7 @@ export function HeroSection() {
       <Heading textSize="display" textVariant="primary">
         {heading}
       </Heading>
-      <SubHeading textSize="lg" as="p">
+      <SubHeading textSize="md" as="p">
         {subHeading}
       </SubHeading>
       <ActionButtons />

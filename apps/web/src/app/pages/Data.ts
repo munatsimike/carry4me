@@ -11,8 +11,7 @@ import Flight from "@/assets/plan.svg?react";
 import LoveHands from "@/assets/lovehands.svg?react";
 import User from "@/assets/userwithtick.svg?react";
 import Lock from "@/assets/lock.svg?react";
-import QuestionsArrow from "@/assets/questionArrow.svg?react";
-import type { InfoItem } from "@/types/Ui";
+import type { InfoItem, Traveler } from "@/types/Ui";
 
 export const steps = [
   {
@@ -137,7 +136,7 @@ export const questions: InfoItem[] = [
       "You can send common personal items such as clothes, documents, and small electronics. All items must be legal and allowed for transport.",
     tag: "sender",
   },
-    {
+  {
     label: "How is payment handled ? ",
     value:
       "The sender pays after you accept a request. Carry4Me securely holds the funds and releases them to you after delivery is confirmed.",
@@ -156,7 +155,6 @@ export const questions: InfoItem[] = [
       "Yes. You decide which requests to accept and can choose parcels that fit your space, preferences, and travel plans.",
     tag: "traveler",
   },
- 
 
   {
     label: "How does pricing work ?",
@@ -165,12 +163,55 @@ export const questions: InfoItem[] = [
     tag: "sender",
   },
 
-
-
-   {
+  {
     label: "When do I get paid ?",
     value:
       "You get paid after delivery using a payout code provided by the sender or recipient.",
     tag: "traveler",
+  },
+];
+
+export const travelers: Traveler[] = [
+  {
+    user: {
+      firstName: "Michael",
+      lastName: "Munatsi",
+    },
+    route: {
+      date: new Date("2026-01-23"),
+      availableWeight: 4,
+      pricePerKg: 20,
+      origin: "UK",
+      destination: "Zimbabwe",
+      acceptedParcels: ["Documents"],
+    },
+  },
+  {
+    user: {
+      firstName: "Michael",
+      lastName: "Munatsi",
+    },
+    route: {
+      date: new Date("2026-01-23"),
+      availableWeight: 4,
+      pricePerKg: 20,
+      origin: "UK",
+      destination: "Zimbabwe",
+      acceptedParcels: ["Documents"],
+    },
+  },
+  {
+    user: {
+      firstName: "Michael",
+      lastName: "Munatsi",
+    },
+    route: {
+      date: new Date("2026-01-23"),
+      availableWeight: 4,
+      pricePerKg: 20,
+      origin: "UK",
+      destination: "Zimbabwe",
+      acceptedParcels: ["Documents"],
+    },
   },
 ];

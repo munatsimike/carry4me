@@ -37,7 +37,7 @@ export default function Text({
 
   return (
     <Component
-      className={`${sizes[textSize]} ${className} ${variants[textVariant]}  leading-tight `}
+      className={`${sizes[textSize]} ${className} ${variants[textVariant]}`}
     >
       {children}
     </Component>

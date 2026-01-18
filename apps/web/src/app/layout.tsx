@@ -6,7 +6,7 @@ export default function AppLayout() {
       <header>
         <div className="mx-auto max-w-container px-4 py-4 flex items-center justify-between">
           <Link to="/" className="font-semibold">
-            <img src="/logo.png" alt="Carry4Me" className="h-12 w-auto" />
+            <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
           </Link>
 
           <nav className="flex items-center gap-5 text-sm">
@@ -21,9 +21,7 @@ export default function AppLayout() {
               Contact
             </Link>
 
-            <Link to="/signin" className="rounded-md hover:bg-blue-600">
-              Sign up
-            </Link>
+            <Link to="/signin">Sign up</Link>
             <Link
               to="/signin"
               className="rounded-md bg-blue-500 px-4 py-1.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-blue-600"

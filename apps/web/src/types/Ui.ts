@@ -2,6 +2,7 @@ export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>
 >;
 type Tag = "traveler" | "sender";
+
 export type InfoItem = {
   tag?: Tag;
   Icon?: SvgIconComponent;
@@ -26,5 +27,28 @@ export type StepsPros = {
 
 export type ContainerProps = {
   children: React.ReactNode;
-  className?: string
+  className?: string;
+};
+
+type Category = "Documents" | "Clothes & Shoes" | "Electronics";
+export type Location = "Zimbabwe" | "USA" | "UK";
+
+type User = {
+  firstName: string;
+  lastName: string;
+  avatar?: string; // optional (not everyone uploads one)
+};
+
+export type Route = {
+  date: Date;
+  availableWeight: number;
+  pricePerKg: number;
+  origin: Location;
+  destination: Location;
+  acceptedParcels: Category[];
+};
+
+export type Traveler = {
+  user: User;
+  route: Route;
 };
