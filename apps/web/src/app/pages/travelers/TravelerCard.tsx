@@ -1,4 +1,4 @@
-import type { Traveler } from "@/types/Ui";
+import type { Trip } from "@/types/Ui";
 import { Card } from "../../components/card/Card";
 import CardLabel from "../../components/card/CardLabel";
 import HeartToggle from "@/app/components/HeartToggle";
@@ -6,55 +6,55 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import LineDivider from "@/app/components/LineDivider";
 import IconTextRow from "@/app/components/card/IconTextRow";
 import LableTextRow from "@/app/components/LabelTextRow";
-import CardFooter from "@/app/components/card/CardFooter";
 import User from "@/app/components/card/User";
 import WeightAndPrice from "@/app/components/card/WeightAndPrice";
+import Stack from "@/app/components/Stack";
+import { InlineRow } from "@/app/components/InlineRow";
+import SendRequestBtn from "@/app/components/card/SendRequestBtn";
 
 type TravelerProps = {
-  traveler: Traveler;
+  trip: Trip;
+  onClick: (trip: Trip) => void;
 };
-export default function TravelerCard({ traveler }: TravelerProps) {
+export default function TravelerCard({ trip, onClick }: TravelerProps) {
   return (
     <Card>
       <div className="flex justify-between">
-        <CardLabel tag={"Trip"} />
+        <CardLabel variant={"trip"} label="Trip" />
         <HeartToggle />
       </div>
       <User
         tag={"Traveler"}
-        userName={`${traveler.user.firstName} ${traveler.user.lastName}`}
+        userName={`${trip.user.firstName.charAt(0)}${"."} ${trip.user.lastName}`}
       />
       <LineDivider />
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <IconTextRow
-            Icon={META_ICONS.planeIcon}
-            label={traveler.route.origin}
-          />
+      <Stack>
+        <InlineRow>
+          <IconTextRow Icon={META_ICONS.planeIcon} label={trip.route.origin} />
           <IconTextRow
             iconSize="xsm"
             Icon={META_ICONS.arrow}
-            label={traveler.route.destination}
+            label={trip.route.destination}
           />
-        </div>
+        </InlineRow>
 
         <IconTextRow
           Icon={META_ICONS.calender}
-          label={traveler.route.date.toDateString()}
+          label={trip.route.date.toDateString()}
         />
         <LableTextRow
           label={"Accepts : "}
-          text={traveler.route.acceptedParcels.join("|")}
+          text={trip.route.acceptedParcels.join("|")}
         />
-      </div>
+      </Stack>
       <LineDivider />
       <WeightAndPrice
-        weight={traveler.route.availableWeight}
-        price={traveler.route.pricePerKg}
+        weight={trip.route.availableWeight}
+        price={trip.route.pricePerKg}
         location={"UK"}
       />
       <LineDivider />
-      <CardFooter />
+      <SendRequestBtn payLoad={trip} primaryAction={onClick} />
     </Card>
   );
 }

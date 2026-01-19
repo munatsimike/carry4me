@@ -7,11 +7,11 @@ import Hand from "@/assets/hand.svg?react";
 import Wallet from "@/assets/wallet.svg?react";
 import Rocket from "@/assets/rocket.svg?react";
 import Money from "@/assets/money.svg?react";
-import Flight from "@/assets/plan.svg?react";
+import Plane from "@/assets/plane-filled.svg?react";
 import LoveHands from "@/assets/lovehands.svg?react";
 import User from "@/assets/userwithtick.svg?react";
 import Lock from "@/assets/lock.svg?react";
-import type { InfoItem, Traveler } from "@/types/Ui";
+import type { InfoItem, Parcel, Trip } from "@/types/Ui";
 
 export const steps = [
   {
@@ -94,7 +94,7 @@ export const benefits: InfoItem[] = [
     tag: "sender",
   },
   {
-    Icon: Flight,
+    Icon: Plane,
     label: "Travel for free or less ",
     value: "Parcels you carry can help lower your travel expenses.",
     tag: "traveler",
@@ -171,10 +171,10 @@ export const questions: InfoItem[] = [
   },
 ];
 
-export const travelers: Traveler[] = [
+export const travelers: Trip[] = [
   {
     user: {
-      firstName: "Michael",
+      firstName: "Tariro",
       lastName: "Munatsi",
     },
     route: {
@@ -188,8 +188,8 @@ export const travelers: Traveler[] = [
   },
   {
     user: {
-      firstName: "Michael",
-      lastName: "Munatsi",
+      firstName: "Zvikomborero",
+      lastName: "Makatendeka",
     },
     route: {
       date: new Date("2026-01-23"),
@@ -202,8 +202,8 @@ export const travelers: Traveler[] = [
   },
   {
     user: {
-      firstName: "Michael",
-      lastName: "Munatsi",
+      firstName: "Tanyaradzwa",
+      lastName: "Mupangavanhu",
     },
     route: {
       date: new Date("2026-01-23"),
@@ -215,3 +215,17 @@ export const travelers: Traveler[] = [
     },
   },
 ];
+
+export const myParcel: Parcel = {
+  user: {
+    firstName: "Peter",
+    lastName: "John",
+    avatar: undefined,
+  },
+  details: {
+    budget: 100,
+    weight: 5,
+    location: "UK",
+    category: ["Clothes & Shoes"],
+  },
+};

@@ -1,4 +1,10 @@
-type ButtonVariant = "primary" | "secondary" | "ghost" | "trip" | "tripPrimary";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "trip"
+  | "tripPrimary"
+  | "neutral";
 type ButtonSize = "sm" | "md" | "lg" | "xl";
 
 type ButtonProps = React.HtmlHTMLAttributes<HTMLButtonElement> & {
@@ -40,6 +46,7 @@ export function Button({
     ghost: "bg-transparent hover:bg-tertiary-50",
     trip: "bg-trip-50 hover:bg-trip-100",
     tripPrimary: "bg-trip-500 hover:bg-trip-600 text-white",
+    neutral: "hover:bg-neutral-50",
   };
 
   const spanBase = "flex items-center " + gap;

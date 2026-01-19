@@ -16,6 +16,7 @@ export default {
         secondary: {
           50: "#E6F1FF",
           100: "#D8E9FF",
+          500: "#4F5B67",
         },
         tertiary: {
           50: "#E8EBEE",
@@ -47,7 +48,8 @@ export default {
 
         neutral: {
           50: "#F2F4F7",
-          100: "#64748B",
+          100: "#72777c",
+          500: "#606b7a",
         },
       },
 

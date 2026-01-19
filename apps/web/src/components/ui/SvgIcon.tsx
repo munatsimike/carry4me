@@ -1,7 +1,7 @@
 import type { SvgIconComponent } from "@/types/Ui";
 
 export type IconSize = "xsm" | "sm" | "md" | "lg" | "xl";
-type IconColor = "primary" | "tertiary" | "trip" | "neutral";
+export type IconColor = "primary" | "tertiary" | "trip" | "neutral" | "onDark";
 
 type IconProps = {
   size: IconSize;
@@ -24,6 +24,7 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
     tertiary: "text-secondary-50",
     trip: "text-trip-500",
     neutral: "text-neutral-100",
+    onDark: "text-white",
   };
 
   return (

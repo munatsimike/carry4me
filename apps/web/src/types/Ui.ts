@@ -48,7 +48,19 @@ export type Route = {
   acceptedParcels: Category[];
 };
 
-export type Traveler = {
+export type Trip = {
   user: User;
   route: Route;
+};
+
+type ParcelRequirements  = {
+  budget: number;
+  weight: number;
+  location: Location;
+  category: Category[]
+};
+
+export type Parcel = {
+  user: User;
+  details: ParcelRequirements ;
 };

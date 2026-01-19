@@ -1,6 +1,7 @@
 import CustomText from "@/components/ui/CustomText";
 import { countryToCurrency } from "../../Mapper";
 import type { Location } from "@/types/Ui";
+import Stack from "../Stack";
 type WeightAndPriceProps = {
   weightLabel?: string;
   priceLabel?: string;
@@ -16,25 +17,38 @@ export default function WeighAndPrice({
   price,
   location,
 }: WeightAndPriceProps) {
+  const baseLabel = "flex justify-end";
+  const labelColor = "neutral";
+  const textSize = "xsm";
   return (
     <div className="flex justify-end items-start gap-2">
       <div className="flex flex-col gap-3">
-        <CustomText className="flex justify-end" as="div" textSize="xsm">
+        <CustomText
+          className={baseLabel}
+          as="div"
+          textSize={textSize}
+          textVariant={labelColor}
+        >
           {weightLabel}
         </CustomText>
-        <CustomText as="div" className="flex justify-end" textSize="xsm">
+        <CustomText
+          as="div"
+          textVariant={labelColor}
+          className={baseLabel}
+          textSize={textSize}
+        >
           {priceLabel}
         </CustomText>
       </div>
 
-      <span className="flex flex-col gap-3">
+      <Stack>
         <CustomText as="div" textVariant="primary">
-          {`${weight}${" Kg"}`}
+          {`${weight}${" kg"}`}
         </CustomText>
         <CustomText className="leading-none" as="div" textVariant="primary">
           {`${countryToCurrency[location]}${price}`}
         </CustomText>
-      </span>
+      </Stack>
     </div>
   );
 }

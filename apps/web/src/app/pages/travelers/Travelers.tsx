@@ -1,14 +1,15 @@
-import type { Traveler } from "@/types/Ui";
+import type { Trip } from "@/types/Ui";
 import TravelerCard from "./TravelerCard";
 
 export type TravlersProps = {
-  travelers: Traveler[];
+  trips: Trip[];
+  onClick: (trip: Trip) => void;
 };
-export default function Travelers({ travelers }: TravlersProps) {
+export default function Travelers({ trips, onClick }: TravlersProps) {
   return (
     <div className="grid grid-col-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {travelers.map((traveler) => (
-        <TravelerCard traveler={traveler} />
+      {trips.map((trip) => (
+        <TravelerCard trip={trip} onClick={onClick} />
       ))}
     </div>
   );
