@@ -13,27 +13,31 @@ export default function ActionButtons() {
   const subtitleSize = "xsm";
   return (
     <section className="flex gap-10 mt-16">
-      <Button
-        subtitle={
-          <CustomText as="span" textSize={subtitleSize}>
-            See items that need to be sent.
+      <Link to={"/parcels"}>
+        <Button
+          subtitle={
+            <CustomText as="span" textSize={subtitleSize}>
+              See items that need to be sent.
+            </CustomText>
+          }
+          variant={"secondary"}
+          size={size}
+          leadingIcon={
+            <CircleBadge
+              size={size}
+              bgColor="parcel"
+              children={
+                <SvgIcon size="xl" Icon={ParcelIcon} color={"primary"} />
+              }
+            />
+          }
+          trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} />}
+        >
+          <CustomText as="span" textSize={titleSize} textVariant="primary">
+            Browse Parcels
           </CustomText>
-        }
-        variant={"secondary"}
-        size={size}
-        leadingIcon={
-          <CircleBadge
-            size={size}
-            bgColor="parcel"
-            children={<SvgIcon size="xl" Icon={ParcelIcon} color={"primary"} />}
-          />
-        }
-        trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} />}
-      >
-        <CustomText as="span" textSize={titleSize} textVariant="primary">
-          Browse Parcels
-        </CustomText>
-      </Button>
+        </Button>
+      </Link>
 
       <Link to={"/travelers"}>
         <Button

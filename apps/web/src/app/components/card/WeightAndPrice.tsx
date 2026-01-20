@@ -2,6 +2,14 @@ import CustomText from "@/components/ui/CustomText";
 import { countryToCurrency } from "../../Mapper";
 import type { Location } from "@/types/Ui";
 import Stack from "../Stack";
+
+type LableValueStackProps = {
+  firstLabel: string;
+  firstValue: string;
+  secondLabel: string;
+  secondValue: string;
+};
+
 type WeightAndPriceProps = {
   weightLabel?: string;
   priceLabel?: string;
@@ -10,15 +18,58 @@ type WeightAndPriceProps = {
   location: Location;
 };
 
-export default function WeighAndPrice({
+type PriceProps = {
+  unitPriceLabel: string;
+  unitPrice: number;
+  totalPriceLabel?: string;
+  totalPrice: number;
+  location: Location;
+};
+
+export function Price({
+  unitPriceLabel,
+  unitPrice,
+  totalPriceLabel = "Total price : ",
+  totalPrice,
+  location,
+}: PriceProps) {
+  const currency = countryToCurrency[location];
+  return (
+      <LableValueStack
+        firstLabel={`${unitPriceLabel}${" : "}`}
+        secondLabel={totalPriceLabel}
+        firstValue={`${currency}${unitPrice.toString()}`}
+        secondValue={`${currency}${totalPrice.toString()}`}
+      />
+  );
+}
+
+export function WeightAndPrice({
   weightLabel = "Available space :",
-  priceLabel = "Price per kg :",
   weight,
+  priceLabel = "Price per kg :",
   price,
   location,
 }: WeightAndPriceProps) {
-  const baseLabel = "flex justify-end";
+   const currency = countryToCurrency[location];
+  return (
+      <LableValueStack
+        firstLabel={weightLabel}
+        secondLabel={priceLabel}
+        firstValue={`${weight.toString()} ${"kg"}`}
+        secondValue={`${currency}${price.toString()}`}
+      />
+  );
+}
+
+function LableValueStack({
+  firstLabel,
+  secondLabel,
+  firstValue,
+  secondValue,
+}: LableValueStackProps) {
   const labelColor = "neutral";
+  const baseLabel = "flex justify-end";
   const textSize = "xsm";
   return (
     <div className="flex justify-end items-start gap-2">
@@ -29,7 +80,7 @@ export default function WeighAndPrice({
           textSize={textSize}
           textVariant={labelColor}
         >
-          {weightLabel}
+          {firstLabel}
         </CustomText>
         <CustomText
           as="div"
@@ -37,16 +88,16 @@ export default function WeighAndPrice({
           className={baseLabel}
           textSize={textSize}
         >
-          {priceLabel}
+          {secondLabel}
         </CustomText>
       </div>
 
       <Stack>
         <CustomText as="div" textVariant="primary">
-          {`${weight}${" kg"}`}
+          {firstValue}
         </CustomText>
         <CustomText className="leading-none" as="div" textVariant="primary">
-          {`${countryToCurrency[location]}${price}`}
+          {secondValue}
         </CustomText>
       </Stack>
     </div>

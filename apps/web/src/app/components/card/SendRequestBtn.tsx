@@ -17,18 +17,23 @@ export default function SendRequestBtn<T>({
   payLoad,
   variant = "tripPrimary",
 }: SendRequestBtnProps<T>) {
-  const base = "flex items-center"
+  const base = "flex items-center";
   const alignment = secondaryAction ? "justify-between" : "justify-end";
   return (
     <div className={`${base} ${alignment}`}>
       {secondaryAction && (
         <Button
-          onClick={() => () => secondaryAction()}
+          onClick={() => secondaryAction()}
           variant="neutral"
           size={"sm"}
           leadingIcon={undefined}
         >
-          <CustomText as="span" textSize={"xsm"} textVariant="primary" className="px-3">
+          <CustomText
+            as="span"
+            textSize={"xsm"}
+            textVariant="primary"
+            className="px-3"
+          >
             cancel
           </CustomText>
         </Button>

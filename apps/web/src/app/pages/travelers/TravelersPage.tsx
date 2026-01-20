@@ -1,6 +1,6 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import Travelers from "./Travelers";
-import { travelers, myParcel } from "../Data";
+import { travelers, loggedInUserParcel } from "../Data";
 import type { Trip } from "@/types/Ui";
 import { useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
@@ -17,7 +17,13 @@ export default function TravelersPage() {
       </DefaultContainer>
       {selectedTrip && (
         <CustomModal onClose={onClose}>
-          {<ConfirmRequest trip={selectedTrip} parcel={myParcel} onClose={onClose}/>}
+          {
+            <ConfirmRequest
+              trip={selectedTrip}
+              parcel={loggedInUserParcel}
+              onClose={onClose}
+            />
+          }
         </CustomModal>
       )}
     </>

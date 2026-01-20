@@ -53,14 +53,17 @@ export type Trip = {
   route: Route;
 };
 
-type ParcelRequirements  = {
-  budget: number;
+type ParcelRequirements = {
+  date?: Date;
+  pricePerKg: number;
   weight: number;
-  location: Location;
-  category: Category[]
+  origin: Location;
+  destination: Location;
+  category: Category[];
+  
 };
 
 export type Parcel = {
   user: User;
-  details: ParcelRequirements ;
+  details: ParcelRequirements;
 };

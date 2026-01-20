@@ -7,7 +7,7 @@ import LineDivider from "@/app/components/LineDivider";
 import IconTextRow from "@/app/components/card/IconTextRow";
 import LableTextRow from "@/app/components/LabelTextRow";
 import User from "@/app/components/card/User";
-import WeightAndPrice from "@/app/components/card/WeightAndPrice";
+import { WeightAndPrice } from "@/app/components/card/WeightAndPrice";
 import Stack from "@/app/components/Stack";
 import { InlineRow } from "@/app/components/InlineRow";
 import SendRequestBtn from "@/app/components/card/SendRequestBtn";

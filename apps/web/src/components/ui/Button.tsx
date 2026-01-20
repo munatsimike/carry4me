@@ -30,7 +30,7 @@ export function Button({
   const base =
     "inline-flex items-center justify-center font-thin font-heading " +
     "transition-all duration-300 " +
-    "hover:-translate-y-0.5 " +
+    "hover:-translate-y-0.5 hover:shadow-lg " +
     cornerRadius;
 
   const sizes: Record<ButtonSize, string> = {

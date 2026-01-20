@@ -194,7 +194,7 @@ export const travelers: Trip[] = [
     route: {
       date: new Date("2026-01-23"),
       availableWeight: 4,
-      pricePerKg: 20,
+      pricePerKg: 15,
       origin: "UK",
       destination: "Zimbabwe",
       acceptedParcels: ["Documents"],
@@ -208,7 +208,7 @@ export const travelers: Trip[] = [
     route: {
       date: new Date("2026-01-23"),
       availableWeight: 4,
-      pricePerKg: 20,
+      pricePerKg: 25,
       origin: "UK",
       destination: "Zimbabwe",
       acceptedParcels: ["Documents"],
@@ -216,16 +216,79 @@ export const travelers: Trip[] = [
   },
 ];
 
-export const myParcel: Parcel = {
+export const loggedInUserParcel: Parcel = {
   user: {
     firstName: "Peter",
     lastName: "John",
     avatar: undefined,
   },
   details: {
-    budget: 100,
+    pricePerKg: 10,
     weight: 5,
-    location: "UK",
+    origin: "UK",
+    destination: "Zimbabwe",
     category: ["Clothes & Shoes"],
   },
 };
+
+export const loggedInUserTrip: Trip = {
+  user: {
+    firstName: "Tanyaradzwa",
+    lastName: "Mupangavanhu",
+  },
+  route: {
+    date: new Date("2026-01-23"),
+    availableWeight: 4,
+    pricePerKg: 15,
+    origin: "UK",
+    destination: "Zimbabwe",
+    acceptedParcels: ["Documents"],
+  },
+};
+
+export const parlecs: Parcel[] = [
+  {
+    user: {
+      firstName: "Kudzanai",
+      lastName: "Raradza",
+      avatar: undefined,
+    },
+    details: {
+      pricePerKg: 20,
+      weight: 5,
+      origin: "UK",
+      destination: "Zimbabwe",
+      category: ["Clothes & Shoes"],
+    },
+  },
+
+  {
+    user: {
+      firstName: "Peter",
+      lastName: "John",
+      avatar: undefined,
+    },
+    details: {
+      pricePerKg: 15,
+      weight: 5,
+      origin: "UK",
+      destination: "Zimbabwe",
+      category: ["Clothes & Shoes"],
+    },
+  },
+
+  {
+    user: {
+      firstName: "Elvis",
+      lastName: "Mashinya",
+      avatar: undefined,
+    },
+    details: {
+      pricePerKg: 30,
+      weight: 5,
+      origin: "UK",
+      destination: "Zimbabwe",
+      category: ["Clothes & Shoes"],
+    },
+  },
+];
