@@ -1,3 +1,4 @@
+import Navigation from "@/Navigation";
 import { Link, Outlet } from "react-router-dom";
 
 export default function AppLayout() {
@@ -9,26 +10,7 @@ export default function AppLayout() {
             <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
           </Link>
 
-          <nav className="flex items-center gap-5 text-sm">
-            <Link to="/" className="hover:underline">
-              Home
-            </Link>
-            <Link to="/about" className="hover:underline">
-              About
-            </Link>
-
-            <Link to="/about" className="hover:underline">
-              Contact
-            </Link>
-
-            <Link to="/signin">Sign up</Link>
-            <Link
-              to="/signin"
-              className="rounded-md bg-blue-500 px-4 py-1.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-blue-600"
-            >
-              Sign in
-            </Link>
-          </nav>
+          <Navigation userLoggedIn={true} />
         </div>
       </header>
 

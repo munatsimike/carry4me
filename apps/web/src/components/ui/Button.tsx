@@ -5,7 +5,7 @@ type ButtonVariant =
   | "trip"
   | "tripPrimary"
   | "neutral";
-type ButtonSize = "sm" | "md" | "lg" | "xl";
+type ButtonSize = "xsm" | "sm" | "md" | "lg" | "xl";
 
 type ButtonProps = React.HtmlHTMLAttributes<HTMLButtonElement> & {
   variant: ButtonVariant;
@@ -34,6 +34,7 @@ export function Button({
     cornerRadius;
 
   const sizes: Record<ButtonSize, string> = {
+    xsm: "h-8 px-3",
     sm: "h-9 px-3",
     md: "h-10 px-4",
     lg: "h-12 px-2.5",

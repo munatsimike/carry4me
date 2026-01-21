@@ -24,7 +24,7 @@ export default function Search({
   onClick,
 }: SearchProps) {
   return (
-    <div className="inline-flex items-center gap-7 rounded-lg py-3 px-5 bg-neutral-50">
+    <div className="inline-flex items-center gap-7 rounded-lg py-2 px-4 bg-neutral-50">
       <DropDownMenu
         value={selectedCountry}
         placeholder="Select country"
@@ -47,7 +47,7 @@ export default function Search({
       <Button
         onClick={onClick}
         variant={"primary"}
-        size={"sm"}
+        size={"xsm"}
         leadingIcon={
           <SvgIcon color="onDark" size={"sm"} Icon={META_ICONS.searchIcon} />
         }
