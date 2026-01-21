@@ -17,7 +17,7 @@ export default function InfoList({ items }: InfoItemsProps) {
 
         return (
           <SectionItem
-            key={item.label}
+            key={index}
             icon={
               <CircleBadge size="lg" bgColor={variant}>
                 {item.Icon ? (

@@ -12,8 +12,8 @@ export default function StatsSection({ stats }: StatItemProps) {
       className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-20"
       aria-label="Platform statistics"
     >
-      {stats.map((s) => (
-        <StatItem key={s.label} stat={s} />
+      {stats.map((s, index) => (
+        <StatItem key={index} stat={s} />
       ))}
     </section>
   );

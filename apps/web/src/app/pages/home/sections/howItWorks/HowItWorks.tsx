@@ -9,8 +9,8 @@ export default function HowItWorks({ steps }: StepsPros) {
       <SectionTitle title="How it works" />
 
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {steps.map((step) => (
-          <StepItem step={step} />
+        {steps.map((step, index) => (
+          <StepItem key={index} step={step} />
         ))}
       </section>
     </DefaultContainer>

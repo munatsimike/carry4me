@@ -8,8 +8,8 @@ export type TravlersProps = {
 export default function Travelers({ trips, onClick }: TravlersProps) {
   return (
     <div className="grid grid-col-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {trips.map((trip) => (
-        <TravelerCard trip={trip} onClick={onClick} />
+      {trips.map((trip, index) => (
+        <TravelerCard key={index} trip={trip} onClick={onClick} />
       ))}
     </div>
   );
