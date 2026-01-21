@@ -1,5 +1,5 @@
 type TextSize = "xxxl" | "xxl" | "xl" | "lg" | "md" | "sm" | "xsm" | "display";
-type TextVariant = "primary" | "secondary" | "neutral" | "trip";
+type TextVariant = "primary" | "secondary" | "neutral" | "trip" | "onDark";
 
 type PrimaryTextProps = {
   as?: "h1" | "h2" | "h3" | "h4" | "p" | "span" | "div";
@@ -21,6 +21,7 @@ export default function Text({
     secondary: "text-ink-secondary",
     neutral: "text-neutral-100",
     trip: "font-heading text-ink-trip",
+    onDark: "font-heading text-ink-onDark"
   };
   const sizes: Record<TextSize, string> = {
     xsm: "text-sm", // 14px

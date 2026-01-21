@@ -5,16 +5,31 @@ import type { Parcel } from "@/types/Ui";
 import { useState } from "react";
 import Parcels from "./Parcels";
 import { loggedInUserTrip, parlecs } from "../Data";
+import Search from "@/app/components/Search";
+import SearchFilter from "@/app/components/SearchFilter";
 
 export default function ParcelsPage() {
   const [selectedParcel, setParcel] = useState<Parcel | null>(null);
-  const onClick = (parcel: Parcel) => setParcel(parcel);
   const onClose = () => setParcel(null);
+
+  const [selectedCountry, setCountry] = useState<string>("");
+  const [selectedCity, setCity] = useState<string>("");
 
   return (
     <>
       <DefaultContainer>
-        <Parcels parcels={parlecs} onClick={onClick} />
+        <SearchFilter>
+          <Search
+            countries={["UK", "USA"]}
+            cities={["London", "Birmingham"]}
+            onClick={() => () => null}
+            onCityChange={setCity}
+            onCountryChange={setCountry}
+            selectedCountry={selectedCountry}
+            selectedCity={selectedCity}
+          />
+        </SearchFilter>
+        <Parcels parcels={parlecs} onClick={setParcel} />
       </DefaultContainer>
       {selectedParcel && (
         <CustomModal onClose={onClose}>

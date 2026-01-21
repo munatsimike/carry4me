@@ -5,15 +5,30 @@ import type { Trip } from "@/types/Ui";
 import { useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
+import SearchFilter from "@/app/components/SearchFilter";
+import Search from "@/app/components/Search";
 
 export default function TravelersPage() {
   const [selectedTrip, setTrip] = useState<Trip | null>(null);
-  const onclick = (trip: Trip) => setTrip(trip);
+  const [selectedCountry, setCountry] = useState<string>("");
+  const [selectedCity, setCity] = useState<string>("");
   const onClose = () => setTrip(null);
+
   return (
     <>
       <DefaultContainer>
-        <Travelers trips={travelers} onClick={onclick} />
+        <SearchFilter>
+          <Search
+            countries={["UK", "USA", "Ireland"]}
+            cities={["London", "Birmingham"]}
+            onClick={() => () => null}
+            onCityChange={setCity}
+            onCountryChange={setCountry}
+            selectedCountry={selectedCountry}
+            selectedCity={selectedCity}
+          />
+        </SearchFilter>
+        <Travelers trips={travelers} onClick={setTrip} />
       </DefaultContainer>
       {selectedTrip && (
         <CustomModal onClose={onClose}>
