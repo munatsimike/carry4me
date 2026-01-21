@@ -24,7 +24,7 @@ export default function Search({
   onClick,
 }: SearchProps) {
   return (
-    <div className="inline-flex items-center gap-7 rounded-lg py-2 px-4 bg-neutral-50">
+    <div className="inline-flex items-center gap-5 py-2 px-4 bg-neutral-50 rounded-full">
       <DropDownMenu
         value={selectedCountry}
         placeholder="Select country"

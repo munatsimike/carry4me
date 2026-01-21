@@ -32,7 +32,8 @@ function GuestNavigation() {
 function AuthenticatedNavigation() {
   return (
     <NavLinks>
-      <NavItem to="">Dashboard</NavItem>
+      <Home />
+      <NavItem to="/dashboard">Dashboard</NavItem>
       <NavItem to="/parcels">Parcels</NavItem>
       <NavItem to="/travelers">Trips</NavItem>
       <Link to="">
