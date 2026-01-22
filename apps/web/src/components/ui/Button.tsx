@@ -25,20 +25,19 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
-  const cornerRadius = size === "xl" ? "rounded-xl" : "rounded-lg";
+  const cornerRadius = "rounded-lg";
   const gap = size === "xl" ? "gap-4" : "gap-2"; // gap between leading, trailing icon and button text
   const base =
     "inline-flex items-center justify-center font-thin font-heading " +
     "transition-all duration-300 " +
-    "hover:-translate-y-0.5 hover:shadow-lg " +
-    cornerRadius;
+    "hover:-translate-y-0.5 hover:shadow-lg ";
 
   const sizes: Record<ButtonSize, string> = {
-    xsm: "h-8 px-3",
-    sm: "h-9 px-3",
-    md: "h-10 px-4",
-    lg: "h-12 px-2.5",
-    xl: "h-[80px] px-3",
+    xsm: "h-8 px-3 rounded-full",
+    sm: "h-9 px-3 " + cornerRadius,
+    md: "h-10 px-4 " + cornerRadius,
+    lg: "h-12 px-2.5 " + cornerRadius,
+    xl: "h-[80px] px-3 rounded-xl",
   };
 
   const variants: Record<ButtonVariant, string> = {

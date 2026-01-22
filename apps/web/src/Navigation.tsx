@@ -33,9 +33,9 @@ function AuthenticatedNavigation() {
   return (
     <NavLinks>
       <Home />
-      <NavItem to="/dashboard">Dashboard</NavItem>
       <NavItem to="/parcels">Parcels</NavItem>
       <NavItem to="/travelers">Trips</NavItem>
+      <NavItem to="/requests">Requests</NavItem>
       <Link to="">
         <img
           src="/avatar.svg"

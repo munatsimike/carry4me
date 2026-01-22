@@ -2,13 +2,16 @@ import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 import type { Parcel, Trip } from "@/types/Ui";
 import LineDivider from "./LineDivider";
-import IconTextRow from "./card/IconTextRow";
 import CardLabel from "./card/CardLabel";
 import { META_ICONS } from "../icons/MetaIcon";
 import Stack from "./Stack";
-import { InlineRow } from "./InlineRow";
 import SendRequestBtn from "./card/SendRequestBtn";
 import { Price } from "./card/WeightAndPrice";
+import WeightRow from "./WeightRow";
+import CategoryRow from "./CategoryRow";
+import DateRow from "./DateRow";
+import RouteRow from "./RouteRow";
+import TravelerRow from "./TravelerRow";
 
 type ConfirmRequestProps = {
   trip: Trip;
@@ -25,7 +28,7 @@ export default function ConfirmRequest({
 }: ConfirmRequestProps) {
   return (
     <div className="flex flex-col px-5">
-      <div className="flex justify-center">
+      <div className="flex justify-center mb-1">
         <SvgIcon color="primary" size={"lg"} Icon={META_ICONS.sendArrow} />
       </div>
       <div className="flex flex-col items-center">
@@ -66,24 +69,17 @@ function Trip({
   const label = isSenderRequesting ? "Traveler`s Trip" : "Your Trip";
   return (
     <Stack>
-      <CardLabel variant={"trip"} label={label} />
-      <IconTextRow
-        Icon={META_ICONS.travelerOutline}
-        label={`${trip.user.firstName} ${trip.user.lastName}`}
-        iconSize="md"
+      <span>
+        <CardLabel variant={"trip"} label={label} />
+        <ButtomSpacer />
+      </span>
+
+      <TravelerRow name={trip.user.firstName} surname={trip.user.lastName} />
+      <RouteRow
+        origin={trip.route.origin}
+        destination={trip.route.destination}
       />
-      <InlineRow>
-        <IconTextRow Icon={META_ICONS.planeIcon} label={trip.route.origin} />
-        <IconTextRow
-          Icon={META_ICONS.arrow}
-          label={trip.route.destination}
-          iconSize="xsm"
-        />
-      </InlineRow>
-      <IconTextRow
-        Icon={META_ICONS.calender}
-        label={trip.route.date.toDateString()}
-      />
+      <DateRow date={trip.route.date.toDateString()} />
     </Stack>
   );
 }
@@ -106,15 +102,12 @@ function Parcel({
   return (
     <>
       <Stack>
-        <CardLabel variant={"parcel"} label={label} />
-        <IconTextRow
-          Icon={META_ICONS.parcelBox}
-          label={parcel.details.category.join("|")}
-        />
-        <IconTextRow
-          Icon={META_ICONS.scale}
-          label={`${parcel.details.weight.toString()} ${"kg"}`}
-        />
+        <span>
+          <CardLabel variant={"parcel"} label={label} />
+          <ButtomSpacer />
+        </span>
+        <CategoryRow tag={"sender"} category={parcel.details.category} />
+        <WeightRow weight={parcel.details.weight} />
       </Stack>
       <LineDivider />
       <Price
@@ -125,4 +118,8 @@ function Parcel({
       />
     </>
   );
+}
+
+function ButtomSpacer() {
+  return <div className="pb-1"></div>;
 }

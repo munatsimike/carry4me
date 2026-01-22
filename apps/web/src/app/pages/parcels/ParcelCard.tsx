@@ -1,14 +1,14 @@
 import { Card } from "@/app/components/card/Card";
 import CardLabel from "@/app/components/card/CardLabel";
-import IconTextRow from "@/app/components/card/IconTextRow";
 import SendRequestBtn from "@/app/components/card/SendRequestBtn";
 import User from "@/app/components/card/User";
-import {WeightAndPrice} from "@/app/components/card/WeightAndPrice";
+import { WeightAndPrice } from "@/app/components/card/WeightAndPrice";
+import CategoryRow from "@/app/components/CategoryRow";
+import DateRow from "@/app/components/DateRow";
 import HeartToggle from "@/app/components/HeartToggle";
-import { InlineRow } from "@/app/components/InlineRow";
 import LineDivider from "@/app/components/LineDivider";
+import RouteRow from "@/app/components/RouteRow";
 import Stack from "@/app/components/Stack";
-import { META_ICONS } from "@/app/icons/MetaIcon";
 import type { Parcel } from "@/types/Ui";
 
 type ParcelProps = {
@@ -28,29 +28,12 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       />
       <LineDivider />
       <Stack>
-        <IconTextRow
-          Icon={META_ICONS.parcelBox}
-          label={parcel.details.category.join("|")}
+        <CategoryRow tag={"sender"} category={parcel.details.category} />
+        <RouteRow
+          origin={parcel.details.origin}
+          destination={parcel.details.destination}
         />
-        <InlineRow>
-          <IconTextRow
-            Icon={META_ICONS.planeIcon}
-            label={parcel.details.origin}
-          />
-          <IconTextRow
-            iconSize="xsm"
-            Icon={META_ICONS.arrow}
-            label={parcel.details.destination}
-          />
-        </InlineRow>
-        <IconTextRow
-          Icon={META_ICONS.calender}
-          label={
-            parcel.details.date
-              ? parcel.details.date.toDateString()
-              : "Not specific"
-          }
-        />
+        <DateRow date={"Not specific"} />
       </Stack>
       <LineDivider />
       <WeightAndPrice

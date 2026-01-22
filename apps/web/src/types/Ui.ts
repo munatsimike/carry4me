@@ -1,7 +1,7 @@
 export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>
 >;
-type Tag = "traveler" | "sender";
+export type Tag = "traveler" | "sender";
 
 export type InfoItem = {
   tag?: Tag;

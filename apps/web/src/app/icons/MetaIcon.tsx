@@ -3,8 +3,9 @@ import CalenderIcon from "@/assets/calender.svg?react";
 import ArrowIcon from "@/assets/arrowLongIcons.svg?react";
 import ParcelBoxIcon from "@/assets/parcelBoxOutlined.svg?react";
 import SendArrowIcon from "@/assets/send-arrow-icon.svg?react";
-import ScalIcon from "@/assets/scale-icon.svg?react"
-import SearchIcon from "@/assets/search-icon.svg?react"
+import ScalIcon from "@/assets/scale-icon.svg?react";
+import SearchIcon from "@/assets/search-icon.svg?react";
+import CheckedCircle from "@/assets/check-circle.svg?react";
 import TravelerOutLinedIcon from "@/assets/traveler-outlined-icon.svg?react";
 
 export const META_ICONS = {
@@ -15,5 +16,6 @@ export const META_ICONS = {
   sendArrow: SendArrowIcon,
   travelerOutline: TravelerOutLinedIcon,
   scale: ScalIcon,
-  searchIcon: SearchIcon
+  checkedIcon: CheckedCircle,
+  searchIcon: SearchIcon,
 };
