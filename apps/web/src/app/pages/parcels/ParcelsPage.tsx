@@ -4,9 +4,9 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import type { Parcel } from "@/types/Ui";
 import { useState } from "react";
 import Parcels from "./Parcels";
-import { loggedInUserTrip, parlecs } from "../Data";
+import { loggedInUserTrip, parlecs } from "../../Data";
 import Search from "@/app/components/Search";
-import SearchFilter from "@/app/components/SearchFilter";
+import PageSection from "@/app/components/PageSection";
 
 export default function ParcelsPage() {
   const [selectedParcel, setParcel] = useState<Parcel | null>(null);
@@ -18,7 +18,7 @@ export default function ParcelsPage() {
   return (
     <>
       <DefaultContainer>
-        <SearchFilter>
+        <PageSection>
           <Search
             countries={["UK", "USA"]}
             cities={["London", "Birmingham"]}
@@ -28,7 +28,7 @@ export default function ParcelsPage() {
             selectedCountry={selectedCountry}
             selectedCity={selectedCity}
           />
-        </SearchFilter>
+        </PageSection>
         <Parcels parcels={parlecs} onClick={setParcel} />
       </DefaultContainer>
       {selectedParcel && (

@@ -1,10 +1,5 @@
-type ButtonVariant =
-  | "primary"
-  | "secondary"
-  | "ghost"
-  | "trip"
-  | "tripPrimary"
-  | "neutral";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "trip" | "tripPrimary"|
+"error" | "neutral";
 type ButtonSize = "xsm" | "sm" | "md" | "lg" | "xl";
 
 type ButtonProps = React.HtmlHTMLAttributes<HTMLButtonElement> & {
@@ -41,12 +36,13 @@ export function Button({
   };
 
   const variants: Record<ButtonVariant, string> = {
-    primary: "bg-primary-500 hover:bg-primary-600",
+    primary: "bg-primary-500 hover:bg-primary-600 text-white font-heading",
     secondary: "bg-secondary-50 hover:bg-secondary-100",
     ghost: "bg-transparent hover:bg-tertiary-50",
     trip: "bg-trip-50 hover:bg-trip-100",
     tripPrimary: "bg-trip-500 hover:bg-trip-600 text-white",
     neutral: "hover:bg-neutral-50",
+    error: "hover:bg-error-100 hover:text-ink-error"
   };
 
   const spanBase = "flex items-center " + gap;

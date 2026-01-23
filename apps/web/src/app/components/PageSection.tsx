@@ -1,4 +1,4 @@
-export default function SearchFilter({
+export default function PageSection({
   children,
 }: {
   children: React.ReactNode;

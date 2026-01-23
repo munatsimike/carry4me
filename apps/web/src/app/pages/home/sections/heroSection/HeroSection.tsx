@@ -3,7 +3,7 @@ import SubHeading from "@/components/ui/CustomText";
 import ActionButtons from "./ActionButtons";
 import StatsSection from "./StatsSection";
 import DefualtContianer from "@/components/ui/DefualtContianer";
-import { stats } from "../../../Data";
+import { stats } from "../../../../Data";
 
 export function HeroSection() {
   const heading = "We match travelers with parcels that need to go home.";

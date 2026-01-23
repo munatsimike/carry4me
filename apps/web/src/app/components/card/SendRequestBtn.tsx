@@ -34,7 +34,7 @@ export default function SendRequestBtn<T>({
             textVariant="primary"
             className="px-3"
           >
-            cancel
+            Cancel
           </CustomText>
         </Button>
       )}

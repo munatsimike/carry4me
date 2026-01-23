@@ -36,7 +36,9 @@ export default {
           primary: "#0A2148",
           secondary: "#4F5B67",
           trip: "#079656",
-          onDark: "#ffff"
+          onDark: "#ffff",
+          error: "#EF4444",
+         // main brand blue 
         },
 
         error: {
@@ -47,10 +49,17 @@ export default {
           700: "#B91C1C",
         },
 
+        status: {
+          pending: "#F6C463",
+          success: "#079656",
+          inactive: "#EF4444",
+        },
+
         neutral: {
           50: "#F2F4F7",
           100: "#72777c",
           200: "#c1c6cc",
+          300: "#D0D7DE",
           500: "#606b7a",
         },
       },

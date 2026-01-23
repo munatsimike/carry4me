@@ -42,7 +42,7 @@ export default function Search({
       />
 
       <CustomText as="span" textSize="xsm">
-        {"To: Zimbabwe"}
+        {"To : Zimbabwe"}
       </CustomText>
       <Button
         onClick={onClick}

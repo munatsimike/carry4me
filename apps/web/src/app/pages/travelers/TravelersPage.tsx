@@ -1,11 +1,11 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import Travelers from "./Travelers";
-import { travelers, loggedInUserParcel } from "../Data";
+import { travelers, loggedInUserParcel } from "../../Data";
 import type { Trip } from "@/types/Ui";
 import { useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
-import SearchFilter from "@/app/components/SearchFilter";
+import PageSection from "@/app/components/PageSection";
 import Search from "@/app/components/Search";
 
 export default function TravelersPage() {
@@ -17,7 +17,7 @@ export default function TravelersPage() {
   return (
     <>
       <DefaultContainer>
-        <SearchFilter>
+        <PageSection>
           <Search
             countries={["UK", "USA", "Ireland"]}
             cities={["London", "Birmingham"]}
@@ -27,7 +27,7 @@ export default function TravelersPage() {
             selectedCountry={selectedCountry}
             selectedCity={selectedCity}
           />
-        </SearchFilter>
+        </PageSection>
         <Travelers trips={travelers} onClick={setTrip} />
       </DefaultContainer>
       {selectedTrip && (

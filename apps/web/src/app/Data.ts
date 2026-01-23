@@ -11,7 +11,7 @@ import Plane from "@/assets/plane-filled.svg?react";
 import LoveHands from "@/assets/lovehands.svg?react";
 import User from "@/assets/userwithtick.svg?react";
 import Lock from "@/assets/lock.svg?react";
-import type { InfoItem, Parcel, Trip } from "@/types/Ui";
+import type { CarryRequest, InfoItem, Parcel, Trip } from "@/types/Ui";
 
 export const steps = [
   {
@@ -176,6 +176,7 @@ export const travelers: Trip[] = [
     user: {
       firstName: "Tariro",
       lastName: "Munatsi",
+      id: 1,
     },
     route: {
       date: new Date("2026-01-23"),
@@ -185,11 +186,13 @@ export const travelers: Trip[] = [
       destination: "Zimbabwe",
       acceptedParcels: ["Documents"],
     },
+    id: 1,
   },
   {
     user: {
       firstName: "Zvikomborero",
       lastName: "Makatendeka",
+      id: 2,
     },
     route: {
       date: new Date("2026-01-23"),
@@ -199,11 +202,13 @@ export const travelers: Trip[] = [
       destination: "Zimbabwe",
       acceptedParcels: ["Documents"],
     },
+    id: 3,
   },
   {
     user: {
       firstName: "Tanyaradzwa",
       lastName: "Mupangavanhu",
+      id: 3,
     },
     route: {
       date: new Date("2026-01-23"),
@@ -213,6 +218,7 @@ export const travelers: Trip[] = [
       destination: "Zimbabwe",
       acceptedParcels: ["Documents"],
     },
+    id: 4,
   },
 ];
 
@@ -221,6 +227,7 @@ export const loggedInUserParcel: Parcel = {
     firstName: "Peter",
     lastName: "John",
     avatar: undefined,
+    id: 4,
   },
   details: {
     pricePerKg: 10,
@@ -229,12 +236,14 @@ export const loggedInUserParcel: Parcel = {
     destination: "Zimbabwe",
     category: ["Clothes & Shoes"],
   },
+  id: 9,
 };
 
 export const loggedInUserTrip: Trip = {
   user: {
     firstName: "Tanyaradzwa",
     lastName: "Mupangavanhu",
+    id: 5,
   },
   route: {
     date: new Date("2026-01-23"),
@@ -244,6 +253,7 @@ export const loggedInUserTrip: Trip = {
     destination: "Zimbabwe",
     acceptedParcels: ["Documents"],
   },
+  id: 9,
 };
 
 export const parlecs: Parcel[] = [
@@ -252,6 +262,7 @@ export const parlecs: Parcel[] = [
       firstName: "Kudzanai",
       lastName: "Raradza",
       avatar: undefined,
+      id: 6,
     },
     details: {
       pricePerKg: 20,
@@ -260,6 +271,7 @@ export const parlecs: Parcel[] = [
       destination: "Zimbabwe",
       category: ["Clothes & Shoes"],
     },
+    id: 1,
   },
 
   {
@@ -267,6 +279,7 @@ export const parlecs: Parcel[] = [
       firstName: "Peter",
       lastName: "John",
       avatar: undefined,
+      id: 7,
     },
     details: {
       pricePerKg: 15,
@@ -275,6 +288,7 @@ export const parlecs: Parcel[] = [
       destination: "Zimbabwe",
       category: ["Clothes & Shoes"],
     },
+    id: 2,
   },
 
   {
@@ -282,6 +296,7 @@ export const parlecs: Parcel[] = [
       firstName: "Elvis",
       lastName: "Mashinya",
       avatar: undefined,
+      id: 8,
     },
     details: {
       pricePerKg: 30,
@@ -290,5 +305,18 @@ export const parlecs: Parcel[] = [
       destination: "Zimbabwe",
       category: ["Clothes & Shoes"],
     },
+    id: 3,
   },
 ];
+
+export const carryRequests: CarryRequest = {
+  id: 1,
+  trip: loggedInUserTrip,
+  parcel: loggedInUserParcel,
+  status: "PENDING_PAYMENT",
+  initiatorRole: "SENDER",
+  pricePerKgAtRequest: 10,
+  weightKgAtRequest: 5,
+  totalPriceAtRequest: 50,
+  currency: "GBP",
+};

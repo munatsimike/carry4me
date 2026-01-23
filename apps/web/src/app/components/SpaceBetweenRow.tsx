@@ -1,7 +1,8 @@
 export default function SpaceBetweenRow({
-  children,
+  children, className
 }: {
   children: React.ReactNode;
+  className?: string
 }) {
-  return <div className="flex items justify-between">{children}</div>;
+  return <div className={["flex items justify-between", className ?? ""].join(" ")}>{children}</div>;
 }

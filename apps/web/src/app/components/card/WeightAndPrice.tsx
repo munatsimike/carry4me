@@ -73,7 +73,7 @@ function LableValueStack({
   const textSize = "xsm";
   return (
     <div className="flex justify-end items-start gap-2">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         <CustomText
           className={baseLabel}
           as="div"

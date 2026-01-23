@@ -12,6 +12,7 @@ import CategoryRow from "./CategoryRow";
 import DateRow from "./DateRow";
 import RouteRow from "./RouteRow";
 import TravelerRow from "./TravelerRow";
+import ButtomSpacer from "./BottomSpacer";
 
 type ConfirmRequestProps = {
   trip: Trip;
@@ -118,8 +119,4 @@ function Parcel({
       />
     </>
   );
-}
-
-function ButtomSpacer() {
-  return <div className="pb-1"></div>;
 }
