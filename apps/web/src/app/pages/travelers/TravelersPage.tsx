@@ -16,18 +16,18 @@ export default function TravelersPage() {
 
   return (
     <>
-      <DefaultContainer>
-        <PageSection>
-          <Search
-            countries={["UK", "USA", "Ireland"]}
-            cities={["London", "Birmingham"]}
-            onClick={() => () => null}
-            onCityChange={setCity}
-            onCountryChange={setCountry}
-            selectedCountry={selectedCountry}
-            selectedCity={selectedCity}
-          />
-        </PageSection>
+      <PageSection>
+        <Search
+          countries={["UK", "USA", "Ireland"]}
+          cities={["London", "Birmingham"]}
+          onClick={() => () => null}
+          onCityChange={setCity}
+          onCountryChange={setCountry}
+          selectedCountry={selectedCountry}
+          selectedCity={selectedCity}
+        />
+      </PageSection>
+      <DefaultContainer outerClassName="bg-neutral-200 min-h-screen">
         <Travelers trips={travelers} onClick={setTrip} />
       </DefaultContainer>
       {selectedTrip && (

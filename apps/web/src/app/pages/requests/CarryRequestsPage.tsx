@@ -30,94 +30,111 @@ import PageSection from "@/app/components/PageSection";
 import { useState } from "react";
 
 export default function CarryRequestsPage() {
-  const [selectedId, setSelected] = useState<string>("Ongoing(1)");
-
   const heightClass = "my-2";
   const requestUI = mapCarryRequestToUI(carryRequests, "SENDER");
+
+  return (
+    <>
+      <PageTopSection />
+
+      <DefaultContainer outerClassName="bg-neutral-200 min-h-screen">
+        <Card
+          hover={false}
+          cornerRadiusClass="rounded-1xl"
+          className="px-6 w-full max-w-[964px] mx-auto"
+        >
+          <div className="flex flex-col gap-3">
+            <Header
+              title={requestUI.title}
+              description={requestUI.description}
+              requestId={carryRequests.id}
+              status={carryRequests.status}
+            />
+            <LineDivider heightClass={heightClass} />
+            <ProgressRow
+              currentStep={requestUI.currentStep}
+              isInitiator={true}
+            />
+            <LineDivider heightClass={heightClass} />
+            <Deails trip={loggedInUserTrip} parcel={loggedInUserParcel} />
+            <LineDivider heightClass={heightClass} />
+            {requestUI.canCancel && (
+              <SpaceBetweenRow>
+                <Button variant={"error"} size={"md"} leadingIcon={undefined}>
+                  Cancel request
+                </Button>
+                <Button variant="primary" size="md" leadingIcon>
+                  Make Payment
+                </Button>
+              </SpaceBetweenRow>
+            )}
+          </div>
+        </Card>
+      </DefaultContainer>
+    </>
+  );
+}
+
+function PageTopSection() {
+  const [selectedId, setSelected] = useState<string>("Ongoing(1)");
   const tabs = ["Ongoing(1)", "Completed(0)", "Cancelled(0)", "Declined(0)"];
   return (
-    <DefaultContainer>
-      <PageSection>
-        <span className="inline-flex bg-neutral-50 rounded-full py-2 px-10">
-          <div className="flex gap-6">
-            {tabs.map((item) => (
-              <span
-                className={`relative cursor-pointer pb-2 ${item === selectedId ? "after:absolute after:bottom-0 after:left-0 after:h-1 after:w-full after:bg-primary-500 after:rounded-full" : ""} `}
-                onClick={() => setSelected(item)}
-              >
-                <CustomText
+    <PageSection>
+      <span className="inline-flex bg-neutral-200 rounded-full py-2 px-10">
+        <div className="flex gap-6">
+          {tabs.map((item) => (
+            <span
+              className={`relative cursor-pointer pb-2 ${item === selectedId ? "after:absolute after:bottom-0 after:left-0 after:h-1 after:w-full after:bg-primary-500 after:rounded-full" : ""} `}
+              onClick={() => setSelected(item)}
+            >
+              <CustomText
                 textSize="xsm"
-                  key={item}
-                  textVariant={`${item === selectedId ? "selected" : "secondary"}`}
-                >
-                  {item}
-                </CustomText>
-              </span>
-            ))}
-          </div>
-        </span>
-      </PageSection>
-      <Card
-        hover={false}
-        cornerRadiusClass="rounded-1xl"
-        className="px-6 w-full max-w-[964px] mx-auto"
-      >
-        <div className="flex flex-col gap-3">
-          <Header
-            title={requestUI.title}
-            description={requestUI.description}
-            requestId={carryRequests.id}
-            status={carryRequests.status}
-          />
-          <LineDivider heightClass={heightClass} />
-          <ProgressRow currentStep={requestUI.currentStep} isInitiator={true} />
-          <LineDivider heightClass={heightClass} />
-          <Deails trip={loggedInUserTrip} parcel={loggedInUserParcel} />
-          <LineDivider heightClass={heightClass} />
-          {requestUI.canCancel && (
-            <SpaceBetweenRow>
-              <Button variant={"error"} size={"md"} leadingIcon={undefined}>
-                Cancel request
-              </Button>
-              <Button variant="primary" size="md" leadingIcon>
-                Make Payment
-              </Button>
-            </SpaceBetweenRow>
-          )}
+                key={item}
+                textVariant={`${item === selectedId ? "selected" : "secondary"}`}
+              >
+                {item}
+              </CustomText>
+            </span>
+          ))}
         </div>
-      </Card>
-    </DefaultContainer>
+      </span>
+    </PageSection>
   );
 }
 
 function Deails({ trip, parcel }: { trip: Trip; parcel: Parcel }) {
+  const totalPrice = parcel.details.pricePerKg * parcel.details.weight;
   return (
-    <SpaceBetweenRow>
-      <Trip trip={trip} />
-      <Parcel parcel={parcel} />
-    </SpaceBetweenRow>
+    <div className="flex flex-col">
+      <SpaceBetweenRow>
+        <Parcel parcel={parcel} />
+        <Trip trip={trip} />
+      </SpaceBetweenRow>
+      <LineDivider />
+      <Price
+        unitPriceLabel={"Price per kg"}
+        unitPrice={parcel.details.pricePerKg}
+        totalPrice={totalPrice}
+        location={parcel.details.origin}
+      />
+    </div>
   );
 }
 
 function Parcel({ parcel }: { parcel: Parcel }) {
-  const totalPrice = parcel.details.pricePerKg * parcel.details.weight;
   return (
-    <>
-      <Stack>
-        <span>
-          <CardLabel variant={"parcel"} label={"Your parcel"} />
-          <ButtomSpacer />
-        </span>
-        <CategoryRow tag={"sender"} category={parcel.details.category} />
-        <WeightRow weight={parcel.details.weight} />
-        <Price
-          unitPriceLabel={"Price per kg"}
-          unitPrice={parcel.details.pricePerKg}
-          totalPrice={totalPrice}
-          location={parcel.details.origin}
-        />
-      </Stack>
-    </>
+    <Stack>
+      <span>
+        <CardLabel variant={"parcel"} label={"Your parcel"} />
+        <ButtomSpacer />
+      </span>
+      <CategoryRow tag={"sender"} category={parcel.details.category} />
+      <RouteRow
+        origin={parcel.details.origin}
+        destination={parcel.details.destination}
+      />
+      <WeightRow weight={parcel.details.weight} />
+    </Stack>
   );
 }
 function Trip({ trip }: { trip: Trip }) {
@@ -148,7 +165,7 @@ function Header({ title, description, requestId, status }: HeaaderProps) {
     <SpaceBetweenRow>
       <CurrentStatus title={title} description={description} status={status} />
       <span className="inline-flex flex-col gap-1">
-        <CustomText textSize="xsm"> {"Carry Request"}</CustomText>
+        <CustomText textSize="xsm"> {"Request"}</CustomText>
         <CustomText textSize="xsm"> {`#${requestId}`}</CustomText>
       </span>
     </SpaceBetweenRow>

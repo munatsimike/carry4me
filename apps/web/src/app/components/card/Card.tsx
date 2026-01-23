@@ -18,7 +18,7 @@ export function Card({
   return (
     <div
       className={[
-        "rounded-2xl border border-neutral-50 bg-white p-5 shadow-md",
+        "rounded-2xl border border-neutral-50 bg-white p-5 shadow-sm",
         cornerRadiusClass,
         hoverClass,
         className ?? "",

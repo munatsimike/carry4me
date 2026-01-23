@@ -5,7 +5,7 @@ import SectionTitle, { Subtitle } from "../SectionTitle";
 
 export default function Benefits({ items }: InfoItemsProps) {
   return (
-    <DefaultContainer className="flex flex-col" outerClassName="bg-primary-50">
+    <DefaultContainer className="flex flex-col" outerClassName="bg-neutral-200">
       <>
         <SectionTitle title="Benefits for Senders and Travelers" />
         <Subtitle />

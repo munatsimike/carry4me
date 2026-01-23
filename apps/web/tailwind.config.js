@@ -38,7 +38,7 @@ export default {
           trip: "#079656",
           onDark: "#ffff",
           error: "#EF4444",
-         // main brand blue 
+          // main brand blue
         },
 
         error: {
@@ -58,7 +58,7 @@ export default {
         neutral: {
           50: "#F2F4F7",
           100: "#72777c",
-          200: "#c1c6cc",
+          200: "#FAFBFC",
           300: "#D0D7DE",
           500: "#606b7a",
         },

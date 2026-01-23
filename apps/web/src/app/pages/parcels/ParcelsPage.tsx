@@ -17,8 +17,7 @@ export default function ParcelsPage() {
 
   return (
     <>
-      <DefaultContainer>
-        <PageSection>
+     <PageSection>
           <Search
             countries={["UK", "USA"]}
             cities={["London", "Birmingham"]}
@@ -29,6 +28,8 @@ export default function ParcelsPage() {
             selectedCity={selectedCity}
           />
         </PageSection>
+      <DefaultContainer outerClassName="bg-neutral-200 min-h-screen">
+       
         <Parcels parcels={parlecs} onClick={setParcel} />
       </DefaultContainer>
       {selectedParcel && (
