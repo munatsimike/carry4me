@@ -27,7 +27,7 @@ export default function TravelersPage() {
           selectedCity={selectedCity}
         />
       </PageSection>
-      <DefaultContainer outerClassName="bg-neutral-200 min-h-screen">
+      <DefaultContainer outerClassName="bg-canvas min-h-screen">
         <Travelers trips={travelers} onClick={setTrip} />
       </DefaultContainer>
       {selectedTrip && (

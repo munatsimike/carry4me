@@ -25,7 +25,7 @@ export default function Text({
   const variants: Record<TextVariant, string> = {
     primary: "font-heading text-ink-primary",
     secondary: "text-ink-secondary",
-    neutral: "text-neutral-100",
+    neutral: "text-neutral-300",
     trip: "font-heading text-ink-trip",
     onDark: "font-heading text-ink-onDark",
     selected: "text-primary-600",

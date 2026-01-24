@@ -18,7 +18,6 @@ export function StatItem({ stat }: StatProps) {
           {stat.label}
         </CustomText>
       </div>
-
       <CustomText as="p" textSize="md" textVariant="neutral" className="pl-12">
         {stat.value}
       </CustomText>

@@ -46,7 +46,7 @@ export default function ActionButtons() {
               See who is traveling soon.
             </CustomText>
           }
-          variant={"trip"}
+          variant={"secondary"}
           size={"xl"}
           leadingIcon={
             <CircleBadge

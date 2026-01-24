@@ -37,7 +37,7 @@ export default function CarryRequestsPage() {
     <>
       <PageTopSection />
 
-      <DefaultContainer outerClassName="bg-neutral-200 min-h-screen">
+      <DefaultContainer outerClassName="bg-canvas min-h-screen">
         <Card
           hover={false}
           cornerRadiusClass="rounded-1xl"
@@ -80,7 +80,7 @@ function PageTopSection() {
   const tabs = ["Ongoing(1)", "Completed(0)", "Cancelled(0)", "Declined(0)"];
   return (
     <PageSection>
-      <span className="inline-flex bg-neutral-200 rounded-full py-2 px-10">
+      <span className="inline-flex bg-canvas rounded-full py-2 px-10">
         <div className="flex gap-6">
           {tabs.map((item) => (
             <span

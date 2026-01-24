@@ -7,15 +7,12 @@ type SendRequestBtnProps<T> = {
   payLoad: T;
   primaryAction: (payLoad: T) => void;
   secondaryAction?: () => void;
-
-  variant?: "tripPrimary" | "primary";
 };
 
 export default function SendRequestBtn<T>({
   primaryAction,
   secondaryAction,
   payLoad,
-  variant = "tripPrimary",
 }: SendRequestBtnProps<T>) {
   const base = "flex items-center";
   const alignment = secondaryAction ? "justify-between" : "justify-end";
@@ -40,7 +37,7 @@ export default function SendRequestBtn<T>({
       )}
       <Button
         onClick={() => primaryAction(payLoad)}
-        variant={variant}
+        variant={"primary"}
         size={"sm"}
         leadingIcon={
           <SvgIcon size={"sm"} Icon={SendIcon} color="onDark"></SvgIcon>

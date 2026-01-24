@@ -28,7 +28,7 @@ export default function ParcelsPage() {
             selectedCity={selectedCity}
           />
         </PageSection>
-      <DefaultContainer outerClassName="bg-neutral-200 min-h-screen">
+      <DefaultContainer outerClassName="bg-canvas min-h-screen">
        
         <Parcels parcels={parlecs} onClick={setParcel} />
       </DefaultContainer>

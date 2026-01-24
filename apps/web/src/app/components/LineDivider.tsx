@@ -4,6 +4,6 @@ export default function LineDivider({
   heightClass?: string;
 }) {
   return (
-    <div className={["w-full h-px bg-neutral-50", heightClass].join(" ")} />
+    <div className={["w-full h-px bg-neutral-100", heightClass].join(" ")} />
   );
 }

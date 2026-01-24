@@ -41,6 +41,8 @@ export default {
           // main brand blue
         },
 
+        canvas: "#FAFBFC",
+
         error: {
           50: "#FEF2F2",
           100: "#FEE2E2",
@@ -56,11 +58,11 @@ export default {
         },
 
         neutral: {
-          50: "#F2F4F7",
-          100: "#72777c",
-          200: "#FAFBFC",
-          300: "#D0D7DE",
-          500: "#606b7a",
+          50: "#FAFBFC", // lightest
+          100: "#F2F4F7",
+          200: "#D0D7DE",
+          300: "#72777C",
+          500: "#606B7A", // darkest
         },
       },
 

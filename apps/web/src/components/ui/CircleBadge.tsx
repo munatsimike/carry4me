@@ -25,9 +25,9 @@ export function CircleBadge({
   };
 
   const bgColors: Record<CirleBgColor, string> = {
-    trip: "bg-trip-100",
+    trip: "bg-trip-50",
     parcel: "bg-secondary-100",
-    neutral: "bg-neutral-50",
+    neutral: "bg-neutral-100",
     primary: "bg-primary-200"
   };
   return (
