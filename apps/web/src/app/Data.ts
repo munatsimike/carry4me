@@ -313,7 +313,7 @@ export const carryRequests: CarryRequest = {
   id: 1,
   trip: loggedInUserTrip,
   parcel: loggedInUserParcel,
-  status: "PENDING_PAYMENT",
+  status: "PAID_OUT",
   initiatorRole: "SENDER",
   pricePerKgAtRequest: 10,
   weightKgAtRequest: 5,

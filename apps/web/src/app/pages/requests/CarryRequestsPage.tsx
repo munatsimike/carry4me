@@ -8,7 +8,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { progress, type Parcel, type Trip } from "@/types/Ui";
+import { INFOMODES, progress, ROLES, type Parcel, type Trip } from "@/types/Ui";
 import {
   carryRequests,
   loggedInUserParcel,
@@ -23,27 +23,33 @@ import { Button } from "@/components/ui/Button";
 import { Price } from "@/app/components/card/WeightAndPrice";
 import {
   mapCarryRequestToUI,
-  statusColor,
   type Status,
-} from "@/app/CarryRequestMapper";
+} from "@/app/pages/requests/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
 import { useState } from "react";
+import statusColor from "./StatustColorMapper";
+import actionsMapper, { type UIActions } from "./ActionsMapper";
 
 export default function CarryRequestsPage() {
+  const [inputValue, setValue] = useState<string>("");
+  const viewerRole = ROLES.SENDER;
   const heightClass = "my-2";
-  const requestUI = mapCarryRequestToUI(carryRequests, "SENDER");
-
+  const requestUI = mapCarryRequestToUI(carryRequests, viewerRole);
+  const actions = actionsMapper(
+    viewerRole,
+    carryRequests.status,
+    carryRequests.initiatorRole,
+  );
   return (
     <>
       <PageTopSection />
-
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         <Card
           hover={false}
           cornerRadiusClass="rounded-1xl"
-          className="px-6 w-full max-w-[964px] mx-auto"
+          className="px-6 w-full max-w-[950px] mx-auto"
         >
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 mx-2">
             <Header
               title={requestUI.title}
               description={requestUI.description}
@@ -53,25 +59,116 @@ export default function CarryRequestsPage() {
             <LineDivider heightClass={heightClass} />
             <ProgressRow
               currentStep={requestUI.currentStep}
-              isInitiator={true}
+              isInitiator={viewerRole === carryRequests.initiatorRole}
             />
             <LineDivider heightClass={heightClass} />
-            <Deails trip={loggedInUserTrip} parcel={loggedInUserParcel} />
+            <Deails
+              trip={loggedInUserTrip}
+              parcel={loggedInUserParcel}
+              isSenderInitiator={viewerRole === carryRequests.initiatorRole}
+            />
             <LineDivider heightClass={heightClass} />
-            {requestUI.canCancel && (
+            {actions.infoBlock?.displayText ? (
+              <RequestCompleted actions={actions} />
+            ) : (
               <SpaceBetweenRow>
-                <Button variant={"error"} size={"md"} leadingIcon={undefined}>
-                  Cancel request
-                </Button>
-                <Button variant="primary" size="md" leadingIcon>
-                  Make Payment
-                </Button>
+                {actions.secondary ? (
+                  <Button variant={"error"} size={"md"} leadingIcon={undefined}>
+                    {actions.secondary?.label}
+                  </Button>
+                ) : (
+                  <span /> // place holder to push primary button to the right
+                )}
+                {actions.primary && (
+                  <Button variant="primary" size="md" leadingIcon>
+                    {actions.primary?.label}
+                  </Button>
+                )}
+
+                {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
+                  actions.infoBlock.displayText === null && (
+                    <InfoBlockDisplay actions={actions} />
+                  )}
+
+                {actions.infoBlock?.mode === INFOMODES.INPUT && (
+                  <InfoBlockInput
+                    actions={actions}
+                    onChange={setValue}
+                    inputValue={inputValue}
+                  />
+                )}
               </SpaceBetweenRow>
             )}
           </div>
         </Card>
       </DefaultContainer>
     </>
+  );
+}
+
+function RequestCompleted({ actions }: { actions: UIActions }) {
+  return (
+    <span className="flex flex-col gap-2 items-center">
+      <CustomText textVariant="primary">
+        {actions.infoBlock?.displayText?.title}
+      </CustomText>
+      <CustomText textSize="xsm">
+        {actions.infoBlock?.displayText?.description}
+      </CustomText>
+    </span>
+  );
+}
+function InfoBlockInput({
+  actions,
+  onChange,
+  inputValue,
+}: {
+  inputValue: string;
+  actions: UIActions;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <span className="inline-flex flex-col gap-2">
+      <span className="inline-flex items-center gap-6">
+        <CustomText textSize="xsm">{actions.infoBlock?.label}</CustomText>
+        <input
+          value={inputValue}
+          maxLength={15}
+          inputMode="numeric"
+          className="rounded-md w-[15ch] tracking-widest ... px-3 py-1 border border-neutral-200 text-md focus:ring-2  focus:ring-primary-100 font-mono text-neutral-500 focus:border-primary-100 focus:outline-none"
+          onChange={(e) => onChange(e.target.value)}
+        ></input>
+        <Button variant={"primary"} size={"sm"} leadingIcon={undefined}>
+          <CustomText textVariant="primary" className="text-white">
+            {"Payout"}
+          </CustomText>
+        </Button>
+      </span>
+      <CustomText textVariant="primary" textSize="xsm">
+        {actions.infoBlock?.helperText}
+      </CustomText>
+    </span>
+  );
+}
+
+function InfoBlockDisplay({ actions }: { actions: UIActions }) {
+  return (
+    <span className="flex justify-end bg-grey">
+      <span className="inline-flex flex-col gap-2">
+        <span className="inline-flex gap-4 items-center">
+          <CustomText textSize="xsm">{actions.infoBlock?.label}</CustomText>{" "}
+          <CustomText
+            className="bg-secondary-100 px-3 py-1 rounded-md"
+            textVariant="primary"
+          >
+            {actions.infoBlock?.value}
+          </CustomText>
+        </span>
+        <CustomText textVariant="primary" textSize="xsm">
+          {actions.infoBlock?.helperText}
+        </CustomText>
+      </span>
+    </span>
   );
 }
 
@@ -102,30 +199,38 @@ function PageTopSection() {
   );
 }
 
-function Deails({ trip, parcel }: { trip: Trip; parcel: Parcel }) {
-  const totalPrice = parcel.details.pricePerKg * parcel.details.weight;
+function Deails({
+  trip,
+  parcel,
+  isSenderInitiator,
+}: {
+  trip: Trip;
+  parcel: Parcel;
+  isSenderInitiator: boolean;
+}) {
   return (
     <div className="flex flex-col">
-      <SpaceBetweenRow>
-        <Parcel parcel={parcel} />
-        <Trip trip={trip} />
-      </SpaceBetweenRow>
-      <LineDivider />
-      <Price
-        unitPriceLabel={"Price per kg"}
-        unitPrice={parcel.details.pricePerKg}
-        totalPrice={totalPrice}
-        location={parcel.details.origin}
-      />
+      <span className="grid grid-cols-2 gap-6">
+        <Trip trip={trip} isSenderInitiator={isSenderInitiator} />
+        <Parcel parcel={parcel} isSenderInitiator={isSenderInitiator} />
+      </span>
     </div>
   );
 }
 
-function Parcel({ parcel }: { parcel: Parcel }) {
+function Parcel({
+  parcel,
+  isSenderInitiator,
+}: {
+  parcel: Parcel;
+  isSenderInitiator: boolean;
+}) {
+  const cardLabel = isSenderInitiator ? "Your parcel" : "Parcel";
+  const totalPrice = parcel.details.pricePerKg * parcel.details.weight;
   return (
     <Stack>
       <span>
-        <CardLabel variant={"parcel"} label={"Your parcel"} />
+        <CardLabel variant={"parcel"} label={cardLabel} />
         <ButtomSpacer />
       </span>
       <CategoryRow tag={"sender"} category={parcel.details.category} />
@@ -134,14 +239,27 @@ function Parcel({ parcel }: { parcel: Parcel }) {
         destination={parcel.details.destination}
       />
       <WeightRow weight={parcel.details.weight} />
+      <Price
+        unitPriceLabel={"Price per kg"}
+        unitPrice={parcel.details.pricePerKg}
+        totalPrice={totalPrice}
+        location={parcel.details.origin}
+      />
     </Stack>
   );
 }
-function Trip({ trip }: { trip: Trip }) {
+function Trip({
+  trip,
+  isSenderInitiator,
+}: {
+  trip: Trip;
+  isSenderInitiator: boolean;
+}) {
+  const cardLabel = isSenderInitiator ? "Trip" : "Your trip";
   return (
     <Stack>
       <span>
-        <CardLabel variant={"trip"} label={"Trip"} />
+        <CardLabel variant={"trip"} label={cardLabel} />
         <ButtomSpacer />
       </span>
       <TravelerRow name={trip.user.firstName} surname={trip.user.lastName} />
@@ -193,7 +311,7 @@ function CurrentStatus({ title, description, status }: StatusProps) {
           </CustomText>
         </div>
       </span>
-      <CustomText textSize="xsm" as="span" className="pl-[78px]">
+      <CustomText textSize="xsm" as="span">
         {description}
       </CustomText>
     </div>
@@ -209,8 +327,8 @@ function ProgressRow({
 }) {
   const steps = [2, 3, 4, 5, 6] as const;
   return (
-    <div className="flex items-center gap-4 justify-center">
-      {isInitiator && <Step isCompleted={true} stage={progress[1]} />}
+    <div className="flex items-center gap-4">
+      {isInitiator && <Step isCompleted={isInitiator} stage={progress[1]} />}
 
       {steps.map((step) => {
         return (

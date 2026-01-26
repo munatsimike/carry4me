@@ -1,4 +1,6 @@
-import type { InitiatorRole, Status } from "@/app/CarryRequestMapper";
+import type {
+  Status,
+} from "@/app/pages/requests/CarryRequestMapper";
 
 export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>
@@ -94,3 +96,17 @@ export type CarryRequest = {
   totalPriceAtRequest: number;
   currency: "GBP" | "USD" | "EUR";
 };
+
+
+export const ROLES = {
+  SENDER: "SENDER",
+  TRAVELER: "TRAVELER",
+}
+export type InitiatorRole = Role;
+export type Role = typeof ROLES [keyof typeof ROLES]
+
+export const INFOMODES = {
+  DISPLAY: "DISPLAY",
+  INPUT: "INPUT",
+};
+export type InfoBlockMode = (typeof INFOMODES)[keyof typeof INFOMODES];

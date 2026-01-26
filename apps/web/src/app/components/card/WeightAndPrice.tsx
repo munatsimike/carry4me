@@ -8,6 +8,7 @@ type LableValueStackProps = {
   firstValue: string;
   secondLabel: string;
   secondValue: string;
+  className?: string;
 };
 
 type WeightAndPriceProps = {
@@ -24,6 +25,7 @@ type PriceProps = {
   totalPriceLabel?: string;
   totalPrice: number;
   location: Location;
+  className?: string;
 };
 
 export function Price({
@@ -32,15 +34,17 @@ export function Price({
   totalPriceLabel = "Total price : ",
   totalPrice,
   location,
+  className,
 }: PriceProps) {
   const currency = countryToCurrency[location];
   return (
-      <LableValueStack
-        firstLabel={`${unitPriceLabel}${" : "}`}
-        secondLabel={totalPriceLabel}
-        firstValue={`${currency}${unitPrice.toString()}`}
-        secondValue={`${currency}${totalPrice.toString()}`}
-      />
+    <LableValueStack
+      className={className}
+      firstLabel={`${unitPriceLabel}${" : "}`}
+      secondLabel={totalPriceLabel}
+      firstValue={`${currency}${unitPrice.toString()}`}
+      secondValue={`${currency}${totalPrice.toString()}`}
+    />
   );
 }
 
@@ -51,14 +55,14 @@ export function WeightAndPrice({
   price,
   location,
 }: WeightAndPriceProps) {
-   const currency = countryToCurrency[location];
+  const currency = countryToCurrency[location];
   return (
-      <LableValueStack
-        firstLabel={weightLabel}
-        secondLabel={priceLabel}
-        firstValue={`${weight.toString()} ${"kg"}`}
-        secondValue={`${currency}${price.toString()}`}
-      />
+    <LableValueStack
+      firstLabel={weightLabel}
+      secondLabel={priceLabel}
+      firstValue={`${weight.toString()} ${"kg"}`}
+      secondValue={`${currency}${price.toString()}`}
+    />
   );
 }
 
@@ -67,12 +71,13 @@ function LableValueStack({
   secondLabel,
   firstValue,
   secondValue,
+  className,
 }: LableValueStackProps) {
   const labelColor = "neutral";
   const baseLabel = "flex justify-end";
   const textSize = "xsm";
   return (
-    <div className="flex justify-end items-start gap-2">
+    <div className={`flex items-start gap-2 justify-end ${className}`}>
       <div className="flex flex-col gap-2">
         <CustomText
           className={baseLabel}

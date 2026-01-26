@@ -42,7 +42,7 @@ export function Button({
     trip: "bg-trip-50 hover:bg-trip-100",
     tripPrimary: "bg-primary-500 hover:bg-trip-600 text-white",
     neutral: "hover:bg-neutral-50",
-    error: "hover:bg-error-100 hover:text-ink-error"
+    error: "hover:bg-error-100 hover:text-ink-error text-ink-secondary"
   };
 
   const spanBase = "flex items-center " + gap;
