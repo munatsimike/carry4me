@@ -1,6 +1,6 @@
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
-import type { Parcel, Trip } from "@/types/Ui";
+import type { Parcel, UITrip } from "@/types/Ui";
 import LineDivider from "./LineDivider";
 import CardLabel from "./card/CardLabel";
 import { META_ICONS } from "../icons/MetaIcon";
@@ -15,7 +15,7 @@ import TravelerRow from "./TravelerRow";
 import ButtomSpacer from "./BottomSpacer";
 
 type ConfirmRequestProps = {
-  trip: Trip;
+  trip: UITrip;
   parcel: Parcel;
   onClose: () => void;
   isSenderRequesting?: boolean;
@@ -43,7 +43,7 @@ export default function ConfirmRequest({
         </CustomText>
       </div>
       <LineDivider />
-      <Trip trip={trip} isSenderRequesting={isSenderRequesting} />
+      <UITrip trip={trip} isSenderRequesting={isSenderRequesting} />
       <LineDivider />
       <Parcel
         parcel={parcel}
@@ -55,16 +55,15 @@ export default function ConfirmRequest({
         payLoad={parcel}
         primaryAction={() => parcel}
         secondaryAction={onClose}
-        variant="primary"
       />
     </div>
   );
 }
-function Trip({
+function UITrip({
   trip,
   isSenderRequesting,
 }: {
-  trip: Trip;
+  trip: UITrip;
   isSenderRequesting: boolean;
 }) {
   const label = isSenderRequesting ? "Traveler`s Trip" : "Your Trip";

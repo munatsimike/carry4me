@@ -1,4 +1,4 @@
-import type { Trip } from "@/types/Ui";
+import type { UITrip } from "@/types/Ui";
 import { Card } from "../../components/card/Card";
 import CardLabel from "../../components/card/CardLabel";
 import HeartToggle from "@/app/components/HeartToggle";
@@ -13,8 +13,8 @@ import DateRow from "@/app/components/DateRow";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
 
 type TravelerProps = {
-  trip: Trip;
-  onClick: (trip: Trip) => void;
+  trip: UITrip;
+  onClick: (trip: UITrip) => void;
 };
 export default function TravelerCard({ trip, onClick }: TravelerProps) {
   return (

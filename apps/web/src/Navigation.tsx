@@ -2,9 +2,14 @@ import { Link, NavLink } from "react-router-dom";
 
 export default function Navigation({
   userLoggedIn,
+  authChecked,
 }: {
   userLoggedIn: boolean;
+  authChecked: boolean;
 }) {
+  if (!authChecked) {
+    return <NavLinks children={undefined} />; // or GuestNavigation if you prefer
+  }
   return userLoggedIn ? <AuthenticatedNavigation /> : <GuestNavigation />;
 }
 
@@ -33,6 +38,7 @@ function AuthenticatedNavigation() {
   return (
     <NavLinks>
       <Home />
+      <NavItem to="/dashboard">Dashboard</NavItem>
       <NavItem to="/parcels">Parcels</NavItem>
       <NavItem to="/travelers">Trips</NavItem>
       <NavItem to="/requests">Requests</NavItem>

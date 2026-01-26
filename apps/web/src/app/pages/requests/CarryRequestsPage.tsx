@@ -8,7 +8,13 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { INFOMODES, progress, ROLES, type Parcel, type Trip } from "@/types/Ui";
+import {
+  INFOMODES,
+  progress,
+  ROLES,
+  type Parcel,
+  type UITrip,
+} from "@/types/Ui";
 import {
   carryRequests,
   loggedInUserParcel,
@@ -204,14 +210,14 @@ function Deails({
   parcel,
   isSenderInitiator,
 }: {
-  trip: Trip;
+  trip: UITrip;
   parcel: Parcel;
   isSenderInitiator: boolean;
 }) {
   return (
     <div className="flex flex-col">
       <span className="grid grid-cols-2 gap-6">
-        <Trip trip={trip} isSenderInitiator={isSenderInitiator} />
+        <UITrip trip={trip} isSenderInitiator={isSenderInitiator} />
         <Parcel parcel={parcel} isSenderInitiator={isSenderInitiator} />
       </span>
     </div>
@@ -248,11 +254,11 @@ function Parcel({
     </Stack>
   );
 }
-function Trip({
+function UITrip({
   trip,
   isSenderInitiator,
 }: {
-  trip: Trip;
+  trip: UITrip;
   isSenderInitiator: boolean;
 }) {
   const cardLabel = isSenderInitiator ? "Trip" : "Your trip";

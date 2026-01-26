@@ -7,6 +7,7 @@ import SignInPage from "./pages/SignInPage";
 import TravelersPage from "./pages/travelers/TravelersPage";
 import ParcelsPage from "./pages/parcels/ParcelsPage";
 import CarryRequestsPage from "./pages/requests/CarryRequestsPage";
+import DashboardPage from "./pages/DashboardPage";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
       { path: "travelers", element: <TravelersPage /> },
       { path: "parcels", element: <ParcelsPage /> },
       { path: "requests", element: <CarryRequestsPage /> },
+      { path: "dashboard", element: <DashboardPage /> },
     ],
   },
 ]);

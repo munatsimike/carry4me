@@ -1,7 +1,10 @@
 import Navigation from "@/Navigation";
 import { Link, Outlet } from "react-router-dom";
+import { useAuthState } from "./shared/supabase/AuthState";
 
 export default function AppLayout() {
+  const { authChecked, userLoggedIn } = useAuthState();
+
   return (
     <div className="min-h-screen flex flex-col">
       <header>
@@ -10,7 +13,7 @@ export default function AppLayout() {
             <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
           </Link>
 
-          <Navigation userLoggedIn={true} />
+          <Navigation userLoggedIn={userLoggedIn} authChecked={authChecked} />
         </div>
       </header>
 
