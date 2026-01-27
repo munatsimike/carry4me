@@ -3,11 +3,12 @@ import AppLayout from "./layout";
 import NotFoundPage from "./pages/NotFoundPage";
 import HomePage from "./pages/home/HomePage";
 import AboutPage from "./pages/AboutPage";
-import SignInPage from "./pages/SignInPage";
 import TravelersPage from "./pages/travelers/TravelersPage";
 import ParcelsPage from "./pages/parcels/ParcelsPage";
 import CarryRequestsPage from "./pages/requests/CarryRequestsPage";
 import DashboardPage from "./pages/DashboardPage";
+import { AuthModal } from "./shared/AuthModal";
+
 
 export const router = createBrowserRouter([
   {
@@ -17,7 +18,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "about", element: <AboutPage /> },
-      { path: "signin", element: <SignInPage /> },
+      { path: "signin", element: <AuthModal /> },
       { path: "travelers", element: <TravelersPage /> },
       { path: "parcels", element: <ParcelsPage /> },
       { path: "requests", element: <CarryRequestsPage /> },

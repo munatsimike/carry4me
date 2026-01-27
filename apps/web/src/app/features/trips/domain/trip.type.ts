@@ -1,4 +1,3 @@
-
 export type Trip = {
   id: string;
   route: {

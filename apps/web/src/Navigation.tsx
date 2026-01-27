@@ -1,4 +1,5 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { useAuthModal } from "./app/shared/AuthModalContext";
 
 export default function Navigation({
   userLoggedIn,
@@ -8,9 +9,10 @@ export default function Navigation({
   authChecked: boolean;
 }) {
   if (!authChecked) {
-    return <NavLinks children={undefined} />; // or GuestNavigation if you prefer
+    console.log(authChecked)
+    return <GuestNavigation />; 
   }
-  return userLoggedIn ? <AuthenticatedNavigation /> : <GuestNavigation />;
+  return userLoggedIn ? <GuestNavigation /> : <GuestNavigation />;
 }
 
 function NavLinks({ children }: { children: React.ReactNode }) {
@@ -18,21 +20,41 @@ function NavLinks({ children }: { children: React.ReactNode }) {
 }
 
 function GuestNavigation() {
+  const { openAuthModal } = useAuthModal();
+  const location = useLocation();
+
   return (
     <NavLinks>
       <Home />
       <NavItem to="/about">About</NavItem>
       <NavItem to="/about">Contact</NavItem>
-      <NavItem to="/signin">Sign up</NavItem>
-      <Link
-        to="/signin"
+      <button
+        onClick={() =>
+          openAuthModal({
+            mode: "signup",
+            redirectTo: location.pathname,
+          })
+        }
+        className="text-sm font-medium text-gray-700 hover:text-blue-600"
+      >
+        Sign up
+      </button>
+
+      <button
+        onClick={() =>
+          openAuthModal({
+            mode: "signin",
+            redirectTo: location.pathname,
+          })
+        }
         className="rounded-md bg-blue-500 px-4 py-1.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-blue-600"
       >
         Sign in
-      </Link>
+      </button>
     </NavLinks>
   );
 }
+
 
 function AuthenticatedNavigation() {
   return (
@@ -84,3 +106,4 @@ function NavItem({ to, children, end = false }: NavItemProps) {
     </NavLink>
   );
 }
+
