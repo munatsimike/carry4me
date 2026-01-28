@@ -143,7 +143,7 @@ function InfoBlockInput({
           inputMode="numeric"
           className="rounded-md w-[15ch] tracking-widest ... px-3 py-1 border border-neutral-200 text-md focus:ring-2  focus:ring-primary-100 font-mono text-neutral-500 focus:border-primary-100 focus:outline-none"
           onChange={(e) => onChange(e.target.value)}
-        ></input>
+        />
         <Button variant={"primary"} size={"sm"} leadingIcon={undefined}>
           <CustomText textVariant="primary" className="text-white">
             {"Payout"}

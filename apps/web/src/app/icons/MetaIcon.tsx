@@ -6,6 +6,13 @@ import SendArrowIcon from "@/assets/send-arrow-icon.svg?react";
 import ScalIcon from "@/assets/scale-icon.svg?react";
 import SearchIcon from "@/assets/search-icon.svg?react";
 import CheckedCircle from "@/assets/check-circle.svg?react";
+import UserIcon from "@/assets/user-icon.svg?react";
+import EmailIcon from "@/assets/email-icon.svg?react";
+import LockIcon from "@/assets/lock-outlined-icon.svg?react";
+import FacebookIcon from "@/assets/facebook-icon.svg?react";
+import GoogleIcon from "@/assets/google-icon.svg?react";
+import TwitterIcon from "@/assets/twitter-icon.svg?react";
+import AddAccountIcon from "@/assets/add-account-icon.svg?react";
 import TravelerOutLinedIcon from "@/assets/traveler-outlined-icon.svg?react";
 
 export const META_ICONS = {
@@ -18,4 +25,11 @@ export const META_ICONS = {
   scale: ScalIcon,
   checkedIcon: CheckedCircle,
   searchIcon: SearchIcon,
+  userIcon: UserIcon,
+  emailIcon: EmailIcon,
+  lockIcon: LockIcon,
+  facebookIcon: FacebookIcon,
+  googleIcon: GoogleIcon,
+  twitterIcon: TwitterIcon,
+  addAccount: AddAccountIcon
 };

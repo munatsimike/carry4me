@@ -5,7 +5,9 @@ type TextVariant =
   | "neutral"
   | "trip"
   | "onDark"
-  | "selected";
+  | "selected"
+  | "linkText"
+  | "error"
 
 type PrimaryTextProps = {
   as?: "h1" | "h2" | "h3" | "h4" | "p" | "span" | "div";
@@ -29,6 +31,8 @@ export default function Text({
     trip: "font-heading text-ink-trip",
     onDark: "font-heading text-ink-onDark",
     selected: "text-primary-600",
+    error: "font-heading text-ink-error",
+    linkText: "font-heading text-primary-500 "
   };
   const sizes: Record<TextSize, string> = {
     xsm: "text-sm", // 14px

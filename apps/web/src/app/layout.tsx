@@ -1,16 +1,15 @@
 import Navigation from "@/Navigation";
 import { Link, Outlet } from "react-router-dom";
 import { useAuthState } from "./shared/supabase/AuthState";
-import { AuthModalProvider } from "./shared/AuthModalContext";
-import { AuthModal } from "./shared/AuthModal";
-
+import { AuthModalProvider } from "./shared/Authentication/AuthModalContext";
+import { AuthModal } from "./features/login/ui/AuthModal";
 
 export default function AppLayout() {
   const { authChecked, userLoggedIn } = useAuthState();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <AuthModalProvider>
+    <AuthModalProvider>
+      <div className="min-h-screen flex flex-col">
         <header>
           <div className="mx-auto max-w-container px-4 py-4 flex items-center justify-between">
             <Link to="/" className="font-semibold">
@@ -25,12 +24,13 @@ export default function AppLayout() {
           <Outlet />
         </main>
         <AuthModal />
-      </AuthModalProvider>
-      <footer className="border-t">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
-          © {new Date().getFullYear()} Carry4Me
-        </div>
-      </footer>
-    </div>
+
+        <footer className="border-t">
+          <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
+            © {new Date().getFullYear()} Carry4Me
+          </div>
+        </footer>
+      </div>
+    </AuthModalProvider>
   );
 }

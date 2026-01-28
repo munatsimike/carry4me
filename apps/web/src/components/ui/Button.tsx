@@ -1,13 +1,20 @@
-type ButtonVariant = "primary" | "secondary" | "ghost" | "trip" | "tripPrimary"|
-"error" | "neutral";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "trip"
+  | "tripPrimary"
+  | "error"
+  | "neutral";
 type ButtonSize = "xsm" | "sm" | "md" | "lg" | "xl";
 
-type ButtonProps = React.HtmlHTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant: ButtonVariant;
   size: ButtonSize;
   leadingIcon: React.ReactNode;
   trailingIcon?: React.ReactNode;
   subtitle?: React.ReactNode;
+  isBusy?: boolean;
 };
 
 export function Button({
@@ -18,14 +25,15 @@ export function Button({
   leadingIcon,
   trailingIcon,
   children,
+  isBusy = false,
   ...props
 }: ButtonProps) {
   const cornerRadius = "rounded-lg";
   const gap = size === "xl" ? "gap-4" : "gap-2"; // gap between leading, trailing icon and button text
-  const base =
-    "inline-flex items-center justify-center font-thin font-heading " +
-    "transition-all duration-300 " +
-    "hover:-translate-y-0.5 hover:shadow-lg ";
+  const opacityCursor = "opacity-75 cursor-not-allowed";
+  const hoverClass =
+    "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer";
+  const base = `inline-flex items-center justify-center font-thin font-heading ... ${isBusy ? opacityCursor : hoverClass}`;
 
   const sizes: Record<ButtonSize, string> = {
     xsm: "h-8 px-3 rounded-full",
@@ -42,7 +50,7 @@ export function Button({
     trip: "bg-trip-50 hover:bg-trip-100",
     tripPrimary: "bg-primary-500 hover:bg-trip-600 text-white",
     neutral: "hover:bg-neutral-50",
-    error: "hover:bg-error-100 hover:text-ink-error text-ink-secondary"
+    error: "hover:bg-error-100 hover:text-ink-error text-ink-secondary",
   };
 
   const spanBase = "flex items-center " + gap;

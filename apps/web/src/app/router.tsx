@@ -7,8 +7,7 @@ import TravelersPage from "./pages/travelers/TravelersPage";
 import ParcelsPage from "./pages/parcels/ParcelsPage";
 import CarryRequestsPage from "./pages/requests/CarryRequestsPage";
 import DashboardPage from "./pages/DashboardPage";
-import { AuthModal } from "./shared/AuthModal";
-
+import { AuthModal } from "./features/login/ui/AuthModal";
 
 export const router = createBrowserRouter([
   {

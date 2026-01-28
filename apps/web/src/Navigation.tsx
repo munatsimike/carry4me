@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { useAuthModal } from "./app/shared/AuthModalContext";
+import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
 
 export default function Navigation({
   userLoggedIn,
@@ -9,10 +9,9 @@ export default function Navigation({
   authChecked: boolean;
 }) {
   if (!authChecked) {
-    console.log(authChecked)
-    return <GuestNavigation />; 
+    return <GuestNavigation />;
   }
-  return userLoggedIn ? <GuestNavigation /> : <GuestNavigation />;
+  return userLoggedIn ? <AuthenticatedNavigation /> : <GuestNavigation />;
 }
 
 function NavLinks({ children }: { children: React.ReactNode }) {
@@ -54,7 +53,6 @@ function GuestNavigation() {
     </NavLinks>
   );
 }
-
 
 function AuthenticatedNavigation() {
   return (
@@ -106,4 +104,3 @@ function NavItem({ to, children, end = false }: NavItemProps) {
     </NavLink>
   );
 }
-
