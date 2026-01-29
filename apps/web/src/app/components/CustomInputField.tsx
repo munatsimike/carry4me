@@ -7,7 +7,6 @@ type CustomInputFieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   leadingIcon?: React.ReactNode;
   trailingIcon?: React.ReactNode;
-  isPassword?: boolean;
   onIconClick?: (v: boolean) => void;
 };
 
@@ -17,7 +16,6 @@ export default function FloatingInputField({
   leadingIcon,
   trailingIcon,
   className,
-  isPassword = false,
   onIconClick,
   ...props
 }: CustomInputFieldProps) {
@@ -35,7 +33,6 @@ export default function FloatingInputField({
         )}
         <div className="relative flex-1">
           <input
-            type={!isPassword ? "password" : "password"}
             {...props}
             placeholder=" "
             className="peer w-full bg-transparent px-3 py-3 text-md text-neutral-700
@@ -52,7 +49,7 @@ export default function FloatingInputField({
           </label>
         </div>
         {trailingIcon && (
-          <button className="pl-2" onClick={() => onIconClick && onIconClick(!isPassword)}>
+          <button>
             {trailingIcon}
           </button>
         )}

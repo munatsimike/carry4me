@@ -1,8 +1,21 @@
 import { supabase } from "../../../shared/supabase/client";
-import type { AuthRepository, LoginResult } from "../domain/AuthRepository";
+import type {
+  AuthRepository,
+  LoginResult,
+  LogoutResult,
+} from "../domain/AuthRepository";
 import toDomainUser from "./userMapper";
 
-export class LoginRepository implements AuthRepository {
+export class SupabaseAuthRepository implements AuthRepository {
+  async logout(): Promise<LogoutResult> {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  }
+
   async login(email: string, password: string): Promise<LoginResult> {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

@@ -1,10 +1,12 @@
-
 export type User = {
   id: string;
   email: string;
   name?: string;
   avatarUrl?: string;
 };
+export type LogoutResult =
+  | { success: true }
+  | { success: false; error: string };
 
 export type LoginResult =
   | { success: true; user: User }
@@ -12,4 +14,5 @@ export type LoginResult =
 
 export interface AuthRepository {
   login(email: string, password: string): Promise<LoginResult>;
+  logout(): Promise<LogoutResult>;
 }

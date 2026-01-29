@@ -3,7 +3,7 @@ import AppLayout from "./layout";
 import NotFoundPage from "./pages/NotFoundPage";
 import HomePage from "./pages/home/HomePage";
 import AboutPage from "./pages/AboutPage";
-import TravelersPage from "./pages/travelers/TravelersPage";
+import TravelersPage from "./features/trips/ui/TravelersPage";
 import ParcelsPage from "./pages/parcels/ParcelsPage";
 import CarryRequestsPage from "./pages/requests/CarryRequestsPage";
 import DashboardPage from "./pages/DashboardPage";

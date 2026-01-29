@@ -8,6 +8,6 @@ export class LoginUseCase {
   }
 
   async execute(email: string, password: string) {
-    return this.repo.login(email, password);
+    return await this.repo.login(email, password);
   }
 }

@@ -10,13 +10,13 @@ import { InlineRow } from "../../../components/InlineRow";
 import z, { email } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { signInWithProvider } from "../../../shared/supabase/AuthProvider";
+import { useEffect, useMemo, useState } from "react";
+import { signInWithProvider } from "../../../shared/supabase/authOAuthService";
 import Spinner from "../../../components/Spinner";
 import LinkText from "../../../components/text/LinkText";
 import ErrorText from "../../../components/text/ErrorText";
 import { LoginUseCase } from "../application/LoginUseCase";
-import { LoginRepository } from "../data/LoginRepository";
+import { SupabaseAuthRepository } from "../data/LoginRepository";
 
 const schema = z.object({
   email: z
@@ -28,7 +28,6 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
-const repo = new LoginRepository();
 
 export function AuthModal() {
   const {
@@ -47,6 +46,8 @@ export function AuthModal() {
   const { state, closeAuthModal } = useAuthModal();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const repo = useMemo(() => new SupabaseAuthRepository(), []);
+  const useCase = useMemo(() => new LoginUseCase(repo), [repo]);
 
   useEffect(() => {
     if (!state.isOpen) {
@@ -64,7 +65,6 @@ export function AuthModal() {
   const handleSignIn = async (value: FormValues) => {
     const { email, password } = value;
 
-    const useCase = new LoginUseCase(repo);
     const result = await useCase.execute(email, password);
 
     if (!result.success) {
@@ -100,6 +100,7 @@ export function AuthModal() {
 
           <span className="inline-flex flex-col gap-7">
             <FloatingInputField
+              type="text"
               leadingIcon={<SvgIcon size={"sm"} Icon={META_ICONS.emailIcon} />}
               {...register("email")}
               label={"Enter email"}
@@ -107,7 +108,7 @@ export function AuthModal() {
             />
 
             <FloatingInputField
-              isPassword={showPassword}
+              type="password"
               onIconClick={setShowPassword}
               leadingIcon={<SvgIcon size={"sm"} Icon={META_ICONS.lockIcon} />}
               {...register("password")}

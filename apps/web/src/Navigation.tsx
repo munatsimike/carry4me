@@ -1,5 +1,10 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
+
+import { SupabaseAuthRepository } from "./app/features/login/data/LoginRepository";
+
+import { LogoutUseCase } from "./app/features/login/application/LogoutUseCase";
+import { useMemo, useState } from "react";
 
 export default function Navigation({
   userLoggedIn,
@@ -55,6 +60,7 @@ function GuestNavigation() {
 }
 
 function AuthenticatedNavigation() {
+  const [showProfile, setShowProfile] = useState<boolean>(false);
   return (
     <NavLinks>
       <Home />
@@ -62,14 +68,46 @@ function AuthenticatedNavigation() {
       <NavItem to="/parcels">Parcels</NavItem>
       <NavItem to="/travelers">Trips</NavItem>
       <NavItem to="/requests">Requests</NavItem>
-      <Link to="">
-        <img
-          src="/avatar.svg"
-          alt="User profile"
-          className="rounded-full h-9 w-9 border border-neutral-50"
-        />
-      </Link>
+      <span className=" relative inline-flex flex-col">
+        <button onClick={() => setShowProfile(!showProfile)}>
+          <img
+            src="/avatar.svg"
+            alt="User profile"
+            className="rounded-full h-9 w-9 border border-neutral-50"
+          />
+        </button>
+        {showProfile && <LogoutButton />}
+      </span>
     </NavLinks>
+  );
+}
+
+function LogoutButton() {
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const repo = useMemo(() => new SupabaseAuthRepository(), []);
+  const useCase = useMemo(() => new LogoutUseCase(repo), [repo]);
+
+  const logout = async () => {
+    setIsLoggingOut(true);
+    const result = await useCase.execute();
+    setIsLoggingOut(false);
+
+    if (!result.success) {
+      console.log(result.error);
+    }
+
+    if (result.success) {
+      console.log(result.success);
+      navigate("/");
+    }
+  };
+
+  return (
+    <span className="absolute top-10 inline-flex shadow.md rounded-md border border:neutral-50">
+      <button onClick={() => logout()}>Signout</button>
+    </span>
   );
 }
 

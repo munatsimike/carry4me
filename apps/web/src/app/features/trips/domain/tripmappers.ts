@@ -1,6 +1,6 @@
 // features/trips/domain/trip.mappers.ts
 
-import type { Trip } from "./trip.type";
+import type { Trip } from "./Trip";
 
 export function mapTripRowToTrip(row: any): Trip {
   return {

@@ -51,7 +51,7 @@ export type Route = {
   acceptedParcels: Category[];
 };
 
-export type UITrip = {
+export type TestUITrip = {
   id: number;
   user: User;
   route: Route;
@@ -83,7 +83,7 @@ export const progress = {
 
 export type CarryRequest = {
   id: number;
-  trip: UITrip;
+  trip: TestUITrip;
   parcel: Parcel;
 
   status: Status;

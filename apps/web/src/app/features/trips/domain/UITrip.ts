@@ -1,8 +1,6 @@
 // features/trips/data/trips.repository.ts
 
-import type { Trip } from "../domain/trip.type";
-
-export type CreateTripInput = {
+export type UITrip = {
   originCountry: string;
   originCity: string;
   destinationCountry: string;
@@ -12,8 +10,3 @@ export type CreateTripInput = {
   capacityKg: number;
   pricePerKg: number;
 };
-
-export interface TripsRepository {
-  createTrip(input: CreateTripInput): Promise<Trip>;
-  // listTrips(filters): Promise<Trip[]>
-}
