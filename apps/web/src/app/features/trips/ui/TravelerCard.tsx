@@ -1,4 +1,3 @@
-import type { TestUITrip } from "@/types/Ui";
 import { Card } from "../../../components/card/Card";
 import CardLabel from "../../../components/card/CardLabel";
 import HeartToggle from "@/app/components/HeartToggle";
@@ -11,12 +10,15 @@ import RouteRow from "@/app/components/RouteRow";
 import CategoryRow from "@/app/components/CategoryRow";
 import DateRow from "@/app/components/DateRow";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
+import type { Trip } from "../domain/Trip";
 
 type TravelerProps = {
-  trip: TestUITrip;
-  onClick: (trip: TestUITrip) => void;
+  trip: Trip;
+  onClick: (trip: Trip) => void;
 };
+
 export default function TravelerCard({ trip, onClick }: TravelerProps) {
+  const goods = trip.acceptedGoods.map((c) => c.name).join(" ");
   return (
     <Card>
       <SpaceBetweenRow>
@@ -25,21 +27,22 @@ export default function TravelerCard({ trip, onClick }: TravelerProps) {
       </SpaceBetweenRow>
       <User
         tag={"Traveler"}
-        userName={`${trip.user.firstName.charAt(0)}${"."} ${trip.user.lastName}`}
+        userName={`${trip.user.fullName?.charAt(0)}${"."} ${trip.user.fullName?.split(" ")[1]}`}
       />
       <LineDivider />
       <Stack>
         <RouteRow
-          origin={trip.route.origin}
-          destination={trip.route.destination}
+          origin={trip.route.originCountry}
+          destination={trip.route.destinationCountry}
         />
-        <DateRow date={trip.route.date.toDateString()} />
-        <CategoryRow category={trip.route.acceptedParcels} />
+        <DateRow date={trip.departDate} />
+
+        <CategoryRow category={goods} />
       </Stack>
       <LineDivider />
       <WeightAndPrice
-        weight={trip.route.availableWeight}
-        price={trip.route.pricePerKg}
+        weight={trip.capacityKg}
+        price={trip.pricePerKg}
         location={"UK"}
       />
       <LineDivider />

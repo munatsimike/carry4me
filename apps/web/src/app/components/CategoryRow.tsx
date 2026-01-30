@@ -7,12 +7,12 @@ export default function CategoryRow({
   category,
   tag = "traveler",
 }: {
-  category: string[];
+  category: string;
   tag?: Tag;
 }) {
   return tag === "traveler" ? (
-    <LableTextRow label={"Accepts : "} text={category.join("|")} />
+    <LableTextRow label={"Accepts : "} text={category} />
   ) : (
-    <IconTextRow Icon={META_ICONS.parcelBox} label={category.join("|")} />
+    <IconTextRow Icon={META_ICONS.parcelBox} label={category} />
   );
 }

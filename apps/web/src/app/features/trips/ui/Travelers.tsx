@@ -1,9 +1,10 @@
-import type { UITrip } from "@/types/Ui";
+
+import type { Trip } from "../domain/Trip";
 import TravelerCard from "./TravelerCard";
 
 export type TravlersProps = {
-  trips: UITrip[];
-  onClick: (trip: UITrip) => void;
+  trips: Trip[];
+  onClick: (trip: Trip) => void;
 };
 export default function Travelers({ trips, onClick }: TravlersProps) {
   return (

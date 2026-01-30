@@ -13,7 +13,7 @@ export function Card({
   cornerRadiusClass = "rounded-2xl",
 }: CardProps) {
   const hoverClass = hover
-    ? "transition hover:shadow-neutral-200 hover:border-tertiary-100"
+    ? "transition hover:shadow-primary-100 hover:border-primary-300"
     : "";
   return (
     <div

@@ -1,7 +1,8 @@
-select column_default
-from information_schema.columns
-where table_schema = 'public'
-  and table_name = 'trips'
-  and column_name = 'traveler_user_id';
+select
+  conname,
+  pg_get_constraintdef(oid) as definition
+from pg_constraint
+where conrelid = 'public.parcels'::regclass
+  and contype = 'f';
 
 

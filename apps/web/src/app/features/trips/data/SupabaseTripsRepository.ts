@@ -1,12 +1,31 @@
 import { supabase } from "@/app/shared/supabase/client";
-import type {
-
-  TripsRepository,
-} from "../domain/TripRepository";
-import type { UITrip } from "../domain/UITrip";
+import type { TripsRepository } from "../domain/TripRepository";
+import type { CreateTrip } from "../domain/CreateTrip";
+import type { Trip } from "../domain/Trip";
+import { mapTripRowToTrip } from "../domain/tripmappers";
 
 export class SupabaseTripsRepository implements TripsRepository {
-  async createTrip(userId: string, input: UITrip) {
+  async listTrips(): Promise<Trip[]> {
+    const { data } = await supabase
+      .from("trips")
+      .select(
+        `
+      *,
+      traveler:profiles(full_name),
+      trip_accepted_categories(
+        category:goods_categories(
+          id,
+          slug,
+          name
+        )
+      )
+    `
+      )
+      .throwOnError();
+
+    return (data ?? []).map(mapTripRowToTrip);
+  }
+  async createTrip(userId: string, input: CreateTrip) {
     await supabase
       .from("trips")
       .insert({

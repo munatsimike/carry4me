@@ -1,7 +1,6 @@
 export type User = {
   id: string;
-  email: string;
-  name?: string;
+  fullName?: string;
   avatarUrl?: string;
 };
 export type LogoutResult =

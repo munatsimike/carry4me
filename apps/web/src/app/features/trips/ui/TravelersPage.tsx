@@ -1,19 +1,23 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import Travelers from "./Travelers";
-import { travelers, loggedInUserParcel } from "../../../Data";
-import type { TestUITrip } from "@/types/Ui";
-import { useMemo, useState } from "react";
+import { loggedInUserParcel } from "../../../Data";
+import { useEffect, useMemo, useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import PageSection from "@/app/components/PageSection";
 import Search from "@/app/components/Search";
 import { CreateTripUseCase } from "../application/CreateTripUsecase";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
-import type { UITrip } from "../domain/UITrip";
+import type { CreateTrip } from "../domain/CreateTrip";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { User } from "@supabase/supabase-js";
+import { FetchTripUseCase } from "../application/FetchTripsUseCase";
+import type { Trip } from "../domain/Trip";
+import { GetGoodsUseCase } from "../../goods/application/GetGoodsUseCase";
+import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepository";
+import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
 
-const trip: UITrip = {
+const trip: CreateTrip = {
   originCountry: "UK",
   originCity: "London",
   destinationCountry: "Zimbabwe",
@@ -27,7 +31,32 @@ const trip: UITrip = {
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
   const useCase = useMemo(() => new CreateTripUseCase(repo), [repo]);
-  const [selectedTrip, setTrip] = useState<TestUITrip | null>(null);
+  const fetchTripsUseCase = useMemo(() => new FetchTripUseCase(repo), [repo]);
+  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
+  const getGoodsUseCase = useMemo(
+    () => new GetGoodsUseCase(goodsRepo),
+    [goodsRepo],
+  );
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [goods, setGoods] = useState<GoodsCategory[]>([]);
+
+  useEffect(() => {
+    const loadTrips = async () => {
+      const trips = await fetchTripsUseCase.execute();
+      setTrips(trips);
+    };
+    loadTrips();
+  }, []);
+
+  useEffect(() => {
+    const goodsCategory = async () => {
+      await getGoodsUseCase.execute();
+      setGoods(goods);
+    };
+  
+  }, []);
+
+  const [selectedTrip, setTrip] = useState<Trip | null>(null);
   const [selectedCountry, setCountry] = useState<string>("");
   const [selectedCity, setCity] = useState<string>("");
   const onClose = () => setTrip(null);
@@ -52,7 +81,7 @@ export default function TravelersPage() {
             create trip
           </button>
         )}
-        <Travelers trips={travelers} onClick={setTrip} />
+        <Travelers trips={trips} onClick={setTrip} />
       </DefaultContainer>
       {selectedTrip && (
         <CustomModal onClose={onClose}>

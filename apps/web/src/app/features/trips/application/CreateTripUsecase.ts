@@ -1,7 +1,5 @@
-import type {
-  TripsRepository,
-} from "../domain/TripRepository";
-import type { UITrip } from "../domain/UITrip";
+import type { TripsRepository } from "../domain/TripRepository";
+import type { CreateTrip } from "../domain/CreateTrip";
 
 export class CreateTripUseCase {
   private repo: TripsRepository;
@@ -9,12 +7,12 @@ export class CreateTripUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string, input: UITrip): Promise<void> {
+  async execute(userId: string, input: CreateTrip): Promise<void> {
     this.validate(input);
     await this.repo.createTrip(userId, input);
   }
 
-  private validate(input: UITrip) {
+  private validate(input: CreateTrip) {
     if (input.capacityKg <= 0) {
       throw new Error("Capacity should be greater than 0");
     }

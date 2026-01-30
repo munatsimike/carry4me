@@ -1,12 +1,17 @@
+import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
+import type { User } from "../../login/domain/AuthRepository";
+
 export type Trip = {
   id: string;
+  user: User;
+  acceptedGoods: GoodsCategory[]
   route: {
     originCountry: string;
     originCity: string;
     destinationCountry: string;
     destinationCity: string;
-    pricePerKg: number;
   };
+  pricePerKg: number;
   capacityKg: number;
   departDate: string;
   arriveDate?: string | null;

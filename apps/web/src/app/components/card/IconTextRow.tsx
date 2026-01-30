@@ -23,7 +23,9 @@ export default function IconTextRow({
       <span>
         <SvgIcon size={iconSize} Icon={Icon} color={iconColor} />
       </span>
-      <CustomText textVariant="primary">{label}</CustomText>
+      <CustomText textSize={"xsm"} textVariant="primary">
+        {label}
+      </CustomText>
     </div>
   );
 }
