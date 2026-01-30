@@ -1,7 +1,7 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import Travelers from "./Travelers";
 import { loggedInUserParcel } from "../../../Data";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import PageSection from "@/app/components/PageSection";
@@ -15,7 +15,8 @@ import { FetchTripUseCase } from "../application/FetchTripsUseCase";
 import type { Trip } from "../domain/Trip";
 import { GetGoodsUseCase } from "../../goods/application/GetGoodsUseCase";
 import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepository";
-import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
+import { useAsync } from "@/app/hookes/useAsync";
+import { isNetworkError } from "@/app/util/isNetworkError";
 
 const trip: CreateTrip = {
   originCountry: "UK",
@@ -37,29 +38,34 @@ export default function TravelersPage() {
     () => new GetGoodsUseCase(goodsRepo),
     [goodsRepo],
   );
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [goods, setGoods] = useState<GoodsCategory[]>([]);
 
-  useEffect(() => {
-    const loadTrips = async () => {
-      const trips = await fetchTripsUseCase.execute();
-      setTrips(trips);
-    };
-    loadTrips();
-  }, []);
+  // fetch trips
+  const {
+    data: trips,
+    error,
+    isLoading,
+  } = useAsync(() => fetchTripsUseCase.execute(), []);
+  if (error) {
+    if (isNetworkError(error)) {
+      <CustomModal> {<p>error</p>}</CustomModal>;
+    }
+  }
 
-  useEffect(() => {
-    const goodsCategory = async () => {
-      await getGoodsUseCase.execute();
-      setGoods(goods);
-    };
-  
-  }, []);
+  // fetch goods categories
+  const {
+    data: goods,
+    isLoading: processing,
+    error: categoryError,
+  } = useAsync(() => getGoodsUseCase.execute(), []);
+
+  if (categoryError) {
+  }
 
   const [selectedTrip, setTrip] = useState<Trip | null>(null);
   const [selectedCountry, setCountry] = useState<string>("");
   const [selectedCity, setCity] = useState<string>("");
   const onClose = () => setTrip(null);
+  // get logged in user session data
   const { user, loading } = useAuth();
   return (
     <>
@@ -81,7 +87,7 @@ export default function TravelersPage() {
             create trip
           </button>
         )}
-        <Travelers trips={trips} onClick={setTrip} />
+        {trips && <Travelers trips={trips} onClick={setTrip} />}
       </DefaultContainer>
       {selectedTrip && (
         <CustomModal onClose={onClose}>

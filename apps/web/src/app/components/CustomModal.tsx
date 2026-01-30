@@ -1,6 +1,6 @@
 type ModalProps = {
   children: React.ReactNode;
-  onClose: () => void;
+  onClose?: () => void;
 };
 
 export default function CustomModal({ children, onClose }: ModalProps) {

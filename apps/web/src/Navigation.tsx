@@ -5,6 +5,8 @@ import { SupabaseAuthRepository } from "./app/features/login/data/LoginRepositor
 
 import { LogoutUseCase } from "./app/features/login/application/LogoutUseCase";
 import { useMemo, useState } from "react";
+import { useAsync } from "./app/hookes/useAsync";
+import { isNetworkError } from "./app/util/isNetworkError";
 
 export default function Navigation({
   userLoggedIn,
@@ -84,21 +86,21 @@ function AuthenticatedNavigation() {
 
 function LogoutButton() {
   const navigate = useNavigate();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
   const repo = useMemo(() => new SupabaseAuthRepository(), []);
   const useCase = useMemo(() => new LogoutUseCase(repo), [repo]);
 
   const logout = async () => {
-    setIsLoggingOut(true);
-    const result = await useCase.execute();
-    setIsLoggingOut(false);
+    const {
+      data: result,
+      error,
+      isLoading,
+    } = useAsync(() => useCase.execute(), []);
 
-    if (!result.success) {
-      console.log(result.error);
+    if (error) {
+      if (isNetworkError(error)) console.log("michael" + error); // to be completed
     }
 
-    if (result.success) {
+    if (result) {
       console.log(result.success);
       navigate("/");
     }
