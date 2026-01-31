@@ -6,11 +6,7 @@ import CustomModal from "@/app/components/CustomModal";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import PageSection from "@/app/components/PageSection";
 import Search from "@/app/components/Search";
-import { CreateTripUseCase } from "../application/CreateTripUsecase";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
-import type { CreateTrip } from "../domain/CreateTrip";
-import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import type { User } from "@supabase/supabase-js";
 import { FetchTripUseCase } from "../application/FetchTripsUseCase";
 import type { Trip } from "../domain/Trip";
 import { GetGoodsUseCase } from "../../goods/application/GetGoodsUseCase";
@@ -18,20 +14,9 @@ import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepositor
 import { useAsync } from "@/app/hookes/useAsync";
 import { isNetworkError } from "@/app/util/isNetworkError";
 
-const trip: CreateTrip = {
-  originCountry: "UK",
-  originCity: "London",
-  destinationCountry: "Zimbabwe",
-  destinationCity: "Harare",
-  departureDate: "2026-01-26",
-  arrivalDate: null,
-  capacityKg: 8,
-  pricePerKg: 20,
-};
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
-  const useCase = useMemo(() => new CreateTripUseCase(repo), [repo]);
   const fetchTripsUseCase = useMemo(() => new FetchTripUseCase(repo), [repo]);
   const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
   const getGoodsUseCase = useMemo(
@@ -65,8 +50,6 @@ export default function TravelersPage() {
   const [selectedCountry, setCountry] = useState<string>("");
   const [selectedCity, setCity] = useState<string>("");
   const onClose = () => setTrip(null);
-  // get logged in user session data
-  const { user, loading } = useAuth();
   return (
     <>
       <PageSection>
@@ -81,12 +64,6 @@ export default function TravelersPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {user && (
-          <button disabled={loading || !user?.id} onClick={() => createTrip}>
-            {" "}
-            create trip
-          </button>
-        )}
         {trips && <Travelers trips={trips} onClick={setTrip} />}
       </DefaultContainer>
       {selectedTrip && (
@@ -102,19 +79,4 @@ export default function TravelersPage() {
       )}
     </>
   );
-}
-
-async function createTrip(
-  loading: boolean,
-  user: User,
-  useCase: CreateTripUseCase,
-) {
-  if (loading || !user) return;
-
-  try {
-    await useCase.execute(user.id, trip);
-    console.log("Trip created");
-  } catch (e) {
-    console.error(e);
-  }
 }

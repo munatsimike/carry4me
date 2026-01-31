@@ -83,7 +83,7 @@ export function AuthModal() {
   return (
     <CustomModal onClose={closeAuthModal}>
       <form onSubmit={handleSubmit(handleSignIn)}>
-        <div className="flex flex-col min-w-[500px] shrink-0 items-center gap-10 m-6">
+        <div className="flex flex-col min-w-[500px] shrink-0 items-center gap-10">
           <div className="relative flex items-center justify-center">
             <span className="inline-flex flex-col gap-2">
               <SvgIcon size={"xxl"} Icon={META_ICONS.userIcon} />

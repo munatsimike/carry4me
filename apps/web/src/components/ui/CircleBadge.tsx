@@ -1,5 +1,5 @@
 type CircleSize = "sm" | "md" | "lg" | "xl";
-type CirleBgColor = "trip" | "parcel" | "neutral" | "primary";
+export type CirleBgColor = "trip" | "parcel" | "neutral" | "primary";
 
 type CirleBadgeProps = {
   size?: CircleSize;

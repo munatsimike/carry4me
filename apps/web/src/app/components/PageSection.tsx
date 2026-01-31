@@ -1,7 +1,17 @@
+type Align = "left" | "right" | "center";
+
 export default function PageSection({
   children,
+  align = "center",
 }: {
+  align?: Align;
   children: React.ReactNode;
 }) {
-  return <div className="flex flex-col items-center mb-10">{children}</div>;
+  const alignment: Record<Align, string> = {
+    left: "",
+    right: "items-right",
+    center: "items-center",
+  };
+  const base = `flex flex-col mb-10 ${alignment[align]}`;
+  return <div className={base}>{children}</div>;
 }

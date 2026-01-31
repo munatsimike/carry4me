@@ -1,13 +1,13 @@
 import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "./layout";
 import NotFoundPage from "./pages/NotFoundPage";
-import HomePage from "./pages/home/HomePage";
 import AboutPage from "./pages/AboutPage";
 import TravelersPage from "./features/trips/ui/TravelersPage";
 import ParcelsPage from "./pages/parcels/ParcelsPage";
 import CarryRequestsPage from "./pages/requests/CarryRequestsPage";
-import DashboardPage from "./pages/DashboardPage";
+import DashboardPage from "./features/dashboard/DashboardPage";
 import { AuthModal } from "./features/login/ui/AuthModal";
+import HomePage from "./features/home/HomePage";
 
 export const router = createBrowserRouter([
   {

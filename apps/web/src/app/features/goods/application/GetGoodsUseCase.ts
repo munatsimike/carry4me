@@ -10,7 +10,6 @@ export class GetGoodsUseCase {
 
   async execute(): Promise<GoodsCategory[]> {
     const result = await this.repo.list();
-        console.log(result)
     return result;
   }
 }

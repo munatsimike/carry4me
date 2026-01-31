@@ -1,4 +1,4 @@
-type ButtonVariant =
+export type ButtonVariant =
   | "primary"
   | "secondary"
   | "ghost"
@@ -6,12 +6,12 @@ type ButtonVariant =
   | "tripPrimary"
   | "error"
   | "neutral";
-type ButtonSize = "xsm" | "sm" | "md" | "lg" | "xl";
+type ButtonSize = "xsm" | "sm" | "md" | "lg" | "xl" | "xxl";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant: ButtonVariant;
   size: ButtonSize;
-  leadingIcon: React.ReactNode;
+  leadingIcon?: React.ReactNode;
   trailingIcon?: React.ReactNode;
   subtitle?: React.ReactNode;
   isBusy?: boolean;
@@ -29,11 +29,14 @@ export function Button({
   ...props
 }: ButtonProps) {
   const cornerRadius = "rounded-lg";
-  const gap = size === "xl" ? "gap-4" : "gap-2"; // gap between leading, trailing icon and button text
   const opacityCursor = "opacity-75 cursor-not-allowed";
   const hoverClass =
     "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer";
-  const base = `inline-flex items-center justify-center font-thin font-heading ... ${isBusy ? opacityCursor : hoverClass}`;
+
+  // IMPORTANT: remove justify-center, because we want internal layout to decide positioning
+  const base = `relative inline-flex items-center font-thin font-heading ${
+    isBusy ? opacityCursor : hoverClass
+  }`;
 
   const sizes: Record<ButtonSize, string> = {
     xsm: "h-8 px-3 rounded-full",
@@ -41,6 +44,7 @@ export function Button({
     md: "h-10 px-4 " + cornerRadius,
     lg: "h-12 px-2.5 " + cornerRadius,
     xl: "h-[80px] px-3 rounded-xl",
+    xxl: "h-[110px] min-w-[200px] px-3 rounded-xl",
   };
 
   const variants: Record<ButtonVariant, string> = {
@@ -53,26 +57,40 @@ export function Button({
     error: "hover:bg-error-100 hover:text-ink-error text-ink-secondary",
   };
 
-  const spanBase = "flex items-center " + gap;
+  // gap should only be between leading and text, NOT including trailing
+  const gap = size === "xl" ? "gap-4" : "gap-2";
+
   return (
     <button
       {...props}
       className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}
     >
-      <span className={spanBase}>
-        {leadingIcon ? (
-          <span className="inline-flex">{leadingIcon}</span>
-        ) : null}
-        <span className="flex flex-col">
-          <span>{children}</span>
-          {subtitle ? (
-            <span className="text-ink-secondary text-[14px]">{subtitle}</span>
-          ) : null}
+      {/* Full-width layout container */}
+      <span className="flex w-full items-center gap-2">
+        {/* Left slot */}
+        {leadingIcon && (
+          <span className="inline-flex shrink-0">
+            {leadingIcon ?? null}
+          </span>
+        )}
+
+        {/* Center slot */}
+        <span className={`flex flex-1 items-center justify-center ${gap}`}>
+          {/* If you want the icon to sit next to text but still centered, move leadingIcon here instead */}
+          <span className="flex flex-col items-center">
+            <span>{children}</span>
+            {subtitle ? (
+              <span className="text-ink-secondary text-[14px]">{subtitle}</span>
+            ) : null}
+          </span>
         </span>
 
-        {trailingIcon ? (
-          <span className="inline-flex">{trailingIcon}</span>
-        ) : null}
+        {/* Right slot */}
+        {trailingIcon && (
+          <span className="inline-flex justify-end">
+            {trailingIcon ?? null}
+          </span>
+        )}
       </span>
     </button>
   );

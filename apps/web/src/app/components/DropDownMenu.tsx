@@ -1,10 +1,10 @@
 type DropDownMenuProps = {
   placeholder: string;
   menuItems: string[];
-  name?: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  roundedClassName?: string;
 };
 
 export default function DropDownMenu({
@@ -12,11 +12,12 @@ export default function DropDownMenu({
   placeholder,
   value,
   onChange,
+  roundedClassName = "rounded-full",
   disabled = false,
 }: DropDownMenuProps) {
   return (
     <select
-      className={`px-3 py-2 rounded-full bg-white border border:primary-500 text-sm ${value === "" ? "text-ink-secondary" : "text-ink-primary"}`}
+      className={`px-3 py-2 ${roundedClassName}  bg-white border text-sm ${value === "" ? "text-ink-secondary" : "text-ink-primary"}`}
       disabled={disabled}
       value={value}
       onChange={(e) => onChange(e.target.value)}

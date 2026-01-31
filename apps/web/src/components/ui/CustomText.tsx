@@ -1,5 +1,5 @@
 type TextSize = "xxxl" | "xxl" | "xl" | "lg" | "md" | "sm" | "xsm" | "display";
-type TextVariant =
+export type TextVariant =
   | "primary"
   | "secondary"
   | "neutral"
@@ -25,8 +25,8 @@ export default function Text({
   textVariant = "secondary",
 }: PrimaryTextProps) {
   const variants: Record<TextVariant, string> = {
-    primary: "font-heading text-ink-primary",
-    secondary: "text-ink-secondary",
+    primary: "font-heading text-ink-primary whitespace-normal break-words",
+    secondary: "text-ink-secondary whitespace-normal break-words",
     neutral: "text-neutral-300",
     trip: "font-heading text-ink-trip",
     onDark: "font-heading text-ink-onDark",

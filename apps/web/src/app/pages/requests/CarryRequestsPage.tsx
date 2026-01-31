@@ -13,7 +13,7 @@ import {
   progress,
   ROLES,
   type Parcel,
-  type UITrip,
+  type TestUITrip,
 } from "@/types/Ui";
 import {
   carryRequests,
@@ -179,23 +179,29 @@ function InfoBlockDisplay({ actions }: { actions: UIActions }) {
 }
 
 function PageTopSection() {
-  const [selectedId, setSelected] = useState<string>("Ongoing(1)");
-  const tabs = ["Ongoing(1)", "Completed(0)", "Cancelled(0)", "Declined(0)"];
+  const [selectedId, setSelected] = useState<string>("ongoing");
+  const tabs = [
+    { id: "ongoing", label: "Ongoing", count: 1 },
+    { id: "completed", label: "Completed", count: 0 },
+    { id: "cancelled", label: "Cancelled", count: 0 },
+    { id: "declined", label: "Declined", count: 0 },
+  ];
   return (
     <PageSection>
       <span className="inline-flex bg-canvas rounded-full py-2 px-10">
         <div className="flex gap-6">
           {tabs.map((item) => (
             <span
-              className={`relative cursor-pointer pb-2 ${item === selectedId ? "after:absolute after:bottom-0 after:left-0 after:h-1 after:w-full after:bg-primary-500 after:rounded-full" : ""} `}
-              onClick={() => setSelected(item)}
+              key={item.id}
+              className={`relative cursor-pointer pb-2 ${item.id === selectedId ? "after:absolute after:bottom-0 after:left-0 after:h-1 after:w-full after:bg-primary-500 after:rounded-full" : ""} `}
+              onClick={() => setSelected(item.id)}
             >
               <CustomText
                 textSize="xsm"
-                key={item}
-                textVariant={`${item === selectedId ? "selected" : "secondary"}`}
+                key={item.id}
+                textVariant={`${item.id === selectedId ? "selected" : "secondary"}`}
               >
-                {item}
+                {item.label}
               </CustomText>
             </span>
           ))}
@@ -210,7 +216,7 @@ function Deails({
   parcel,
   isSenderInitiator,
 }: {
-  trip: UITrip;
+  trip: TestUITrip;
   parcel: Parcel;
   isSenderInitiator: boolean;
 }) {
@@ -239,7 +245,10 @@ function Parcel({
         <CardLabel variant={"parcel"} label={cardLabel} />
         <ButtomSpacer />
       </span>
-      <CategoryRow tag={"sender"} category={parcel.details.category} />
+      <CategoryRow
+        tag={"sender"}
+        category={parcel.details.category.join(" ")}
+      />
       <RouteRow
         origin={parcel.details.origin}
         destination={parcel.details.destination}
@@ -258,7 +267,7 @@ function UITrip({
   trip,
   isSenderInitiator,
 }: {
-  trip: UITrip;
+  trip: TestUITrip;
   isSenderInitiator: boolean;
 }) {
   const cardLabel = isSenderInitiator ? "Trip" : "Your trip";
@@ -339,6 +348,7 @@ function ProgressRow({
       {steps.map((step) => {
         return (
           <Step
+            key={step}
             isCompleted={step - 1 < currentStep && currentStep !== 1}
             stage={progress[step]}
           />
