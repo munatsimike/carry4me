@@ -56,15 +56,13 @@ export default function DashboardPage() {
         <ActionButtons
           onClick={setShowModal}
           btnText="Post a trip"
-          badgeColor="onDark"
-          iconColor="primary"
+          iconColor="onDark"
           icon={META_ICONS.travelerIcon}
         />
         <ActionButtons
           btnText="Post a parcel"
           btnVariant="secondary"
           textVariant="primary"
-          badgeColor="onDark"
         />
         <Link to={"/parcels"}>
           <ActionButtons
@@ -72,7 +70,6 @@ export default function DashboardPage() {
             btnVariant="outline"
             iconColor="primary"
             icon={META_ICONS.travelerIcon}
-            badgeColor="secondary"
             showArrow={true}
             textVariant="primary"
           />
@@ -84,7 +81,6 @@ export default function DashboardPage() {
             btnText="Browse parcels"
             btnVariant="outline"
             textVariant="primary"
-            badgeColor="secondary"
           />
         </Link>
       </div>

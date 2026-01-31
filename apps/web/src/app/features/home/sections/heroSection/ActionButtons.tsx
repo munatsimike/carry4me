@@ -12,7 +12,7 @@ export default function ActionButtons() {
   const titleSize = "md";
   const subtitleSize = "xsm";
   return (
-    <section className="flex gap-10 mt-16">
+    <section className="flex flex-wrap gap-10 m-24 ">
       <Link to={"/parcels"}>
         <Button
           subtitle={
@@ -25,9 +25,9 @@ export default function ActionButtons() {
           leadingIcon={
             <CircleBadge
               size={size}
-              bgColor="onDark"
+              bgColor="transparent"
               children={
-                <SvgIcon size="xl" Icon={ParcelIcon} color={"primary"} />
+                <SvgIcon size="xl" Icon={ParcelIcon} color={"onDark"} />
               }
             />
           }
@@ -47,7 +47,7 @@ export default function ActionButtons() {
               as="span"
               textSize={subtitleSize}
             >
-              see who is traveling home soon.
+              See who is traveling home soon.
             </CustomText>
           }
           variant={"secondary"}
@@ -55,7 +55,7 @@ export default function ActionButtons() {
           leadingIcon={
             <CircleBadge
               size={size}
-              bgColor="onDark"
+              bgColor="transparent"
               children={
                 <SvgIcon size="xl" Icon={TravelerIcon} color={"primary"} />
               }

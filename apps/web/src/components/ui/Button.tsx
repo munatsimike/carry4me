@@ -43,13 +43,13 @@ export function Button({
     sm: "h-9 px-3 " + cornerRadius,
     md: "h-10 px-4 " + cornerRadius,
     lg: "h-12 px-2.5 " + cornerRadius,
-    xl: "h-[80px] px-3 rounded-xl",
+    xl: "h-[80px] max-w-sm px-3 rounded-xl",
     xxl: "h-[110px] min-w-[200px] px-3 rounded-xl",
   };
 
   const variants: Record<ButtonVariant, string> = {
     primary: "bg-primary-500 hover:bg-primary-600 text-white font-heading",
-    secondary: "bg-secondary-50 hover:bg-secondary-100",
+    secondary: "bg-secondary-100 hover:bg-secondary-2-00",
     ghost: "bg-transparent hover:bg-tertiary-50",
     tripPrimary: "bg-primary-500 hover:bg-trip-600 text-white",
     neutral: "hover:bg-neutral-50",

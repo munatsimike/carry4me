@@ -19,7 +19,7 @@ export function HeroSection() {
         {subHeading}
       </SubHeading>
       <ActionButtons />
-      <StatsSection stats={stats} />
+      {/* <StatsSection stats={stats} />*/}
     </DefualtContianer>
   );
 }
