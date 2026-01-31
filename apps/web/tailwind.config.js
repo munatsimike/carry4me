@@ -9,6 +9,7 @@ export default {
           100: "#DBEAFE",
           200: "#E4EDFD",
           300: "#D5E4FF",
+          400: "#588bd3",
           500: "#3B82F6", // main brand blue
           600: "#2563EB",
           700: "#1D4ED8",
@@ -16,6 +17,7 @@ export default {
         secondary: {
           50: "#E6F1FF",
           100: "#D8E9FF",
+          200: "#dce7f1",
           500: "#4F5B67",
         },
         tertiary: {

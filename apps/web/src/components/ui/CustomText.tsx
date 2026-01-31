@@ -3,7 +3,7 @@ export type TextVariant =
   | "primary"
   | "secondary"
   | "neutral"
-  | "trip"
+  | "success"
   | "onDark"
   | "selected"
   | "linkText"
@@ -28,7 +28,7 @@ export default function Text({
     primary: "font-heading text-ink-primary whitespace-normal break-words",
     secondary: "text-ink-secondary whitespace-normal break-words",
     neutral: "text-neutral-300",
-    trip: "font-heading text-ink-trip",
+    success: "font-heading text-ink-trip",
     onDark: "font-heading text-ink-onDark",
     selected: "text-primary-600",
     error: "font-heading text-ink-error",

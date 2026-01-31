@@ -2,9 +2,9 @@ export type ButtonVariant =
   | "primary"
   | "secondary"
   | "ghost"
-  | "trip"
   | "tripPrimary"
   | "error"
+  | "outline"
   | "neutral";
 type ButtonSize = "xsm" | "sm" | "md" | "lg" | "xl" | "xxl";
 
@@ -51,9 +51,9 @@ export function Button({
     primary: "bg-primary-500 hover:bg-primary-600 text-white font-heading",
     secondary: "bg-secondary-50 hover:bg-secondary-100",
     ghost: "bg-transparent hover:bg-tertiary-50",
-    trip: "bg-trip-50 hover:bg-trip-100",
     tripPrimary: "bg-primary-500 hover:bg-trip-600 text-white",
     neutral: "hover:bg-neutral-50",
+    outline: "hover:bg-neutral-100 border bg-neutral-50",
     error: "hover:bg-error-100 hover:text-ink-error text-ink-secondary",
   };
 
@@ -69,9 +69,7 @@ export function Button({
       <span className="flex w-full items-center gap-2">
         {/* Left slot */}
         {leadingIcon && (
-          <span className="inline-flex shrink-0">
-            {leadingIcon ?? null}
-          </span>
+          <span className="inline-flex shrink-0">{leadingIcon ?? null}</span>
         )}
 
         {/* Center slot */}

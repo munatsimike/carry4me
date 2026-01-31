@@ -14,6 +14,18 @@ import type { SvgIconComponent } from "@/types/Ui";
 import CreatParcelModal from "./CreateParcel";
 import Greeting from "@/app/components/Greeting";
 
+type ActionButtonsProps = {
+  showArrow?: boolean;
+  btnVariant?: ButtonVariant;
+  textVariant?: TextVariant;
+  iconColor?: IconColor;
+  badgeColor?: CirleBgColor;
+  btnText: string;
+  icon?: SvgIconComponent;
+  onClick?: (v: boolean) => void;
+  showModal?: boolean;
+};
+
 export default function DashboardPage() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -32,30 +44,35 @@ export default function DashboardPage() {
 
   if (!authChecked) return null;
 
-  
   return (
     <DefaultContainer>
       <PageSection align="left">
         <CustomText as="span" textVariant="primary" textSize="xl">
-         {<Greeting user="Michael!"/>}
+          {<Greeting user="Michael!" />}
         </CustomText>
       </PageSection>
+
       <div className="flex flex-wrap justify-center items-center gap-6">
         <ActionButtons
           onClick={setShowModal}
           btnText="Post a trip"
-          iconColor="trip"
-          badgeColor="trip"
+          badgeColor="onDark"
+          iconColor="primary"
           icon={META_ICONS.travelerIcon}
         />
-        <ActionButtons btnText="Post a parcel" />
+        <ActionButtons
+          btnText="Post a parcel"
+          btnVariant="secondary"
+          textVariant="primary"
+          badgeColor="onDark"
+        />
         <Link to={"/parcels"}>
           <ActionButtons
             btnText="Browse trips"
-            btnVariant="secondary"
-            iconColor="trip"
+            btnVariant="outline"
+            iconColor="primary"
             icon={META_ICONS.travelerIcon}
-            badgeColor="trip"
+            badgeColor="secondary"
             showArrow={true}
             textVariant="primary"
           />
@@ -65,35 +82,29 @@ export default function DashboardPage() {
           <ActionButtons
             showArrow={true}
             btnText="Browse parcels"
-            btnVariant="secondary"
+            btnVariant="outline"
             textVariant="primary"
+            badgeColor="secondary"
           />
         </Link>
       </div>
+
       {showModal && (
         <CreatParcelModal showModal={showModal} setShowModal={setShowModal} />
       )}
     </DefaultContainer>
   );
 
-  type ActionButtonsProps = {
-    showArrow?: boolean;
-    btnVariant?: ButtonVariant;
-    textVariant?: TextVariant;
-    iconColor?: IconColor;
-    badgeColor?: CirleBgColor;
-    btnText: string;
-    icon?: SvgIconComponent;
-    onClick?: (v: boolean) => void;
-    showModal?: boolean;
-  };
+  function StatsSection() {
+    return <div></div>;
+  }
 
   function ActionButtons({
     showArrow = false,
     btnVariant = "primary",
     textVariant = "onDark",
     iconColor = "primary",
-    badgeColor = "primary",
+    badgeColor = "transparent",
     btnText,
     icon = META_ICONS.parcelBox,
     onClick,

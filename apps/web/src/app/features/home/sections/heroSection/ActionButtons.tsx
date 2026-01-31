@@ -16,16 +16,16 @@ export default function ActionButtons() {
       <Link to={"/parcels"}>
         <Button
           subtitle={
-            <CustomText as="span" textSize={subtitleSize}>
-              See items that need to be sent.
+            <CustomText textVariant="onDark" as="span" textSize={subtitleSize}>
+              See what people need sent home.
             </CustomText>
           }
-          variant={"secondary"}
+          variant={"primary"}
           size={size}
           leadingIcon={
             <CircleBadge
               size={size}
-              bgColor="parcel"
+              bgColor="onDark"
               children={
                 <SvgIcon size="xl" Icon={ParcelIcon} color={"primary"} />
               }
@@ -33,7 +33,7 @@ export default function ActionButtons() {
           }
           trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} />}
         >
-          <CustomText as="span" textSize={titleSize} textVariant="primary">
+          <CustomText as="span" textSize={titleSize} textVariant="onDark">
             Browse Parcels
           </CustomText>
         </Button>
@@ -42,8 +42,12 @@ export default function ActionButtons() {
       <Link to={"/travelers"}>
         <Button
           subtitle={
-            <CustomText as="span" textSize={subtitleSize}>
-              See who is traveling soon.
+            <CustomText
+              textVariant="secondary"
+              as="span"
+              textSize={subtitleSize}
+            >
+              see who is traveling home soon.
             </CustomText>
           }
           variant={"secondary"}
@@ -51,9 +55,9 @@ export default function ActionButtons() {
           leadingIcon={
             <CircleBadge
               size={size}
-              bgColor="trip"
+              bgColor="onDark"
               children={
-                <SvgIcon size="xl" Icon={TravelerIcon} color={"trip"} />
+                <SvgIcon size="xl" Icon={TravelerIcon} color={"primary"} />
               }
             />
           }

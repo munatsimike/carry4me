@@ -28,7 +28,7 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       />
       <LineDivider />
       <Stack>
-        <CategoryRow tag={"sender"} category={parcel.details.category} />
+        <CategoryRow tag={"sender"} category={parcel.details.category.join()} />
         <RouteRow
           origin={parcel.details.origin}
           destination={parcel.details.destination}
@@ -47,7 +47,6 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       <SendRequestBtn
         payLoad={parcel}
         primaryAction={onClick}
-        variant="primary"
       />
     </Card>
   );

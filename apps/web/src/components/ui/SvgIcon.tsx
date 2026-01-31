@@ -4,7 +4,6 @@ export type IconSize = "xsm" | "sm" | "md" | "lg" | "xl" | "xxl";
 export type IconColor =
   | "primary"
   | "tertiary"
-  | "trip"
   | "success"
   | "pending"
   | "inactive"
@@ -32,11 +31,10 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
   const iconColors: Record<IconColor, string> = {
     primary: "text-primary-500",
     tertiary: "text-secondary-50",
-    trip: "text-trip-500",
+    success: "text-trip-500",
     neutral: "text-neutral-300",
     grey: "text-neutral-200",
     onDark: "text-white",
-    success: "text-status-success",
     pending: "text-status-pending",
     inactive: "text-status-error",
   };

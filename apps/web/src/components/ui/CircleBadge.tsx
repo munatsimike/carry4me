@@ -1,5 +1,5 @@
 type CircleSize = "sm" | "md" | "lg" | "xl";
-export type CirleBgColor = "trip" | "parcel" | "neutral" | "primary";
+export type CirleBgColor = "success" | "secondary" | "neutral" | "primary" | "onDark"| "transparent";
 
 type CirleBadgeProps = {
   size?: CircleSize;
@@ -25,10 +25,12 @@ export function CircleBadge({
   };
 
   const bgColors: Record<CirleBgColor, string> = {
-    trip: "bg-trip-50",
-    parcel: "bg-secondary-100",
+    success: "bg-trip-50",
+    secondary: "bg-secondary-100",
     neutral: "bg-neutral-100",
-    primary: "bg-primary-200"
+    primary: "bg-primary-100",
+    onDark: "bg-white",
+    transparent: "bg-transparent"
   };
   return (
     <span
