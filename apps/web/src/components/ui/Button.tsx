@@ -43,8 +43,8 @@ export function Button({
     sm: "h-9 px-3 " + cornerRadius,
     md: "h-10 px-4 " + cornerRadius,
     lg: "h-12 px-2.5 " + cornerRadius,
-    xl: "h-[80px] max-w-sm px-3 rounded-xl",
-    xxl: "h-[110px] min-w-[200px] px-3 rounded-xl",
+    xl: "h-[85px] max-w-sm px-3 rounded-xl",
+    xxl: "h-[110px] min-w-[200px] px-3 rounded-xl motion-safe:animate-scale-in",
   };
 
   const variants: Record<ButtonVariant, string> = {

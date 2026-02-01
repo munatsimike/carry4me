@@ -222,7 +222,7 @@ function Deails({
 }) {
   return (
     <div className="flex flex-col">
-      <span className="grid grid-cols-2 gap-6">
+      <span className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <UITrip trip={trip} isSenderInitiator={isSenderInitiator} />
         <Parcel parcel={parcel} isSenderInitiator={isSenderInitiator} />
       </span>
@@ -342,7 +342,7 @@ function ProgressRow({
 }) {
   const steps = [2, 3, 4, 5, 6] as const;
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center gap-4 bg-neutral-50 py-4 px-2">
       {isInitiator && <Step isCompleted={isInitiator} stage={progress[1]} />}
 
       {steps.map((step) => {
@@ -365,7 +365,7 @@ function Step({
   isCompleted?: boolean;
   stage: string;
 }) {
-  const iconColor = isCompleted ? "trip" : "grey";
+  const iconColor = isCompleted ? "success" : "grey";
   const textColor = isCompleted ? "primary" : "secondary";
   return (
     <span className="inline-flex gap-2 items-center">

@@ -5,7 +5,6 @@ type CardProps = {
   hover?: boolean;
 };
 
-// resuable card layout
 export function Card({
   children,
   className,
@@ -13,12 +12,14 @@ export function Card({
   cornerRadiusClass = "rounded-2xl",
 }: CardProps) {
   const hoverClass = hover
-    ? "transition hover:shadow-primary-300 hover:border-primary-300"
+    ? "transition-shadow transition-colors duration-200 hover:shadow-primary-300 hover:border-primary-300"
     : "";
+
   return (
     <div
       className={[
-        "rounded-2xl border border-neutral-50 bg-white p-5 shadow-sm",
+        "border border-neutral-50 bg-white p-5 shadow-sm",
+        "motion-safe:animate-scale-in",
         cornerRadiusClass,
         hoverClass,
         className ?? "",

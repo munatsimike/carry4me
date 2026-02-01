@@ -20,7 +20,7 @@ export default function Greeting({ user }: { user?: string }) {
   }, []);
 
   return (
-    <h1>
+    <h1 >
       {greeting} {","} {user}
     </h1>
   );

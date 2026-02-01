@@ -1,8 +1,25 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+
   theme: {
     extend: {
+      // ...your existing extend
+      keyframes: {
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(.98)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+      },
+      animation: {
+        "fade-in": "fade-in 250ms ease-out",
+        "scale-in": "scale-in 250ms ease-out",
+        "slide-up-fade": "slide-up-fade 250ms ease-out"
+      },
       colors: {
         primary: {
           50: "#EFF6FF",
