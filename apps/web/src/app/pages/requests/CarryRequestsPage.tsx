@@ -55,7 +55,7 @@ export default function CarryRequestsPage() {
           cornerRadiusClass="rounded-1xl"
           className="px-6 w-full max-w-[950px] mx-auto"
         >
-          <div className="flex flex-col gap-3 mx-2">
+          <div className="flex flex-col gap-2 mx-2">
             <Header
               title={requestUI.title}
               description={requestUI.description}
@@ -342,7 +342,7 @@ function ProgressRow({
 }) {
   const steps = [2, 3, 4, 5, 6] as const;
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-neutral-50 py-4 px-2">
+    <div className="flex flex-wrap items-center gap-4 bg-neutral-50 py-4 px-3 shadow-sm">
       {isInitiator && <Step isCompleted={isInitiator} stage={progress[1]} />}
 
       {steps.map((step) => {

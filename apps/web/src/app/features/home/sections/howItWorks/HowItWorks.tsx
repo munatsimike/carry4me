@@ -18,13 +18,20 @@ export default function HowItWorks({ steps }: StepsPros) {
         ))}
       </section>
 
-      <div className="flex justify-center py-6">
+      <div className="flex justify-center pt-6">
         <Button
+          className="w-full sm:w-auto"
           variant={"secondary"}
           size={"lg"}
-          leadingIcon={<SvgIcon size={"lg"} Icon={META_ICONS.addAccount} />}
+          leadingIcon={
+            <SvgIcon
+              color={"primary"}
+              size={"lg"}
+              Icon={META_ICONS.addAccount}
+            />
+          }
         >
-          <CustomText textVariant="primary">{"Sign up"}</CustomText>
+          <CustomText textVariant="primary">{"Sign up to get started"}</CustomText>
         </Button>
       </div>
     </DefaultContainer>

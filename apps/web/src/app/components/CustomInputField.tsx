@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ErrorText from "./text/ErrorText";
+import { baseInput, cn } from "../lib/cn";
 
 type CustomInputFieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
   className?: string;
@@ -22,9 +23,8 @@ export default function FloatingInputField({
   return (
     <div>
       <div
-        className={`relative flex items-center rounded-md border border-neutral-200 font-inter text-sm text-neutral-300
-        focus-within:ring-1 focus-within:ring-primary-100 focus-within:border-primary-100
-        ${className ?? ""}`}
+        className={cn(`relative flex items-center ${baseInput}
+        ${className ?? ""}`)}
       >
         {leadingIcon && (
           <div className="pl-3 text-neutral-400 flex items-center">
@@ -48,11 +48,7 @@ export default function FloatingInputField({
             {label}
           </label>
         </div>
-        {trailingIcon && (
-          <button>
-            {trailingIcon}
-          </button>
-        )}
+        {trailingIcon && <button>{trailingIcon}</button>}
       </div>
       <ErrorText error={error} />
     </div>

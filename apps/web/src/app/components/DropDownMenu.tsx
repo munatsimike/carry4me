@@ -1,32 +1,41 @@
+import type { UseFormRegisterReturn } from "react-hook-form";
+
 type DropDownMenuProps = {
   placeholder: string;
   menuItems: string[];
-  value: string;
-  onChange: (value: string) => void;
   disabled?: boolean;
-  roundedClassName?: string;
+  className?: string;
+  register: UseFormRegisterReturn;
+  value?: string;
 };
 
 export default function DropDownMenu({
   menuItems,
   placeholder,
-  value,
-  onChange,
-  roundedClassName = "rounded-full",
   disabled = false,
+  className = "rounded-full",
+  register,
+  value = "",
 }: DropDownMenuProps) {
+  const isPlaceholder = !value;
+  const textSize = "text-[14px]";
+  const textVariant = `text-ink-primary ${textSize}`;
+
   return (
     <select
-      className={`px-3 py-2 ${roundedClassName}  bg-white border text-sm ${value === "" ? "text-ink-secondary" : "text-ink-primary"}`}
+      defaultValue=""
       disabled={disabled}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+      className={`px-3 py-2 ${className} ${
+        isPlaceholder ? `text-ink-secondary ${textSize}` : textVariant
+      }`}
+      {...register}
     >
-      <option value="" disabled hidden>
+      <option value="" disabled>
         {placeholder}
       </option>
+
       {menuItems.map((item) => (
-        <option key={item} value={item}>
+        <option key={item} value={item} className={textVariant}>
           {item}
         </option>
       ))}

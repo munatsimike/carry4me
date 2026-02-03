@@ -11,7 +11,7 @@ import Plane from "@/assets/plane-filled.svg?react";
 import LoveHands from "@/assets/lovehands.svg?react";
 import User from "@/assets/userwithtick.svg?react";
 import Lock from "@/assets/lock.svg?react";
-import type { CarryRequest, InfoItem, Parcel, UITrip } from "@/types/Ui";
+import type { CarryRequest, InfoItem, Parcel, TestUITrip} from "@/types/Ui";
 
 export const steps = [
   {
@@ -171,7 +171,7 @@ export const questions: InfoItem[] = [
   },
 ];
 
-export const travelers: UITrip[] = [
+export const travelers: TestUITrip[] = [
   {
     user: {
       firstName: "Tariro",
@@ -239,7 +239,7 @@ export const loggedInUserParcel: Parcel = {
   id: 9,
 };
 
-export const loggedInUserTrip: UITrip = {
+export const loggedInUserTrip: TestUITrip = {
   user: {
     firstName: "Tanyaradzwa",
     lastName: "Mupangavanhu",

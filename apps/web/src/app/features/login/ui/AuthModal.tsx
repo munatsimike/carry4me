@@ -190,7 +190,6 @@ function LoginButton({ isFormSubmitting }: { isFormSubmitting: boolean }) {
       variant={"primary"}
       size={"md"}
       isBusy={isFormSubmitting}
-      leadingIcon={undefined}
     >
       <span className="inline-flex items-center gap-2 min-w-[150px] justify-center">
         {isFormSubmitting && <Spinner />}

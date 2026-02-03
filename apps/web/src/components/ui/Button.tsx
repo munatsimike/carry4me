@@ -25,6 +25,7 @@ export function Button({
   leadingIcon,
   trailingIcon,
   children,
+  type = "button",
   isBusy = false,
   ...props
 }: ButtonProps) {
@@ -42,7 +43,7 @@ export function Button({
     xsm: "h-8 px-3 rounded-full",
     sm: "h-9 px-3 " + cornerRadius,
     md: "h-10 px-4 " + cornerRadius,
-    lg: "h-12 px-2.5 " + cornerRadius,
+    lg: "h-14 px-4 " + cornerRadius,
     xl: "h-[85px] max-w-sm px-3 rounded-xl",
     xxl: "h-[110px] min-w-[200px] px-3 rounded-xl motion-safe:animate-scale-in",
   };
@@ -66,7 +67,7 @@ export function Button({
       className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}
     >
       {/* Full-width layout container */}
-      <span className="flex w-full items-center gap-2">
+      <span className="flex w-full items-center gap-3">
         {/* Left slot */}
         {leadingIcon && (
           <span className="inline-flex shrink-0">{leadingIcon ?? null}</span>
