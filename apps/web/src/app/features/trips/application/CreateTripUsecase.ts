@@ -7,9 +7,9 @@ export class CreateTripUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string, input: CreateTrip): Promise<void> {
+  async execute(userId: string, input: CreateTrip): Promise<string> {
     this.validate(input);
-    await this.repo.createTrip(userId, input);
+   return this.repo.createTrip(userId, input);
   }
 
   private validate(input: CreateTrip) {

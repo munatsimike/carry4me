@@ -16,9 +16,14 @@ import ErrorText from "@/app/components/text/ErrorText";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
 import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
 import { useMemo } from "react";
-import { AnimatePresence } from "framer-motion";
 import FormModal from "./components/FormModal";
 import RouteFieldRow from "./components/RouteFieldRow";
+import toCreateTrip from "../goods/domain/toCreateTripMapper";
+import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
+import { SaveGoodsUseCase } from "../goods/application/SaveGoodsUseCase";
+import type { UserGoods } from "../goods/domain/UserGoods";
+import { useAsync } from "@/app/hookes/useAsync";
+import toGoodsMapper from "../goods/domain/toGoodsMapper";
 
 export const tripSchema = z.object({
   originCountry: z.string().min(3, "minimum of three letters is required"),
@@ -52,9 +57,15 @@ export default function CreatTripModal({
   showModal: boolean;
   setModalState: (v: boolean) => void;
 }) {
+  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
+  const saveGoodsUseCase = useMemo(
+    () => new SaveGoodsUseCase(goodsRepo),
+    [goodsRepo],
+  );
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
   const useCase = useMemo(() => new CreateTripUseCase(repo), [repo]);
   const { userId, userLoggedIn } = useAuthState();
+
   const {
     register,
     handleSubmit,
@@ -83,7 +94,10 @@ export default function CreatTripModal({
 
   const onValid = async (values: FormFields) => {
     if (!userLoggedIn || !userId) return;
-    await createTrip(values, userId, useCase, () => setModalState(false));
+    const data = await createTrip(values, userId, useCase, () =>
+      setModalState(false),
+    );
+    SaveGoodsCategories(saveGoodsUseCase, toGoodsMapper(data, selectedIds));
   };
 
   const countryValue = watch("originCountry");
@@ -327,25 +341,26 @@ async function createTrip(
   userId: string,
   useCase: CreateTripUseCase,
   onCloseModal: () => void,
-) {
+): Promise<string> {
   try {
-    await useCase.execute(userId, toCreateTrip(values));
+    const tripId = await useCase.execute(userId, toCreateTrip(values));
     console.log("Trip saved");
     onCloseModal();
+    return tripId; //
   } catch (e) {
     console.log("Saving failed", e);
+    throw e;
   }
 }
 
-function toCreateTrip(formValues: FormFields): CreateTrip {
-  return {
-    originCountry: formValues.originCountry,
-    originCity: formValues.originCity,
-    destinationCountry: formValues.destinationCountry,
-    destinationCity: formValues.destinationCity,
-    departureDate: formValues.departureDate,
-    arrivalDate: null,
-    capacityKg: formValues.availableSpace,
-    pricePerKg: formValues.pricePerKg,
-  };
+async function SaveGoodsCategories(
+  saveGoodsUseCase: SaveGoodsUseCase,
+  goods: UserGoods,
+) {
+  try {
+    await saveGoodsUseCase.execute(goods);
+    console.log("Goods saved");
+  } catch (e) {
+    console.log(e);
+  }
 }

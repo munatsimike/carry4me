@@ -18,7 +18,7 @@ type TravelerProps = {
 };
 
 export default function TravelerCard({ trip, onClick }: TravelerProps) {
-  const goods = trip.acceptedGoods.map((c) => c.name).join(" ");
+  const goods = trip.acceptedGoods.map((c) => c.name).join(" | ");
   return (
     <Card>
       <SpaceBetweenRow>

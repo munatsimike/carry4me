@@ -32,7 +32,7 @@ export default function TravelersPage() {
   } = useAsync(() => fetchTripsUseCase.execute(), []);
   if (error) {
     if (isNetworkError(error)) {
-      <CustomModal> {<p>error</p>}</CustomModal>;
+    
     }
   }
 

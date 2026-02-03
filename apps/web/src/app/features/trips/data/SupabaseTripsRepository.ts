@@ -19,14 +19,14 @@ export class SupabaseTripsRepository implements TripsRepository {
           name
         )
       )
-    `
+    `,
       )
       .throwOnError();
 
     return (data ?? []).map(mapTripRowToTrip);
   }
-  async createTrip(userId: string, input: CreateTrip) {
-    await supabase
+  async createTrip(userId: string, input: CreateTrip): Promise<string> {
+    const { data } = await supabase
       .from("trips")
       .insert({
         traveler_user_id: userId,
@@ -40,6 +40,9 @@ export class SupabaseTripsRepository implements TripsRepository {
         price_per_kg: input.pricePerKg,
         status: "open",
       })
+      .select("id")
+      .single()
       .throwOnError();
+    return data.id;
   }
 }
