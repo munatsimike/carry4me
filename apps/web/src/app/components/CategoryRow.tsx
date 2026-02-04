@@ -13,6 +13,6 @@ export default function CategoryRow({
   return tag === "traveler" ? (
     <LableTextRow label={"Accepts : "} text={category} />
   ) : (
-    <IconTextRow Icon={META_ICONS.parcelBox} label={category} />
+    <IconTextRow Icon={META_ICONS.parcelBoxOutlined} label={category} />
   );
 }

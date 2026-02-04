@@ -69,11 +69,12 @@ export default function TravelersPage() {
       {selectedTrip && (
         <CustomModal onClose={onClose}>
           {
-            <ConfirmRequest
+            <></>
+            /**<ConfirmRequest
               trip={selectedTrip}
               parcel={loggedInUserParcel}
               onClose={onClose}
-            />
+            />**/
           }
         </CustomModal>
       )}

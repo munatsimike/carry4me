@@ -1,5 +1,4 @@
 import { CreateTripUseCase } from "../trips/application/CreateTripUsecase";
-import type { CreateTrip } from "../trips/domain/CreateTrip";
 import FormHeader from "./components/FormHeader";
 import LineDivider from "@/app/components/LineDivider";
 import DateField from "./components/DateField";
@@ -22,7 +21,6 @@ import toCreateTrip from "../goods/domain/toCreateTripMapper";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { SaveGoodsUseCase } from "../goods/application/SaveGoodsUseCase";
 import type { UserGoods } from "../goods/domain/UserGoods";
-import { useAsync } from "@/app/hookes/useAsync";
 import toGoodsMapper from "../goods/domain/toGoodsMapper";
 
 export const tripSchema = z.object({

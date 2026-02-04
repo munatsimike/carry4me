@@ -1,10 +1,10 @@
-import type { SupabaseGoodsRepository } from "../data/SupabaseGoodsRepository";
 import type { GoodsCategory } from "../domain/GoodsCategory";
+import type { GoodsRepository } from "../domain/GoodsRepository";
 
 export class GetGoodsUseCase {
-  repo: SupabaseGoodsRepository;
+  repo: GoodsRepository;
 
-  constructor(repo: SupabaseGoodsRepository) {
+  constructor(repo: GoodsRepository) {
     this.repo = repo;
   }
 

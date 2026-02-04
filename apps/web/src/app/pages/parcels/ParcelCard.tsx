@@ -9,13 +9,14 @@ import HeartToggle from "@/app/components/HeartToggle";
 import LineDivider from "@/app/components/LineDivider";
 import RouteRow from "@/app/components/RouteRow";
 import Stack from "@/app/components/Stack";
-import type { Parcel } from "@/types/Ui";
+import type { Parcel } from "@/app/features/parcels/domain/Parcel";
 
 type ParcelProps = {
   parcel: Parcel;
   onClick: (parcel: Parcel) => void;
 };
 export default function ParcelCard({ parcel, onClick }: ParcelProps) {
+  const categories = parcel.categories.map((x) => x.name).join(" ");
   return (
     <Card>
       <div className="flex justify-between">
@@ -24,30 +25,27 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       </div>
       <User
         tag={"Sender"}
-        userName={`${parcel.user.firstName.charAt(0)}${"."} ${parcel.user.lastName}`}
+        userName={`${parcel.user.fullName?.charAt(0)}${"."} ${parcel.user.fullName}`}
       />
       <LineDivider />
       <Stack>
-        <CategoryRow tag={"sender"} category={parcel.details.category.join()} />
+        <CategoryRow tag={"sender"} category={categories} />
         <RouteRow
-          origin={parcel.details.origin}
-          destination={parcel.details.destination}
+          origin={parcel.route.originCountry}
+          destination={parcel.route.destinationCountry}
         />
         <DateRow date={"Not specific"} />
       </Stack>
       <LineDivider />
       <WeightAndPrice
         weightLabel="Weight : "
-        weight={parcel.details.weight}
+        weight={parcel.weightKg}
         priceLabel="Budget : "
-        price={parcel.details.pricePerKg}
+        price={parcel.budget}
         location={"UK"}
       />
       <LineDivider />
-      <SendRequestBtn
-        payLoad={parcel}
-        primaryAction={onClick}
-      />
+      <SendRequestBtn payLoad={parcel} primaryAction={onClick} />
     </Card>
   );
 }

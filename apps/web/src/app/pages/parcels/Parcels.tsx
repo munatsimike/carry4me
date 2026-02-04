@@ -1,4 +1,5 @@
-import type { Parcel } from "@/types/Ui";
+
+import type { Parcel } from "@/app/features/parcels/domain/Parcel";
 import ParcelCard from "./ParcelCard";
 
 export type ParcelsProps = {

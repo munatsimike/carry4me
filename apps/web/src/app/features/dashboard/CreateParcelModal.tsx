@@ -1,29 +1,77 @@
 import FloatingInputField from "@/app/components/CustomInputField";
-
-import DropDownMenu from "@/app/components/DropDownMenu";
 import LineDivider from "@/app/components/LineDivider";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
-import FormContainer from "./components/FormModal";
+import FormModal from "./components/FormModal";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { SupabaseParcelRepository } from "../parcels/data/SupabaseCreateParcelRepository";
+import { useMemo } from "react";
+import { CreateParcelUseCase } from "../parcels/application/CreateParcelUseCase";
+import type { CreateParcel } from "../parcels/domain/CreateParcel";
+import { useAuthState } from "@/app/shared/supabase/AuthState";
+
+const parcelSchema = z.object({});
+
+type FormFields = z.infer<typeof parcelSchema>;
 
 export default function CreatParcelModal({
-  // showModal,
+  showModal,
   setModalState,
 }: {
   showModal: boolean;
   setModalState: (v: boolean) => void;
 }) {
+  const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
+  const creteParceUseCase = useMemo(
+    () => new CreateParcelUseCase(parcelRepo),
+    [parcelRepo],
+  );
+  const { register, handleSubmit, watch } = useForm<FormFields>({
+    resolver: zodResolver(parcelSchema),
+    defaultValues: {},
+    mode: "onSubmit",
+  });
+
+  const { userId, userLoggedIn } = useAuthState();
+
+  const createParcel: CreateParcel = {
+    senderUserId: userId ? userId : "",
+    originCountry: "Malawi",
+    originCity: "Lilongwe",
+    destinationCountry: "Zimbabwe",
+    destinationCity: "Harare",
+    weightKg: 10,
+    items: [
+      {
+        quantity: 1,
+        description: "jeans",
+      },
+    ],
+  };
+  const onValid = async () => {
+    try {
+      await creteParceUseCase.execute(createParcel);
+      console.log("Parcel created");
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   return (
-    // <FormContainer handleSubmit={()=>void} showModal={showModal} onClick={setModalState}>
-    <>
-      <LineDivider />
-      <LineDivider />
-      <GoodsWeightRow />
-      <LineDivider />
-      <DescriptionQuantityRow />
-      <LineDivider />
-    </>
-    // </FormContainer>
+    <FormModal
+      onSubmit={handleSubmit(onValid)}
+      onClose={() => setModalState(false)}
+    >
+      <>
+        <LineDivider />
+        <LineDivider />
+        <LineDivider />
+        <DescriptionQuantityRow />
+        <LineDivider />
+      </>
+    </FormModal>
   );
 }
 
@@ -51,18 +99,19 @@ function DescriptionQuantityRow() {
     </div>
   );
 }
-
+/*
 function GoodsWeightRow() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-start">
       <div className="flex flex-col gap-3 max-w-sm">
         <CustomText>{"What are you sending?"}</CustomText>
         <DropDownMenu
-          roundedClassName="md"
+        register={..register}
+          className="md"
           placeholder="Select Goods"
           menuItems={[]}
           value=""
-          onChange={() => {}}
+   
         />
       </div>
 
@@ -72,4 +121,4 @@ function GoodsWeightRow() {
       </div>
     </div>
   );
-}
+}*/

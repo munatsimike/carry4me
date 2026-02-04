@@ -3,8 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthState } from "../../shared/supabase/AuthState";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
-import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
-import { CreateTripUseCase } from "../trips/application/CreateTripUsecase";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
 import CustomText, { type TextVariant } from "@/components/ui/CustomText";
 import { CircleBadge, type CirleBgColor } from "@/components/ui/CircleBadge";
@@ -81,15 +79,15 @@ export default function DashboardPage() {
             setModalState={setTripModalState}
           />
         )}
-      </AnimatePresence>
 
-      {/* hide and show post parcel modal */}
-      {showParcelModal && (
-        <CreatParcelModal
-          showModal={showParcelModal}
-          setModalState={setParcelModalState}
-        />
-      )}
+        {/* hide and show post parcel modal */}
+        {showParcelModal && (
+          <CreatParcelModal
+            showModal={showParcelModal}
+            setModalState={setParcelModalState}
+          />
+        )}
+      </AnimatePresence>
     </DefaultContainer>
   );
 }

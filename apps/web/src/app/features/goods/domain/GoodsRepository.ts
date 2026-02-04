@@ -1,7 +1,7 @@
 import type { GoodsCategory } from "./GoodsCategory";
 import type { UserGoods } from "./UserGoods";
 
-export interface GoodsCategoriesRepository {
+export interface GoodsRepository {
   list(): Promise<GoodsCategory[]>;
   getBySlug(slug: string): Promise<GoodsCategory | null>;
   saveGoods(input: UserGoods): Promise<void>;

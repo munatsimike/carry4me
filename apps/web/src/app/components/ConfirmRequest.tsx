@@ -1,6 +1,5 @@
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
-import type { Parcel, UITrip } from "@/types/Ui";
 import LineDivider from "./LineDivider";
 import CardLabel from "./card/CardLabel";
 import { META_ICONS } from "../icons/MetaIcon";
@@ -13,9 +12,11 @@ import DateRow from "./DateRow";
 import RouteRow from "./RouteRow";
 import TravelerRow from "./TravelerRow";
 import ButtomSpacer from "./BottomSpacer";
+import type { Trip } from "../features/trips/domain/Trip";
+import type { Parcel } from "../features/parcels/domain/Parcel";
 
 type ConfirmRequestProps = {
-  trip: UITrip;
+  trip: Trip;
   parcel: Parcel;
   onClose: () => void;
   isSenderRequesting?: boolean;
@@ -48,7 +49,7 @@ export default function ConfirmRequest({
       <Parcel
         parcel={parcel}
         isSenderRequesting={isSenderRequesting}
-        travelerPricePerKg={trip.route.pricePerKg}
+        travelerPricePerKg={trip.pricePerKg}
       />
       <LineDivider />
       <SendRequestBtn
@@ -63,7 +64,7 @@ function UITrip({
   trip,
   isSenderRequesting,
 }: {
-  trip: UITrip;
+  trip: Trip;
   isSenderRequesting: boolean;
 }) {
   const label = isSenderRequesting ? "Traveler`s Trip" : "Your Trip";
@@ -74,12 +75,14 @@ function UITrip({
         <ButtomSpacer />
       </span>
 
-      <TravelerRow name={trip.user.firstName} surname={trip.user.lastName} />
+      {trip.user.fullName && (
+        <TravelerRow name={trip.user.fullName} surname={trip.user?.fullName} />
+      )}
       <RouteRow
-        origin={trip.route.origin}
-        destination={trip.route.destination}
+        origin={trip.route.originCountry}
+        destination={trip.route.destinationCountry}
       />
-      <DateRow date={trip.route.date.toDateString()} />
+      <DateRow date={""} />
     </Stack>
   );
 }
@@ -94,11 +97,9 @@ function Parcel({
   travelerPricePerKg: number;
 }) {
   const label = isSenderRequesting ? "Your parcel" : "Sender`s Parcel";
-  const pricePerKg = isSenderRequesting
-    ? travelerPricePerKg
-    : parcel.details.pricePerKg;
+  const pricePerKg = isSenderRequesting ? travelerPricePerKg : "";
 
-  const totalPrice = pricePerKg * parcel.details.weight;
+  // const totalPrice = pricePerKg * parcel.details.weight;
   return (
     <>
       <Stack>
@@ -106,15 +107,15 @@ function Parcel({
           <CardLabel variant={"parcel"} label={label} />
           <ButtomSpacer />
         </span>
-        <CategoryRow tag={"sender"} category={parcel.details.category} />
-        <WeightRow weight={parcel.details.weight} />
+        <CategoryRow tag={"sender"} category={parcel.categories.join(" ")} />
+        <WeightRow weight={parcel.weightKg} />
       </Stack>
       <LineDivider />
       <Price
         unitPriceLabel={"Price per kg"}
-        unitPrice={pricePerKg}
-        totalPrice={totalPrice}
-        location={parcel.details.origin}
+        unitPrice={0}
+        totalPrice={0}
+        location={"USA"}
       />
     </>
   );
