@@ -21,14 +21,14 @@ type ConfirmRequestProps = {
   trip: Trip;
   parcel: Parcel;
   onClose: () => void;
-  isSenderRequesting?: boolean;
+  isSenderRequesting: boolean;
 };
 
 export default function ConfirmRequest({
   trip,
   parcel,
   onClose,
-  isSenderRequesting = true,
+  isSenderRequesting,
 }: ConfirmRequestProps) {
   return (
     <div className="flex flex-col px-5">

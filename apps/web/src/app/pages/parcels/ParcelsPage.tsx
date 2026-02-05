@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Parcels from "./Parcels";
 import Search from "@/app/components/Search";
 import PageSection from "@/app/components/PageSection";
-import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseCreateParcelRepository";
+import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
 import { useAsync } from "@/app/hookes/useAsync";
 import type { Parcel } from "@/app/features/parcels/domain/Parcel";
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
@@ -80,9 +80,9 @@ export default function ParcelsPage() {
               onClose={onClose}
               isSenderRequesting={userId === selectedParcel.user.id}
             />
-           
           </CustomModal>
-        )}{ console.log(userId === selectedParcel?.user.id)}
+        )}
+        {console.log(userId === selectedParcel?.user.id)}
       </AnimatePresence>
     </>
   );

@@ -12,7 +12,7 @@ import {
   type UseFormSetError,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SupabaseParcelRepository } from "../parcels/data/SupabaseCreateParcelRepository";
+import { SupabaseParcelRepository } from "../parcels/data/SupabaseParcelRepository";
 import { useMemo, useState } from "react";
 import { CreateParcelUseCase } from "../parcels/application/CreateParcelUseCase";
 import type { CreateParcel, ParcelItem } from "../parcels/domain/CreateParcel";

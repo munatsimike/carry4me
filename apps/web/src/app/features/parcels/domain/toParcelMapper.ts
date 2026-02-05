@@ -10,7 +10,7 @@ export function toParcelMapper(row: any): Parcel {
     id: row.id,
     budget: row.price,
     user: {
-      id: row.sender_user_id,
+      id: row.sender.id,
       fullName: row.sender.full_name,
     },
 

@@ -1,4 +1,4 @@
-import type { SupabaseParcelRepository } from "../data/SupabaseCreateParcelRepository";
+import type { SupabaseParcelRepository } from "../data/SupabaseParcelRepository";
 import type { CreateParcel } from "../domain/CreateParcel";
 
 export class CreateParcelUseCase {
