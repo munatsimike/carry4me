@@ -5,13 +5,33 @@ import type { Trip } from "../domain/Trip";
 import { mapTripRowToTrip } from "../domain/tripmappers";
 
 export class SupabaseTripsRepository implements TripsRepository {
+  async fetchTrip(userId: string): Promise<Trip | null> {
+    const { data } = await supabase
+      .from("trips")
+      .select(
+        `*,traveler:profiles(id,full_name),trip_accepted_categories(
+        category:goods_categories(
+          id,
+          slug,
+          name
+        )
+      )`,
+      )
+      .eq("traveler_user_id", userId)
+      .limit(1)
+      .throwOnError();
+
+    if (!data) return null;
+    return mapTripRowToTrip(data[0]);
+  }
+
   async listTrips(): Promise<Trip[]> {
     const { data } = await supabase
       .from("trips")
       .select(
         `
       *,
-      traveler:profiles(full_name),
+      traveler:profiles(id,full_name),
       trip_accepted_categories(
         category:goods_categories(
           id,

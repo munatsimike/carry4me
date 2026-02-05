@@ -1,11 +1,26 @@
 import { motion } from "framer-motion";
 
+type Width = "sm" | "md" | "lg" | "xl" | "2xl";
+
 type Props = {
+  width?: Width;
   children: React.ReactNode;
   onClose: () => void;
 };
 
-export default function CustomModal({ children, onClose }: Props) {
+const sizes: Record<Width, string> = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-xl",
+  "2xl": "max-w-2xl",
+};
+
+export default function CustomModal({
+  children,
+  onClose,
+  width = "2xl",
+}: Props) {
   return (
     <motion.div
       className="fixed inset-0 z-40 flex items-center justify-center px-4"
@@ -23,7 +38,7 @@ export default function CustomModal({ children, onClose }: Props) {
       />
 
       <motion.div
-        className="relative z-50 w-full max-w-2xl rounded-2xl bg-white shadow-xl p-6"
+        className={`relative z-50 w-full ${sizes[width]} rounded-2xl bg-white shadow-xl p-6`}
         initial={{ opacity: 0, scale: 0.96, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 32 }}

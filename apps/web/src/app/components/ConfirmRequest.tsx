@@ -14,6 +14,8 @@ import TravelerRow from "./TravelerRow";
 import ButtomSpacer from "./BottomSpacer";
 import type { Trip } from "../features/trips/domain/Trip";
 import type { Parcel } from "../features/parcels/domain/Parcel";
+import LableTextRow from "./LabelTextRow";
+import IconTextRow from "./card/IconTextRow";
 
 type ConfirmRequestProps = {
   trip: Trip;
@@ -68,6 +70,7 @@ function UITrip({
   isSenderRequesting: boolean;
 }) {
   const label = isSenderRequesting ? "Traveler`s Trip" : "Your Trip";
+  const items = trip.acceptedGoods.map((item) => item.name).join("-");
   return (
     <Stack>
       <span>
@@ -75,14 +78,13 @@ function UITrip({
         <ButtomSpacer />
       </span>
 
-      {trip.user.fullName && (
-        <TravelerRow name={trip.user.fullName} surname={trip.user?.fullName} />
-      )}
+      {<TravelerRow name={trip.user.fullName} />}
       <RouteRow
         origin={trip.route.originCountry}
         destination={trip.route.destinationCountry}
       />
-      <DateRow date={""} />
+      <DateRow date={trip.departDate} />
+      <LableTextRow label={"Accepted Items:"} text={items} />
     </Stack>
   );
 }
@@ -97,9 +99,12 @@ function Parcel({
   travelerPricePerKg: number;
 }) {
   const label = isSenderRequesting ? "Your parcel" : "Sender`s Parcel";
-  const pricePerKg = isSenderRequesting ? travelerPricePerKg : "";
+  const items = parcel.categories.map((item) => item.name).join("-");
+  const pricePerKg = isSenderRequesting
+    ? travelerPricePerKg
+    : parcel.budget / parcel.weightKg;
 
-  // const totalPrice = pricePerKg * parcel.details.weight;
+  const totalPrice = pricePerKg * parcel.weightKg;
   return (
     <>
       <Stack>
@@ -107,14 +112,19 @@ function Parcel({
           <CardLabel variant={"parcel"} label={label} />
           <ButtomSpacer />
         </span>
-        <CategoryRow tag={"sender"} category={parcel.categories.join(" ")} />
+        <IconTextRow
+          iconSize="md"
+          Icon={META_ICONS.userIconOutlined}
+          label={parcel.user.fullName}
+        />
+        <CategoryRow tag={"sender"} category={items} />
         <WeightRow weight={parcel.weightKg} />
       </Stack>
       <LineDivider />
       <Price
         unitPriceLabel={"Price per kg"}
-        unitPrice={0}
-        totalPrice={0}
+        unitPrice={pricePerKg}
+        totalPrice={totalPrice}
         location={"USA"}
       />
     </>

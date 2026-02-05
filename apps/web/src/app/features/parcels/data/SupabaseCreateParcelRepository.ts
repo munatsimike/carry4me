@@ -5,11 +5,21 @@ import type { Parcel } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
 
 export class SupabaseParcelRepository implements ParcelRepository {
-  async fetchParcel(): Promise<Parcel[]> {
+  async fetchParcel(userId: string): Promise<Parcel | null> {
+    const { data } = await supabase
+      .from("parcels")
+      .select("*, sender:profiles(id,full_name, avatar_url")
+      .eq("user_id", userId)
+      .single()
+      .throwOnError();
+    if (!data) return null;
+    return toParcelMapper(data);
+  }
+  async fetchParcels(): Promise<Parcel[]> {
     const { data } = await supabase
       .from("parcels")
       .select(
-        `*, sender:profiles(full_name), parcel_categories(
+        `*, sender:profiles(id,full_name,avatar_url), parcel_categories(
       categories:goods_categories(
       id,
       slug,

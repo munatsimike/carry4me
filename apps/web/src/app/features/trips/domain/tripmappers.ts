@@ -9,8 +9,8 @@ export function mapTripRowToTrip(row: any): Trip {
   return {
     id: row.id,
     user: {
-      id: row.traveler?.id,
-      fullName: row.traveler?.full_name,
+      id: row.traveler.id,
+      fullName: row.traveler.full_name,
     },
     route: {
       originCountry: row.origin_country,

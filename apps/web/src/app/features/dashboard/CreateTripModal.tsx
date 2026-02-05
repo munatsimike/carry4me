@@ -98,6 +98,8 @@ export default function CreatTripModal({
     const data = await createTrip(values, userId, useCase, () =>
       setModalState(false),
     );
+    if (!data) return;
+
     SaveGoodsCategories(saveGoodsUseCase, toGoodsMapper(data, selectedIds));
   };
 

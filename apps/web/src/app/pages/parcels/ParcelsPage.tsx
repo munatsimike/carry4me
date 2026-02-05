@@ -1,35 +1,59 @@
-import ConfirmRequest from "@/app/components/ConfirmRequest";
 import CustomModal from "@/app/components/CustomModal";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-
 import { useMemo, useState } from "react";
 import Parcels from "./Parcels";
-import { loggedInUserTrip, parlecs } from "../../Data";
 import Search from "@/app/components/Search";
 import PageSection from "@/app/components/PageSection";
-import { GetParcelUseCase } from "@/app/features/parcels/application/GetParcelUseCase";
 import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseCreateParcelRepository";
 import { useAsync } from "@/app/hookes/useAsync";
 import type { Parcel } from "@/app/features/parcels/domain/Parcel";
+import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
+import type { Trip } from "@/app/features/trips/domain/Trip";
+import ConfirmRequest from "@/app/components/ConfirmRequest";
+import { useAuthState } from "@/app/shared/supabase/AuthState";
+import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
+import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
+import { AnimatePresence } from "framer-motion";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
-  const getParcelUseCase = useMemo(
-    () => new GetParcelUseCase(parcelRepo),
+  const getParcelsUseCase = useMemo(
+    () => new GetParcelsUseCase(parcelRepo), // all parcels
     [parcelRepo],
   );
 
-  const { data, error, isLoading } = useAsync(() => getParcelUseCase.execute());
+  const tripRepo = useMemo(() => new SupabaseTripsRepository(), []);
+  const getTripUseCase = useMemo(
+    () => new GetTripUseCase(tripRepo), // get a single paarcel
+    [parcelRepo],
+  );
+
+  const { data, error, isLoading } = useAsync(() =>
+    getParcelsUseCase.execute(),
+  );
 
   if (error) {
     console.log(error);
   }
-
   const [selectedParcel, setParcel] = useState<Parcel | null>(null);
   const onClose = () => setParcel(null);
-
   const [selectedCountry, setCountry] = useState<string>("");
   const [selectedCity, setCity] = useState<string>("");
+  const [tripLoaded, setTripLoaded] = useState(false);
+  // trip to matched with a parcel. when a user selects a parcel they should have a trip.
+  const [userTrip, setUserTrip] = useState<Trip | null>(null);
+
+  // hooks must be here, NOT inside if blocks
+  const { userId, userLoggedIn } = useAuthState();
+
+  const handleRequest = async (parcel: Parcel) => {
+    setParcel(parcel);
+    if (!tripLoaded && userId && userLoggedIn) {
+      const trip = await getTripUseCase.execute(userId);
+      setUserTrip(trip);
+      setTripLoaded(true);
+    }
+  };
 
   return (
     <>
@@ -45,22 +69,21 @@ export default function ParcelsPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        <Parcels parcels={data ? data : []} onClick={setParcel} />
+        <Parcels parcels={data ? data : []} onClick={handleRequest} />
       </DefaultContainer>
-      {selectedParcel && (
-        <CustomModal onClose={onClose}>
-          {
-            <></>
-            /*
+      <AnimatePresence>
+        {selectedParcel && userId && userTrip && (
+          <CustomModal width="xl" onClose={onClose}>
             <ConfirmRequest
-              trip={}
+              trip={userTrip}
               parcel={selectedParcel}
               onClose={onClose}
-              isSenderRequesting={false}
-            />*/
-          }
-        </CustomModal>
-      )}
+              isSenderRequesting={userId === selectedParcel.user.id}
+            />
+           
+          </CustomModal>
+        )}{ console.log(userId === selectedParcel?.user.id)}
+      </AnimatePresence>
     </>
   );
 }

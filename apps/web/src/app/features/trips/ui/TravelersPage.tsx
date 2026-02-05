@@ -7,17 +7,16 @@ import ConfirmRequest from "@/app/components/ConfirmRequest";
 import PageSection from "@/app/components/PageSection";
 import Search from "@/app/components/Search";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
-import { FetchTripUseCase } from "../application/FetchTripsUseCase";
+import { GetTripsUseCase } from "../application/GetTripsUseCase";
 import type { Trip } from "../domain/Trip";
 import { GetGoodsUseCase } from "../../goods/application/GetGoodsUseCase";
 import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepository";
 import { useAsync } from "@/app/hookes/useAsync";
 import { isNetworkError } from "@/app/util/isNetworkError";
 
-
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
-  const fetchTripsUseCase = useMemo(() => new FetchTripUseCase(repo), [repo]);
+  const fetchTripsUseCase = useMemo(() => new GetTripsUseCase(repo), [repo]);
   const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
   const getGoodsUseCase = useMemo(
     () => new GetGoodsUseCase(goodsRepo),
@@ -32,7 +31,6 @@ export default function TravelersPage() {
   } = useAsync(() => fetchTripsUseCase.execute(), []);
   if (error) {
     if (isNetworkError(error)) {
-    
     }
   }
 

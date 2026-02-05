@@ -2,7 +2,7 @@ import PlaneIcon from "@/assets/plane.svg?react";
 import CalenderIcon from "@/assets/calender.svg?react";
 import ArrowIcon from "@/assets/arrowLongIcons.svg?react";
 import ArrowSmall from "@/assets/arrow.svg?react";
-import ParcelBoxIcon from "@/assets/parcelIcon.svg?react"
+import ParcelBoxIcon from "@/assets/parcelIcon.svg?react";
 import ParcelBoxOutlined from "@/assets/parcelBoxOutlined.svg?react";
 import SendArrowIcon from "@/assets/send-arrow-icon.svg?react";
 import ScaleIcon from "@/assets/scale-icon.svg?react";
@@ -16,14 +16,15 @@ import GoogleIcon from "@/assets/google-icon.svg?react";
 import TwitterIcon from "@/assets/twitter-icon.svg?react";
 import AddAccountIcon from "@/assets/add-account-icon.svg?react";
 import TravelerOutLinedIcon from "@/assets/traveler-outlined-icon.svg?react";
-import TravelerIcon from "@/assets/travelerIcon.svg?react"
-import AddIcon from "@/assets/plus-icon.svg?react"
+import TravelerIcon from "@/assets/travelerIcon.svg?react";
+import AddIcon from "@/assets/plus-icon.svg?react";
+import UserIconOutlined from "@/assets/user-icon-outlined.svg?react";
 
 export const META_ICONS = {
   planeIcon: PlaneIcon,
   calender: CalenderIcon,
   arrow: ArrowIcon,
-  parcelBox:ParcelBoxIcon,
+  parcelBox: ParcelBoxIcon,
   parcelBoxOutlined: ParcelBoxOutlined,
   sendArrow: SendArrowIcon,
   travelerOutline: TravelerOutLinedIcon,
@@ -39,5 +40,6 @@ export const META_ICONS = {
   twitterIcon: TwitterIcon,
   addAccount: AddAccountIcon,
   arrowSmall: ArrowSmall,
-  addIcon: AddIcon
+  addIcon: AddIcon,
+  userIconOutlined: UserIconOutlined,
 };

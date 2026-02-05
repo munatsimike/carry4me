@@ -3,5 +3,6 @@ import type { Parcel } from "./Parcel";
 
 export interface ParcelRepository {
   createParcel(parcel: CreateParcel): Promise<string>;
-  fetchParcel(): Promise<Parcel[]>;
+  fetchParcels(): Promise<Parcel[]>;
+  fetchParcel(userId: string): Promise<Parcel | null>;
 }

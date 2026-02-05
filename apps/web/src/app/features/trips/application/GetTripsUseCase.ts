@@ -1,7 +1,7 @@
 import type { Trip } from "../domain/Trip";
 import type { TripsRepository } from "../domain/TripRepository";
 
-export class FetchTripUseCase {
+export class GetTripsUseCase {
   private repo: TripsRepository;
 
   constructor(repo: TripsRepository) {

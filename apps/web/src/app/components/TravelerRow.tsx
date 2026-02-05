@@ -6,12 +6,12 @@ export default function TravelerRow({
   surname,
 }: {
   name: string;
-  surname: string;
+  surname?: string;
 }) {
   return (
     <IconTextRow
       Icon={META_ICONS.travelerOutline}
-      label={`${name} ${surname}`}
+      label={`${name} ${surname ? surname : ""}`}
       iconSize="md"
     />
   );

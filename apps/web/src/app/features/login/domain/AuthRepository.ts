@@ -1,6 +1,6 @@
 export type User = {
   id: string;
-  fullName?: string;
+  fullName: string;
   avatarUrl?: string;
 };
 export type LogoutResult =
