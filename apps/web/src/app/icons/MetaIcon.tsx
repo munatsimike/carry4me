@@ -17,6 +17,7 @@ import TwitterIcon from "@/assets/twitter-icon.svg?react";
 import AddAccountIcon from "@/assets/add-account-icon.svg?react";
 import TravelerOutLinedIcon from "@/assets/traveler-outlined-icon.svg?react";
 import TravelerIcon from "@/assets/travelerIcon.svg?react"
+import AddIcon from "@/assets/plus-icon.svg?react"
 
 export const META_ICONS = {
   planeIcon: PlaneIcon,
@@ -37,5 +38,6 @@ export const META_ICONS = {
   googleIcon: GoogleIcon,
   twitterIcon: TwitterIcon,
   addAccount: AddAccountIcon,
-  arrowSmall: ArrowSmall
+  arrowSmall: ArrowSmall,
+  addIcon: AddIcon
 };

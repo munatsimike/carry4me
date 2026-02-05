@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 type Props = {
   children: React.ReactNode;
@@ -23,7 +23,7 @@ export default function CustomModal({ children, onClose }: Props) {
       />
 
       <motion.div
-        className="relative z-50 w-full max-w-2xl rounded-2xl bg-white shadow-xl p-8"
+        className="relative z-50 w-full max-w-2xl rounded-2xl bg-white shadow-xl p-6"
         initial={{ opacity: 0, scale: 0.96, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 32 }}

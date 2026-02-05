@@ -16,7 +16,7 @@ type ParcelProps = {
   onClick: (parcel: Parcel) => void;
 };
 export default function ParcelCard({ parcel, onClick }: ParcelProps) {
-  const categories = parcel.categories.map((x) => x.name).join(" ");
+  const categories = parcel.categories.map((x) => x.name).join(" - ");
   return (
     <Card>
       <div className="flex justify-between">

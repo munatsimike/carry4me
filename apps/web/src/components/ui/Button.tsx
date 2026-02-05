@@ -63,6 +63,7 @@ export function Button({
 
   return (
     <button
+      type={type}
       {...props}
       className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}
     >

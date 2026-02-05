@@ -20,7 +20,7 @@ export default function FormModal({
         id="tripForm"
         onSubmit={onSubmit} // keep your handler too
       >
-        <div className={`flex flex-col gap-4 w-full sm:w-[600px] px-4`}>
+        <div className={`flex flex-col gap-5 w-full sm:w-2xl px-4`}>
           {children}
         </div>
       </form>

@@ -83,6 +83,7 @@ export default function DashboardPage() {
         {/* hide and show post parcel modal */}
         {showParcelModal && (
           <CreatParcelModal
+            goodsCategory={goodsCategory}
             showModal={showParcelModal}
             setModalState={setParcelModalState}
           />
@@ -90,10 +91,6 @@ export default function DashboardPage() {
       </AnimatePresence>
     </DefaultContainer>
   );
-}
-
-function StatsSection() {
-  return <div></div>;
 }
 
 // row with dashboard action buttons- post parcel, post trip, browse trip and browse parcel
@@ -119,7 +116,7 @@ function ActionButtonRow({
         btnVariant="secondary"
         textVariant="primary"
       />
-      <Link to={"/parcels"}>
+      <Link to={"/travelers"}>
         <ActionButton
           btnText="Browse trips"
           btnVariant="outline"
@@ -130,7 +127,7 @@ function ActionButtonRow({
         />
       </Link>
 
-      <Link to={"/travelers"}>
+      <Link to={"/parcels"}>
         <ActionButton
           showArrow={true}
           btnText="Browse parcels"

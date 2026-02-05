@@ -8,7 +8,7 @@ export class SaveGoodsUseCase {
     this.repo = repo;
   }
 
-  async execute(input: UserGoods): Promise<void> {
-    await this.repo.saveGoods(input);
+  async execute(input: UserGoods, isTrip:boolean): Promise<void> {
+    await this.repo.saveGoods(input, isTrip);
   }
 }

@@ -6,8 +6,6 @@ import { InlineRow } from "@/app/components/InlineRow";
 import { baseInput, cn } from "@/app/lib/cn";
 import CustomText from "@/components/ui/CustomText";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import CheckBox from "@/app/components/CheckBox";
-import { Button } from "@/components/ui/Button";
 import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
@@ -22,6 +20,11 @@ import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { SaveGoodsUseCase } from "../goods/application/SaveGoodsUseCase";
 import type { UserGoods } from "../goods/domain/UserGoods";
 import toGoodsMapper from "../goods/domain/toGoodsMapper";
+import AgreeToTermsRow from "./components/AgreeToTermsRow";
+import ActionBtn from "./components/CreateTripParcelActionBtn";
+import GoodsCategoryGrid from "./components/GoodsCategoryGrid";
+import PriceField from "./components/PriceField";
+import WeightField from "./components/WeightField";
 
 export const tripSchema = z.object({
   originCountry: z.string().min(3, "minimum of three letters is required"),
@@ -69,7 +72,7 @@ export default function CreatTripModal({
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, submitCount },
   } = useForm<FormFields>({
     resolver: zodResolver(tripSchema),
     defaultValues: {
@@ -87,8 +90,8 @@ export default function CreatTripModal({
   });
 
   const selectedIds = watch("goodsCategoryIds");
-
   const dividerHeight = "my-0";
+  const showErrors = isSubmitting || submitCount > 0;
 
   const onValid = async (values: FormFields) => {
     if (!userLoggedIn || !userId) return;
@@ -111,6 +114,8 @@ export default function CreatTripModal({
       />
       <LineDivider heightClass={dividerHeight} />
       <RouteFieldRow
+        cityError={errors.originCity?.message}
+        countryError={errors.originCountry?.message}
         cityValue={cityValue}
         countryValue={countryValue}
         registerCity={register("originCity")}
@@ -125,14 +130,8 @@ export default function CreatTripModal({
       />
       <LineDivider heightClass={dividerHeight} />
 
-      <WeightField
-        id="weight"
-        register={register("availableSpace", { valueAsNumber: true })}
-        error={errors.availableSpace?.message}
-      />
-      <LineDivider heightClass={dividerHeight} />
-
-      <GoodsCategory
+      <GoodsCategoryGrid
+        label="What items do you prefer to carry?"
         error={errors.goodsCategoryIds?.message}
         goods={goodsCategory}
         selectedIds={selectedIds}
@@ -141,11 +140,19 @@ export default function CreatTripModal({
         }
       />
       <LineDivider heightClass={dividerHeight} />
-      <PriceField
-        id="price"
-        register={register("pricePerKg", { valueAsNumber: true })}
-        error={errors.pricePerKg?.message}
-      />
+      <span className="flex flex-wrap gap-4 sm:gap-20">
+        <WeightField
+          id="weight"
+          register={register("availableSpace", { valueAsNumber: true })}
+          error={errors.availableSpace?.message}
+        />
+
+        <PriceField
+          id="price"
+          register={register("pricePerKg", { valueAsNumber: true })}
+          error={errors.pricePerKg?.message}
+        />
+      </span>
       <LineDivider heightClass={dividerHeight} />
       <AgreeToTermsRow
         register={register("agreeToRules")}
@@ -158,179 +165,6 @@ export default function CreatTripModal({
         onCancel={() => setModalState(false)}
       />
     </FormModal>
-  );
-}
-
-function PriceField({
-  register,
-  id,
-  error,
-}: {
-  id: string;
-  error?: string;
-  register: UseFormRegisterReturn;
-}) {
-  return (
-    <div>
-      <div className="flex flex-col gap-2">
-        <CustomText textSize="xsm">{"Price per kg"}</CustomText>
-        {
-          <input
-            type="number"
-            id={id}
-            className={cn(`w-full sm:w-[100px] py-2 px-2 ${baseInput}`)}
-            {...register}
-          />
-        }
-      </div>
-      {error && <ErrorText error={error} />}
-    </div>
-  );
-}
-
-function ActionBtn({
-  isSubmitting,
-  onCancel,
-}: {
-  isSubmitting: boolean;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:justify-between px-2 gap-2">
-      <Button
-        type="button"
-        onClick={onCancel}
-        className="w-full sm:w-auto"
-        variant="neutral"
-        size="md"
-      >
-        <CustomText className="px-6" textVariant="secondary">
-          Cancel
-        </CustomText>
-      </Button>
-
-      <Button
-        form="tripForm"
-        disabled={isSubmitting}
-        type="submit"
-        className="w-full sm:w-auto"
-        variant="primary"
-        size="md"
-      >
-        <CustomText textVariant="onDark">
-          {isSubmitting ? "Posting..." : "Review & Post"}
-        </CustomText>
-      </Button>
-    </div>
-  );
-}
-
-type AgreeToTermsProps = {
-  id: string;
-  error?: string;
-  register: UseFormRegisterReturn;
-};
-
-function AgreeToTermsRow({ register, id, error }: AgreeToTermsProps) {
-  return (
-    <div>
-      <div className="flex flex-col">
-        <div className="flex gap-3">
-          <CheckBox register={register} id={id}></CheckBox>
-          <CustomText textVariant="formText">
-            {"I agree to the terms and conditions."}
-          </CustomText>
-        </div>
-      </div>
-      {error && <ErrorText error={error} />}
-    </div>
-  );
-}
-
-function GoodsCategory({
-  goods,
-  selectedIds,
-  onChange,
-  error,
-}: {
-  error?: string;
-  goods: GoodsCategory[];
-  selectedIds: string[];
-  onChange: (selectedIds: string[]) => void;
-}) {
-  const toggle = (id: string, checked: boolean) => {
-    const next = checked
-      ? [...selectedIds, id]
-      : selectedIds.filter((x) => x !== id);
-
-    onChange(next);
-  };
-
-  return (
-    <div>
-      <div className="flex flex-col gap-2">
-        <InlineRow>
-          <CustomText textSize="xsm">
-            {"What items do you prefer to carry?"}
-          </CustomText>
-        </InlineRow>
-
-        <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
-          {goods.map((item) => {
-            const checked = selectedIds.includes(item.id);
-
-            return (
-              <label
-                key={item.id}
-                className="flex items-center gap-2 rounded-lg border p-2 shadow-sm"
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) => toggle(item.id, e.target.checked)}
-                />
-                <CustomText textSize="xsm" textVariant="formText">
-                  {item.name}
-                </CustomText>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-      {error && <ErrorText error={error} />}
-    </div>
-  );
-}
-
-function WeightField({
-  id,
-  register,
-  error,
-}: {
-  id: string;
-  error?: string;
-  register: UseFormRegisterReturn;
-}) {
-  return (
-    <div>
-      <div className="flex flex-col gap-2">
-        <label id={id} htmlFor="weight">
-          {<CustomText textSize="xsm">{"Available space."}</CustomText>}
-        </label>
-        <InlineRow>
-          {
-            <input
-              type="number"
-              id={id}
-              className={cn(`w-full sm:w-[100px] py-2 px-2 ${baseInput}`)}
-              {...register}
-            ></input>
-          }
-          <CustomText textSize="xsm">{"Kg"}</CustomText>
-        </InlineRow>
-      </div>
-      {error && <ErrorText error={error} />}
-    </div>
   );
 }
 
@@ -356,7 +190,7 @@ async function SaveGoodsCategories(
   goods: UserGoods,
 ) {
   try {
-    await saveGoodsUseCase.execute(goods);
+    await saveGoodsUseCase.execute(goods, true);
     console.log("Goods saved");
   } catch (e) {
     console.log(e);
