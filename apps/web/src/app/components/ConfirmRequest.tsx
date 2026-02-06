@@ -20,6 +20,9 @@ import { useMemo, useState } from "react";
 import { CreateCarryRequest } from "../features/carry request/application/CreateCarryReaquest";
 import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
 import { toCarryRequestMapper } from "../features/carry request/domain/toCarryRequestMapper";
+import { CreateCarryRequestEventUseCase } from "../features/carry request/application/CreateCarryRequestEventUseCase";
+import { SupabaseCarryRequestEventRepository } from "../features/carry request/data/SupabaseCarryRequestEventsRepository";
+import { toCarryRequestEventMapper } from "../features/carry request/domain/toCarryRequestEventMapper";
 
 type ConfirmRequestProps = {
   loggedInUserId: string;
@@ -36,6 +39,14 @@ export default function ConfirmRequest({
   onClose,
   isSenderRequesting,
 }: ConfirmRequestProps) {
+  const requestEventRepo = useMemo(
+    () => new SupabaseCarryRequestEventRepository(),
+    [],
+  );
+  const createEventUseCase = useMemo(
+    () => new CreateCarryRequestEventUseCase(requestEventRepo),
+    [requestEventRepo],
+  );
   const carryRequestRepository = useMemo(
     () => new SupabaseCarryRequestRepository(),
     [],
@@ -45,11 +56,18 @@ export default function ConfirmRequest({
     [carryRequestRepository],
   );
   const [requestLoaded, setLoadRequest] = useState<boolean>(false);
-  const initiator = loggedInUserId === parcel.user.id ? "sender" : "traveler";
+
   const handleRequest = async () => {
     if (requestLoaded) return;
-    await createRequest.execute(
+    const initiator = loggedInUserId === parcel.user.id ? "sender" : "traveler";
+    const actorId =
+      loggedInUserId === parcel.user.id ? parcel.user.id : trip.user.id;
+
+    const requestId = await createRequest.execute(
       toCarryRequestMapper(parcel, trip, initiator, "pending"),
+    );
+    createEventUseCase.execute(
+      toCarryRequestEventMapper(requestId, "request_sent", actorId),
     );
     setLoadRequest(true);
     onClose();
