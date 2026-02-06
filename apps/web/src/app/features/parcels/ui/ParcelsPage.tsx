@@ -75,6 +75,7 @@ export default function ParcelsPage() {
         {selectedParcel && userId && userTrip && (
           <CustomModal width="xl" onClose={onClose}>
             <ConfirmRequest
+              loggedInUserId={userId}
               trip={userTrip}
               parcel={selectedParcel}
               onClose={onClose}
@@ -82,7 +83,6 @@ export default function ParcelsPage() {
             />
           </CustomModal>
         )}
-        {console.log(userId === selectedParcel?.user.id)}
       </AnimatePresence>
     </>
   );

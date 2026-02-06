@@ -1,4 +1,4 @@
-import type { Status } from "@/app/pages/requests/CarryRequestMapper";
+import type { Status } from "@/app/features/carry request/ui/CarryRequestMapper";
 
 export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>

@@ -15,5 +15,5 @@ export type Parcel = {
 
   weightKg: number;
   items: ParcelItem[];
-  budget: number;
+  pricePerKg: number;
 };

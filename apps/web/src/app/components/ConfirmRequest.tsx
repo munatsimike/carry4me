@@ -16,8 +16,13 @@ import type { Trip } from "../features/trips/domain/Trip";
 import type { Parcel } from "../features/parcels/domain/Parcel";
 import LableTextRow from "./LabelTextRow";
 import IconTextRow from "./card/IconTextRow";
+import { useMemo, useState } from "react";
+import { CreateCarryRequest } from "../features/carry request/application/CreateCarryReaquest";
+import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
+import { toCarryRequestMapper } from "../features/carry request/domain/toCarryRequestMapper";
 
 type ConfirmRequestProps = {
+  loggedInUserId: string;
   trip: Trip;
   parcel: Parcel;
   onClose: () => void;
@@ -25,11 +30,31 @@ type ConfirmRequestProps = {
 };
 
 export default function ConfirmRequest({
+  loggedInUserId,
   trip,
   parcel,
   onClose,
   isSenderRequesting,
 }: ConfirmRequestProps) {
+  const carryRequestRepository = useMemo(
+    () => new SupabaseCarryRequestRepository(),
+    [],
+  );
+  const createRequest = useMemo(
+    () => new CreateCarryRequest(carryRequestRepository),
+    [carryRequestRepository],
+  );
+  const [requestLoaded, setLoadRequest] = useState<boolean>(false);
+  const initiator = loggedInUserId === parcel.user.id ? "sender" : "traveler";
+  const handleRequest = async () => {
+    if (requestLoaded) return;
+    await createRequest.execute(
+      toCarryRequestMapper(parcel, trip, initiator, "pending"),
+    );
+    setLoadRequest(true);
+    onClose();
+  };
+
   return (
     <div className="flex flex-col px-5">
       <div className="flex justify-center mb-1">
@@ -55,8 +80,8 @@ export default function ConfirmRequest({
       />
       <LineDivider />
       <SendRequestBtn
-        payLoad={parcel}
-        primaryAction={() => parcel}
+        payLoad={undefined as never}
+        primaryAction={handleRequest}
         secondaryAction={onClose}
       />
     </div>
@@ -102,7 +127,7 @@ function Parcel({
   const items = parcel.categories.map((item) => item.name).join("-");
   const pricePerKg = isSenderRequesting
     ? travelerPricePerKg
-    : parcel.budget / parcel.weightKg;
+    : parcel.pricePerKg;
 
   const totalPrice = pricePerKg * parcel.weightKg;
   return (

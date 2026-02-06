@@ -19,7 +19,7 @@ import {
   carryRequests,
   loggedInUserParcel,
   loggedInUserTrip,
-} from "../../Data";
+} from "../../../Data";
 import RouteRow from "@/app/components/RouteRow";
 import DateRow from "@/app/components/DateRow";
 import CategoryRow from "@/app/components/CategoryRow";
@@ -30,7 +30,7 @@ import { Price } from "@/app/components/card/WeightAndPrice";
 import {
   mapCarryRequestToUI,
   type Status,
-} from "@/app/pages/requests/CarryRequestMapper";
+} from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
 import { useState } from "react";
 import statusColor from "./StatustColorMapper";

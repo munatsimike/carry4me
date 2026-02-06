@@ -20,7 +20,6 @@ export class SupabaseParcelRepository implements ParcelRepository {
       .limit(1)
       .throwOnError();
     if (!data) return null;
-    console.log(data)
     return toParcelMapper(data[0]);
   }
   async fetchParcels(): Promise<Parcel[]> {

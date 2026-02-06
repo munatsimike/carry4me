@@ -86,29 +86,31 @@ function AuthenticatedNavigation() {
 
 function LogoutButton() {
   const navigate = useNavigate();
+
   const repo = useMemo(() => new SupabaseAuthRepository(), []);
   const useCase = useMemo(() => new LogoutUseCase(repo), [repo]);
 
+  const [loading, setLoading] = useState(false);
+
   const logout = async () => {
-    const {
-      data: result,
-      error,
-      isLoading,
-    } = useAsync(() => useCase.execute(), []);
+    try {
+      setLoading(true);
+      const result = await useCase.execute();
 
-    if (error) {
-      if (isNetworkError(error)) console.log("michael" + error); // to be completed
-    }
-
-    if (result) {
-      console.log(result.success);
-      navigate("/");
+      if (result.success) navigate("/");
+    } catch (error) {
+      if (isNetworkError(error)) console.log("network error:", error);
+      else console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <span className="absolute top-10 inline-flex shadow.md rounded-md border border:neutral-50">
-      <button onClick={() => logout()}>Signout</button>
+    <span className="absolute top-10 flex shadow-md rounded-md border border-error-500 p-5 max-w-sm">
+      <button onClick={logout} disabled={loading}>
+        {loading ? "Signing out..." : "Sign out"}
+      </button>
     </span>
   );
 }

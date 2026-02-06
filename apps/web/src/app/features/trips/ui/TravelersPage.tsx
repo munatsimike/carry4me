@@ -89,9 +89,10 @@ export default function TravelersPage() {
         {trips && <Travelers trips={trips} onClick={handleRequest} />}
       </DefaultContainer>
       <AnimatePresence>
-        {selectedTrip && parcel && userLoggedIn && (
-          <CustomModal onClose={onClose}>
+        {selectedTrip && parcel && userId && (
+          <CustomModal width="xl" onClose={onClose}>
             <ConfirmRequest
+            loggedInUserId={userId}
               trip={selectedTrip}
               parcel={parcel}
               onClose={onClose}
