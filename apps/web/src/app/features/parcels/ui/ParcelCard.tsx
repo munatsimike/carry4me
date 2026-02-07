@@ -41,7 +41,7 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
         weightLabel="Weight : "
         weight={parcel.weightKg}
         priceLabel="Budget : "
-        price={parcel.budget}
+        price={parcel.pricePerKg}
         location={"UK"}
       />
       <LineDivider />

@@ -1,6 +1,6 @@
-import type { Status } from "./CarryRequestMapper";
+import type { CarryRequestStatus } from "../domain/CreateCarryRequest";
 
-export default function statusColor(status: Status) {
+export default function statusColor(status: CarryRequestStatus) {
   let color = "PENDING_ACCEPTANCE";
   switch (status) {
     case "PAID_OUT":

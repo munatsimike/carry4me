@@ -17,12 +17,16 @@ import type { Parcel } from "../features/parcels/domain/Parcel";
 import LableTextRow from "./LabelTextRow";
 import IconTextRow from "./card/IconTextRow";
 import { useMemo, useState } from "react";
-import { CreateCarryRequest } from "../features/carry request/application/CreateCarryReaquest";
 import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
-import { toCarryRequestMapper } from "../features/carry request/domain/toCarryRequestMapper";
+import { toCreateCarryRequestMapper } from "../features/carry request/domain/toCreateCarryRequestMapper";
 import { CreateCarryRequestEventUseCase } from "../features/carry request/application/CreateCarryRequestEventUseCase";
 import { SupabaseCarryRequestEventRepository } from "../features/carry request/data/SupabaseCarryRequestEventsRepository";
 import { toCarryRequestEventMapper } from "../features/carry request/domain/toCarryRequestEventMapper";
+import {
+  CARRY_REQUEST_STATUSES,
+  ROLES,
+} from "../features/carry request/domain/CreateCarryRequest";
+import { CreateCarryRequestUseCase } from "../features/carry request/application/CreateCarryReaquest";
 
 type ConfirmRequestProps = {
   loggedInUserId: string;
@@ -52,19 +56,25 @@ export default function ConfirmRequest({
     [],
   );
   const createRequest = useMemo(
-    () => new CreateCarryRequest(carryRequestRepository),
+    () => new CreateCarryRequestUseCase(carryRequestRepository),
     [carryRequestRepository],
   );
   const [requestLoaded, setLoadRequest] = useState<boolean>(false);
 
   const handleRequest = async () => {
     if (requestLoaded) return;
-    const initiator = loggedInUserId === parcel.user.id ? "sender" : "traveler";
+    const userId =
+      loggedInUserId === parcel.user.id ? ROLES.SENDER : ROLES.TRAVELER;
     const actorId =
       loggedInUserId === parcel.user.id ? parcel.user.id : trip.user.id;
 
     const requestId = await createRequest.execute(
-      toCarryRequestMapper(parcel, trip, initiator, "pending"),
+      toCreateCarryRequestMapper(
+        parcel,
+        trip,
+        userId,
+        CARRY_REQUEST_STATUSES.PENDING_ACCEPTANCE,
+      ),
     );
     createEventUseCase.execute(
       toCarryRequestEventMapper(requestId, "request_sent", actorId),

@@ -15,11 +15,7 @@ import {
   type Parcel,
   type TestUITrip,
 } from "@/types/Ui";
-import {
-  carryRequests,
-  loggedInUserParcel,
-  loggedInUserTrip,
-} from "../../../Data";
+import { loggedInUserParcel, loggedInUserTrip } from "../../../Data";
 import RouteRow from "@/app/components/RouteRow";
 import DateRow from "@/app/components/DateRow";
 import CategoryRow from "@/app/components/CategoryRow";
@@ -27,86 +23,138 @@ import WeightRow from "@/app/components/WeightRow";
 import ButtomSpacer from "@/app/components/BottomSpacer";
 import { Button } from "@/components/ui/Button";
 import { Price } from "@/app/components/card/WeightAndPrice";
-import {
-  mapCarryRequestToUI,
-  type Status,
-} from "@/app/features/carry request/ui/CarryRequestMapper";
+import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import statusColor from "./StatustColorMapper";
 import actionsMapper, { type UIActions } from "./ActionsMapper";
+import { FetchCarryRequestsUseCase } from "../application/FetchCarryRequestsUseCase";
+import { SupabaseCarryRequestRepository } from "../data/SupabaseCarryRequestRepository";
+import { useAuthState } from "@/app/shared/supabase/AuthState";
+import type { CarryRequest } from "../domain/CarryRequest";
+import type { CarryRequestStatus } from "../domain/CreateCarryRequest";
+import { toRoleMapper } from "./toRoleMapper";
+import { toCarryRequestStatusMapper } from "./toCarryRequestStatusMapper";
 
 export default function CarryRequestsPage() {
-  const [inputValue, setValue] = useState<string>("");
-  const viewerRole = ROLES.SENDER;
-  const heightClass = "my-2";
-  const requestUI = mapCarryRequestToUI(carryRequests, viewerRole);
-  const actions = actionsMapper(
-    viewerRole,
-    carryRequests.status,
-    carryRequests.initiatorRole,
+  const [carryRequests, setCarryRequests] = useState<CarryRequest[]>([]);
+  const carryRequestRepository = useMemo(
+    () => new SupabaseCarryRequestRepository(),
+    [],
   );
+  const fetchCarryRequestUseCase = useMemo(
+    () => new FetchCarryRequestsUseCase(carryRequestRepository),
+    [carryRequestRepository],
+  );
+
+  const [requestLoaded, setRequestLoaded] = useState(false);
+  const { userId } = useAuthState();
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchRequest() {
+      if (!userId || requestLoaded) return;
+      const data = await fetchCarryRequestUseCase.execute(userId);
+      if (!cancelled) {
+        setCarryRequests(data);
+        setRequestLoaded(true);
+      }
+    }
+
+    fetchRequest();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, requestLoaded]);
+
+  const [inputValue, setValue] = useState<string>("");
+
+  const heightClass = "my-2";
+
   return (
     <>
       <PageTopSection />
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        <Card
-          hover={false}
-          cornerRadiusClass="rounded-1xl"
-          className="px-6 w-full max-w-[950px] mx-auto"
-        >
-          <div className="flex flex-col gap-2 mx-2">
-            <Header
-              title={requestUI.title}
-              description={requestUI.description}
-              requestId={carryRequests.id}
-              status={carryRequests.status}
-            />
-            <LineDivider heightClass={heightClass} />
-            <ProgressRow
-              currentStep={requestUI.currentStep}
-              isInitiator={viewerRole === carryRequests.initiatorRole}
-            />
-            <LineDivider heightClass={heightClass} />
-            <Deails
-              trip={loggedInUserTrip}
-              parcel={loggedInUserParcel}
-              isSenderInitiator={viewerRole === carryRequests.initiatorRole}
-            />
-            <LineDivider heightClass={heightClass} />
-            {actions.infoBlock?.displayText ? (
-              <RequestCompleted actions={actions} />
-            ) : (
-              <SpaceBetweenRow>
-                {actions.secondary ? (
-                  <Button variant={"error"} size={"md"} leadingIcon={undefined}>
-                    {actions.secondary?.label}
-                  </Button>
-                ) : (
-                  <span /> // place holder to push primary button to the right
-                )}
-                {actions.primary && (
-                  <Button variant="primary" size="md" leadingIcon>
-                    {actions.primary?.label}
-                  </Button>
-                )}
-
-                {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
-                  actions.infoBlock.displayText === null && (
-                    <InfoBlockDisplay actions={actions} />
+        {carryRequests.map((request) => {
+          const viewerRole =
+            userId === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
+          const requestUI = mapCarryRequestToUI(request, viewerRole);
+          const actions = actionsMapper(
+            viewerRole,
+            request.status,
+            request.initiatorRole,
+          );
+          return (
+            <Card
+              hover={false}
+              cornerRadiusClass="rounded-1xl"
+              className="px-6 w-full max-w-[960px] mx-auto"
+            >
+              <div className="flex flex-col gap-2 mx-2">
+                <Header
+                  title={requestUI.title}
+                  description={requestUI.description}
+                  requestId={request.carryRequestId.substring(
+                    request.carryRequestId.length - 5,
                   )}
+                  status={toCarryRequestStatusMapper[request.status]}
+                />
+                <LineDivider heightClass={heightClass} />
+                <ProgressRow
+                  currentStep={requestUI.currentStep}
+                  isInitiator={
+                    viewerRole === toRoleMapper[request.initiatorRole]
+                  }
+                />
+                <LineDivider heightClass={heightClass} />
+                <Deails
+                  trip={loggedInUserTrip}
+                  parcel={loggedInUserParcel}
+                  isSenderInitiator={
+                    viewerRole === toRoleMapper[request.initiatorRole]
+                  }
+                />
+                <LineDivider heightClass={heightClass} />
+                {actions.infoBlock?.displayText ? (
+                  <RequestCompleted actions={actions} />
+                ) : (
+                  <SpaceBetweenRow>
+                    {actions.secondary ? (
+                      <Button
+                        variant={"error"}
+                        size={"md"}
+                        leadingIcon={undefined}
+                      >
+                        {actions.secondary?.label}
+                      </Button>
+                    ) : (
+                      <span /> // place holder to push primary button to the right
+                    )}
+                    {actions.primary && (
+                      <Button variant="primary" size="md" leadingIcon>
+                        {actions.primary?.label}
+                      </Button>
+                    )}
 
-                {actions.infoBlock?.mode === INFOMODES.INPUT && (
-                  <InfoBlockInput
-                    actions={actions}
-                    onChange={setValue}
-                    inputValue={inputValue}
-                  />
+                    {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
+                      actions.infoBlock.displayText === null && (
+                        <InfoBlockDisplay actions={actions} />
+                      )}
+
+                    {actions.infoBlock?.mode === INFOMODES.INPUT && (
+                      <InfoBlockInput
+                        actions={actions}
+                        onChange={setValue}
+                        inputValue={inputValue}
+                      />
+                    )}
+                  </SpaceBetweenRow>
                 )}
-              </SpaceBetweenRow>
-            )}
-          </div>
-        </Card>
+              </div>
+            </Card>
+          );
+        })}
       </DefaultContainer>
     </>
   );
@@ -290,8 +338,8 @@ function UITrip({
 type HeaaderProps = {
   title: string;
   description: string;
-  requestId: number;
-  status: Status;
+  requestId: string;
+  status: CarryRequestStatus;
 };
 function Header({ title, description, requestId, status }: HeaaderProps) {
   return (
@@ -308,7 +356,7 @@ function Header({ title, description, requestId, status }: HeaaderProps) {
 type StatusProps = {
   title: string;
   description: string;
-  status: Status;
+  status: CarryRequestStatus;
 };
 
 function CurrentStatus({ title, description, status }: StatusProps) {

@@ -1,5 +1,6 @@
 import { INFOMODES, ROLES, type InfoBlockMode, type Role } from "@/types/Ui";
-import type { Status } from "./CarryRequestMapper";
+import type { CarryRequestStatus } from "../domain/CreateCarryRequest";
+
 const VARIANTS = {
   PRIMARY: "primary",
   DANGER: "danger",
@@ -94,7 +95,7 @@ function displayPaymentCode(): InfoBlock {
 
 export default function actionsMapper(
   viewerRole: Role,
-  status: Status,
+  status: CarryRequestStatus,
   requestIniator: Role,
 ): UIActions {
   switch (status) {

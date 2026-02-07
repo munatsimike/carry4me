@@ -1,48 +1,47 @@
-import type { Parcel } from "../../parcels/domain/Parcel";
-import type { Trip } from "../../trips/domain/Trip";
-import type { CarryRequest, Role, Status } from "./CarryRequest";
+import type { CarryRequest } from "./CarryRequest";
 
-export function toCarryRequestMapper(
-  parcel: Parcel,
-  trip: Trip,
-  initiatorRole: Role,
-  status: Status,
-): CarryRequest {
-  const pricePerKg =
-    initiatorRole === "sender" ? trip.pricePerKg : parcel.pricePerKg;
+export function toCarryRequestMapper(row: any): CarryRequest {
   return {
-    parcel_id: parcel.id,
-    trip_id: trip.id,
-    sender_user_id: parcel.user.id,
-    traveler_user_id: trip.user.id,
-    initiator_role: initiatorRole,
-    status: status,
-    parcel_snapshot: {
-      senderName: parcel.user.fullName,
-      items: parcel.items,
-      weight_kg: parcel.weightKg,
-      price_per_kg: pricePerKg,
+    carryRequestId: row.id,
+    parcelId: row.parcel_id,
+    tripId: row.trip_id,
+    senderUserId: row.sender_user_id,
+    travelerUserId: row.traveler_user_id,
+    initiatorRole: row.initiator_role,
+    status: row.status,
+    parcelSnapshot: {
+      senderName: row.fullName,
+      items: row.items, //[]
+      weightKg: row.weight_kg,
+      pricePerKg: row.price_per_kg,
       origin: {
-        country: parcel.route.originCountry,
-        city: parcel.route.originCity,
+        country: row.country,
+        city: row.city,
       },
       destination: {
-        country: parcel.route.destinationCountry,
-        city: parcel.route.destinationCity,
+        country: row.country,
+        city: row.city,
       },
-      categories: parcel.categories,
+      categories: row.categories, //[]
     },
-    trip_snapshot: {
-      traveler_name: trip.user.fullName,
-      departure_date: trip.departDate,
+    tripSnapshot: {
+      travelerName: row.fullName,
+      departureDate: row.departure_date,
       origin: {
-        country: trip.route.originCountry,
-        city: trip.route.originCity,
+        country: row.country,
+        city: row.city,
       },
       destination: {
-        country: trip.route.destinationCountry,
-        city: trip.route.destinationCity,
+        country: row.country,
+        city: row.city,
       },
+    },
+
+    events: {
+      carryRequestId: row.events.carry_request_id,
+      type: row.events.type,
+      actorUserId: row.events.actor_user_id,
+      metadata: row.events.metadata,
     },
   };
 }

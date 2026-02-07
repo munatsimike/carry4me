@@ -1,4 +1,7 @@
-import { ROLES, type CarryRequest, type Role } from "@/types/Ui";
+import { ROLES, type Role } from "@/types/Ui";
+import type { CarryRequest } from "../domain/CarryRequest";
+import { toRoleMapper } from "./toRoleMapper";
+import { toCarryRequestStatusMapper } from "./toCarryRequestStatusMapper";
 
 export type CarryRequestUI = {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
@@ -6,40 +9,19 @@ export type CarryRequestUI = {
   description: string;
 };
 
-export type Status =
-  | "PENDING_ACCEPTANCE"
-  | "REJECTED"
-  | "CANCELLED"
-  | "PENDING_PAYMENT"
-  | "PENDING_HANDOVER"
-  | "IN_TRANSIT"
-  | "PENDING_PAYOUT"
-  | "PAID_OUT";
-
-const LABELS = {
-  1: "Request sent",
-  2: "Request accepted",
-  3: "Payment completed",
-  4: "Parcel received",
-  5: "Delivered",
-  6: "Payment released",
-} as const;
-
 export function mapCarryRequestToUI(
   request: CarryRequest,
   viewerRole: Role,
 ): CarryRequestUI {
-  const isInitiator = request.initiatorRole === viewerRole;
+  const isInitiator = toRoleMapper[request.initiatorRole] === viewerRole;
 
   let currentStep: CarryRequestUI["currentStep"] = 1;
   let title = "";
   let description = "";
   const roletext =
-    request.initiatorRole === ROLES.TRAVELER
-      ? ROLES.TRAVELER.toLocaleLowerCase
-      : ROLES.SENDER.toLocaleLowerCase;
+    request.initiatorRole === ROLES.TRAVELER ? "traveler" : "sender";
 
-  switch (request.status) {
+  switch (toCarryRequestStatusMapper[request.status]) {
     case "PENDING_ACCEPTANCE":
       currentStep = 1;
       title = `${isInitiator ? "Pending response" : "Request pending"}`;

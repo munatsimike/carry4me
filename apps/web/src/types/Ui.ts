@@ -1,4 +1,5 @@
-import type { Status } from "@/app/features/carry request/ui/CarryRequestMapper";
+import type { CarryRequestStatus } from "@/app/features/carry request/domain/CreateCarryRequest";
+
 
 export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>
@@ -86,7 +87,7 @@ export type CarryRequest = {
   trip: TestUITrip;
   parcel: Parcel;
 
-  status: Status;
+  status: CarryRequestStatus;
   initiatorRole: InitiatorRole;
 
   pricePerKgAtRequest: number;
