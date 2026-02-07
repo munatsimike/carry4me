@@ -8,14 +8,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SvgIcon from "@/components/ui/SvgIcon";
-import {
-  INFOMODES,
-  progress,
-  ROLES,
-  type Parcel,
-  type TestUITrip,
-} from "@/types/Ui";
-import { loggedInUserParcel, loggedInUserTrip } from "../../../Data";
+import { INFOMODES, progress, ROLES, type Parcel } from "@/types/Ui";
 import RouteRow from "@/app/components/RouteRow";
 import DateRow from "@/app/components/DateRow";
 import CategoryRow from "@/app/components/CategoryRow";
@@ -35,6 +28,10 @@ import type { CarryRequest } from "../domain/CarryRequest";
 import type { CarryRequestStatus } from "../domain/CreateCarryRequest";
 import { toRoleMapper } from "./toRoleMapper";
 import { toCarryRequestStatusMapper } from "./toCarryRequestStatusMapper";
+import type { TripSnapshot } from "../domain/TripSnapshot";
+import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
+import IconTextRow from "@/app/components/card/IconTextRow";
+import LableTextRow from "@/app/components/LabelTextRow";
 
 export default function CarryRequestsPage() {
   const [carryRequests, setCarryRequests] = useState<CarryRequest[]>([]);
@@ -55,6 +52,7 @@ export default function CarryRequestsPage() {
     async function fetchRequest() {
       if (!userId || requestLoaded) return;
       const data = await fetchCarryRequestUseCase.execute(userId);
+
       if (!cancelled) {
         setCarryRequests(data);
         setRequestLoaded(true);
@@ -82,14 +80,15 @@ export default function CarryRequestsPage() {
           const requestUI = mapCarryRequestToUI(request, viewerRole);
           const actions = actionsMapper(
             viewerRole,
-            request.status,
-            request.initiatorRole,
+            toCarryRequestStatusMapper[request.status],
+            toRoleMapper[request.initiatorRole],
           );
           return (
             <Card
+              key={request.carryRequestId}
               hover={false}
-              cornerRadiusClass="rounded-1xl"
-              className="px-6 w-full max-w-[960px] mx-auto"
+              cornerRadiusClass="rounded-2xl"
+              className="px-6 w-full max-w-[960px] mx-auto shadow-sm"
             >
               <div className="flex flex-col gap-2 mx-2">
                 <Header
@@ -109,8 +108,8 @@ export default function CarryRequestsPage() {
                 />
                 <LineDivider heightClass={heightClass} />
                 <Deails
-                  trip={loggedInUserTrip}
-                  parcel={loggedInUserParcel}
+                  trip={request.tripSnapshot}
+                  parcel={request.parcelSnapshot}
                   isSenderInitiator={
                     viewerRole === toRoleMapper[request.initiatorRole]
                   }
@@ -264,15 +263,33 @@ function Deails({
   parcel,
   isSenderInitiator,
 }: {
-  trip: TestUITrip;
-  parcel: Parcel;
+  trip: TripSnapshot;
+  parcel: ParcelSnapshot;
   isSenderInitiator: boolean;
 }) {
+  const totalPrice = parcel.price_per_kg * parcel.weight_kg;
   return (
     <div className="flex flex-col">
-      <span className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <span className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.7fr] gap-10">
         <UITrip trip={trip} isSenderInitiator={isSenderInitiator} />
         <Parcel parcel={parcel} isSenderInitiator={isSenderInitiator} />
+        <Stack>
+          <span className="inline-flex bg-neutral-100 rounded-full py-1 px-3 border">
+            <CustomText as="span" textSize="xsm">
+              {"Cost summary"}
+            </CustomText>
+          </span>
+          <span className="flex flex-col items-end gap-2">
+            <LableTextRow label={"Weight : "} text={`${parcel.weight_kg.toString()}kg`} />
+
+            <Price
+              unitPriceLabel={"Price per kg"}
+              unitPrice={parcel.price_per_kg}
+              totalPrice={totalPrice}
+              location={"USA"}
+            />
+          </span>
+        </Stack>
       </span>
     </div>
   );
@@ -282,32 +299,27 @@ function Parcel({
   parcel,
   isSenderInitiator,
 }: {
-  parcel: Parcel;
+  parcel: ParcelSnapshot;
   isSenderInitiator: boolean;
 }) {
   const cardLabel = isSenderInitiator ? "Your parcel" : "Parcel";
-  const totalPrice = parcel.details.pricePerKg * parcel.details.weight;
+  const categories = parcel.categories.map((item) => item.name).join("-");
   return (
     <Stack>
       <span>
         <CardLabel variant={"parcel"} label={cardLabel} />
         <ButtomSpacer />
       </span>
-      <CategoryRow
-        tag={"sender"}
-        category={parcel.details.category.join(" ")}
+      <IconTextRow
+        iconSize="md"
+        Icon={META_ICONS.userIconOutlined}
+        label={parcel.sender_name}
       />
       <RouteRow
-        origin={parcel.details.origin}
-        destination={parcel.details.destination}
+        origin={parcel.origin.country}
+        destination={parcel.destination.country}
       />
-      <WeightRow weight={parcel.details.weight} />
-      <Price
-        unitPriceLabel={"Price per kg"}
-        unitPrice={parcel.details.pricePerKg}
-        totalPrice={totalPrice}
-        location={parcel.details.origin}
-      />
+      <CategoryRow tag={"sender"} category={categories} />
     </Stack>
   );
 }
@@ -315,7 +327,7 @@ function UITrip({
   trip,
   isSenderInitiator,
 }: {
-  trip: TestUITrip;
+  trip: TripSnapshot;
   isSenderInitiator: boolean;
 }) {
   const cardLabel = isSenderInitiator ? "Trip" : "Your trip";
@@ -325,12 +337,12 @@ function UITrip({
         <CardLabel variant={"trip"} label={cardLabel} />
         <ButtomSpacer />
       </span>
-      <TravelerRow name={trip.user.firstName} surname={trip.user.lastName} />
+      <TravelerRow name={trip.traveler_name} />
       <RouteRow
-        origin={trip.route.origin}
-        destination={trip.route.destination}
+        origin={trip.origin.country}
+        destination={trip.destination.country}
       />
-      <DateRow date={trip.route.date.toDateString()} />
+      <DateRow date={trip.departure_date} />
     </Stack>
   );
 }
@@ -390,7 +402,7 @@ function ProgressRow({
 }) {
   const steps = [2, 3, 4, 5, 6] as const;
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-neutral-50 py-4 px-3 shadow-sm">
+    <div className="flex flex-wrap items-center gap-4 bg-neutral-50 py-4 px-3">
       {isInitiator && <Step isCompleted={isInitiator} stage={progress[1]} />}
 
       {steps.map((step) => {

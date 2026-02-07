@@ -92,7 +92,7 @@ export default function TravelersPage() {
         {selectedTrip && parcel && userId && (
           <CustomModal width="xl" onClose={onClose}>
             <ConfirmRequest
-            loggedInUserId={userId}
+              loggedInUserId={userId}
               trip={selectedTrip}
               parcel={parcel}
               onClose={onClose}

@@ -1,11 +1,11 @@
 export type ParcelSnapshot = {
-  senderName: string;
+  sender_name: string;
   items: {
     quantity: number;
     description: string;
   }[];
-  weightKg: number;
-  pricePerKg: number;
+  weight_kg: number;
+  price_per_kg: number;
   origin: {
     country: string;
     city: string;

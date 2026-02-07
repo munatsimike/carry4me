@@ -13,3 +13,4 @@ export const toCarryRequestStatusMapper: Record<string, CarryRequestStatus> = {
   pending_payout: CARRY_REQUEST_STATUSES.PENDING_PAYOUT,
   paid_out: CARRY_REQUEST_STATUSES.PAID_OUT,
 };
+ 

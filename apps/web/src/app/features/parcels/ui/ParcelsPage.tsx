@@ -69,7 +69,7 @@ export default function ParcelsPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        <Parcels parcels={data ? data : []} onClick={handleRequest} />
+        {data && <Parcels parcels={data} onClick={handleRequest} />}
       </DefaultContainer>
       <AnimatePresence>
         {selectedParcel && userId && userTrip && (

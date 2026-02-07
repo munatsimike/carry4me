@@ -1,6 +1,6 @@
 export type TripSnapshot = {
-  travelerName:string,
-  departureDate: string; // ISO string
+  traveler_name:string,
+  departure_date: string; // ISO string
   origin: {
     country: string;
     city: string;

@@ -6,28 +6,31 @@ import { toParcelMapper } from "../domain/toParcelMapper";
 
 export class SupabaseParcelRepository implements ParcelRepository {
   async fetchParcel(userId: string): Promise<Parcel | null> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("parcels")
       .select(
         `*, sender:profiles(id,full_name), parcel_categories(
-      categories:goods_categories(
+      category:goods_categories(
       id,
       slug,
       name
       ))`,
       )
       .eq("sender_user_id", userId)
-      .limit(1)
-      .throwOnError();
-    if (!data) return null;
-    return toParcelMapper(data[0]);
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null; // parcel not found or not visible (RLS)
+
+    return toParcelMapper(data);
   }
+
   async fetchParcels(): Promise<Parcel[]> {
     const { data } = await supabase
       .from("parcels")
       .select(
         `*, sender:profiles(id,full_name), parcel_categories(
-      categories:goods_categories(
+      category:goods_categories(
       id,
       slug,
       name

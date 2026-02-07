@@ -63,16 +63,15 @@ export default function ConfirmRequest({
 
   const handleRequest = async () => {
     if (requestLoaded) return;
-    const userId =
+    const userRole =
       loggedInUserId === parcel.user.id ? ROLES.SENDER : ROLES.TRAVELER;
     const actorId =
       loggedInUserId === parcel.user.id ? parcel.user.id : trip.user.id;
-
     const requestId = await createRequest.execute(
       toCreateCarryRequestMapper(
         parcel,
         trip,
-        userId,
+        userRole,
         CARRY_REQUEST_STATUSES.PENDING_ACCEPTANCE,
       ),
     );
@@ -172,6 +171,11 @@ function Parcel({
         />
         <CategoryRow tag={"sender"} category={items} />
         <WeightRow weight={parcel.weightKg} />
+        <RouteRow
+          origin={parcel.route.originCountry}
+          destination={parcel.route.destinationCountry}
+        />
+        
       </Stack>
       <LineDivider />
       <Price

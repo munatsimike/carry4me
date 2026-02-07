@@ -3,9 +3,14 @@ import type { Parcel } from "./Parcel";
 import type { ParcelItem } from "./CreateParcel";
 
 export function toParcelMapper(row: any): Parcel {
-  const rows =
-    row.parcel_categories?.map((x: any) => x.categories).filter(boolean) ?? [];
 
+  if (!row)
+    throw new Error(
+      "toParcelMapper called with empty row (parcel not found / RLS blocked)",
+    );
+  const rows = row.parcel_categories
+    .map((x: any) => x.category)
+    .filter(boolean);
   return {
     id: row.id,
     pricePerKg: row.price,

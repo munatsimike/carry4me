@@ -15,8 +15,7 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
     `,
       )
       .or(`sender_user_id.eq.${userId},traveler_user_id.eq.${userId}`)
-      .order("created_at", { ascending: false })
-      .throwOnError();
+      .order("created_at", { ascending: false });
 
     return (data ?? []).map(toCarryRequestMapper);
   }

@@ -1,9 +1,4 @@
 import type { CarryRequestEvent } from "./CarryRequestEvent";
-import type {
-
-  Role,
-  CarryRequestStatus,
-} from "./CreateCarryRequest";
 import type { ParcelSnapshot } from "./ParcelSnapShot";
 import type { TripSnapshot } from "./TripSnapshot";
 
@@ -13,8 +8,8 @@ export type CarryRequest = {
   tripId: string;
   senderUserId: string;
   travelerUserId: string;
-  initiatorRole: Role;
-  status: CarryRequestStatus;
+  initiatorRole: string;
+  status: string;
   parcelSnapshot: ParcelSnapshot;
   tripSnapshot: TripSnapshot;
   events: CarryRequestEvent;
