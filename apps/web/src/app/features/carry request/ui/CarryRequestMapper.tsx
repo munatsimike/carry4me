@@ -1,7 +1,5 @@
 import { ROLES, type Role } from "@/types/Ui";
 import type { CarryRequest } from "../domain/CarryRequest";
-import { toRoleMapper } from "./toRoleMapper";
-import { toCarryRequestStatusMapper } from "./toCarryRequestStatusMapper";
 
 export type CarryRequestUI = {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
@@ -13,7 +11,7 @@ export function mapCarryRequestToUI(
   request: CarryRequest,
   viewerRole: Role,
 ): CarryRequestUI {
-  const isInitiator = toRoleMapper[request.initiatorRole] === viewerRole;
+  const isInitiator = request.initiatorRole === viewerRole;
 
   let currentStep: CarryRequestUI["currentStep"] = 1;
   let title = "";
@@ -21,7 +19,7 @@ export function mapCarryRequestToUI(
   const roletext =
     request.initiatorRole === ROLES.TRAVELER ? "traveler" : "sender";
 
-  switch (toCarryRequestStatusMapper[request.status]) {
+  switch (request.status) {
     case "PENDING_ACCEPTANCE":
       currentStep = 1;
       title = `${isInitiator ? "Pending response" : "Request pending"}`;

@@ -1,8 +1,5 @@
-
 import type { ParcelSnapshot } from "./ParcelSnapShot";
 import type { TripSnapshot } from "./TripSnapshot";
-
-
 
 export const ROLES = {
   SENDER: "SENDER",
@@ -30,7 +27,7 @@ export type CreateCarryRequest = {
   senderUserId: string;
   travelerUserId: string;
   initiatorRole: string;
-  status: string;
+  status: CarryRequestStatus;
   parcelSnapshot: ParcelSnapshot;
   tripSnapshot: TripSnapshot;
 };

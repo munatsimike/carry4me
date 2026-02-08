@@ -18,15 +18,12 @@ import LableTextRow from "./LabelTextRow";
 import IconTextRow from "./card/IconTextRow";
 import { useMemo, useState } from "react";
 import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
-import { toCreateCarryRequestMapper } from "../features/carry request/domain/toCreateCarryRequestMapper";
 import { CreateCarryRequestEventUseCase } from "../features/carry request/application/CreateCarryRequestEventUseCase";
 import { SupabaseCarryRequestEventRepository } from "../features/carry request/data/SupabaseCarryRequestEventsRepository";
-import { toCarryRequestEventMapper } from "../features/carry request/domain/toCarryRequestEventMapper";
-import {
-  CARRY_REQUEST_STATUSES,
-  ROLES,
-} from "../features/carry request/domain/CreateCarryRequest";
 import { CreateCarryRequestUseCase } from "../features/carry request/application/CreateCarryReaquest";
+import { CreateNotificationUseCase } from "../features/carry request/carry request events/application/CreateNotificationUseCase";
+import { SupabaseNotificationRepository } from "../features/carry request/carry request events/data/SupabaseNotificationRepository";
+import { SendCarryRequestUseCase } from "../features/carry request/application/SendCarryRequestUseCase";
 
 type ConfirmRequestProps = {
   loggedInUserId: string;
@@ -43,6 +40,15 @@ export default function ConfirmRequest({
   onClose,
   isSenderRequesting,
 }: ConfirmRequestProps) {
+  const notificationRepo = useMemo(
+    () => new SupabaseNotificationRepository(),
+    [],
+  );
+
+  const createNotificationUseCase = useMemo(
+    () => new CreateNotificationUseCase(notificationRepo),
+    [notificationRepo],
+  );
   const requestEventRepo = useMemo(
     () => new SupabaseCarryRequestEventRepository(),
     [],
@@ -61,25 +67,28 @@ export default function ConfirmRequest({
   );
   const [requestLoaded, setLoadRequest] = useState<boolean>(false);
 
-  const handleRequest = async () => {
-    if (requestLoaded) return;
-    const userRole =
-      loggedInUserId === parcel.user.id ? ROLES.SENDER : ROLES.TRAVELER;
-    const actorId =
-      loggedInUserId === parcel.user.id ? parcel.user.id : trip.user.id;
-    const requestId = await createRequest.execute(
-      toCreateCarryRequestMapper(
-        parcel,
-        trip,
-        userRole,
-        CARRY_REQUEST_STATUSES.PENDING_ACCEPTANCE,
+  const sendCarryRequestUseCase = useMemo(
+    () =>
+      new SendCarryRequestUseCase(
+        createRequest,
+        createEventUseCase,
+        createNotificationUseCase,
       ),
+    [],
+  );
+
+  const handleSendRequest = async () => {
+    if (requestLoaded) return;
+    const result = await sendCarryRequestUseCase.execute(
+      loggedInUserId,
+      parcel,
+      trip,
     );
-    createEventUseCase.execute(
-      toCarryRequestEventMapper(requestId, "request_sent", actorId),
-    );
-    setLoadRequest(true);
-    onClose();
+
+    if (result) {
+      setLoadRequest(true);
+      onClose();
+    }
   };
 
   return (
@@ -108,7 +117,7 @@ export default function ConfirmRequest({
       <LineDivider />
       <SendRequestBtn
         payLoad={undefined as never}
-        primaryAction={handleRequest}
+        primaryAction={handleSendRequest}
         secondaryAction={onClose}
       />
     </div>
@@ -175,7 +184,6 @@ function Parcel({
           origin={parcel.route.originCountry}
           destination={parcel.route.destinationCountry}
         />
-        
       </Stack>
       <LineDivider />
       <Price

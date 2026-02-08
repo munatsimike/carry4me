@@ -82,19 +82,6 @@ export const progress = {
   6: "Payment released",
 } as const;
 
-export type CarryRequest = {
-  id: number;
-  trip: TestUITrip;
-  parcel: Parcel;
-
-  status: CarryRequestStatus;
-  initiatorRole: InitiatorRole;
-
-  pricePerKgAtRequest: number;
-  weightKgAtRequest: number;
-  totalPriceAtRequest: number;
-  currency: "GBP" | "USD" | "EUR";
-};
 
 export const ROLES = {
   SENDER: "SENDER",

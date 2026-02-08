@@ -2,6 +2,7 @@ import type { CarryRequest } from "./CarryRequest";
 
 export function toCarryRequestMapper(row: any): CarryRequest {
 
+
   return {
     carryRequestId: row.id,
     parcelId: row.parcel_id,

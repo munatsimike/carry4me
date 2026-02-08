@@ -1,5 +1,16 @@
 import { INFOMODES, ROLES, type InfoBlockMode, type Role } from "@/types/Ui";
-import type { CarryRequestStatus } from "../domain/CreateCarryRequest";
+import { type CarryRequestStatus } from "../domain/CreateCarryRequest";
+
+export type UIActionKey =
+  | "ACCEPT"
+  | "REJECT"
+  | "CANCEL"
+  | "PAY"
+  | "CONFIRM_HANDOVER"
+  | "MARK_DELIVERED"
+  | "RELEASE_PAYMENT"
+  | "BROWSE_TRIPS"
+  | "BROWSE_PARCELS";
 
 const VARIANTS = {
   PRIMARY: "primary",
@@ -38,6 +49,7 @@ type UIAction = {
   variant: Variant;
   label: string;
   helperText?: string;
+  key: UIActionKey;
 };
 
 export type UIActions = {
@@ -50,30 +62,35 @@ const accepRequest: UIAction = {
   kind: ACTIONKINDS.ACCEPT,
   variant: VARIANTS.PRIMARY,
   label: "Accept request",
+  key: "ACCEPT",
 };
 
 const rejectRequest: UIAction = {
   kind: ACTIONKINDS.REJECT,
   variant: VARIANTS.DANGER,
   label: "Reject request",
+  key: "REJECT",
 };
 
 const cancelRequest: UIAction = {
   kind: ACTIONKINDS.CANCEL,
   variant: VARIANTS.DANGER,
   label: "Cancel request",
+  key: "CANCEL",
 };
 
 const makePayment: UIAction = {
   kind: ACTIONKINDS.PAY,
   variant: VARIANTS.PRIMARY,
   label: "Make payment",
+  key: "PAY",
 };
 
 const confirmHandover: UIAction = {
   kind: ACTIONKINDS.HANDOVER,
   variant: VARIANTS.PRIMARY,
   label: "Confirm handover",
+  key: "CONFIRM_HANDOVER",
 };
 
 function confirmDelivery(): UIAction {
@@ -81,6 +98,7 @@ function confirmDelivery(): UIAction {
     kind: ACTIONKINDS.DELIVERY,
     variant: VARIANTS.PRIMARY,
     label: "Confirm delivery",
+    key: "MARK_DELIVERED",
   };
 }
 
@@ -127,6 +145,7 @@ function requestRejected(viewerRole: Role): UIActions {
       kind: ACTIONKINDS.NAVIGATE,
       variant: "primary",
       label: label,
+      key: viewerRole === ROLES.SENDER ? "BROWSE_TRIPS" : "BROWSE_PARCELS",
     },
   };
 }
@@ -138,6 +157,7 @@ function requestCanceled(viewerRole: Role): UIActions {
       kind: ACTIONKINDS.REJECT,
       variant: "primary",
       label: label,
+      key: viewerRole === ROLES.SENDER ? "BROWSE_TRIPS" : "BROWSE_PARCELS",
     },
   };
 }

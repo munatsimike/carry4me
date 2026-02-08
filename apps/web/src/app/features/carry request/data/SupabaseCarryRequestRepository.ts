@@ -1,10 +1,27 @@
 import { supabase } from "@/app/shared/supabase/client";
 import type { CarryRequestRepository } from "../domain/CarryRequestRepository";
-import { type CreateCarryRequest } from "../domain/CreateCarryRequest";
+import {
+  type CarryRequestStatus,
+  type CreateCarryRequest,
+} from "../domain/CreateCarryRequest";
 import { toCarryRequestMapper } from "../domain/toCarryRequestMapper";
 import type { CarryRequest } from "../domain/CarryRequest";
 
 export class SupabaseCarryRequestRepository implements CarryRequestRepository {
+  async updateCarryRequestStatus(
+    carryRequestId: string,
+    newStatus: CarryRequestStatus,
+  ): Promise<void> {
+    await supabase
+      .from("carry_requests")
+      .update({
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", carryRequestId)
+      .throwOnError();
+  }
+
   async fetchCarryRequestsForUser(userId: string): Promise<CarryRequest[]> {
     const { data } = await supabase
       .from("carry_requests")

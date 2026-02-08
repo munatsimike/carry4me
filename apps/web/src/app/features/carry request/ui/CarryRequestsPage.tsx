@@ -20,18 +20,26 @@ import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryReques
 import PageSection from "@/app/components/PageSection";
 import { useEffect, useMemo, useState } from "react";
 import statusColor from "./StatustColorMapper";
-import actionsMapper, { type UIActions } from "./ActionsMapper";
+import actionsMapper, {
+  type UIActionKey,
+  type UIActions,
+} from "./ActionsMapper";
 import { FetchCarryRequestsUseCase } from "../application/FetchCarryRequestsUseCase";
 import { SupabaseCarryRequestRepository } from "../data/SupabaseCarryRequestRepository";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
 import type { CarryRequest } from "../domain/CarryRequest";
-import type { CarryRequestStatus } from "../domain/CreateCarryRequest";
+import { type CarryRequestStatus } from "../domain/CreateCarryRequest";
 import { toRoleMapper } from "./toRoleMapper";
-import { toCarryRequestStatusMapper } from "./toCarryRequestStatusMapper";
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
 import IconTextRow from "@/app/components/card/IconTextRow";
 import LableTextRow from "@/app/components/LabelTextRow";
+import { UpdateCarryRequestUseCase } from "../application/UpdateCarryRequestUseCase";
+import { SupabaseCarryRequestEventRepository } from "../data/SupabaseCarryRequestEventsRepository";
+import { CreateCarryRequestEventUseCase } from "../application/CreateCarryRequestEventUseCase";
+import { SupabaseNotificationRepository } from "../carry request events/data/SupabaseNotificationRepository";
+import { CreateNotificationUseCase } from "../carry request events/application/CreateNotificationUseCase";
+import { PerformCarryRequestActionUseCase } from "../application/PerformCarryRequestActionUseCase";
 
 export default function CarryRequestsPage() {
   const [carryRequests, setCarryRequests] = useState<CarryRequest[]>([]);
@@ -44,6 +52,40 @@ export default function CarryRequestsPage() {
     [carryRequestRepository],
   );
 
+  const updateCarryRequest = useMemo(
+    () => new UpdateCarryRequestUseCase(carryRequestRepository),
+    [carryRequestRepository],
+  );
+
+  const enventRepo = useMemo(
+    () => new SupabaseCarryRequestEventRepository(),
+    [],
+  );
+  const createEventUseCase = useMemo(
+    () => new CreateCarryRequestEventUseCase(enventRepo),
+    [enventRepo],
+  );
+
+  const notificatoinRepo = useMemo(
+    () => new SupabaseNotificationRepository(),
+    [],
+  );
+  const createNotificationUseCase = useMemo(
+    () => new CreateNotificationUseCase(notificatoinRepo),
+    [notificatoinRepo],
+  );
+
+  const acceptRequestUseCase = useMemo(
+    () =>
+      new PerformCarryRequestActionUseCase(
+        updateCarryRequest,
+        createEventUseCase,
+        createNotificationUseCase,
+      ),
+    [],
+  );
+
+  const [isRequestSent, setisRequestSent] = useState(false);
   const [requestLoaded, setRequestLoaded] = useState(false);
   const { userId } = useAuthState();
 
@@ -80,8 +122,8 @@ export default function CarryRequestsPage() {
           const requestUI = mapCarryRequestToUI(request, viewerRole);
           const actions = actionsMapper(
             viewerRole,
-            toCarryRequestStatusMapper[request.status],
-            toRoleMapper[request.initiatorRole],
+            request.status,
+            request.initiatorRole,
           );
           return (
             <Card
@@ -97,14 +139,12 @@ export default function CarryRequestsPage() {
                   requestId={request.carryRequestId.substring(
                     request.carryRequestId.length - 5,
                   )}
-                  status={toCarryRequestStatusMapper[request.status]}
+                  status={request.status}
                 />
                 <LineDivider heightClass={heightClass} />
                 <ProgressRow
                   currentStep={requestUI.currentStep}
-                  isInitiator={
-                    viewerRole === toRoleMapper[request.initiatorRole]
-                  }
+                  isInitiator={viewerRole === request.initiatorRole}
                 />
                 <LineDivider heightClass={heightClass} />
                 <Deails
@@ -131,8 +171,26 @@ export default function CarryRequestsPage() {
                       <span /> // place holder to push primary button to the right
                     )}
                     {actions.primary && (
-                      <Button variant="primary" size="md" leadingIcon>
-                        {actions.primary?.label}
+                      <Button
+                        onClick={async () => {
+                          if (!actions.primary || isRequestSent || !userId)
+                            return;
+
+                          const result = await acceptRequestUseCase.execute(
+                            actions.primary.key,
+                            userId,
+                            request,
+                          );
+
+                          if (result?.ok) {
+                            // do success handling
+                          }
+                        }}
+                        variant="primary"
+                        size="md"
+                        leadingIcon
+                      >
+                        {actions.primary.label}
                       </Button>
                     )}
 
@@ -280,7 +338,10 @@ function Deails({
             </CustomText>
           </span>
           <span className="flex flex-col items-end gap-2">
-            <LableTextRow label={"Weight : "} text={`${parcel.weight_kg.toString()}kg`} />
+            <LableTextRow
+              label={"Parcel weight : "}
+              text={`${parcel.weight_kg.toString()}kg`}
+            />
 
             <Price
               unitPriceLabel={"Price per kg"}
@@ -402,7 +463,7 @@ function ProgressRow({
 }) {
   const steps = [2, 3, 4, 5, 6] as const;
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-neutral-50 py-4 px-3">
+    <div className="flex flex-wrap items-center gap-4 bg-neutral-50 py-4 px-3 rounded-lg">
       {isInitiator && <Step isCompleted={isInitiator} stage={progress[1]} />}
 
       {steps.map((step) => {

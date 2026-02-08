@@ -20,8 +20,8 @@ export function toCreateCarryRequestMapper(
     tripId: trip.id,
     senderUserId: parcel.user.id,
     travelerUserId: trip.user.id,
-    initiatorRole: initiatorRole.toLowerCase(),
-    status: status.toLowerCase(),
+    initiatorRole: initiatorRole,
+    status: status,
     parcelSnapshot: {
       sender_name: parcel.user.fullName,
       items: parcel.items,
