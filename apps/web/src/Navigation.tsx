@@ -1,12 +1,8 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
+import { useState } from "react";
 
-import { SupabaseAuthRepository } from "./app/features/login/data/LoginRepository";
-
-import { LogoutUseCase } from "./app/features/login/application/LogoutUseCase";
-import { useMemo, useState } from "react";
-import { useAsync } from "./app/hookes/useAsync";
-import { isNetworkError } from "./app/util/isNetworkError";
+import LogoutButton from "./app/shared/Authentication/UI/LogoutButton";
 
 export default function Navigation({
   userLoggedIn,
@@ -22,7 +18,11 @@ export default function Navigation({
 }
 
 function NavLinks({ children }: { children: React.ReactNode }) {
-  return <nav className="flex items-center gap-5 text-sm">{children}</nav>;
+  return (
+    <nav className="flex items-center gap-5 text-sm justify-center">
+      {children}
+    </nav>
+  );
 }
 
 function GuestNavigation() {
@@ -33,16 +33,8 @@ function GuestNavigation() {
     <NavLinks>
       <Home />
       <NavItem to="/about">About</NavItem>
-      <NavItem to="/about">Contact</NavItem>
-      <button
-        onClick={() =>
-          openAuthModal({
-            mode: "signup",
-            redirectTo: location.pathname,
-          })
-        }
-        className="text-sm font-medium text-gray-700 hover:text-blue-600"
-      >
+      <NavItem to="/contact">Contact</NavItem>
+      <button className="text-sm font-medium text-gray-700 hover:text-blue-600">
         Sign up
       </button>
 
@@ -65,11 +57,11 @@ function AuthenticatedNavigation() {
   const [showProfile, setShowProfile] = useState<boolean>(false);
   return (
     <NavLinks>
-      <Home />
       <NavItem to="/dashboard">Dashboard</NavItem>
       <NavItem to="/travelers">Trips</NavItem>
       <NavItem to="/parcels">Parcels</NavItem>
       <NavItem to="/requests">Requests</NavItem>
+      <button className="relative pb-1 text-neutral-600 font-medium">Notifications</button>
       <span className=" relative inline-flex flex-col">
         <button onClick={() => setShowProfile(!showProfile)}>
           <img
@@ -81,37 +73,6 @@ function AuthenticatedNavigation() {
         {showProfile && <LogoutButton />}
       </span>
     </NavLinks>
-  );
-}
-
-function LogoutButton() {
-  const navigate = useNavigate();
-
-  const repo = useMemo(() => new SupabaseAuthRepository(), []);
-  const useCase = useMemo(() => new LogoutUseCase(repo), [repo]);
-
-  const [loading, setLoading] = useState(false);
-
-  const logout = async () => {
-    try {
-      setLoading(true);
-      const result = await useCase.execute();
-
-      if (result.success) navigate("/");
-    } catch (error) {
-      if (isNetworkError(error)) console.log("network error:", error);
-      else console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <span className="absolute top-10 flex shadow-md rounded-md border border-error-500 p-5 max-w-sm">
-      <button onClick={logout} disabled={loading}>
-        {loading ? "Signing out..." : "Sign out"}
-      </button>
-    </span>
   );
 }
 

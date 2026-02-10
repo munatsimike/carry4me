@@ -338,15 +338,56 @@ function Deails({
               {"Cost summary"}
             </CustomText>
           </span>
-          <LabelTextRow
-            label={"Parcel weight :"}
-            text={`${parcel.weight_kg.toString()}kg`}
-          />
-          <LabelTextRow
-            label={"Price :"}
-            text={`${parcel.price_per_kg.toString()}/kg`}
-          />
-          <LabelTextRow label={"Total price :"} text={totalPrice.toString()} />
+          <div className="grid grid-cols-2 gap-y-2">
+            <CustomText
+              textSize="xsm"
+              textVariant="neutral"
+              as="span"
+              className="text-right"
+            >
+              {"Parcel weight :"}
+            </CustomText>
+            <CustomText
+              className="pl-1"
+              textSize="xsm"
+              as="span"
+              textVariant="primary"
+            >{`${parcel.weight_kg.toString()}kg`}</CustomText>
+
+            <CustomText
+              textSize="xsm"
+              as="span"
+              textVariant="neutral"
+              className="text-right"
+            >
+              {"Price :"}
+            </CustomText>
+            <CustomText
+              textSize="xsm"
+              as="span"
+              textVariant="primary"
+              className="leading-1 pl-1"
+            >
+              {`${parcel.price_per_kg.toString()}`}/kg
+            </CustomText>
+
+            <CustomText
+              textSize="xsm"
+              as="span"
+              textVariant="neutral"
+              className="text-right "
+            >
+              {"Total price :"}
+            </CustomText>
+            <CustomText
+              textSize="xsm"
+              as="span"
+              className="pl-1"
+              textVariant="primary"
+            >
+              {`${totalPrice.toString()}`}
+            </CustomText>
+          </div>
         </Stack>
       </span>
     </div>
@@ -360,7 +401,7 @@ function Parcel({
   parcel: ParcelSnapshot;
   viewerRole: Role;
 }) {
-  const cardLabel = viewerRole === ROLES.SENDER ? "Your parcel" : "Parcel";
+  const cardLabel = viewerRole === ROLES.SENDER ? "Your parcel details" : "Parcel details";
   const categories = parcel.categories.map((item) => item.name).join("-");
   return (
     <Stack>
@@ -388,7 +429,7 @@ function UITrip({
   trip: TripSnapshot;
   viewerRole: Role;
 }) {
-  const cardLabel = viewerRole === ROLES.TRAVELER ? "Your trip" : "Trip";
+  const cardLabel = viewerRole === ROLES.TRAVELER ? "Your trip details" : "Trip details";
   return (
     <Stack>
       <span>

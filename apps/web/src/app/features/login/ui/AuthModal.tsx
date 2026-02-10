@@ -75,7 +75,7 @@ export function AuthModal() {
       setError(null);
       closeAuthModal();
       if (state.redirectTo) {
-        navigate(state.redirectTo);
+        navigate("/dashboard");
       }
     }
   };

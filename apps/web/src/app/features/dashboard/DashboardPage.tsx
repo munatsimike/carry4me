@@ -54,7 +54,7 @@ export default function DashboardPage() {
     if (!authChecked) return;
 
     if (!userLoggedIn) {
-      navigate("/signin", { replace: true });
+      navigate("/", { replace: true });
     }
   }, [userLoggedIn, authChecked, navigate]);
 
