@@ -11,7 +11,8 @@ import Plane from "@/assets/plane-filled.svg?react";
 import LoveHands from "@/assets/lovehands.svg?react";
 import User from "@/assets/userwithtick.svg?react";
 import Lock from "@/assets/lock.svg?react";
-import type { CarryRequest, InfoItem, Parcel, TestUITrip} from "@/types/Ui";
+import type { InfoItem } from "@/types/Ui";
+
 
 export const steps = [
   {
@@ -169,154 +170,10 @@ export const questions: InfoItem[] = [
       "You get paid after delivery using a payout code provided by the sender or recipient.",
     tag: "traveler",
   },
-];
+];;
 
-export const travelers: TestUITrip[] = [
-  {
-    user: {
-      firstName: "Tariro",
-      lastName: "Munatsi",
-      id: 1,
-    },
-    route: {
-      date: new Date("2026-01-23"),
-      availableWeight: 4,
-      pricePerKg: 20,
-      origin: "UK",
-      destination: "Zimbabwe",
-      acceptedParcels: ["Documents"],
-    },
-    id: 1,
-  },
-  {
-    user: {
-      firstName: "Zvikomborero",
-      lastName: "Makatendeka",
-      id: 2,
-    },
-    route: {
-      date: new Date("2026-01-23"),
-      availableWeight: 4,
-      pricePerKg: 15,
-      origin: "UK",
-      destination: "Zimbabwe",
-      acceptedParcels: ["Documents"],
-    },
-    id: 3,
-  },
-  {
-    user: {
-      firstName: "Tanyaradzwa",
-      lastName: "Mupangavanhu",
-      id: 3,
-    },
-    route: {
-      date: new Date("2026-01-23"),
-      availableWeight: 4,
-      pricePerKg: 25,
-      origin: "UK",
-      destination: "Zimbabwe",
-      acceptedParcels: ["Documents"],
-    },
-    id: 4,
-  },
-];
 
-export const loggedInUserParcel: Parcel = {
-  user: {
-    firstName: "Peter",
-    lastName: "John",
-    avatar: undefined,
-    id: 4,
-  },
-  details: {
-    pricePerKg: 10,
-    weight: 5,
-    origin: "UK",
-    destination: "Zimbabwe",
-    category: ["Clothes & Shoes"],
-  },
-  id: 9,
-};
 
-export const loggedInUserTrip: TestUITrip = {
-  user: {
-    firstName: "Tanyaradzwa",
-    lastName: "Mupangavanhu",
-    id: 5,
-  },
-  route: {
-    date: new Date("2026-01-23"),
-    availableWeight: 4,
-    pricePerKg: 15,
-    origin: "UK",
-    destination: "Zimbabwe",
-    acceptedParcels: ["Documents"],
-  },
-  id: 9,
-};
 
-export const parlecs: Parcel[] = [
-  {
-    user: {
-      firstName: "Kudzanai",
-      lastName: "Raradza",
-      avatar: undefined,
-      id: 6,
-    },
-    details: {
-      pricePerKg: 20,
-      weight: 5,
-      origin: "UK",
-      destination: "Zimbabwe",
-      category: ["Clothes & Shoes"],
-    },
-    id: 1,
-  },
 
-  {
-    user: {
-      firstName: "Peter",
-      lastName: "John",
-      avatar: undefined,
-      id: 7,
-    },
-    details: {
-      pricePerKg: 15,
-      weight: 5,
-      origin: "UK",
-      destination: "Zimbabwe",
-      category: ["Clothes & Shoes"],
-    },
-    id: 2,
-  },
 
-  {
-    user: {
-      firstName: "Elvis",
-      lastName: "Mashinya",
-      avatar: undefined,
-      id: 8,
-    },
-    details: {
-      pricePerKg: 30,
-      weight: 5,
-      origin: "UK",
-      destination: "Zimbabwe",
-      category: ["Clothes & Shoes"],
-    },
-    id: 3,
-  },
-];
-
-export const carryRequests: CarryRequest = {
-  id: 1,
-  trip: loggedInUserTrip,
-  parcel: loggedInUserParcel,
-  status: "PAID_OUT",
-  initiatorRole: "SENDER",
-  pricePerKgAtRequest: 10,
-  weightKgAtRequest: 5,
-  totalPriceAtRequest: 50,
-  currency: "GBP",
-};

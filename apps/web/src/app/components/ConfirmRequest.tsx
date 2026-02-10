@@ -14,15 +14,11 @@ import TravelerRow from "./TravelerRow";
 import ButtomSpacer from "./BottomSpacer";
 import type { Trip } from "../features/trips/domain/Trip";
 import type { Parcel } from "../features/parcels/domain/Parcel";
-import LableTextRow from "./LabelTextRow";
+import LabelTextRow from "./LabelTextRow";
 import IconTextRow from "./card/IconTextRow";
 import { useMemo, useState } from "react";
 import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
-import { CreateCarryRequestEventUseCase } from "../features/carry request/application/CreateCarryRequestEventUseCase";
-import { SupabaseCarryRequestEventRepository } from "../features/carry request/data/SupabaseCarryRequestEventsRepository";
 import { CreateCarryRequestUseCase } from "../features/carry request/application/CreateCarryReaquest";
-import { CreateNotificationUseCase } from "../features/carry request/carry request events/application/CreateNotificationUseCase";
-import { SupabaseNotificationRepository } from "../features/carry request/carry request events/data/SupabaseNotificationRepository";
 import { SendCarryRequestUseCase } from "../features/carry request/application/SendCarryRequestUseCase";
 
 type ConfirmRequestProps = {
@@ -40,23 +36,6 @@ export default function ConfirmRequest({
   onClose,
   isSenderRequesting,
 }: ConfirmRequestProps) {
-  const notificationRepo = useMemo(
-    () => new SupabaseNotificationRepository(),
-    [],
-  );
-
-  const createNotificationUseCase = useMemo(
-    () => new CreateNotificationUseCase(notificationRepo),
-    [notificationRepo],
-  );
-  const requestEventRepo = useMemo(
-    () => new SupabaseCarryRequestEventRepository(),
-    [],
-  );
-  const createEventUseCase = useMemo(
-    () => new CreateCarryRequestEventUseCase(requestEventRepo),
-    [requestEventRepo],
-  );
   const carryRequestRepository = useMemo(
     () => new SupabaseCarryRequestRepository(),
     [],
@@ -68,24 +47,18 @@ export default function ConfirmRequest({
   const [requestLoaded, setLoadRequest] = useState<boolean>(false);
 
   const sendCarryRequestUseCase = useMemo(
-    () =>
-      new SendCarryRequestUseCase(
-        createRequest,
-        createEventUseCase,
-        createNotificationUseCase,
-      ),
+    () => new SendCarryRequestUseCase(createRequest),
     [],
   );
 
   const handleSendRequest = async () => {
     if (requestLoaded) return;
-    const result = await sendCarryRequestUseCase.execute(
+    const requestId = await sendCarryRequestUseCase.execute(
       loggedInUserId,
       parcel,
       trip,
     );
-
-    if (result) {
+    if (requestId) {
       setLoadRequest(true);
       onClose();
     }
@@ -145,7 +118,7 @@ function UITrip({
         destination={trip.route.destinationCountry}
       />
       <DateRow date={trip.departDate} />
-      <LableTextRow label={"Accepted Items:"} text={items} />
+      <LabelTextRow label={"Accepted Items:"} text={items} />
     </Stack>
   );
 }

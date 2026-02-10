@@ -1,16 +1,24 @@
-import { INFOMODES, ROLES, type InfoBlockMode, type Role } from "@/types/Ui";
-import { type CarryRequestStatus } from "../domain/CreateCarryRequest";
+import { INFOMODES, type InfoBlockMode } from "@/types/Ui";
+import {
+  CARRY_REQUEST_STATUSES,
+  ROLES,
+  type CarryRequestStatus,
+  type Role,
+} from "../domain/CreateCarryRequest";
+import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
 
-export type UIActionKey =
-  | "ACCEPT"
-  | "REJECT"
-  | "CANCEL"
-  | "PAY"
-  | "CONFIRM_HANDOVER"
-  | "MARK_DELIVERED"
-  | "RELEASE_PAYMENT"
-  | "BROWSE_TRIPS"
-  | "BROWSE_PARCELS";
+export const UIACTIONKEYS = {
+  ACCEPT: "ACCEPT",
+  REJECT: "REJECT",
+  CANCEL: "CANCEL",
+  PAY: "PAY",
+  CONFIRM_HANDOVER: "CONFIRM_HANDOVER",
+  MARK_DELIVERED: "MARK_DELIVERED",
+  RELEASE_PAYMENT: "RELEASE_PAYMENT",
+  BROWSE_TRIPS: "BROWSE_TRIPS",
+  BROWSE_PARCELS: "BROWSE_PARCELS",
+} as const;
+export type UIActionKey = (typeof UIACTIONKEYS)[keyof typeof UIACTIONKEYS];
 
 const VARIANTS = {
   PRIMARY: "primary",
@@ -62,35 +70,35 @@ const accepRequest: UIAction = {
   kind: ACTIONKINDS.ACCEPT,
   variant: VARIANTS.PRIMARY,
   label: "Accept request",
-  key: "ACCEPT",
+  key: UIACTIONKEYS.ACCEPT,
 };
 
 const rejectRequest: UIAction = {
   kind: ACTIONKINDS.REJECT,
   variant: VARIANTS.DANGER,
   label: "Reject request",
-  key: "REJECT",
+  key: UIACTIONKEYS.REJECT,
 };
 
 const cancelRequest: UIAction = {
   kind: ACTIONKINDS.CANCEL,
   variant: VARIANTS.DANGER,
   label: "Cancel request",
-  key: "CANCEL",
+  key: UIACTIONKEYS.CANCEL,
 };
 
 const makePayment: UIAction = {
   kind: ACTIONKINDS.PAY,
   variant: VARIANTS.PRIMARY,
   label: "Make payment",
-  key: "PAY",
+  key: UIACTIONKEYS.PAY,
 };
 
 const confirmHandover: UIAction = {
   kind: ACTIONKINDS.HANDOVER,
   variant: VARIANTS.PRIMARY,
   label: "Confirm handover",
-  key: "CONFIRM_HANDOVER",
+  key: UIACTIONKEYS.CONFIRM_HANDOVER,
 };
 
 function confirmDelivery(): UIAction {
@@ -98,7 +106,7 @@ function confirmDelivery(): UIAction {
     kind: ACTIONKINDS.DELIVERY,
     variant: VARIANTS.PRIMARY,
     label: "Confirm delivery",
-    key: "MARK_DELIVERED",
+    key: UIACTIONKEYS.MARK_DELIVERED,
   };
 }
 
@@ -115,23 +123,24 @@ export default function actionsMapper(
   viewerRole: Role,
   status: CarryRequestStatus,
   requestIniator: Role,
+  handoverState?: HandoverConfirmationState,
 ): UIActions {
   switch (status) {
-    case "PENDING_ACCEPTANCE":
+    case CARRY_REQUEST_STATUSES.PENDING_ACCEPTANCE:
       return pendingAcceptance(viewerRole, requestIniator);
-    case "PENDING_PAYMENT":
+    case CARRY_REQUEST_STATUSES.PENDING_PAYMENT:
       return pendingPayment(viewerRole);
-    case "PENDING_HANDOVER":
-      return pendingHandover();
-    case "IN_TRANSIT":
+    case CARRY_REQUEST_STATUSES.PENDING_HANDOVER:
+      return pendingHandover(handoverState, viewerRole);
+    case CARRY_REQUEST_STATUSES.IN_TRANSIT:
       return intransit(viewerRole);
-    case "PENDING_PAYOUT":
+    case CARRY_REQUEST_STATUSES.PENDING_PAYOUT:
       return pendingPayout(viewerRole);
-    case "PAID_OUT":
+    case CARRY_REQUEST_STATUSES.PAID_OUT:
       return paidOut();
-    case "REJECTED":
+    case CARRY_REQUEST_STATUSES.REJECTED:
       return requestRejected(viewerRole);
-    case "CANCELLED":
+    case CARRY_REQUEST_STATUSES.CANCELLED:
       return requestCanceled(viewerRole);
     default:
       return {};
@@ -191,6 +200,13 @@ function pendingPayout(viewerRole: Role): UIActions {
         label: "Enter payment code",
         helperText: "Haven’t received the code yet? Please contact the sender.",
       },
+
+      primary: {
+        kind: ACTIONKINDS.PAYOUT,
+        variant: VARIANTS.PRIMARY,
+        label: "Pay out",
+        key: "RELEASE_PAYMENT",
+      },
     };
   }
 }
@@ -209,7 +225,20 @@ function intransit(viewerRole: Role): UIActions {
   }
 }
 
-function pendingHandover(): UIActions {
+function pendingHandover(
+  handoverState: HandoverConfirmationState | undefined,
+  viewerRole: Role,
+): UIActions {
+  if (
+    (handoverState &&
+      viewerRole === ROLES.SENDER &&
+      handoverState?.senderConfirmed) ||
+    (viewerRole === ROLES.TRAVELER && handoverState?.travelerConfirmed)
+  ) {
+    return {
+      secondary: cancelRequest,
+    };
+  }
   return {
     primary: confirmHandover,
     secondary: cancelRequest,

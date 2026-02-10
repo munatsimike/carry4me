@@ -5,9 +5,21 @@ type LabelTextRowProps = {
   text: string;
 };
 
-export default function LableTextRow({ label, text }: LabelTextRowProps) {
- return <span className="inline flex items-center gap-2">
-    <CustomText textSize="xsm" textVariant="neutral"> {label}</CustomText>
-    <CustomText textVariant="primary" textSize="xsm"> {text}</CustomText>
-  </span>;
+export default function LabelTextRow({ label, text }: LabelTextRowProps) {
+  return (
+    <span className="grid grid-cols-2">
+      <CustomText as="span" textSize="xsm" textVariant="neutral" className="leading-tight">
+        {label}
+      </CustomText>
+
+      <CustomText
+        as="span"
+        textVariant="primary"
+        textSize="xsm"
+        className="pl-1 leading-tight"
+      >
+        {text}
+      </CustomText>
+    </span>
+  );
 }

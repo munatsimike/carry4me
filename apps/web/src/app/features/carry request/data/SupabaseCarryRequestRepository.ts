@@ -27,12 +27,14 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       .from("carry_requests")
       .select(
         `
-      *,
-      events:carry_request_events(*)
-    `,
+        *,
+        events:carry_request_events(*),
+        handover_confirmations:carry_request_handover_confirmations(role, confirmed_at)
+      `,
       )
       .or(`sender_user_id.eq.${userId},traveler_user_id.eq.${userId}`)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .throwOnError();
 
     return (data ?? []).map(toCarryRequestMapper);
   }

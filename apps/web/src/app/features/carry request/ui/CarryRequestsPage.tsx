@@ -8,41 +8,40 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { INFOMODES, progress, ROLES, type Parcel } from "@/types/Ui";
+import { INFOMODES, progress, type Parcel } from "@/types/Ui";
 import RouteRow from "@/app/components/RouteRow";
 import DateRow from "@/app/components/DateRow";
 import CategoryRow from "@/app/components/CategoryRow";
-import WeightRow from "@/app/components/WeightRow";
+
 import ButtomSpacer from "@/app/components/BottomSpacer";
 import { Button } from "@/components/ui/Button";
-import { Price } from "@/app/components/card/WeightAndPrice";
+
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
 import { useEffect, useMemo, useState } from "react";
 import statusColor from "./StatustColorMapper";
-import actionsMapper, {
-  type UIActionKey,
-  type UIActions,
-} from "./ActionsMapper";
+import actionsMapper, { UIACTIONKEYS, type UIActions } from "./ActionsMapper";
 import { FetchCarryRequestsUseCase } from "../application/FetchCarryRequestsUseCase";
 import { SupabaseCarryRequestRepository } from "../data/SupabaseCarryRequestRepository";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
 import type { CarryRequest } from "../domain/CarryRequest";
-import { type CarryRequestStatus } from "../domain/CreateCarryRequest";
-import { toRoleMapper } from "./toRoleMapper";
+import {
+  CARRY_REQUEST_STATUSES,
+  ROLES,
+  type CarryRequestStatus,
+  type Role,
+} from "../domain/CreateCarryRequest";
+
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
 import IconTextRow from "@/app/components/card/IconTextRow";
-import LableTextRow from "@/app/components/LabelTextRow";
-import { UpdateCarryRequestUseCase } from "../application/UpdateCarryRequestUseCase";
-import { SupabaseCarryRequestEventRepository } from "../data/SupabaseCarryRequestEventsRepository";
-import { CreateCarryRequestEventUseCase } from "../application/CreateCarryRequestEventUseCase";
-import { SupabaseNotificationRepository } from "../carry request events/data/SupabaseNotificationRepository";
-import { CreateNotificationUseCase } from "../carry request events/application/CreateNotificationUseCase";
+import LabelTextRow from "@/app/components/LabelTextRow";
 import { PerformCarryRequestActionUseCase } from "../application/PerformCarryRequestActionUseCase";
+import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActionRepository";
+import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
 
 export default function CarryRequestsPage() {
-  const [carryRequests, setCarryRequests] = useState<CarryRequest[]>([]);
+  const [carryRequestsList, setCarryRequestList] = useState<CarryRequest[]>([]);
   const carryRequestRepository = useMemo(
     () => new SupabaseCarryRequestRepository(),
     [],
@@ -52,71 +51,75 @@ export default function CarryRequestsPage() {
     [carryRequestRepository],
   );
 
-  const updateCarryRequest = useMemo(
-    () => new UpdateCarryRequestUseCase(carryRequestRepository),
-    [carryRequestRepository],
-  );
-
-  const enventRepo = useMemo(
-    () => new SupabaseCarryRequestEventRepository(),
+  const performActionRepository = useMemo(
+    () => new SupabasePerformActionRepository(),
     [],
   );
-  const createEventUseCase = useMemo(
-    () => new CreateCarryRequestEventUseCase(enventRepo),
-    [enventRepo],
-  );
-
-  const notificatoinRepo = useMemo(
-    () => new SupabaseNotificationRepository(),
-    [],
-  );
-  const createNotificationUseCase = useMemo(
-    () => new CreateNotificationUseCase(notificatoinRepo),
-    [notificatoinRepo],
-  );
-
-  const acceptRequestUseCase = useMemo(
-    () =>
-      new PerformCarryRequestActionUseCase(
-        updateCarryRequest,
-        createEventUseCase,
-        createNotificationUseCase,
-      ),
-    [],
+  const performRequestActions = useMemo(
+    () => new PerformCarryRequestActionUseCase(performActionRepository),
+    [performActionRepository],
   );
 
   const [isRequestSent, setisRequestSent] = useState(false);
-  const [requestLoaded, setRequestLoaded] = useState(false);
+  const [isListLoaded, setIsListLoaded] = useState(false);
+  const [isStateLoaded, setIsStateLoaded] = useState(false);
   const { userId } = useAuthState();
+  const [handoverState, setHandoverState] = useState<
+    HandoverConfirmationState | undefined
+  >(undefined);
 
+  //fetch carry requests
   useEffect(() => {
     let cancelled = false;
     async function fetchRequest() {
-      if (!userId || requestLoaded) return;
+      if (!userId || isListLoaded) return;
       const data = await fetchCarryRequestUseCase.execute(userId);
 
       if (!cancelled) {
-        setCarryRequests(data);
-        setRequestLoaded(true);
+        setCarryRequestList(data);
+        setIsListLoaded(true);
       }
     }
 
     fetchRequest();
-
     return () => {
       cancelled = true;
     };
-  }, [userId, requestLoaded]);
+  }, [userId, isListLoaded]);
 
   const [inputValue, setValue] = useState<string>("");
-
   const heightClass = "my-2";
+
+  const handleActions = async (
+    actions: UIActions,
+    carryRequest: CarryRequest,
+  ) => {
+    if (!actions.primary || isRequestSent || !userId) return;
+
+    const result = await performRequestActions.execute(
+      actions.primary.key,
+      carryRequest.carryRequestId,
+    );
+
+    if (result) {
+      setIsListLoaded(false);
+      setisRequestSent(true);
+    }
+  };
 
   return (
     <>
       <PageTopSection />
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {carryRequests.map((request) => {
+        {carryRequestsList.map((request) => {
+          if (
+            request.status == CARRY_REQUEST_STATUSES.PENDING_HANDOVER &&
+            !isStateLoaded
+          ) {
+            ``;
+            setHandoverState(request.handoverState);
+            setIsStateLoaded(true);
+          }
           const viewerRole =
             userId === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
           const requestUI = mapCarryRequestToUI(request, viewerRole);
@@ -124,6 +127,7 @@ export default function CarryRequestsPage() {
             viewerRole,
             request.status,
             request.initiatorRole,
+            handoverState ?? undefined,
           );
           return (
             <Card
@@ -150,9 +154,7 @@ export default function CarryRequestsPage() {
                 <Deails
                   trip={request.tripSnapshot}
                   parcel={request.parcelSnapshot}
-                  isSenderInitiator={
-                    viewerRole === toRoleMapper[request.initiatorRole]
-                  }
+                  viewerRole={viewerRole}
                 />
                 <LineDivider heightClass={heightClass} />
                 {actions.infoBlock?.displayText ? (
@@ -170,37 +172,27 @@ export default function CarryRequestsPage() {
                     ) : (
                       <span /> // place holder to push primary button to the right
                     )}
-                    {actions.primary && (
-                      <Button
-                        onClick={async () => {
-                          if (!actions.primary || isRequestSent || !userId)
-                            return;
-
-                          const result = await acceptRequestUseCase.execute(
-                            actions.primary.key,
-                            userId,
-                            request,
-                          );
-
-                          if (result?.ok) {
-                            // do success handling
-                          }
-                        }}
-                        variant="primary"
-                        size="md"
-                        leadingIcon
-                      >
-                        {actions.primary.label}
-                      </Button>
-                    )}
+                    {actions.primary &&
+                      actions.primary.key !== UIACTIONKEYS.RELEASE_PAYMENT && (
+                        <Button
+                          onClick={() => handleActions(actions, request)}
+                          variant="primary"
+                          size="md"
+                          leadingIcon
+                        >
+                          {actions.primary.label}
+                        </Button>
+                      )}
 
                     {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
-                      actions.infoBlock.displayText === null && (
+                      actions.infoBlock.displayText !== null && (
                         <InfoBlockDisplay actions={actions} />
                       )}
 
                     {actions.infoBlock?.mode === INFOMODES.INPUT && (
                       <InfoBlockInput
+                        handleActions={handleActions}
+                        carryRequest={request}
                         actions={actions}
                         onChange={setValue}
                         inputValue={inputValue}
@@ -230,13 +222,17 @@ function RequestCompleted({ actions }: { actions: UIActions }) {
   );
 }
 function InfoBlockInput({
+  handleActions,
   actions,
   onChange,
   inputValue,
+  carryRequest,
 }: {
   inputValue: string;
+  carryRequest: CarryRequest;
   actions: UIActions;
   onChange: (value: string) => void;
+  handleActions: (actions: UIActions, request: CarryRequest) => void;
 }) {
   return (
     <span className="inline-flex flex-col gap-2">
@@ -249,7 +245,12 @@ function InfoBlockInput({
           className="rounded-md w-[15ch] tracking-widest ... px-3 py-1 border border-neutral-200 text-md focus:ring-2  focus:ring-primary-100 font-mono text-neutral-500 focus:border-primary-100 focus:outline-none"
           onChange={(e) => onChange(e.target.value)}
         />
-        <Button variant={"primary"} size={"sm"} leadingIcon={undefined}>
+        <Button
+          onClick={() => handleActions(actions, carryRequest)}
+          variant={"primary"}
+          size={"sm"}
+          leadingIcon={undefined}
+        >
           <CustomText textVariant="primary" className="text-white">
             {"Payout"}
           </CustomText>
@@ -319,37 +320,33 @@ function PageTopSection() {
 function Deails({
   trip,
   parcel,
-  isSenderInitiator,
+  viewerRole,
 }: {
   trip: TripSnapshot;
   parcel: ParcelSnapshot;
-  isSenderInitiator: boolean;
+  viewerRole: Role;
 }) {
   const totalPrice = parcel.price_per_kg * parcel.weight_kg;
   return (
     <div className="flex flex-col">
       <span className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.7fr] gap-10">
-        <UITrip trip={trip} isSenderInitiator={isSenderInitiator} />
-        <Parcel parcel={parcel} isSenderInitiator={isSenderInitiator} />
+        <UITrip trip={trip} viewerRole={viewerRole} />
+        <Parcel parcel={parcel} viewerRole={viewerRole} />
         <Stack>
           <span className="inline-flex bg-neutral-100 rounded-full py-1 px-3 border">
             <CustomText as="span" textSize="xsm">
               {"Cost summary"}
             </CustomText>
           </span>
-          <span className="flex flex-col items-end gap-2">
-            <LableTextRow
-              label={"Parcel weight : "}
-              text={`${parcel.weight_kg.toString()}kg`}
-            />
-
-            <Price
-              unitPriceLabel={"Price per kg"}
-              unitPrice={parcel.price_per_kg}
-              totalPrice={totalPrice}
-              location={"USA"}
-            />
-          </span>
+          <LabelTextRow
+            label={"Parcel weight :"}
+            text={`${parcel.weight_kg.toString()}kg`}
+          />
+          <LabelTextRow
+            label={"Price :"}
+            text={`${parcel.price_per_kg.toString()}/kg`}
+          />
+          <LabelTextRow label={"Total price :"} text={totalPrice.toString()} />
         </Stack>
       </span>
     </div>
@@ -358,12 +355,12 @@ function Deails({
 
 function Parcel({
   parcel,
-  isSenderInitiator,
+  viewerRole,
 }: {
   parcel: ParcelSnapshot;
-  isSenderInitiator: boolean;
+  viewerRole: Role;
 }) {
-  const cardLabel = isSenderInitiator ? "Your parcel" : "Parcel";
+  const cardLabel = viewerRole === ROLES.SENDER ? "Your parcel" : "Parcel";
   const categories = parcel.categories.map((item) => item.name).join("-");
   return (
     <Stack>
@@ -386,12 +383,12 @@ function Parcel({
 }
 function UITrip({
   trip,
-  isSenderInitiator,
+  viewerRole,
 }: {
   trip: TripSnapshot;
-  isSenderInitiator: boolean;
+  viewerRole: Role;
 }) {
-  const cardLabel = isSenderInitiator ? "Trip" : "Your trip";
+  const cardLabel = viewerRole === ROLES.TRAVELER ? "Your trip" : "Trip";
   return (
     <Stack>
       <span>

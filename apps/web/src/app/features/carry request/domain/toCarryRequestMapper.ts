@@ -1,7 +1,13 @@
 import type { CarryRequest } from "./CarryRequest";
 
 export function toCarryRequestMapper(row: any): CarryRequest {
-
+  const confirmations = row.handover_confirmations ?? [];
+  const senderConfirmed = confirmations.some(
+    (c: any) => c.role === "SENDER" && c.confirmed_at,
+  );
+  const travelerConfirmed = confirmations.some(
+    (c: any) => c.role === "TRAVELER" && c.confirmed_at,
+  );
 
   return {
     carryRequestId: row.id,
@@ -11,6 +17,12 @@ export function toCarryRequestMapper(row: any): CarryRequest {
     travelerUserId: row.traveler_user_id,
     initiatorRole: row.initiator_role,
     status: row.status,
+
+    handoverState: {
+      senderConfirmed,
+      travelerConfirmed,
+      bothConfirmed: senderConfirmed && travelerConfirmed,
+    },
     parcelSnapshot: {
       sender_name: row.parcel_snapshot.sender_name,
       items: row.parcel_snapshot.items, //[]

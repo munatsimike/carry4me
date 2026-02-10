@@ -82,14 +82,6 @@ export const progress = {
   6: "Payment released",
 } as const;
 
-
-export const ROLES = {
-  SENDER: "SENDER",
-  TRAVELER: "TRAVELER",
-};
-export type InitiatorRole = Role;
-export type Role = (typeof ROLES)[keyof typeof ROLES];
-
 export const INFOMODES = {
   DISPLAY: "DISPLAY",
   INPUT: "INPUT",
