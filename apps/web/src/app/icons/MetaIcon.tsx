@@ -18,6 +18,8 @@ import AddAccountIcon from "@/assets/add-account-icon.svg?react";
 import TravelerOutLinedIcon from "@/assets/traveler-outlined-icon.svg?react";
 import TravelerIcon from "@/assets/travelerIcon.svg?react";
 import AddIcon from "@/assets/plus-icon.svg?react";
+import ShakingHands from "@/assets/shaking-hands.svg?react";
+import ClockFilled from "@/assets/clock-filled.svg?react";
 import UserIconOutlined from "@/assets/user-icon-outlined.svg?react";
 
 export const META_ICONS = {
@@ -42,4 +44,6 @@ export const META_ICONS = {
   arrowSmall: ArrowSmall,
   addIcon: AddIcon,
   userIconOutlined: UserIconOutlined,
+  shaakingHands: ShakingHands,
+  clockFilled: ClockFilled,
 };

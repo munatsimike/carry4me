@@ -1,7 +1,7 @@
-export type Status = "Pending" | "InProgress" | "Completed";
+import type { CarryRequestStatus } from "../../carry request/domain/CreateCarryRequest";
 
 export type ActivityItem = {
-  status: Status;
+  status: CarryRequestStatus;
   count: number;
-  title: string;
+  itemName: string;
 };

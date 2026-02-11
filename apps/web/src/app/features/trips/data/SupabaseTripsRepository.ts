@@ -20,7 +20,7 @@ export class SupabaseTripsRepository implements TripsRepository {
       .eq("traveler_user_id", userId)
       .maybeSingle()
       .throwOnError();
-     return data ? mapTripRowToTrip(data) : null;
+    return data ? mapTripRowToTrip(data) : null;
   }
 
   async listTrips(): Promise<Trip[]> {

@@ -7,7 +7,9 @@ import {
 import { toCarryRequestMapper } from "../domain/toCarryRequestMapper";
 import type { CarryRequest } from "../domain/CarryRequest";
 
+
 export class SupabaseCarryRequestRepository implements CarryRequestRepository {
+
   async updateCarryRequestStatus(
     carryRequestId: string,
     newStatus: CarryRequestStatus,

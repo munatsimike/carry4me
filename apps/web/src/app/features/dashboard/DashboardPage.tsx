@@ -19,10 +19,14 @@ import { isNetworkError } from "@/app/util/isNetworkError";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
 import { AnimatePresence } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
-import type { ActivityItem } from "./domain/ActivityItem";
 import { toColorMapper } from "./application/toColorMapper";
 import { SupabaseAuthRepository } from "@/app/shared/data/LoginRepository";
 import { GetUsersNameUseCase } from "@/app/shared/Authentication/application/GetUsersNameUseCase";
+import type { StatsItem } from "./domain/stats.types";
+import { GetDashboardDataUseCase } from "./application/GetDashboardData";
+import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
+import type { DashboardData } from "./domain/DashboardData";
+import { SubabaseDashboardRepository } from "./data/SupabaseDashboardRepository";
 
 export default function DashboardPage() {
   //Create get goods use case
@@ -37,14 +41,41 @@ export default function DashboardPage() {
     [supabaseRepository],
   );
 
+  const tripRepository = useMemo(() => new SupabaseTripsRepository(), []);
+  const dashboardDataRepository = useMemo(
+    () => new SubabaseDashboardRepository(),
+    [],
+  );
+
+  const getDashboardDataUseCase = useMemo(
+    () => new GetDashboardDataUseCase(dashboardDataRepository),
+    [tripRepository],
+  );
+
   const [fullName, setFullName] = useState<string | null>(null);
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
   const [showTripModal, setTripModalState] = useState<boolean>(false);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null,
+  );
   const navigate = useNavigate();
   const { userLoggedIn, authChecked, userId } = useAuthState();
   // fetch goods category
   const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
 
+  // fetch dashboard data
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchDashboardData = async () => {
+      const data = await getDashboardDataUseCase.execute(userId);
+      if (data) setDashboardData(data);
+    };
+
+    fetchDashboardData();
+  }, [userId]);
+
+  // users fullname
   useEffect(() => {
     if (!userId) return;
 
@@ -96,25 +127,9 @@ export default function DashboardPage() {
         />
 
         <div className="flex flex-wrap gap-10">
-          <StatsSection
-            statsList={[
-              { title: "Posted Trips", stat: 1 },
-              { title: "Posted  Parcel", stat: 1 },
-              { title: "Deliveries completed", stat: 1 },
-              { title: "Matches", stat: 1 },
-            ]}
-          />
+          <StatsSection statsList={dashboardData ? dashboardData.stats : []} />
           <YourActivitySection
-            tripActivityList={[
-              { title: "Pending matches", status: "Pending", count: 2 },
-              { title: "Awaiting handover", status: "Pending", count: 2 },
-              {
-                title: "Delivery InProgress",
-                status: "InProgress",
-                count: 2,
-              },
-              { title: "Delivered", status: "Completed", count: 2 },
-            ]}
+            tripActivityList={dashboardData ? dashboardData.activity : []}
           />
         </div>
       </div>
@@ -141,16 +156,12 @@ export default function DashboardPage() {
   );
 }
 
-type StatItem = {
-  title: string;
-  stat: number;
-};
 type StatsProps = {
-  statsList: StatItem[];
+  statsList: StatsItem[];
 };
 
 type ActivityProps = {
-  tripActivityList: ActivityItem[];
+  tripActivityList: StatsItem[];
 };
 
 function YourActivitySection({ tripActivityList }: ActivityProps) {
@@ -168,11 +179,11 @@ function YourActivitySection({ tripActivityList }: ActivityProps) {
                 <SvgIcon
                   color="primary"
                   size={"md"}
-                  Icon={META_ICONS.parcelBox}
+                  Icon={META_ICONS.shaakingHands}
                 ></SvgIcon>
               </CircleBadge>
               <CustomText textVariant="primary" textSize="md">
-                {"My Parcels"}
+                {"My deliveries"}
               </CustomText>
             </span>
             <ActivityItems activityList={tripActivityList} />
@@ -185,43 +196,36 @@ function YourActivitySection({ tripActivityList }: ActivityProps) {
                 <SvgIcon
                   color="primary"
                   size={"md"}
-                  Icon={META_ICONS.travelerIcon}
+                  Icon={META_ICONS.clockFilled}
                 ></SvgIcon>
               </CircleBadge>
               <CustomText textVariant="primary" textSize="md">
-                {"My Trips"}
+                {"Recent activities"}
               </CustomText>
             </span>
             <ActivityItems activityList={tripActivityList} />
           </div>
         </Card>
       </div>
-      <RecentActivities />
       <></>
     </div>
   );
 }
 
-function RecentActivities() {
-  return (
-    <div className="flex flex-col border border:neutral-100 rounded-xl p-4">
-      <CustomText textVariant="primary" textSize="lg">
-        {"Recent activities"}
-      </CustomText>
-    </div>
-  );
-}
-
-function ActivityItems({ activityList }: { activityList: ActivityItem[] }) {
+function ActivityItems({ activityList }: { activityList: StatsItem[] }) {
   return (
     <span className="flex flex-col gap-3">
       {activityList.map((item) => (
-        <span key={item.title} className="inline-flex gap-3 items-center">
+        <span key={item.itemName} className="inline-flex gap-3 items-center">
           <span
-            className={`w-3 h-3 rounded-full pointer-cursor ${toColorMapper[item.status]}`}
+            className={`w-3 h-3 rounded-full ${item.status && toColorMapper[item.status]}`}
           />
-          <CustomText textVariant="secondary" textSize="xsm">
-            {item.title} {`(${item.count})`}
+          <CustomText
+            textVariant="secondary"
+            textSize="xsm"
+            className="cursor-pointer"
+          >
+            {item.itemName} {`(${item.count})`}
           </CustomText>
         </span>
       ))}
@@ -238,8 +242,8 @@ function StatsSection({ statsList }: StatsProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 justify-end">
           {statsList.map((item) => (
             <Card className="flex flex-col items-center gap-3">
-              <CustomText>{item.title}</CustomText>
-              <CustomText>{item.stat}</CustomText>
+              <CustomText>{item.itemName}</CustomText>
+              <CustomText>{item.count}</CustomText>
             </Card>
           ))}
         </div>
