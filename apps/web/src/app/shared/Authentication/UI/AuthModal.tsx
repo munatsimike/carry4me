@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useAuthModal } from "../../../shared/Authentication/AuthModalContext";
+import { useAuthModal } from "../AuthModalContext";
 import CustomModal from "../../../components/CustomModal";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "../../../icons/MetaIcon";
@@ -11,12 +11,12 @@ import z, { email } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
-import { signInWithProvider } from "../../../shared/supabase/authOAuthService";
+import { signInWithProvider } from "../../supabase/authOAuthService";
 import Spinner from "../../../components/Spinner";
 import LinkText from "../../../components/text/LinkText";
 import ErrorText from "../../../components/text/ErrorText";
 import { LoginUseCase } from "../application/LoginUseCase";
-import { SupabaseAuthRepository } from "../data/LoginRepository";
+import { SupabaseAuthRepository } from "../../data/LoginRepository";
 
 const schema = z.object({
   email: z

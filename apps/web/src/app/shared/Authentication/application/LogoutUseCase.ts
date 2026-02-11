@@ -8,6 +8,6 @@ export class LogoutUseCase {
   }
 
   async execute(): Promise<LogoutResult> {
-   return this.repo.logout();
+    return this.repo.logout();
   }
 }

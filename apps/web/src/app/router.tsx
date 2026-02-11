@@ -6,7 +6,7 @@ import TravelersPage from "./features/trips/ui/TravelersPage";
 import ParcelsPage from "./features/parcels/ui/ParcelsPage";
 import CarryRequestsPage from "./features/carry request/ui/CarryRequestsPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
-import { AuthModal } from "./features/login/ui/AuthModal";
+import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import HomePage from "./features/home/HomePage";
 
 export const router = createBrowserRouter([

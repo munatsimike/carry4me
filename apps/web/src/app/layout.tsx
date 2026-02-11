@@ -2,7 +2,7 @@ import Navigation from "@/Navigation";
 import { Link, Outlet } from "react-router-dom";
 import { useAuthState } from "./shared/supabase/AuthState";
 import { AuthModalProvider } from "./shared/Authentication/AuthModalContext";
-import { AuthModal } from "./features/login/ui/AuthModal";
+import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 
 export default function AppLayout() {
   const { authChecked, userLoggedIn } = useAuthState();

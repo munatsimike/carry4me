@@ -1,12 +1,23 @@
-import { supabase } from "../../../shared/supabase/client";
+import { supabase } from "../supabase/client";
 import type {
   AuthRepository,
   LoginResult,
   LogoutResult,
-} from "../domain/AuthRepository";
+  User,
+} from "../Authentication/domain/AuthRepository";
 import toDomainUser from "./userMapper";
 
 export class SupabaseAuthRepository implements AuthRepository {
+  async fetchUserName(userId: string): Promise<string> {
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .single()
+      .throwOnError();
+    return data.full_name;
+  }
+
   async logout(): Promise<LogoutResult> {
     const { error } = await supabase.auth.signOut();
     if (error) {

@@ -132,7 +132,6 @@ export default function CarryRequestsPage() {
           return (
             <Card
               key={request.carryRequestId}
-              hover={false}
               cornerRadiusClass="rounded-2xl"
               className="px-6 w-full max-w-[960px] mx-auto shadow-sm"
             >

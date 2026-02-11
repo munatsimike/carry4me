@@ -1,6 +1,6 @@
 // userMapper.ts
 import type { User as SbUser } from "@supabase/supabase-js";
-import type { User } from "../domain/AuthRepository";
+import type { User } from "../Authentication/domain/AuthRepository";
 
 export default function toDomainUser(u: SbUser): User {
   return {

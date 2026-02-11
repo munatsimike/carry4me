@@ -1,5 +1,5 @@
-import { LogoutUseCase } from "@/app/features/login/application/LogoutUseCase";
-import { SupabaseAuthRepository } from "@/app/features/login/data/LoginRepository";
+import { LogoutUseCase } from "@/app/shared/Authentication/application/LogoutUseCase";
+import { SupabaseAuthRepository } from "@/app/shared/data/LoginRepository";
 import { isNetworkError } from "@/app/util/isNetworkError";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";

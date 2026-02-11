@@ -1,6 +1,6 @@
 import type { ParcelItem } from "./CreateParcel";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
-import type { User } from "../../login/domain/AuthRepository";
+import type { User } from "../../../shared/Authentication/domain/AuthRepository";
 
 export type Parcel = {
   id: string;

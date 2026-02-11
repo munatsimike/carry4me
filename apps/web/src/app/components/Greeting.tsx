@@ -8,7 +8,7 @@ function getGreeting() {
   return `Good evening 🌙`;
 }
 
-export default function Greeting({ user }: { user?: string }) {
+export default function Greeting({ user }: { user: string | null}) {
   const [greeting, setGreeting] = useState(getGreeting());
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function Greeting({ user }: { user?: string }) {
 
   return (
     <h1 >
-      {greeting} {","} {user}
+      {greeting} {","} {`${user?.substring(0,user.indexOf(" "))}${"!"}`}
     </h1>
   );
 }
