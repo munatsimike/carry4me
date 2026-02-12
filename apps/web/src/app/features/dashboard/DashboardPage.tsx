@@ -27,6 +27,13 @@ import { GetDashboardDataUseCase } from "./application/GetDashboardData";
 import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
 import type { DashboardData } from "./domain/DashboardData";
 import { SubabaseDashboardRepository } from "./data/SupabaseDashboardRepository";
+import { Clock, Truck } from "lucide-react";
+import { GetNotificationUseCase } from "../carry request/carry request events/application/CreateNotificationUseCase";
+import { SupabaseNotificationRepository } from "../carry request/carry request events/data/SupabaseNotificationRepository";
+import type { CarryRequestNotification } from "../carry request/carry request events/domain/CarryRequestNotification";
+import LineDivider from "@/app/components/LineDivider";
+import { formatRelativeTime } from "./application/formatRelativeTime";
+import { iconForActivity } from "./application/iconForActivity";
 
 export default function DashboardPage() {
   //Create get goods use case
@@ -52,11 +59,22 @@ export default function DashboardPage() {
     [tripRepository],
   );
 
+  const supabaseNotificationRepo = useMemo(
+    () => new SupabaseNotificationRepository(),
+    [],
+  );
+  const getNotificationUseCase = useMemo(
+    () => new GetNotificationUseCase(supabaseNotificationRepo),
+    [supabaseNotificationRepo],
+  );
   const [fullName, setFullName] = useState<string | null>(null);
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
   const [showTripModal, setTripModalState] = useState<boolean>(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
+  );
+  const [notifications, setNotification] = useState<CarryRequestNotification[]>(
+    [],
   );
   const navigate = useNavigate();
   const { userLoggedIn, authChecked, userId } = useAuthState();
@@ -68,23 +86,17 @@ export default function DashboardPage() {
     if (!userId) return;
 
     const fetchDashboardData = async () => {
-      const data = await getDashboardDataUseCase.execute(userId);
-      if (data) setDashboardData(data);
+      const [dashboardData, name, notifications] = await Promise.all([
+        getDashboardDataUseCase.execute(userId),
+        getFullNameUseCase.execute(userId),
+        getNotificationUseCase.execute(userId),
+      ]);
+      if (dashboardData) setDashboardData(dashboardData);
+      if (name) setFullName(name);
+      if (notifications) setNotification(notifications);
     };
 
     fetchDashboardData();
-  }, [userId]);
-
-  // users fullname
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchName = async () => {
-      const name = await getFullNameUseCase.execute(userId);
-      if (name) setFullName(name);
-    };
-
-    fetchName();
   }, [userId]);
 
   const { data, error, isLoading } = useAsync(() => getGoodsUseCase.execute());
@@ -120,16 +132,17 @@ export default function DashboardPage() {
         </CustomText>
       </PageSection>
 
-      <div className="flex flex-col gap-14">
+      <div className="flex flex-col gap-12">
         <ActionButtonRow
           setTripModalState={setTripModalState}
           setParcelModalState={setParcelModalState}
         />
 
-        <div className="flex flex-wrap gap-10">
+        <div className="flex flex-wrap gap-6">
           <StatsSection statsList={dashboardData ? dashboardData.stats : []} />
           <YourActivitySection
-            tripActivityList={dashboardData ? dashboardData.activity : []}
+            recentActivityList={notifications}
+            activityList={dashboardData ? dashboardData.activity : []}
           />
         </div>
       </div>
@@ -161,53 +174,92 @@ type StatsProps = {
 };
 
 type ActivityProps = {
-  tripActivityList: StatsItem[];
+  activityList: StatsItem[];
+  recentActivityList: CarryRequestNotification[];
 };
 
-function YourActivitySection({ tripActivityList }: ActivityProps) {
+function YourActivitySection({
+  activityList,
+  recentActivityList,
+}: ActivityProps) {
   return (
-    <div className="flex flex-col gap-4">
-      <CustomText textVariant="primary" textSize="xl">
-        {"Your Activity"}
+    <div className="flex flex-col gap-3">
+      <CustomText textVariant="primary" textSize="lg">
+        {"Your activities"}
       </CustomText>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card>
-          <span className="flex flex-col gap-4 sm:pr-14">
-            <span className="inline-flex gap-3 items-center">
-              <CircleBadge size="md" bgColor="primary">
-                <SvgIcon
-                  color="primary"
-                  size={"md"}
-                  Icon={META_ICONS.shaakingHands}
-                ></SvgIcon>
-              </CircleBadge>
-              <CustomText textVariant="primary" textSize="md">
-                {"My deliveries"}
-              </CustomText>
-            </span>
-            <ActivityItems activityList={tripActivityList} />
-          </span>
-        </Card>
-        <Card>
-          <div className="flex flex-col gap-2">
-            <span className="inline-flex gap-3">
-              <CircleBadge size="md" bgColor="primary">
-                <SvgIcon
-                  color="primary"
-                  size={"md"}
-                  Icon={META_ICONS.clockFilled}
-                ></SvgIcon>
-              </CircleBadge>
-              <CustomText textVariant="primary" textSize="md">
-                {"Recent activities"}
-              </CustomText>
-            </span>
-            <ActivityItems activityList={tripActivityList} />
-          </div>
-        </Card>
+      <div className="flex flex gap-6">
+        <MyDeliveries activityList={activityList} />
+        <RecentActivity recentActivities={recentActivityList} />
       </div>
-      <></>
+    </div>
+  );
+}
+
+function RecentActivity({
+  recentActivities,
+}: {
+  recentActivities: CarryRequestNotification[];
+}) {
+  return (
+    <Card>
+      <div className="flex flex-col gap-4 max-w-sm">
+        <span className="inline-flex gap-3 items-center">
+          <CircleBadge size="md" bgColor="neutral">
+            <Clock className="text-neutral-500" strokeWidth={1.5} />
+          </CircleBadge>
+          <CustomText textVariant="primary" textSize="md">
+            {"Recent activity"}
+          </CustomText>
+        </span>
+        <div className="flex flex-col pb-2">
+          {recentActivities &&
+            recentActivities.map((activity, index) => (
+              <div className="flex flex-col">
+                <div className="flex gap-3 p-1 hover:bg-neutral-100">
+                  <span className="inline-flex pt-1">{iconForActivity(activity.type)}</span>
+
+                  <div key={activity.id} className="inline-flex flex-col">
+                    <div className="flex justify-between">
+                      <CustomText textVariant="primary">
+                        {activity.title}
+                      </CustomText>
+                      <p className="text-[12px] text-neutral-300">
+                        {formatRelativeTime(activity.createdAt)}
+                      </p>
+                    </div>
+                    <CustomText textVariant="secondary" textSize="xsm" className="leading-[1.2]">
+                      {activity.body}
+                    </CustomText>
+                  </div>
+                </div>
+                {index !== recentActivities.length - 1 && (
+                  <LineDivider heightClass="my-1" />
+                )}
+              </div>
+            ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// card to disply activity items
+function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
+  return (
+    <div className="flex flex-col gap-3 max-w-sm">
+      <Card>
+        <span className="flex flex-col gap-4 sm:pr-6">
+          <span className="inline-flex gap-3 items-center">
+            <CircleBadge size="md" bgColor="neutral">
+              <Truck className="text-neutral-500" strokeWidth={1.5} />
+            </CircleBadge>
+            <CustomText textVariant="primary" textSize="md">
+              {"My deliveries"}
+            </CustomText>
+          </span>
+          <ActivityItems activityList={activityList} />
+        </span>
+      </Card>
     </div>
   );
 }
@@ -218,7 +270,7 @@ function ActivityItems({ activityList }: { activityList: StatsItem[] }) {
       {activityList.map((item) => (
         <span key={item.itemName} className="inline-flex gap-3 items-center">
           <span
-            className={`w-3 h-3 rounded-full ${item.status && toColorMapper[item.status]}`}
+            className={`w-2 h-2 rounded-full ${item.status && toColorMapper[item.status]}`}
           />
           <CustomText
             textVariant="secondary"
@@ -235,13 +287,16 @@ function ActivityItems({ activityList }: { activityList: StatsItem[] }) {
 function StatsSection({ statsList }: StatsProps) {
   return (
     <div className="flex flex-col gap-3">
-      <CustomText textVariant="primary" textSize="xl">
+      <CustomText textVariant="primary" textSize="lg">
         {"Your Stats"}
       </CustomText>
       <div className="w-fit">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 justify-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {statsList.map((item) => (
-            <Card className="flex flex-col items-center gap-3">
+            <Card
+              key={item.itemName}
+              className="flex flex-col items-center gap-3"
+            >
               <CustomText>{item.itemName}</CustomText>
               <CustomText>{item.count}</CustomText>
             </Card>

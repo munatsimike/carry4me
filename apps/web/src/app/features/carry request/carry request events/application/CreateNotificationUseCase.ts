@@ -1,13 +1,13 @@
-import type { CarryRequestNotification } from "../domain/Notification";
+import type { CarryRequestNotification } from "../domain/CarryRequestNotification";
 import type { NotificationRepository } from "../domain/NotificationRepository";
 
-export class CreateNotificationUseCase {
+export class GetNotificationUseCase {
   repo: NotificationRepository;
   constructor(repo: NotificationRepository) {
     this.repo = repo;
   }
 
-  execute(notification: CarryRequestNotification): Promise<void> {
-    return this.repo.createNotification(notification);
+  execute(userId: string): Promise<CarryRequestNotification[]> {
+    return this.repo.fetchNotifications(userId);
   }
 }
