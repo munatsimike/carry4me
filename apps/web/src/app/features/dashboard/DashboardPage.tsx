@@ -216,7 +216,9 @@ function RecentActivity({
             recentActivities.map((activity, index) => (
               <div className="flex flex-col">
                 <div className="flex gap-3 p-1 hover:bg-neutral-100">
-                  <span className="inline-flex pt-1">{iconForActivity(activity.type)}</span>
+                  <span className="inline-flex pt-1">
+                    {iconForActivity(activity.type)}
+                  </span>
 
                   <div key={activity.id} className="inline-flex flex-col">
                     <div className="flex justify-between">
@@ -227,7 +229,11 @@ function RecentActivity({
                         {formatRelativeTime(activity.createdAt)}
                       </p>
                     </div>
-                    <CustomText textVariant="secondary" textSize="xsm" className="leading-[1.2]">
+                    <CustomText
+                      textVariant="secondary"
+                      textSize="xsm"
+                      className="leading-[1.2]"
+                    >
                       {activity.body}
                     </CustomText>
                   </div>
