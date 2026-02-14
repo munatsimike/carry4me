@@ -1,3 +1,4 @@
+import { useToast } from "@/app/components/Toast";
 import { LogoutUseCase } from "@/app/shared/Authentication/application/LogoutUseCase";
 import { SupabaseAuthRepository } from "@/app/shared/data/LoginRepository";
 import { isNetworkError } from "@/app/util/isNetworkError";
@@ -16,6 +17,7 @@ export default function LogoutButton({
   const cls = "group-hover:text-ink-error";
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const logout = async () => {
     try {
@@ -23,6 +25,7 @@ export default function LogoutButton({
       const result = await useCase.execute();
 
       if (result.success) navigate("/");
+      toast("Signed out successfully.", { variant: "info" });
     } catch (error) {
       if (isNetworkError(error)) console.log("network error:", error);
       else console.log(error);

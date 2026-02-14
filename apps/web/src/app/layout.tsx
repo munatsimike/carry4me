@@ -5,6 +5,7 @@ import { AuthModalProvider } from "./shared/Authentication/AuthModalContext";
 import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import { UserProfileMenu } from "./shared/Authentication/UI/userProfileMenu";
 import { useEffect, useState } from "react";
+import { ToastProvider } from "./components/Toast";
 
 export default function AppLayout() {
   const { authChecked, userLoggedIn } = useAuthState();
@@ -17,41 +18,43 @@ export default function AppLayout() {
 
   return (
     <AuthModalProvider>
-      <div className="min-h-screen flex flex-col">
-        <header>
-          <div className="relative mx-auto max-w-container px-4 py-4 flex items-center justify-between">
-            <Link
-              to={userLoggedIn ? "/dashboard" : ""}
-              className="font-semibold"
-            >
-              <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
-            </Link>
+      <ToastProvider>
+        <div className="min-h-screen flex flex-col">
+          <header>
+            <div className="relative mx-auto max-w-container px-4 py-4 flex items-center justify-between">
+              <Link
+                to={userLoggedIn ? "/dashboard" : ""}
+                className="font-semibold"
+              >
+                <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
+              </Link>
 
-            <Navigation
-              userLoggedIn={userLoggedIn}
-              authChecked={authChecked}
-              userProfile={{
-                setShowProfile: setShowProfile,
-                showProfile: showProfile,
-              }}
-            />
-            {showProfile && (
-              <UserProfileMenu onCloseProfile={() => setShowProfile(false)} />
-            )}
-          </div>
-        </header>
+              <Navigation
+                userLoggedIn={userLoggedIn}
+                authChecked={authChecked}
+                userProfile={{
+                  setShowProfile: setShowProfile,
+                  showProfile: showProfile,
+                }}
+              />
+              {showProfile && (
+                <UserProfileMenu onCloseProfile={() => setShowProfile(false)} />
+              )}
+            </div>
+          </header>
 
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <AuthModal />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <AuthModal />
 
-        <footer className="border-t">
-          <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
-            © {new Date().getFullYear()} Carry4Me
-          </div>
-        </footer>
-      </div>
+          <footer className="border-t">
+            <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-slate-600">
+              © {new Date().getFullYear()} Carry4Me
+            </div>
+          </footer>
+        </div>
+      </ToastProvider>
     </AuthModalProvider>
   );
 }

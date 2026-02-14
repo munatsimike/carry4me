@@ -1,53 +1,105 @@
-import CustomText from "@/components/ui/CustomText";
-import {CheckCircle2 } from "lucide-react";
-import { useEffect } from "react";
+import { CheckCircle2, Info, XCircle } from "lucide-react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
+
 type ToastVariant = "success" | "error" | "info";
 
-const variants: Record<ToastVariant, string> = {
-  success: "bg-success-50/20 border border-success-50 shadow:success-200",
-  error: "bg-red-600 text-white",
-  info: "bg-white text-ink-primary border",
+const defaultIcons: Record<ToastVariant, React.ReactNode> = {
+  success: (
+    <CheckCircle2 className="h-5 w-5 text-success-600" strokeWidth={1.5} />
+  ),
+  error: <XCircle className="h-5 w-5 text-red-600" strokeWidth={1.5} />,
+  info: <Info className="h-5 w-5 text-primary-600" strokeWidth={1.5} />,
 };
 
-type ToastProps = {
-  message: string | null;
-  isVisible: boolean;
-  onClose: () => void;
-  toastVariant?: ToastVariant;
-  duration?: number;
+type ToastItem = {
+  id: string;
+  message: string;
+  variant: ToastVariant;
+  duration: number;
   icon?: React.ReactNode;
 };
 
-export default function Toast({
-  message,
-  isVisible,
-  onClose,
-  toastVariant = "success",
-  duration = 5000,
-  icon = <CheckCircle2 className="h-5 w-5 text-success-600" strokeWidth={1.5} />,
-}: ToastProps) {
-  useEffect(() => {
-    if (!isVisible) return;
+type ToastContextValue = {
+  toast: (
+    message: string,
+    opts?: Partial<Pick<ToastItem, "variant" | "duration">>,
+    icon?: React.ReactNode,
+  ) => void;
+};
 
-    const timer = setTimeout(() => {
-      onClose();
-    }, duration);
+const ToastContext = createContext<ToastContextValue | null>(null);
 
-    return () => clearTimeout(timer);
-  }, [isVisible, duration, onClose]);
+function uid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const remove = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const toast = useCallback(
+    (
+      message: string,
+      opts?: Partial<Pick<ToastItem, "variant" | "duration">>,
+      icon?: React.ReactNode,
+    ) => {
+      const id = uid();
+      const duration = opts?.duration ?? 3000;
+      const variant = opts?.variant ?? "info";
+
+      setToasts((prev) => [
+        ...prev,
+        { id, message, variant, duration, icon: icon ?? defaultIcons[variant] },
+      ]);
+      window.setTimeout(() => remove(id), duration);
+    },
+    [remove],
+  );
+
+  const value = useMemo(() => ({ toast }), [toast]);
 
   return (
-    <div
-      className={`fixed inset-0 flex items-start pt-8 justify-center pointer-events-none z-[100]`}
-    >
-      <div
-        className={`backdrop-blur-md pointer-events-auto px-6 py-2 rounded-xl shadow-sm ${variants[toastVariant]} text-sm transition-all duration-300
-        ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
-      >
-        <span className="inline-flex gap-2 items-center">
-          {icon} <CustomText textVariant="primary">{message}</CustomText>
-        </span>
+    <ToastContext.Provider value={value}>
+      {children}
+
+      {/* Toast viewport: top center */}
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] space-y-2">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={[
+              "px-4 py-3 rounded-xl shadow-sm text-sm border",
+              "transition-all duration-300",
+              t.variant === "success" &&
+                "bg-success-50/20 text-ink-primary border border-success-50 shadow:success-200",
+              t.variant === "error" && "bg-red-600/20 border-red-700",
+              t.variant === "info" &&
+                "bg-primary-50/30 text-ink-primary border-primary-100",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <span className="flex items-center gap-2">
+              {t.icon}
+              {t.message}
+            </span>
+          </div>
+        ))}
       </div>
-    </div>
+    </ToastContext.Provider>
   );
+}
+
+export function useToast() {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error("useToast must be used inside ToastProvider");
+  return ctx;
 }

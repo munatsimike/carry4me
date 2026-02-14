@@ -38,7 +38,7 @@ export function UserProfileMenu({
     >
       <div className="flex flex-col">
         {profileItems.map((item) => (
-          <ProfileItem profileItem={item} />
+          <ProfileItem key={item.name} profileItem={item} />
         ))}
 
         <LogoutButton onCloseProfile={onCloseProfile} />

@@ -26,7 +26,7 @@ import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
 import z from "zod";
 import { useMemo } from "react";
 import type { ParcelItem } from "../parcels/domain/CreateParcel";
-
+import { useToast } from "@/app/components/Toast";
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
   description: z.string().trim().min(1, "Item description is required"),
@@ -54,11 +54,7 @@ export type ParcelFormFields = z.infer<typeof parcelSchema>;
 export default function CreatParcelModal({
   goodsCategory,
   setModalState,
-  setToastMessage,
-  showToast,
 }: {
-  setToastMessage: () => void;
-  showToast: () => void;
   goodsCategory: GoodsCategory[];
   showModal: boolean;
   setModalState: (v: boolean) => void;
@@ -74,6 +70,7 @@ export default function CreatParcelModal({
     () => new CreateParcelUseCase(parcelRepo),
     [parcelRepo],
   );
+  const { toast } = useToast();
 
   const {
     register,
@@ -114,7 +111,7 @@ export default function CreatParcelModal({
           toCreateParcelMapper(userId, values),
         );
         SaveGoodsCategories(saveGoodsUseCase, toGoodsMapper(data, selectedIds));
-        (setToastMessage(), showToast());
+        toast("Parcel saved successfully",{ variant: "success" });
         setModalState(false);
       }
     } catch (e) {

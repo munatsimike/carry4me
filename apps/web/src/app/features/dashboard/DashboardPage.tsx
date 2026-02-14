@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthState } from "../../shared/supabase/AuthState";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
@@ -34,7 +34,7 @@ import type { CarryRequestNotification } from "../carry request/carry request ev
 import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
-import Toast from "@/app/components/Toast";
+import { useToast } from "@/app/components/Toast";
 
 export default function DashboardPage() {
   //Create get goods use case
@@ -74,12 +74,9 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [notifications, setNotification] = useState<CarryRequestNotification[]>(
     [],
   );
-  const [showToast, setShowToast] = useState(false);
-
   const navigate = useNavigate();
   const { userLoggedIn, authChecked, userId } = useAuthState();
   // fetch goods category
@@ -156,8 +153,6 @@ export default function DashboardPage() {
           <CreateTripModal
             goodsCategory={goodsCategory}
             showModal={showTripModal}
-            showToast={() => setShowToast(true)}
-            setToastMessage={() => setToastMessage("Trip saved successfully.")}
             setModalState={setTripModalState}
           />
         )}
@@ -168,16 +163,9 @@ export default function DashboardPage() {
             goodsCategory={goodsCategory}
             showModal={showParcelModal}
             setModalState={setParcelModalState}
-            showToast={() => setShowToast(true)}
-            setToastMessage={() => setToastMessage("Parcel saved successfully.")}
           />
         )}
       </AnimatePresence>
-      <Toast
-        message={toastMessage}
-        isVisible={showToast}
-        onClose={() => setShowToast(false)}
-      />
     </DefaultContainer>
   );
 }

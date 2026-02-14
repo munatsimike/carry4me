@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
+import { Bell} from "lucide-react";
 
 type ProfileProps = {
   setShowProfile: (b: boolean) => void;
@@ -76,7 +77,12 @@ function AuthenticatedNavigation({
       <NavItem to="/travelers">Trips</NavItem>
       <NavItem to="/parcels">Parcels</NavItem>
       <NavItem to="/requests">Requests</NavItem>
-      <button>Notifications</button>
+      <button>
+        <span className="inline-flex gap-1 items-center">
+          <Bell className="h-5 w-5 text-neutral-600" strokeWidth={1.5} />
+          Notifications
+        </span>
+      </button>
       <span className=" relative inline-flex flex-col">
         <button onClick={() => setShowProfile(!showProfile)}>
           <img

@@ -8,7 +8,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { INFOMODES, progress, type Parcel } from "@/types/Ui";
+import { INFOMODES, progress, type Parcel as ParcelDetails } from "@/types/Ui";
 import RouteRow from "@/app/components/RouteRow";
 import DateRow from "@/app/components/DateRow";
 import CategoryRow from "@/app/components/CategoryRow";
@@ -329,11 +329,15 @@ function Deails({
   return (
     <div className="flex flex-col">
       <span className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.7fr] gap-10">
-        <UITrip trip={trip} viewerRole={viewerRole} />
-        <Parcel parcel={parcel} viewerRole={viewerRole} />
+        <TripDetails trip={trip} viewerRole={viewerRole} />
+        <ParcelDetails parcel={parcel} viewerRole={viewerRole} />
         <Stack>
-          <span className="inline-flex bg-neutral-100 rounded-full py-1 px-3 border">
-            <CustomText as="span" textSize="xsm">
+          <span className="pb-1">
+            <CustomText
+              as="span"
+              textSize="xsm"
+              className="inline-flex bg-neutral-100 rounded-full py-1 px-3 border"
+            >
               {"Cost summary"}
             </CustomText>
           </span>
@@ -393,18 +397,19 @@ function Deails({
   );
 }
 
-function Parcel({
+function ParcelDetails({
   parcel,
   viewerRole,
 }: {
   parcel: ParcelSnapshot;
   viewerRole: Role;
 }) {
-  const cardLabel = viewerRole === ROLES.SENDER ? "Your parcel details" : "Parcel details";
+  const cardLabel =
+    viewerRole === ROLES.SENDER ? "Your parcel details" : "Parcel details";
   const categories = parcel.categories.map((item) => item.name).join("-");
   return (
     <Stack>
-      <span>
+      <span className="pb-1">
         <CardLabel variant={"parcel"} label={cardLabel} />
         <ButtomSpacer />
       </span>
@@ -421,17 +426,18 @@ function Parcel({
     </Stack>
   );
 }
-function UITrip({
+function TripDetails({
   trip,
   viewerRole,
 }: {
   trip: TripSnapshot;
   viewerRole: Role;
 }) {
-  const cardLabel = viewerRole === ROLES.TRAVELER ? "Your trip details" : "Trip details";
+  const cardLabel =
+    viewerRole === ROLES.TRAVELER ? "Your trip details" : "Trip details";
   return (
     <Stack>
-      <span>
+      <span className="pb-1">
         <CardLabel variant={"trip"} label={cardLabel} />
         <ButtomSpacer />
       </span>

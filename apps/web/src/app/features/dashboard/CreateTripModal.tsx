@@ -21,6 +21,7 @@ import ActionBtn from "./components/CreateTripParcelActionBtn";
 import GoodsCategoryGrid from "./components/GoodsCategoryGrid";
 import PriceField from "./components/PriceField";
 import WeightField from "./components/WeightField";
+import { useToast } from "@/app/components/Toast";
 
 export const tripSchema = z.object({
   originCountry: z.string().min(3, "minimum of three letters is required"),
@@ -49,14 +50,10 @@ export type FormFields = z.infer<typeof tripSchema>;
 export default function CreatTripModal({
   goodsCategory,
   setModalState,
-  showToast,
-  setToastMessage,
 }: {
   goodsCategory: GoodsCategory[];
   showModal: boolean;
-  showToast: () => void;
   setModalState: (v: boolean) => void;
-  setToastMessage: () => void;
 }) {
   const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
   const saveGoodsUseCase = useMemo(
@@ -92,6 +89,7 @@ export default function CreatTripModal({
   const selectedIds = watch("goodsCategoryIds");
   const dividerHeight = "my-0";
   const showErrors = isSubmitting || submitCount > 0;
+  const { toast } = useToast();
 
   const onValid = async (values: FormFields) => {
     if (!userLoggedIn || !userId) return;
@@ -102,8 +100,7 @@ export default function CreatTripModal({
     try {
       if (!data) return;
       SaveGoodsCategories(saveGoodsUseCase, toGoodsMapper(data, selectedIds));
-      setToastMessage();
-      showToast();
+      toast("Trip saved successfully", { variant: "success" });
     } catch (e) {
       console.log(e); // to be completed with a dialogue box
     }
