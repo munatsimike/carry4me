@@ -1,20 +1,33 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
-import { useState } from "react";
 
-import LogoutButton from "./app/shared/Authentication/UI/LogoutButton";
+type ProfileProps = {
+  setShowProfile: (b: boolean) => void;
+  showProfile: boolean;
+};
+
+type NavigationProps = {
+  userLoggedIn: boolean;
+  authChecked: boolean;
+  userProfile: ProfileProps;
+};
 
 export default function Navigation({
   userLoggedIn,
   authChecked,
-}: {
-  userLoggedIn: boolean;
-  authChecked: boolean;
-}) {
+  userProfile,
+}: NavigationProps) {
   if (!authChecked) {
     return <GuestNavigation />;
   }
-  return userLoggedIn ? <AuthenticatedNavigation /> : <GuestNavigation />;
+  return userLoggedIn ? (
+    <AuthenticatedNavigation
+      setShowProfile={userProfile.setShowProfile}
+      showProfile={userProfile.showProfile}
+    />
+  ) : (
+    <GuestNavigation />
+  );
 }
 
 function NavLinks({ children }: { children: React.ReactNode }) {
@@ -53,15 +66,17 @@ function GuestNavigation() {
   );
 }
 
-function AuthenticatedNavigation() {
-  const [showProfile, setShowProfile] = useState<boolean>(false);
+function AuthenticatedNavigation({
+  setShowProfile,
+  showProfile,
+}: ProfileProps) {
   return (
     <NavLinks>
       <NavItem to="/dashboard">Dashboard</NavItem>
       <NavItem to="/travelers">Trips</NavItem>
       <NavItem to="/parcels">Parcels</NavItem>
       <NavItem to="/requests">Requests</NavItem>
-      <button className="relative pb-1 text-neutral-600 font-medium">Notifications</button>
+      <button>Notifications</button>
       <span className=" relative inline-flex flex-col">
         <button onClick={() => setShowProfile(!showProfile)}>
           <img
@@ -70,7 +85,6 @@ function AuthenticatedNavigation() {
             className="rounded-full h-9 w-9 border border-neutral-50"
           />
         </button>
-        {showProfile && <LogoutButton />}
       </span>
     </NavLinks>
   );

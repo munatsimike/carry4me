@@ -8,6 +8,8 @@ import CarryRequestsPage from "./features/carry request/ui/CarryRequestsPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import HomePage from "./features/home/HomePage";
+import { UserProfilePage } from "./shared/Authentication/UI/UserProfilePage";
+import { MyFavouritesPage } from "./features/my favourites/UI/MyFavouritesPage";
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +24,8 @@ export const router = createBrowserRouter([
       { path: "parcels", element: <ParcelsPage /> },
       { path: "requests", element: <CarryRequestsPage /> },
       { path: "dashboard", element: <DashboardPage /> },
+      { path: "profile", element: <UserProfilePage /> },
+      { path: "favourites", element: <MyFavouritesPage /> },
     ],
   },
 ]);

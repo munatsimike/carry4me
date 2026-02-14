@@ -5,7 +5,7 @@ type DropDownMenuProps = {
   menuItems: string[];
   disabled?: boolean;
   className?: string;
-  register: UseFormRegisterReturn;
+  register?: UseFormRegisterReturn;
   value?: string;
 };
 
@@ -25,7 +25,7 @@ export default function DropDownMenu({
     <select
       defaultValue=""
       disabled={disabled}
-      className={`px-3 py-2 ${className} ${
+      className={`px-3 py-2 bg-white border border-neutral-100 ${className} ${
         isPlaceholder ? `text-ink-secondary ${textSize}` : textVariant
       }`}
       {...register}

@@ -187,7 +187,7 @@ function YourActivitySection({
       <CustomText textVariant="primary" textSize="lg">
         {"Your activities"}
       </CustomText>
-      <div className="flex flex gap-6">
+      <div className="flex flex-wrap gap-6">
         <MyDeliveries activityList={activityList} />
         <RecentActivity recentActivities={recentActivityList} />
       </div>
@@ -201,49 +201,52 @@ function RecentActivity({
   recentActivities: CarryRequestNotification[];
 }) {
   return (
-    <Card>
-      <div className="flex flex-col gap-4 max-w-sm">
-        <span className="inline-flex gap-3 items-center">
-          <CircleBadge size="md" bgColor="neutral">
-            <Clock className="text-neutral-500" strokeWidth={1.5} />
-          </CircleBadge>
-          <CustomText textVariant="primary" textSize="md">
-            {"Recent activity"}
-          </CustomText>
+    <Card paddingClass="p-3">
+      <div className="flex flex-col max-w-sm">
+        <span className="flex flex-col gap-3">
+          <span className="inline-flex gap-3 items-center">
+            <CircleBadge size="md" bgColor="neutral">
+              <Clock className="text-neutral-500" strokeWidth={1.5} />
+            </CircleBadge>
+            <CustomText textVariant="primary" textSize="md">
+              {"Recent activity"}
+            </CustomText>
+          </span>
+          <LineDivider heightClass="my-1" />
         </span>
-        <div className="flex flex-col pb-2">
-          {recentActivities &&
-            recentActivities.map((activity, index) => (
-              <div className="flex flex-col">
-                <div className="flex gap-3 p-1 hover:bg-neutral-100">
-                  <span className="inline-flex pt-1">
-                    {iconForActivity(activity.type)}
-                  </span>
 
-                  <div key={activity.id} className="inline-flex flex-col">
-                    <div className="flex justify-between">
-                      <CustomText textVariant="primary">
-                        {activity.title}
-                      </CustomText>
-                      <p className="text-[12px] text-neutral-300">
-                        {formatRelativeTime(activity.createdAt)}
-                      </p>
-                    </div>
-                    <CustomText
-                      textVariant="secondary"
-                      textSize="xsm"
-                      className="leading-[1.2]"
-                    >
-                      {activity.body}
+        {recentActivities &&
+          recentActivities.map((activity, index) => (
+            <div className="flex flex-col w-full sm:min-w-[350px] max-w-sm">
+              <div className="flex gap-3 hover:bg-neutral-100 p-2 rounded-lg">
+                <span className="inline-flex pt-1">
+                  {iconForActivity(activity.type)}
+                </span>
+
+                <div key={activity.id} className="flex flex-col bg-neutral">
+                  <div className="flex justify-between">
+                    <CustomText textVariant="primary">
+                      {activity.title}
                     </CustomText>
+                    <p className="text-[12px] text-neutral-300">
+                      {formatRelativeTime(activity.createdAt)}
+                    </p>
                   </div>
+                  <CustomText
+                    as="span"
+                    textVariant="secondary"
+                    textSize="xsm"
+                    className="leading-[1.2] "
+                  >
+                    {activity.body}
+                  </CustomText>
                 </div>
-                {index !== recentActivities.length - 1 && (
-                  <LineDivider heightClass="my-1" />
-                )}
               </div>
-            ))}
-        </div>
+              {index !== recentActivities.length - 1 && (
+                <LineDivider heightClass="my-0" />
+              )}
+            </div>
+          ))}
       </div>
     </Card>
   );

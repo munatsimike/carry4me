@@ -35,7 +35,7 @@ import {
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
 import IconTextRow from "@/app/components/card/IconTextRow";
-import LabelTextRow from "@/app/components/LabelTextRow";
+
 import { PerformCarryRequestActionUseCase } from "../application/PerformCarryRequestActionUseCase";
 import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActionRepository";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
@@ -133,7 +133,7 @@ export default function CarryRequestsPage() {
             <Card
               key={request.carryRequestId}
               cornerRadiusClass="rounded-2xl"
-              className="px-6 w-full max-w-[960px] mx-auto shadow-sm"
+              className="px-6 w-full max-w-[1000px] mx-auto shadow-sm"
             >
               <div className="flex flex-col gap-2 mx-2">
                 <Header
@@ -484,7 +484,7 @@ function CurrentStatus({ title, description, status }: StatusProps) {
           </CustomText>
         </div>
       </span>
-      <CustomText textSize="xsm" as="span">
+      <CustomText textSize="xsm" as="span" className="pl-[77px]">
         {description}
       </CustomText>
     </div>
@@ -500,7 +500,7 @@ function ProgressRow({
 }) {
   const steps = [2, 3, 4, 5, 6] as const;
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-neutral-50 py-4 px-3 rounded-lg">
+    <div className="flex flex-wrap items-center gap-6 bg-neutral-50 py-4 px-3 rounded-lg">
       {isInitiator && <Step isCompleted={isInitiator} stage={progress[1]} />}
 
       {steps.map((step) => {

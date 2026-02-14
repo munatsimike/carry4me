@@ -20,7 +20,7 @@ type IconProps = {
 
 export default function SvgIcon({ size, Icon, color, className }: IconProps) {
   const sizes: Record<IconSize, string> = {
-    xsm: "h-2.5 w-auto",
+    xsm: "h-3 w-auto",
     sm: "h-4 w-auto",
     md: "h-5 w-auto",
     lg: "h-6 w-auto",

@@ -19,33 +19,24 @@ export default function Search({
   selectedCity,
   countries,
   cities,
-  onCountryChange,
-  onCityChange,
-  onClick,
 }: SearchProps) {
   return (
-    <div className="inline-flex items-center gap-5 py-2 px-4 bg-canvas rounded-full">
+    <div className="inline-flex items-center gap-5 py-2 px-4 bg-canvas rounded-full border border-neutral-100">
       <DropDownMenu
         value={selectedCountry}
         placeholder="Select country"
-        onChange={(c) => {
-          (onCountryChange(c), onCityChange(""));
-        }}
         menuItems={countries}
       />
       <DropDownMenu
         value={selectedCity}
         placeholder="Select city"
-        onChange={onCityChange}
         menuItems={cities}
-        disabled={selectedCountry === ""}
       />
 
       <CustomText as="span" textSize="xsm">
         {"To : Zimbabwe"}
       </CustomText>
       <Button
-        onClick={onClick}
         variant={"primary"}
         size={"xsm"}
         leadingIcon={

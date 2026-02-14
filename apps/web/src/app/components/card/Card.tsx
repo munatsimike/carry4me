@@ -4,14 +4,18 @@ type CardProps = {
   cornerRadiusClass?: string;
   borderClass?: string;
   hover?: boolean;
+  paddingClass?:string
+  shadowClass?:string
 };
 
 export function Card({
   children,
   className,
   hover = true,
+  paddingClass = "p-5",
   borderClass = "border border-neutral-100",
   cornerRadiusClass = "rounded-2xl",
+  shadowClass = "shadow-sm"
 }: CardProps) {
   const hoverClass = hover
     ? "transition-shadow transition-colors duration-200 hover:shadow-primary-300 hover:border-primary-400"
@@ -20,8 +24,10 @@ export function Card({
   return (
     <div
       className={[
-        "bg-white p-5 shadow-sm",
+        "bg-white",
         "motion-safe:animate-scale-in",
+        shadowClass,
+        paddingClass,
         cornerRadiusClass,
         borderClass,
         hoverClass,
