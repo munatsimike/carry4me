@@ -25,7 +25,7 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       </div>
       <User
         tag={"Sender"}
-        userName={`${parcel.user.fullName?.charAt(0)}${"."} ${parcel.user.fullName}`}
+        userName={`${parcel.user.fullName?.charAt(0)}${"."} ${parcel.user.fullName.substring(parcel.user.fullName.indexOf(" "))}`}
       />
       <LineDivider />
       <Stack>

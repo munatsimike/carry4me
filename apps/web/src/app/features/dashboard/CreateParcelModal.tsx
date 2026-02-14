@@ -3,19 +3,10 @@ import LineDivider from "@/app/components/LineDivider";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import FormModal from "./components/FormModal";
-import z, { number } from "zod";
-import {
-  useFieldArray,
-  useForm,
-  type FieldErrors,
-  type UseFormRegisterReturn,
-  type UseFormSetError,
-} from "react-hook-form";
+import { useFieldArray, useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SupabaseParcelRepository } from "../parcels/data/SupabaseParcelRepository";
-import { useMemo, useState } from "react";
 import { CreateParcelUseCase } from "../parcels/application/CreateParcelUseCase";
-import type { CreateParcel, ParcelItem } from "../parcels/domain/CreateParcel";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
 import FormHeader from "./components/FormHeader";
 import { META_ICONS } from "@/app/icons/MetaIcon";
@@ -32,6 +23,9 @@ import toGoodsMapper from "../goods/domain/toGoodsMapper";
 import WeightField from "./components/WeightField";
 import PriceField from "./components/PriceField";
 import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
+import z from "zod";
+import { useMemo } from "react";
+import type { ParcelItem } from "../parcels/domain/CreateParcel";
 
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
@@ -60,7 +54,11 @@ export type ParcelFormFields = z.infer<typeof parcelSchema>;
 export default function CreatParcelModal({
   goodsCategory,
   setModalState,
+  setToastMessage,
+  showToast,
 }: {
+  setToastMessage: () => void;
+  showToast: () => void;
   goodsCategory: GoodsCategory[];
   showModal: boolean;
   setModalState: (v: boolean) => void;
@@ -116,7 +114,7 @@ export default function CreatParcelModal({
           toCreateParcelMapper(userId, values),
         );
         SaveGoodsCategories(saveGoodsUseCase, toGoodsMapper(data, selectedIds));
-        console.log("Parcel created");
+        (setToastMessage(), showToast());
         setModalState(false);
       }
     } catch (e) {

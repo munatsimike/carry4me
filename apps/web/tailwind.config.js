@@ -43,7 +43,7 @@ export default {
           100: "#D0D7DE",
         },
 
-        trip: {
+        success: {
           50: "#D8F5E8",
           100: "#C1F0DB",
           200: "#BDEAD3",

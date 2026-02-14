@@ -2,14 +2,10 @@ import { CreateTripUseCase } from "../trips/application/CreateTripUsecase";
 import FormHeader from "./components/FormHeader";
 import LineDivider from "@/app/components/LineDivider";
 import DateField from "./components/DateField";
-import { InlineRow } from "@/app/components/InlineRow";
-import { baseInput, cn } from "@/app/lib/cn";
-import CustomText from "@/components/ui/CustomText";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import { useForm, type UseFormRegisterReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import ErrorText from "@/app/components/text/ErrorText";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
 import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
 import { useMemo } from "react";
@@ -53,10 +49,14 @@ export type FormFields = z.infer<typeof tripSchema>;
 export default function CreatTripModal({
   goodsCategory,
   setModalState,
+  showToast,
+  setToastMessage,
 }: {
   goodsCategory: GoodsCategory[];
   showModal: boolean;
+  showToast: () => void;
   setModalState: (v: boolean) => void;
+  setToastMessage: () => void;
 }) {
   const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
   const saveGoodsUseCase = useMemo(
@@ -98,9 +98,15 @@ export default function CreatTripModal({
     const data = await createTrip(values, userId, useCase, () =>
       setModalState(false),
     );
-    if (!data) return;
 
-    SaveGoodsCategories(saveGoodsUseCase, toGoodsMapper(data, selectedIds));
+    try {
+      if (!data) return;
+      SaveGoodsCategories(saveGoodsUseCase, toGoodsMapper(data, selectedIds));
+      setToastMessage();
+      showToast();
+    } catch (e) {
+      console.log(e); // to be completed with a dialogue box
+    }
   };
 
   const countryValue = watch("originCountry");

@@ -34,7 +34,7 @@ export function UserProfileMenu({
       shadowClass="shadow-md"
       paddingClass="p-3"
       hover={false}
-      className="absolute top-16 right-0 z-40 w-56"
+      className="absolute top-16 right-0 z-10 w-56"
     >
       <div className="flex flex-col">
         {profileItems.map((item) => (

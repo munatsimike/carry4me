@@ -34,6 +34,7 @@ import type { CarryRequestNotification } from "../carry request/carry request ev
 import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
+import Toast from "@/app/components/Toast";
 
 export default function DashboardPage() {
   //Create get goods use case
@@ -73,9 +74,12 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [notifications, setNotification] = useState<CarryRequestNotification[]>(
     [],
   );
+  const [showToast, setShowToast] = useState(false);
+
   const navigate = useNavigate();
   const { userLoggedIn, authChecked, userId } = useAuthState();
   // fetch goods category
@@ -152,6 +156,8 @@ export default function DashboardPage() {
           <CreateTripModal
             goodsCategory={goodsCategory}
             showModal={showTripModal}
+            showToast={() => setShowToast(true)}
+            setToastMessage={() => setToastMessage("Trip saved successfully.")}
             setModalState={setTripModalState}
           />
         )}
@@ -162,9 +168,16 @@ export default function DashboardPage() {
             goodsCategory={goodsCategory}
             showModal={showParcelModal}
             setModalState={setParcelModalState}
+            showToast={() => setShowToast(true)}
+            setToastMessage={() => setToastMessage("Parcel saved successfully.")}
           />
         )}
       </AnimatePresence>
+      <Toast
+        message={toastMessage}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </DefaultContainer>
   );
 }
@@ -217,13 +230,19 @@ function RecentActivity({
 
         {recentActivities &&
           recentActivities.map((activity, index) => (
-            <div className="flex flex-col w-full sm:min-w-[350px] max-w-sm">
+            <div
+              key={activity.id}
+              className="flex flex-col w-full sm:min-w-[350px] max-w-sm"
+            >
               <div className="flex gap-3 hover:bg-neutral-100 p-2 rounded-lg">
                 <span className="inline-flex pt-1">
                   {iconForActivity(activity.type)}
                 </span>
 
-                <div key={activity.id} className="flex flex-col bg-neutral">
+                <div
+                  key={activity.id}
+                  className="flex flex-col bg-neutral w-full sm:min-w-[330px] max-w-sm"
+                >
                   <div className="flex justify-between">
                     <CustomText textVariant="primary">
                       {activity.title}

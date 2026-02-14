@@ -31,7 +31,7 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
   const iconColors: Record<IconColor, string> = {
     primary: "text-primary-500",
     tertiary: "text-secondary-50",
-    success: "text-trip-500",
+    success: "text-success-500",
     neutral: "text-neutral-300",
     grey: "text-neutral-200",
     onDark: "text-white",
