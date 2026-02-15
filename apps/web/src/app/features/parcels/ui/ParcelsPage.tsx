@@ -14,6 +14,7 @@ import { useAuthState } from "@/app/shared/supabase/AuthState";
 import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
 import { AnimatePresence } from "framer-motion";
+import { useToast } from "@/app/components/Toast";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -40,18 +41,35 @@ export default function ParcelsPage() {
   const [selectedCountry, setCountry] = useState<string>("");
   const [selectedCity, setCity] = useState<string>("");
   const [tripLoaded, setTripLoaded] = useState(false);
+  const { toast } = useToast();
+
   // trip to matched with a parcel. when a user selects a parcel they should have a trip.
   const [userTrip, setUserTrip] = useState<Trip | null>(null);
 
-  // hooks must be here, NOT inside if blocks
   const { userId, userLoggedIn } = useAuthState();
 
   const handleRequest = async (parcel: Parcel) => {
+    if(parcel.user.id === userId){
+        toast(
+          "You cannot march with your own Parcel. Find a trip to match with.",
+          { variant: "info" },
+        );
+        return
+    }
     setParcel(parcel);
+
+
     if (!tripLoaded && userId && userLoggedIn) {
       const trip = await getTripUseCase.execute(userId);
-      setUserTrip(trip);
-      setTripLoaded(true);
+      if (!trip) {
+        toast(
+          "Trip not found.You need to post a trip to match with a sender.",
+          { variant: "info" },
+        );
+      } else {
+        setUserTrip(trip);
+        setTripLoaded(true);
+      }
     }
   };
 

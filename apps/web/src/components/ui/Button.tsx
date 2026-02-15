@@ -35,7 +35,7 @@ export function Button({
     "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer";
 
   // IMPORTANT: remove justify-center, because we want internal layout to decide positioning
-  const base = `relative inline-flex items-center font-thin font-heading ${
+  const base = `relative inline-flex items-center font-thin font-heading active:translate-y-0 active:scale-[0.95] active:shadow-md ${
     isBusy ? opacityCursor : hoverClass
   }`;
 
@@ -65,8 +65,12 @@ export function Button({
     <button
       type={type}
       {...props}
-      className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}
+      className={`group ${base} ${sizes[size]} ${variants[variant]} ${className}`}
     >
+      <span
+        className="pointer-events-none absolute inset-0 rounded-[inherit] bg-white/20 opacity-0
+             group-active:opacity-100 group-active:duration-150"
+      />
       {/* Full-width layout container */}
       <span className="flex w-full items-center gap-3">
         {/* Left slot */}
