@@ -45,7 +45,7 @@ export default function LogoutButton({
   return (
     <button onClick={logout} disabled={loading}>
       <span className="group w-full inline-flex gap-2 items-center p-2 hover:bg-error-100 rounded-md">
-        <LogOut className={`${"h-6 w-6 text-neutral-300 "}${cls}`} />
+        <LogOut className={`${"h-6 w-6 text-neutral-500 "}${cls}`} strokeWidth={1.5} />
         <CustomText as="span" textVariant="primary" className={cls}>
           {loading ? "Signing out..." : "Sign out"}
         </CustomText>

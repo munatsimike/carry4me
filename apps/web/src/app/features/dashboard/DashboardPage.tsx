@@ -17,7 +17,7 @@ import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
 import { useAsync } from "@/app/hookes/useAsync";
 import { isNetworkError } from "@/app/util/isNetworkError";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
 import { SupabaseAuthRepository } from "@/app/shared/data/LoginRepository";
@@ -34,7 +34,7 @@ import type { CarryRequestNotification } from "../carry request/carry request ev
 import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
-import { useToast } from "@/app/components/Toast";
+import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 
 export default function DashboardPage() {
   //Create get goods use case
@@ -79,22 +79,34 @@ export default function DashboardPage() {
   );
   const navigate = useNavigate();
   const { userLoggedIn, authChecked, userId } = useAuthState();
+  const { showSupabaseError } = useUniversalModal();
   // fetch goods category
   const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
+
+  const onLoad = async () => {
+    console.log("what are you looking at?");
+  };
 
   // fetch dashboard data
   useEffect(() => {
     if (!userId) return;
 
     const fetchDashboardData = async () => {
-      const [dashboardData, name, notifications] = await Promise.all([
-        getDashboardDataUseCase.execute(userId),
-        getFullNameUseCase.execute(userId),
-        getNotificationUseCase.execute(userId),
-      ]);
-      if (dashboardData) setDashboardData(dashboardData);
-      if (name) setFullName(name);
-      if (notifications) setNotification(notifications);
+      try {
+        const [dashboardData, name, notifications] = await Promise.all([
+          getDashboardDataUseCase.execute(userId),
+          getFullNameUseCase.execute(userId),
+          getNotificationUseCase.execute(userId),
+        ]);
+
+        if (dashboardData) setDashboardData(dashboardData);
+        if (name) setFullName(name);
+        if (notifications) setNotification(notifications);
+      } catch (e: any) {
+        {
+          showSupabaseError(e, e?.status, { onRetry: onLoad });
+        }
+      }
     };
 
     fetchDashboardData();
@@ -262,7 +274,12 @@ function RecentActivity({
 // card to disply activity items
 function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
   return (
-    <div className="flex flex-col gap-3 max-w-sm">
+    <motion.div
+      className="flex flex-col gap-3 max-w-sm"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+    >
       <Card>
         <span className="flex flex-col gap-4 sm:pr-6">
           <span className="inline-flex gap-3 items-center">
@@ -273,10 +290,11 @@ function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
               {"My deliveries"}
             </CustomText>
           </span>
+
           <ActivityItems activityList={activityList} />
         </span>
       </Card>
-    </div>
+    </motion.div>
   );
 }
 
@@ -332,40 +350,72 @@ function ActionButtonRow({
   setParcelModalState,
   setTripModalState,
 }: ActionButtonRowProps) {
-  return (
-    <div className="flex flex-wrap justify-center items-center gap-4">
-      <ActionButton
-        onClick={setTripModalState}
-        btnText="Post a trip"
-        iconColor="onDark"
-        icon={META_ICONS.travelerIcon}
-      />
-      <ActionButton
-        onClick={setParcelModalState}
-        btnText="Post a parcel"
-        btnVariant="secondary"
-        textVariant="primary"
-      />
-      <Link to={"/travelers"}>
-        <ActionButton
-          btnText="Browse trips"
-          btnVariant="outline"
-          iconColor="primary"
-          icon={META_ICONS.travelerIcon}
-          showArrow={true}
-          textVariant="primary"
-        />
-      </Link>
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.3,
+      },
+    },
+  };
 
-      <Link to={"/parcels"}>
+  const itemVariants = {
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0 },
+  };
+
+  return (
+    <motion.div
+      className="flex flex-wrap justify-center items-center gap-4 transition-all duration-200 ease-out"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
         <ActionButton
-          showArrow={true}
-          btnText="Browse parcels"
-          btnVariant="outline"
+          onClick={setTripModalState}
+          btnText="Post a trip"
+          iconColor="onDark"
+          icon={META_ICONS.travelerIcon}
+        />
+      </motion.div>
+
+      <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
+        <ActionButton
+          onClick={setParcelModalState}
+          btnText="Post a parcel"
+          btnVariant="secondary"
           textVariant="primary"
         />
-      </Link>
-    </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
+        <Link to={"/travelers"}>
+          <ActionButton
+            btnText="Browse trips"
+            btnVariant="outline"
+            iconColor="primary"
+            icon={META_ICONS.travelerIcon}
+            showArrow
+            textVariant="primary"
+          />
+        </Link>
+      </motion.div>
+
+      <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
+        <Link to={"/parcels"}>
+          <ActionButton
+            showArrow
+            btnText="Browse parcels"
+            btnVariant="outline"
+            textVariant="primary"
+          />
+        </Link>
+      </motion.div>
+    </motion.div>
   );
 }
 

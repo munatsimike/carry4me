@@ -13,7 +13,7 @@ export function Card({
   className,
   hover = true,
   paddingClass = "p-5",
-  borderClass = "border border-neutral-100",
+  borderClass = "border border-neutral-200",
   cornerRadiusClass = "rounded-2xl",
   shadowClass = "shadow-sm"
 }: CardProps) {

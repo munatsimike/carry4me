@@ -2,7 +2,7 @@ import { Card } from "@/app/components/card/Card";
 import LogoutButton from "./LogoutButton";
 import LineDivider from "@/app/components/LineDivider";
 import CustomText from "@/components/ui/CustomText";
-import { Heart, User } from "lucide-react";
+import { Heart, User, UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import SvgIcon from "@/components/ui/SvgIcon";
@@ -19,9 +19,9 @@ export function UserProfileMenu({
 }: {
   onCloseProfile: () => void;
 }) {
-  const cls = "h-6 w-6 text-neutral-300";
+  const cls = "h-6 w-6 text-neutral-500";
   const profileItems: ProfileItem[] = [
-    { name: "Profile", icon: <User className={cls} />, path: "/profile" },
+    { name: "Profile", icon: <UserRound className={cls} />, path: "/profile" },
     {
       name: "My Favourites",
       icon: <Heart className={cls} />,

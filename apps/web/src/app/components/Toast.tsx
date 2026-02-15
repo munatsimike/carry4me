@@ -114,7 +114,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 damping: 30,
               }}
               className={[
-                "px-6 py-3 rounded-xl shadow-sm text-sm border sm:max-w-sm",
+                "px-5 py-2 rounded-xl shadow-sm text-sm border sm:max-w-sm",
                 toastItem.variant === "success" &&
                   "bg-success-50 text-ink-primary border-success-100",
                 toastItem.variant === "error" &&
@@ -127,9 +127,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 .filter(Boolean)
                 .join(" ")}
             >
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-3">
                 {toastItem.icon}
                 <span className="flex-1">{toastItem.message}</span>
+                <span></span>
 
                 {/* optional close */}
                 <button

@@ -79,7 +79,7 @@ function AuthenticatedNavigation({
       <NavItem to="/requests">Requests</NavItem>
       <button>
         <span className=" group inline-flex gap-1 items-center hover:text-primary-600">
-          <span className="relative flex rounded-full p-1 group-hover:bg-neutral-100">
+          <span className="relative flex rounded-full p-1 group-hover:bg-neutral-200">
             <Bell className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
             <span className="flex absolute z-10 right-0 top-[-1px] rounded-full h-4 w-4 bg-error-500 text-[11px] text-white justify-center items-center">
               {1}

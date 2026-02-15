@@ -4,9 +4,16 @@ import type { RequestStats } from "../domain/stats.types";
 
 export class SubabaseDashboardRepository implements DashboardDataRepository {
   async getDashboardStats(userId: string): Promise<RequestStats> {
-    const { data } = await supabase.rpc("get_dashboard_overview", {
-      p_user_id: userId,
-    });
+    const { data } = await supabase
+      .rpc("get_dashboard_overview", {
+        p_user_id: userId,
+      })
+      .throwOnError();
+
+    if (!data) {
+      // this becomes a "known" error for your modal mapper
+      throw { message: "No dashboard data returned", code: "NO_DATA" };
+    }
 
     return {
       stats: {
