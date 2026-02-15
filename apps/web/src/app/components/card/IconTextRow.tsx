@@ -7,7 +7,7 @@ import type { SvgIconComponent } from "@/types/Ui";
 
 type IconRowProps = {
   Icon: SvgIconComponent;
-  label: string;
+  label: string | string[];
   iconSize?: IconSize;
   iconColor?: IconColor;
 };

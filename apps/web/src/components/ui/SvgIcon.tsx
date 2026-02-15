@@ -32,7 +32,7 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
     primary: "text-primary-500",
     tertiary: "text-secondary-50",
     success: "text-success-500",
-    neutral: "text-neutral-300",
+    neutral: "text-neutral-400",
     grey: "text-neutral-200",
     onDark: "text-white",
     pending: "text-status-pending",

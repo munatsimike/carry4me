@@ -18,7 +18,7 @@ type TravelerProps = {
 };
 
 export default function TravelerCard({ trip, onClick }: TravelerProps) {
-  const goods = trip.acceptedGoods.map((c) => c.name).join(" | ");
+  const goods = trip.acceptedGoods.map((c) => c.name) ?? "No goods specified";
   return (
     <Card>
       <SpaceBetweenRow>
@@ -38,6 +38,7 @@ export default function TravelerCard({ trip, onClick }: TravelerProps) {
         <DateRow date={trip.departDate} />
 
         <CategoryRow category={goods} />
+
       </Stack>
       <LineDivider />
       <WeightAndPrice

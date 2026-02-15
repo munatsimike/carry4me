@@ -17,6 +17,7 @@ import { GetParcelUseCase } from "../../parcels/application/GetParcelUseCase";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import type { Parcel } from "../../parcels/domain/Parcel";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
+import { useToast } from "@/app/components/Toast";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -61,15 +62,31 @@ export default function TravelersPage() {
   const [tripLoaded, setTripLoaded] = useState<boolean>(false);
   const [parcel, setParcel] = useState<Parcel | null>(null);
   const onClose = () => setTrip(null);
+  const { toast } = useToast();
 
   const handleRequest = async (trip: Trip) => {
-    setTrip(trip);
-    if (!userId || !userLoggedIn) return;
-    if (!tripLoaded) {
-      const data = await getParcelUseCase.execute(userId);
-      setParcel(data);
-      setTripLoaded(true);
+    if (trip.user.id === userId) {
+      toast(
+        "You can’t match with your own trip.Browse available parcels instead.",
+        { variant: "warning" },
+      );
+      return;
     }
+
+    try {
+      if (!tripLoaded && userId && userLoggedIn) {
+        const data = await getParcelUseCase.execute(userId);
+        if (!data) {
+          toast("Post a trip first to start matching with senders.", {
+            variant: "warning",
+          });
+        } else {
+          setParcel(data);
+          setTrip(trip);
+          setTripLoaded(true);
+        }
+      }
+    } catch (e) { console.log(e)} // to be implemented
   };
   return (
     <>

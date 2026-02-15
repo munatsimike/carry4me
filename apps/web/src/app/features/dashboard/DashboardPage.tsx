@@ -207,7 +207,7 @@ function RecentActivity({
         <span className="flex flex-col gap-3">
           <span className="inline-flex gap-3 items-center">
             <CircleBadge size="md" bgColor="neutral">
-              <Clock className="text-neutral-500" strokeWidth={1.5} />
+              <Clock className="text-neutral-600" strokeWidth={1.5} />
             </CircleBadge>
             <CustomText textVariant="primary" textSize="md">
               {"Recent activity"}
@@ -235,7 +235,7 @@ function RecentActivity({
                     <CustomText textVariant="primary">
                       {activity.title}
                     </CustomText>
-                    <p className="text-[12px] text-neutral-300">
+                    <p className="text-[12px] text-neutral-400">
                       {formatRelativeTime(activity.createdAt)}
                     </p>
                   </div>
@@ -267,7 +267,7 @@ function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
         <span className="flex flex-col gap-4 sm:pr-6">
           <span className="inline-flex gap-3 items-center">
             <CircleBadge size="md" bgColor="neutral">
-              <Truck className="text-neutral-500" strokeWidth={1.5} />
+              <Truck className="text-neutral-600" strokeWidth={1.5} />
             </CircleBadge>
             <CustomText textVariant="primary" textSize="md">
               {"My deliveries"}

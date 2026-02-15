@@ -49,27 +49,29 @@ export default function ParcelsPage() {
   const { userId, userLoggedIn } = useAuthState();
 
   const handleRequest = async (parcel: Parcel) => {
-    if(parcel.user.id === userId){
-        toast(
-          "You cannot march with your own Parcel. Find a trip to match with.",
-          { variant: "info" },
-        );
-        return
+    if (parcel.user.id === userId) {
+      toast(
+        "You can’t match with your own parcel.Browse available trips instead.",
+        { variant: "warning" },
+      );
+      return;
     }
-    setParcel(parcel);
 
-
-    if (!tripLoaded && userId && userLoggedIn) {
-      const trip = await getTripUseCase.execute(userId);
-      if (!trip) {
-        toast(
-          "Trip not found.You need to post a trip to match with a sender.",
-          { variant: "info" },
-        );
-      } else {
-        setUserTrip(trip);
-        setTripLoaded(true);
+    try {
+      if (!tripLoaded && userId && userLoggedIn) {
+        const trip = await getTripUseCase.execute(userId);
+        if (!trip) {
+          toast("Post a trip first to start matching with senders.", {
+            variant: "warning",
+          });
+        } else {
+          setUserTrip(trip);
+          setParcel(parcel);
+          setTripLoaded(true);
+        }
       }
+    } catch (e) {
+      console.log(e) /// needs to be implemented
     }
   };
 

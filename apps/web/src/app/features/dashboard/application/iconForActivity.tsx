@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 export function iconForActivity(type: string) {
-  const cls = "h-5 w-5 text-neutral-300";
+  const cls = "h-5 w-5 text-neutral-500";
   const width = 1.5;
   switch (type) {
     case "REQUEST_ACCEPTED":

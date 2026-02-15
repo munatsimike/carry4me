@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Info, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import React, {
   createContext,
   useCallback,
@@ -9,7 +9,7 @@ import React, {
   useState,
 } from "react";
 
-type ToastVariant = "success" | "error" | "info";
+type ToastVariant = "success" | "error" | "info" | "warning";
 
 type ToastAction = {
   label: string;
@@ -22,6 +22,9 @@ const defaultIcons: Record<ToastVariant, React.ReactNode> = {
   ),
   error: <XCircle className="h-6 w-6 text-red-600" strokeWidth={1.5} />,
   info: <Info className="h-6 w-6 text-primary-600" strokeWidth={1.5} />,
+  warning: (
+    <AlertTriangle className="h-6 w-6 text-warning-600" strokeWidth={1.5} />
+  ),
 };
 
 type ToastItem = {
@@ -118,11 +121,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   "bg-red-50 text-ink-primary border-red-200",
                 toastItem.variant === "info" &&
                   "bg-primary-50 text-ink-primary border-primary-100",
+                toastItem.variant === "warning" &&
+                  "bg-warning-50 text-ink-primary border-warning-100",
               ]
                 .filter(Boolean)
                 .join(" ")}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 pt-1">
                 {toastItem.icon}
                 <span className="flex-1">{toastItem.message}</span>
 
