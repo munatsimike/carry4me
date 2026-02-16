@@ -39,6 +39,8 @@ import IconTextRow from "@/app/components/card/IconTextRow";
 import { PerformCarryRequestActionUseCase } from "../application/PerformCarryRequestActionUseCase";
 import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActionRepository";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
+import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
+import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 
 export default function CarryRequestsPage() {
   const [carryRequestsList, setCarryRequestList] = useState<CarryRequest[]>([]);
@@ -60,6 +62,7 @@ export default function CarryRequestsPage() {
     [performActionRepository],
   );
 
+  const { showSupabaseError } = useUniversalModal();
   const [isRequestSent, setisRequestSent] = useState(false);
   const [isListLoaded, setIsListLoaded] = useState(false);
   const [isStateLoaded, setIsStateLoaded] = useState(false);
@@ -71,12 +74,21 @@ export default function CarryRequestsPage() {
   //fetch carry requests
   useEffect(() => {
     let cancelled = false;
+
+    if (cancelled) return;
     async function fetchRequest() {
       if (!userId || isListLoaded) return;
-      const data = await fetchCarryRequestUseCase.execute(userId);
+      const { result } = await namedCall(
+        "carryRequest",
+        fetchCarryRequestUseCase.execute(userId),
+      );
 
-      if (!cancelled) {
-        setCarryRequestList(data);
+      if (!result.success) {
+        showSupabaseError(result.error, result.status);
+        return;
+      }
+      if (result.success) {
+        setCarryRequestList(result.data);
         setIsListLoaded(true);
       }
     }
@@ -406,7 +418,7 @@ function ParcelDetails({
 }) {
   const cardLabel =
     viewerRole === ROLES.SENDER ? "Your parcel details" : "Parcel details";
-  const categories = parcel.categories.map((item) => item.name).join("-");
+  const categories = parcel.categories.map((item) => item.name);
   return (
     <Stack>
       <span className="pb-1">

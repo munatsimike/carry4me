@@ -46,8 +46,8 @@ function GuestNavigation() {
   return (
     <NavLinks>
       <Home />
-      <NavItem to="/about">About</NavItem>
-      <NavItem to="/contact">Contact</NavItem>
+      <NavItem to="/travelers">Trips</NavItem>
+      <NavItem to="/parcels">Parcels</NavItem>
       <button className="text-sm font-medium text-gray-700 hover:text-blue-600">
         Sign up
       </button>

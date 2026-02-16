@@ -53,6 +53,7 @@ export default function ConfirmRequest({
 
   const handleSendRequest = async () => {
     if (requestLoaded) return;
+    
     const requestId = await sendCarryRequestUseCase.execute(
       loggedInUserId,
       parcel,
@@ -112,7 +113,7 @@ function UITrip({
         <ButtomSpacer />
       </span>
 
-      {<TravelerRow name={trip.user.fullName} />}
+      {trip.user?.fullName && <TravelerRow name={trip.user.fullName} />}
       <RouteRow
         origin={trip.route.originCountry}
         destination={trip.route.destinationCountry}
@@ -133,7 +134,7 @@ function Parcel({
   travelerPricePerKg: number;
 }) {
   const label = isSenderRequesting ? "Your parcel" : "Sender`s Parcel";
-  const items = parcel.categories.map((item) => item.name).join("-");
+  const items = parcel.categories.map((item) => item.name);
   const pricePerKg = isSenderRequesting
     ? travelerPricePerKg
     : parcel.pricePerKg;

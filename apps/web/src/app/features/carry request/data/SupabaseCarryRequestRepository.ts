@@ -6,26 +6,30 @@ import {
 } from "../domain/CreateCarryRequest";
 import { toCarryRequestMapper } from "../domain/toCarryRequestMapper";
 import type { CarryRequest } from "../domain/CarryRequest";
-
+import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
 export class SupabaseCarryRequestRepository implements CarryRequestRepository {
-
   async updateCarryRequestStatus(
     carryRequestId: string,
     newStatus: CarryRequestStatus,
-  ): Promise<void> {
-    await supabase
+  ): Promise<RepoResponse<string>> {
+    const { data, status, error } = await supabase
       .from("carry_requests")
       .update({
         status: newStatus,
         updated_at: new Date().toISOString(),
       })
       .eq("id", carryRequestId)
-      .throwOnError();
+      .select("id")
+      .single();
+    if (error) return { data: null, status, error };
+    return { data: data.id, error: null, status: null };
   }
 
-  async fetchCarryRequestsForUser(userId: string): Promise<CarryRequest[]> {
-    const { data } = await supabase
+  async fetchCarryRequestsForUser(
+    userId: string,
+  ): Promise<RepoResponse<CarryRequest[]>> {
+    const { data, status, error } = await supabase
       .from("carry_requests")
       .select(
         `
@@ -35,14 +39,17 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       `,
       )
       .or(`sender_user_id.eq.${userId},traveler_user_id.eq.${userId}`)
-      .order("created_at", { ascending: false })
-      .throwOnError();
+      .order("created_at", { ascending: false });
 
-    return (data ?? []).map(toCarryRequestMapper);
+    if (error) return { data: null, status, error };
+    const result = (data ?? []).map(toCarryRequestMapper);
+    return { data: result, error: null, status: null };
   }
 
-  async createCarryRequest(request: CreateCarryRequest): Promise<string> {
-    const { data } = await supabase
+  async createCarryRequest(
+    request: CreateCarryRequest,
+  ): Promise<RepoResponse<string>> {
+    const { data, status, error } = await supabase
       .from("carry_requests")
       .insert({
         parcel_id: request.parcelId,
@@ -55,8 +62,8 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
         trip_snapshot: request.tripSnapshot,
       })
       .select("id")
-      .single()
-      .throwOnError();
-    return data.id;
+      .single();
+    if (error) return { data: null, status, error };
+    return { data: data.id, error: null, status: null };
   }
 }
