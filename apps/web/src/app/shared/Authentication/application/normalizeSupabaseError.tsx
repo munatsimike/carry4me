@@ -23,7 +23,7 @@ export interface NormalizedError {
 
 export function normalizeSupabaseError(
   error: any,
-  status?: number,
+  status?: number | null,
 ): NormalizedError {
   // Network-ish
   if (!error || error?.message?.includes("Failed to fetch")) {

@@ -18,7 +18,7 @@ export function Card({
   shadowClass = "shadow-sm"
 }: CardProps) {
   const hoverClass = hover
-    ? "transition-shadow transition-colors duration-200 hover:shadow-primary-300 hover:border-primary-400"
+    ? "transition-shadow transition-colors duration-200 hover:border-primary-400"
     : "";
 
   return (

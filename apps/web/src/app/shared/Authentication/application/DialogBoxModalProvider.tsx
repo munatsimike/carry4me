@@ -58,7 +58,7 @@ type UniversalModalContextValue = {
   // ergonomic helpers
   showSupabaseError: (
     err: any,
-    status?: number,
+    status?: number | null,
     opts?: { onRetry?: () => void; onLogin?: () => void },
   ) => void;
 

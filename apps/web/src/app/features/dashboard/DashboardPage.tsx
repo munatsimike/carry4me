@@ -35,6 +35,7 @@ import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 
 export default function DashboardPage() {
   //Create get goods use case
@@ -92,20 +93,46 @@ export default function DashboardPage() {
     if (!userId) return;
 
     const fetchDashboardData = async () => {
-      try {
-        const [dashboardData, name, notifications] = await Promise.all([
-          getDashboardDataUseCase.execute(userId),
-          getFullNameUseCase.execute(userId),
-          getNotificationUseCase.execute(userId),
-        ]);
+      const [dashboardData, name, notifications] = await Promise.all([
+        namedCall("dashboard", getDashboardDataUseCase.execute(userId)),
+        namedCall("UserName", getFullNameUseCase.execute(userId)),
+        namedCall("Notifications", getNotificationUseCase.execute(userId)),
+      ]);
 
-        if (dashboardData) setDashboardData(dashboardData);
-        if (name) setFullName(name);
-        if (notifications) setNotification(notifications);
-      } catch (e: any) {
-        {
-          showSupabaseError(e, e?.status, { onRetry: onLoad });
-        }
+      if (dashboardData.result.success)
+        setDashboardData(dashboardData.result.data);
+      if (name.result.success) setFullName(name.result.data);
+      if (notifications.result.success)
+        setNotification(notifications.result.data);
+
+      // show fetch dashboard data error
+      if (!dashboardData.result.success) {
+        showSupabaseError(
+          dashboardData.result.error,
+          dashboardData.result.status,
+          { onRetry: onLoad },
+        );
+        return;
+      }
+
+      // show fetch user name error
+      if (!name.result.success) {
+        showSupabaseError(name.result.error, name.result.status, {
+          onRetry: onLoad,
+        });
+        return;
+      }
+
+      // show fetch notification errors
+      if (!notifications.result.success) {
+        showSupabaseError(
+          notifications.result.error,
+          notifications.result.status,
+          {
+            onRetry: onLoad,
+          },
+        );
+        return;
       }
     };
 
@@ -247,7 +274,7 @@ function RecentActivity({
                     <CustomText textVariant="primary">
                       {activity.title}
                     </CustomText>
-                    <p className="text-[12px] text-neutral-400">
+                    <p className="text-[12px] text-neutral-500">
                       {formatRelativeTime(activity.createdAt)}
                     </p>
                   </div>
@@ -262,7 +289,7 @@ function RecentActivity({
                 </div>
               </div>
               {index !== recentActivities.length - 1 && (
-                <LineDivider heightClass="my-0" />
+                <LineDivider heightClass="my-1" />
               )}
             </div>
           ))}
@@ -374,7 +401,7 @@ function ActionButtonRow({
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
+      <motion.div variants={itemVariants}>
         <ActionButton
           onClick={setTripModalState}
           btnText="Post a trip"
@@ -383,7 +410,7 @@ function ActionButtonRow({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
+      <motion.div variants={itemVariants}>
         <ActionButton
           onClick={setParcelModalState}
           btnText="Post a parcel"
@@ -392,7 +419,7 @@ function ActionButtonRow({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
+      <motion.div variants={itemVariants}>
         <Link to={"/travelers"}>
           <ActionButton
             btnText="Browse trips"
@@ -405,7 +432,7 @@ function ActionButtonRow({
         </Link>
       </motion.div>
 
-      <motion.div variants={itemVariants} whileHover={{ y: -4 }}>
+      <motion.div variants={itemVariants}>
         <Link to={"/parcels"}>
           <ActionButton
             showArrow
@@ -464,4 +491,7 @@ function ActionButton({
       </span>
     </Button>
   );
+}
+function NamedCall(): any {
+  throw new Error("Function not implemented.");
 }

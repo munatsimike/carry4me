@@ -1,3 +1,4 @@
+import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import type { CarryRequestNotification } from "./CarryRequestNotification";
 
 export interface NotificationRepository {
@@ -7,5 +8,5 @@ export interface NotificationRepository {
   fetchNotifications(
     userId: string,
     limit?: number,
-  ): Promise<CarryRequestNotification[]>;
+  ): Promise<RepoResponse<CarryRequestNotification[]>>;
 }

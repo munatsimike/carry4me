@@ -3,19 +3,23 @@ import type {
   AuthRepository,
   LoginResult,
   LogoutResult,
-  User,
 } from "../Authentication/domain/AuthRepository";
 import toDomainUser from "./userMapper";
+import type { RepoResponse } from "../domain/RepoResponse";
 
 export class SupabaseAuthRepository implements AuthRepository {
-  async fetchUserName(userId: string): Promise<string> {
-    const { data } = await supabase
+  async fetchUserName(userId: string): Promise<RepoResponse<string>> {
+    const { data, status, error } = await supabase
       .from("profiles")
       .select("full_name")
       .eq("id", userId)
-      .single()
-      .throwOnError();
-    return data.full_name;
+      .single();
+    if (error) return { data: null, status, error };
+    return {
+      data: data.full_name,
+      status: status,
+      error: error,
+    };
   }
 
   async logout(): Promise<LogoutResult> {

@@ -1,3 +1,5 @@
+import type { RepoResponse } from "../../domain/RepoResponse";
+
 export type User = {
   id: string;
   fullName: string;
@@ -14,5 +16,5 @@ export type LoginResult =
 export interface AuthRepository {
   login(email: string, password: string): Promise<LoginResult>;
   logout(): Promise<LogoutResult>;
-  fetchUserName(userId: string): Promise<string>
+  fetchUserName(userId: string): Promise<RepoResponse<string>>
 }

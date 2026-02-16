@@ -2,7 +2,7 @@ type Variant = "trip" | "parcel";
 
 export default function CardLabel({ label, variant }: { variant: Variant; label: string }) {
   const styles: Record<Variant, string> = {
-    trip: "bg-primary-50 text-primary-500 border-primary-300",
+    trip: "bg-primary-50 text-primary-500 border-primary-100",
     parcel: "bg-purple-50 text-purple-500 border-purple-100",
   };
 
