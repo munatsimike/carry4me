@@ -1,5 +1,7 @@
 import type { TripsRepository } from "../domain/TripRepository";
 import type { CreateTrip } from "../domain/CreateTrip";
+import type { Result } from "@/app/shared/Authentication/domain/Result";
+import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
 
 export class CreateTripUseCase {
   private repo: TripsRepository;
@@ -7,9 +9,10 @@ export class CreateTripUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string, input: CreateTrip): Promise<string> {
+  async execute(userId: string, input: CreateTrip): Promise<Result<string>> {
     this.validate(input);
-   return this.repo.createTrip(userId, input);
+    const data = await this.repo.createTrip(userId, input);
+    return toResult(data);
   }
 
   private validate(input: CreateTrip) {

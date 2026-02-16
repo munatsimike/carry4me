@@ -3,10 +3,11 @@ import type { TripsRepository } from "../domain/TripRepository";
 import type { CreateTrip } from "../domain/CreateTrip";
 import type { Trip } from "../domain/Trip";
 import { mapTripRowToTrip } from "../domain/tripmappers";
+import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
 export class SupabaseTripsRepository implements TripsRepository {
-  async fetchTrip(userId: string): Promise<Trip | null> {
-    const { data } = await supabase
+  async fetchTrip(userId: string): Promise<RepoResponse<Trip>> {
+    const { data, error, status } = await supabase
       .from("trips")
       .select(
         `*,traveler:profiles(id,full_name),trip_accepted_categories(
@@ -18,16 +19,16 @@ export class SupabaseTripsRepository implements TripsRepository {
       )`,
       )
       .eq("traveler_user_id", userId)
-      .maybeSingle()
-      .throwOnError();
-    return data ? mapTripRowToTrip(data) : null;
+      .maybeSingle();
+    if (error) return { data: null, status, error };
+    if (error) return { data: null, status: null, error: null };
+    const result = data.mapTripRowToTrip(data);
+    return { data: result, status, error: null };
   }
 
-  async listTrips(): Promise<Trip[]> {
-    const { data } = await supabase
-      .from("trips")
-      .select(
-        `
+  async listTrips(): Promise<RepoResponse<Trip[]>> {
+    const { data, error, status } = await supabase.from("trips").select(
+      `
       *,
       traveler:profiles(id,full_name),
       trip_accepted_categories(
@@ -38,13 +39,19 @@ export class SupabaseTripsRepository implements TripsRepository {
         )
       )
     `,
-      )
-      .throwOnError();
+    );
 
-    return (data ?? []).map(mapTripRowToTrip);
+    if (error) return { data: null, status, error };
+    if (error) return { data: null, status: null, error: null };
+    const result = data.map(mapTripRowToTrip);
+    return { data: result, error:null, status };
   }
-  async createTrip(userId: string, input: CreateTrip): Promise<string> {
-    const { data } = await supabase
+
+  async createTrip(
+    userId: string,
+    input: CreateTrip,
+  ): Promise<RepoResponse<string>> {
+    const { data, error, status } = await supabase
       .from("trips")
       .insert({
         traveler_user_id: userId,
@@ -59,8 +66,9 @@ export class SupabaseTripsRepository implements TripsRepository {
         status: "open",
       })
       .select("id")
-      .single()
-      .throwOnError();
-    return data.id;
+      .single();
+
+    if (error) return { data: null, status, error };
+    return { data: data.id, status, error:null };
   }
 }

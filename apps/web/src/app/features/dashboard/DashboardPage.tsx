@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthState } from "../../shared/supabase/AuthState";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
@@ -139,18 +139,22 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [userId]);
 
-  const { data, error, isLoading } = useAsync(() => getGoodsUseCase.execute());
-  if (error) {
-    if (isNetworkError(error)) {
-      console.log(error);
-    }
-  }
-
   useEffect(() => {
-    if (!isLoading && data) {
-      setCategory(data);
+    if (!showTripModal && !showParcelModal) return;
+
+    async function fetchGoods() {
+      const { result } = await namedCall("goods", getGoodsUseCase.execute());
+      if (!result.success) {
+        showSupabaseError(result.error, result.status, {
+          onRetry: fetchGoods,
+        });
+        return;
+      }
+      setCategory(result.data);
     }
-  }, [isLoading, data]);
+
+    fetchGoods();
+  }, [showParcelModal, showTripModal]);
 
   // get logged in user session data
   //const { user, loading } = useAuth();

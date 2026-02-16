@@ -3,10 +3,11 @@ import type { CreateParcel } from "../domain/CreateParcel";
 import type { ParcelRepository } from "../domain/CreateParcelRepository";
 import type { Parcel } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
+import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
 export class SupabaseParcelRepository implements ParcelRepository {
-  async fetchParcel(userId: string): Promise<Parcel | null> {
-    const { data, error } = await supabase
+  async fetchParcel(userId: string): Promise<RepoResponse<Parcel>> {
+    const { data, error, status } = await supabase
       .from("parcels")
       .select(
         `*, sender:profiles(id,full_name), parcel_categories(
@@ -19,28 +20,32 @@ export class SupabaseParcelRepository implements ParcelRepository {
       .eq("sender_user_id", userId)
       .maybeSingle();
 
-    if (error) throw error;
-    if (!data) return null; // parcel not found or not visible (RLS)
+    if (error) {
+      return { data: null, error, status };
+    }
 
-    return toParcelMapper(data);
+    const parcel = toParcelMapper(data);
+    return { error: null, data: parcel, status };
   }
 
-  async fetchParcels(): Promise<Parcel[]> {
-    const { data } = await supabase
-      .from("parcels")
-      .select(
-        `*, sender:profiles(id,full_name), parcel_categories(
+  async fetchParcels(): Promise<RepoResponse<Parcel[]>> {
+    const { data, error, status } = await supabase.from("parcels").select(
+      `*, sender:profiles(id,full_name), parcel_categories(
       category:goods_categories(
       id,
       slug,
       name
       ))`,
-      )
-      .throwOnError();
-    return (data ?? []).map(toParcelMapper);
+    );
+
+    if (error) {
+      return { data: null, error, status };
+    }
+    const parcelList = (data ?? []).map(toParcelMapper);
+    return { data: parcelList, status: status, error: null };
   }
-  async createParcel(parcel: CreateParcel): Promise<string> {
-    const { data } = await supabase
+  async createParcel(parcel: CreateParcel): Promise<RepoResponse<string>> {
+    const { data, error, status } = await supabase
       .from("parcels")
       .insert({
         sender_user_id: parcel.senderUserId,
@@ -53,8 +58,11 @@ export class SupabaseParcelRepository implements ParcelRepository {
         items: parcel.items,
       })
       .select("id")
-      .single()
-      .throwOnError();
-    return data.id;
+      .single();
+
+    if (error) {
+      return { data: null, error, status };
+    }
+    return { data: data.id, error: null, status: status };
   }
 }

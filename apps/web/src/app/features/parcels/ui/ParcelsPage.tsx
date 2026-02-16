@@ -1,41 +1,68 @@
 import CustomModal from "@/app/components/CustomModal";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Parcels from "./Parcels";
 import Search from "@/app/components/Search";
-import PageSection from "@/app/components/PageSection";
+
 import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
 import { useAsync } from "@/app/hookes/useAsync";
 import type { Parcel } from "@/app/features/parcels/domain/Parcel";
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
 import type { Trip } from "@/app/features/trips/domain/Trip";
-import ConfirmRequest from "@/app/components/ConfirmRequest";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
 import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
-import { AnimatePresence } from "framer-motion";
+
 import { useToast } from "@/app/components/Toast";
+import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
+import PageSection from "@/app/components/PageSection";
+import { AnimatePresence } from "framer-motion";
+import ConfirmRequest from "@/app/components/ConfirmRequest";
+import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
   const getParcelsUseCase = useMemo(
-    () => new GetParcelsUseCase(parcelRepo), // all parcels
+    () => new GetParcelsUseCase(parcelRepo),
     [parcelRepo],
   );
-
+  const { showSupabaseError } = useUniversalModal();
   const tripRepo = useMemo(() => new SupabaseTripsRepository(), []);
   const getTripUseCase = useMemo(
-    () => new GetTripUseCase(tripRepo), // get a single paarcel
+    () => new GetTripUseCase(tripRepo),
     [parcelRepo],
   );
 
-  const { data, error, isLoading } = useAsync(() =>
-    getParcelsUseCase.execute(),
-  );
+  const [parcelsList, setParcelsList] = useState<Parcel[]>([]);
 
-  if (error) {
-    console.log(error);
-  }
+  useEffect(() => {
+    let cancel = false;
+
+    if (cancel) return;
+
+    async function fetchParcels() {
+      const { result } = await namedCall(
+        "parcels",
+        getParcelsUseCase.execute(),
+      );
+
+      if (!result.success) {
+        showSupabaseError(result.error, result.status, {
+          onRetry: fetchParcels,
+        });
+        return;
+      }
+
+      if (result.success) setParcelsList(result.data);
+    }
+
+    fetchParcels();
+
+    return () => {
+      cancel = true;
+    };
+  }, []);
+
   const [selectedParcel, setParcel] = useState<Parcel | null>(null);
   const onClose = () => setParcel(null);
   const [selectedCountry, setCountry] = useState<string>("");
@@ -48,7 +75,9 @@ export default function ParcelsPage() {
 
   const { userId, userLoggedIn } = useAuthState();
 
+  //
   const handleRequest = async (parcel: Parcel) => {
+    // check if parcel to be matched to a trip does not belong to the logged in user
     if (parcel.user.id === userId) {
       toast(
         "You can’t match with your own parcel.Browse available trips instead.",
@@ -57,21 +86,27 @@ export default function ParcelsPage() {
       return;
     }
 
-    try {
-      if (!tripLoaded && userId && userLoggedIn) {
-        const trip = await getTripUseCase.execute(userId);
-        if (!trip) {
-          toast("Post a trip first to start matching with senders.", {
-            variant: "warning",
-          });
-        } else {
-          setUserTrip(trip);
-          setParcel(parcel);
-          setTripLoaded(true);
-        }
+    if (!tripLoaded && userId && userLoggedIn) {
+      // fetch a trip to be matched with a parcel
+      const trip = await namedCall("trip", getTripUseCase.execute(userId));
+
+      if (!trip.result.success) {
+        showSupabaseError(trip.result.error, trip.result.status, {
+          onRetry: () => handleRequest(parcel),
+        });
+        return;
       }
-    } catch (e) {
-      console.log(e) /// needs to be implemented
+
+      // check if any trip is available for the loggedin user
+      if (trip.result.success && trip.result.data === null) {
+        toast("Post a trip first to start matching with senders.", {
+          variant: "warning",
+        });
+        return;
+      }
+      setUserTrip(trip.result.data);
+      setParcel(parcel);
+      setTripLoaded(true);
     }
   };
 
@@ -89,7 +124,9 @@ export default function ParcelsPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {data && <Parcels parcels={data} onClick={handleRequest} />}
+        {parcelsList && (
+          <Parcels parcels={parcelsList} onClick={handleRequest} />
+        )}
       </DefaultContainer>
       <AnimatePresence>
         {selectedParcel && userId && userTrip && (
