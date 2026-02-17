@@ -16,6 +16,7 @@ type ParcelProps = {
   onClick: (parcel: Parcel) => void;
 };
 export default function ParcelCard({ parcel, onClick }: ParcelProps) {
+
   const categories = parcel.categories.map((x) => x.name);
   return (
     <Card>
@@ -45,7 +46,7 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
         location={"UK"}
       />
       <LineDivider />
-      <SendRequestBtn payLoad={parcel} primaryAction={onClick} />
+      <SendRequestBtn buttonTextVariant="tonal" iconColorVariant="tonal"  buttonVariant="tonal" payLoad={parcel} primaryAction={onClick} />
     </Card>
   );
 }

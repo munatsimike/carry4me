@@ -8,7 +8,8 @@ export type TextVariant =
   | "selected"
   | "linkText"
   | "error"
-  | "formText";
+  | "formText"
+  | "tonal"
 
 type PrimaryTextProps = {
   as?: "h1" | "h2" | "h3" | "h4" | "p" | "span" | "div";
@@ -28,6 +29,7 @@ export default function Text({
   const variants: Record<TextVariant, string> = {
     primary: "font-heading text-ink-primary whitespace-normal break-words",
     secondary: "text-ink-secondary whitespace-normal break-words",
+    tonal: "tex-ink-primary hover:text-white",
     neutral: "text-neutral-500 whitespace-normal break-words",
     success: "font-heading text-ink-trip",
     onDark: "font-heading text-ink-onDark",

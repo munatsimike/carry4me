@@ -1,18 +1,24 @@
-import { Button } from "@/components/ui/Button";
-import SvgIcon from "@/components/ui/SvgIcon";
+import { Button, type ButtonVariant } from "@/components/ui/Button";
+import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import SendIcon from "@/assets/send-arrow-icon.svg?react";
-import CustomText from "@/components/ui/CustomText";
+import CustomText, { type TextVariant } from "@/components/ui/CustomText";
 
 type SendRequestBtnProps<T> = {
   payLoad: T;
   primaryAction: (payLoad: T) => void;
   secondaryAction?: () => void;
+  buttonVariant?: ButtonVariant,
+  iconColorVariant?:IconColor,
+  buttonTextVariant?: TextVariant
 };
 
 export default function SendRequestBtn<T>({
   primaryAction,
   secondaryAction,
   payLoad,
+  buttonVariant = "primary",
+  buttonTextVariant = "onDark",
+  iconColorVariant ="onDark"
 }: SendRequestBtnProps<T>) {
   const base = "flex items-center";
   const alignment = secondaryAction ? "justify-between" : "justify-end";
@@ -37,17 +43,16 @@ export default function SendRequestBtn<T>({
       )}
       <Button
         onClick={() => primaryAction(payLoad)}
-        variant={"primary"}
+        variant={buttonVariant}
         size={"sm"}
         leadingIcon={
-          <SvgIcon size={"sm"} Icon={SendIcon} color="onDark"></SvgIcon>
+          <SvgIcon size={"sm"} Icon={SendIcon} color={iconColorVariant}></SvgIcon>
         }
       >
         <CustomText
-          className="text-white"
           as="span"
           textSize={"xsm"}
-          textVariant="primary"
+          textVariant={buttonTextVariant}
         >
           Send request
         </CustomText>

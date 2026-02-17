@@ -2,7 +2,7 @@ export type ButtonVariant =
   | "primary"
   | "secondary"
   | "ghost"
-  | "tripPrimary"
+  | "tonal"
   | "error"
   | "outline"
   | "neutral";
@@ -52,7 +52,7 @@ export function Button({
     primary: "bg-primary-500 hover:bg-primary-600 text-white font-heading",
     secondary: "bg-secondary-100 hover:bg-secondary-2-00",
     ghost: "bg-transparent hover:bg-tertiary-50",
-    tripPrimary: "bg-primary-500 hover:bg-trip-600 text-white",
+    tonal: "bg-secondary-50 hover:bg-primary-500 text-primary border border-secondary-200 hover:text-white",
     neutral: "hover:bg-neutral-50",
     outline: "hover:bg-neutral-100 border bg-neutral-50",
     error: "hover:bg-error-100 hover:text-ink-error text-ink-secondary",
@@ -72,7 +72,7 @@ export function Button({
              group-active:opacity-100 group-active:duration-150"
       />
       {/* Full-width layout container */}
-      <span className="flex w-full items-center gap-3">
+      <span className="flex w-full items-center gap-2">
         {/* Left slot */}
         {leadingIcon && (
           <span className="inline-flex shrink-0">{leadingIcon ?? null}</span>

@@ -38,7 +38,6 @@ export default function TravelerCard({ trip, onClick }: TravelerProps) {
         <DateRow date={trip.departDate} />
 
         <CategoryRow category={goods} />
-
       </Stack>
       <LineDivider />
       <WeightAndPrice
@@ -47,7 +46,14 @@ export default function TravelerCard({ trip, onClick }: TravelerProps) {
         location={"UK"}
       />
       <LineDivider />
-      <SendRequestBtn payLoad={trip} primaryAction={onClick} />
+
+      <SendRequestBtn
+        buttonTextVariant="tonal"
+        iconColorVariant="tonal"
+        buttonVariant="tonal"
+        payLoad={trip}
+        primaryAction={onClick}
+      />
     </Card>
   );
 }

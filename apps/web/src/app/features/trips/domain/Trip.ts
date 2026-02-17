@@ -3,7 +3,7 @@ import type { User } from "../../../shared/Authentication/domain/AuthRepository"
 
 export type Trip = {
   id: string;
-  user?: User | null;
+  user: User;
   acceptedGoods: GoodsCategory[];
   route: {
     originCountry: string;

@@ -41,6 +41,7 @@ import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActi
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { color, motion } from "framer-motion";
 
 export default function CarryRequestsPage() {
   const [carryRequestsList, setCarryRequestList] = useState<CarryRequest[]>([]);
@@ -305,23 +306,44 @@ function PageTopSection() {
   ];
   return (
     <PageSection>
-      <span className="inline-flex bg-canvas rounded-full py-2 px-10">
-        <div className="flex gap-6">
-          {tabs.map((item) => (
-            <span
-              key={item.id}
-              className={`relative cursor-pointer pb-2 ${item.id === selectedId ? "after:absolute after:bottom-0 after:left-0 after:h-1 after:w-full after:bg-primary-500 after:rounded-full" : ""} `}
-              onClick={() => setSelected(item.id)}
-            >
-              <CustomText
-                textSize="xsm"
+      <span className="inline-flex bg-neutral-100 rounded-full py-2 px-10 shadow-sm  border border-neutral-200">
+        <div className="flex gap-6 relative">
+          {tabs.map((item) => {
+            const isActive = item.id === selectedId;
+
+            return (
+              <motion.span
                 key={item.id}
-                textVariant={`${item.id === selectedId ? "selected" : "secondary"}`}
+                className="relative cursor-pointer pb-2"
+                onClick={() => setSelected(item.id)}
+                whileTap={{
+                  y: 0,
+                  scale: 0.95,
+                }}
+                whileHover={{
+                  y: -2,
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                animate={{ y: item.id === selectedId ? -3 : 0 }}
               >
-                {item.label}
-              </CustomText>
-            </span>
-          ))}
+                <CustomText
+                  textSize="xsm"
+                  textVariant={isActive ? "selected" : "secondary"}
+                >
+                  {item.label}
+                </CustomText>
+
+                {/* Animated underline */}
+                {isActive && (
+                  <motion.div
+                    layoutId="tab-underline"
+                    className="absolute bottom-0 left-0 h-1 w-full rounded-full bg-primary-500"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </motion.span>
+            );
+          })}
         </div>
       </span>
     </PageSection>

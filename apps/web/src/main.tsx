@@ -6,12 +6,11 @@ import "./index.css";
 import { AuthProvider } from "./app/shared/supabase/AuthProvider";
 import { AppProviders } from "./app/shared/Authentication/application/AppProviders";
 
+// main.tsx
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AppProviders>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <RouterProvider router={router} />
     </AppProviders>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

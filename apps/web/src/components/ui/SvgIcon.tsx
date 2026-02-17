@@ -9,7 +9,8 @@ export type IconColor =
   | "inactive"
   | "neutral"
   | "onDark"
-  | "grey";
+  | "grey"
+  | "tonal"
 
 type IconProps = {
   size: IconSize;
@@ -30,6 +31,7 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
 
   const iconColors: Record<IconColor, string> = {
     primary: "text-primary-500",
+    tonal: "text-primary-500 group-hover:text-ink-onDark",
     tertiary: "text-secondary-50",
     success: "text-success-500",
     neutral: "text-neutral-400",

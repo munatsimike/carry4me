@@ -5,7 +5,7 @@ import Parcels from "./Parcels";
 import Search from "@/app/components/Search";
 
 import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
-import { useAsync } from "@/app/hookes/useAsync";
+
 import type { Parcel } from "@/app/features/parcels/domain/Parcel";
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
 import type { Trip } from "@/app/features/trips/domain/Trip";

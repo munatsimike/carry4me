@@ -305,12 +305,7 @@ function RecentActivity({
 // card to disply activity items
 function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
   return (
-    <motion.div
-      className="flex flex-col gap-3 max-w-sm"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-    >
+    <div className="flex flex-col gap-3 max-w-sm">
       <Card>
         <span className="flex flex-col gap-4 sm:pr-6">
           <span className="inline-flex gap-3 items-center">
@@ -325,7 +320,7 @@ function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
           <ActivityItems activityList={activityList} />
         </span>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 
@@ -363,7 +358,7 @@ function StatsSection({ statsList }: StatsProps) {
               className="flex flex-col items-center gap-3"
             >
               <CustomText>{item.itemName}</CustomText>
-              <CustomText>{item.count}</CustomText>
+              <CustomText textSize={"md"}>{item.count}</CustomText>
             </Card>
           ))}
         </div>
@@ -495,7 +490,4 @@ function ActionButton({
       </span>
     </Button>
   );
-}
-function NamedCall(): any {
-  throw new Error("Function not implemented.");
 }
