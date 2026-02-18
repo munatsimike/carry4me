@@ -1,8 +1,10 @@
 // resuable container for creating trips and parcels
 
 import CustomModal from "@/app/components/CustomModal";
+import { motion } from "framer-motion";
 
 type FormModalProps = {
+  step: number;
   children: React.ReactNode;
   onClose: (v: boolean) => void;
   onSubmit: () => void;
@@ -13,16 +15,16 @@ export default function FormModal({
   onClose,
   onSubmit,
 }: FormModalProps) {
-  const bgColor = "bg-neutral-50";
   return (
     <CustomModal onClose={() => onClose(false)}>
-      <form
-        id="tripForm"
-        onSubmit={onSubmit} // keep your handler too
-      >
-        <div className={`flex flex-col gap-5 w-full sm:w-2xl px-4`}>
+      <form id="tripForm" onSubmit={onSubmit}>
+        <motion.div
+          layout
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
+          className="flex flex-col gap-5 w-full sm:w-2xl px-4"
+        >
           {children}
-        </div>
+        </motion.div>
       </form>
     </CustomModal>
   );

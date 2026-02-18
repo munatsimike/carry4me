@@ -32,7 +32,7 @@ export default function DateField({
           id={id}
           type="date"
           className={cn(
-            `w-full sm:w-[150px] px-2 py-2 ${baseInput}`,
+            `w-full sm:w-[150px] px-2 py-2 rounded-md ${baseInput}`,
           )}
         />
       </div>

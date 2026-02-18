@@ -21,7 +21,7 @@ export function Card({
 }: CardProps) {
   const shouldReduceMotion = useReducedMotion();
   const hoverClass = hover
-    ? "transition-shadow transition-colors duration-200 hover:border-primary-400"
+    ? "transition-shadow transition-colors duration-200 hover:border-primary-500"
     : "";
 
   return (

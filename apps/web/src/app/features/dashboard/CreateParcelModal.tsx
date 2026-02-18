@@ -24,7 +24,7 @@ import WeightField from "./components/WeightField";
 import PriceField from "./components/PriceField";
 import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
 import z from "zod";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { ParcelItem } from "../parcels/domain/CreateParcel";
 import { useToast } from "@/app/components/Toast";
 export const parcelItemSchema = z.object({
@@ -51,7 +51,15 @@ const parcelSchema = z.object({
 
 export type ParcelFormFields = z.infer<typeof parcelSchema>;
 
-export default function CreatParcelModal({
+
+
+type Step = 1 | 2;
+
+// choose what belongs to each step
+const parcelStep1Fields = ["originCountry", "originCity", "goodsCategoryIds"] as const;
+const parcelStep2Fields = ["itemDescriptions", "totalWeight", "totalPrice", "agreeToRules"] as const;
+
+export default function CreateParcelModal({
   goodsCategory,
   setModalState,
 }: {
@@ -59,18 +67,9 @@ export default function CreatParcelModal({
   showModal: boolean;
   setModalState: (v: boolean) => void;
 }) {
-  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
-  const saveGoodsUseCase = useMemo(
-    () => new SaveGoodsUseCase(goodsRepo),
-    [goodsRepo],
-  );
+  const [step, setStep] = useState<Step>(1);
 
-  const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
-  const creteParceUseCase = useMemo(
-    () => new CreateParcelUseCase(parcelRepo),
-    [parcelRepo],
-  );
-  const { toast } = useToast();
+  // ... your useMemo repos/usecases etc
 
   const {
     register,
@@ -78,46 +77,29 @@ export default function CreatParcelModal({
     watch,
     setValue,
     control,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm<ParcelFormFields>({
     resolver: zodResolver(parcelSchema),
     defaultValues: {
       originCountry: "",
       originCity: "",
-      totalPrice: 0,
-      totalWeight: 0,
-      destinationCity: "Harare",
       destinationCountry: "Zimbabwe",
+      destinationCity: "Harare",
       goodsCategoryIds: [],
       itemDescriptions: [{ quantity: 1, description: "" }],
+      totalWeight: 1,
+      totalPrice: 0,
       agreeToRules: false,
     },
     mode: "onSubmit",
   });
 
+  const selectedIds = watch("goodsCategoryIds");
   const countryValue = watch("originCountry");
   const cityValue = watch("originCity");
-  const selectedIds = watch("goodsCategoryIds");
-  const { userId, userLoggedIn } = useAuthState();
-  const dividerHeight = "my-0";
 
-  const onInvalid = (errors: FieldErrors<ParcelFormFields>) => {
-    console.log("Form errors:", errors);
-  };
-  const onValid = async (values: ParcelFormFields) => {
-    try {
-      if (userId && userLoggedIn) {
-        const data = await creteParceUseCase.execute(
-          toCreateParcelMapper(userId, values),
-        );
-        SaveGoodsCategories(saveGoodsUseCase, toGoodsMapper(data, selectedIds));
-        toast("Parcel saved successfully",{ variant: "success" });
-        setModalState(false);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  const dividerHeight = "my-0";
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -131,6 +113,36 @@ export default function CreatParcelModal({
   function removeField(index: number) {
     remove(index);
   }
+
+  const goNext = async () => {
+    const ok = await trigger(parcelStep1Fields as any, { shouldFocus: true });
+    if (!ok) return;
+    setStep(2);
+  };
+
+  const goBack = () => setStep(1);
+
+  const onValid = async (values: ParcelFormFields) => {
+    const ok = await trigger(parcelStep2Fields as any, { shouldFocus: true });
+    if (!ok) return;
+
+    try {
+      // your existing save flow...
+      // const parcelId = await createParcel(...)
+      // await SaveGoodsCategories(...)
+      // toast success
+      setModalState(false);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const onInvalid = (formErrors: any) => {
+    // optional: you can auto-jump to the step that contains errors
+    // but keep it simple for now
+    console.log(formErrors);
+  };
+
   return (
     <FormModal
       onSubmit={handleSubmit(onValid, onInvalid)}
@@ -138,60 +150,105 @@ export default function CreatParcelModal({
     >
       <FormHeader
         heading={"Post a parcel"}
-        subHeading={"Share your parcel details to match with travelers."}
+        subHeading={
+          step === 1
+            ? "Step 1 of 2 — Route & item type."
+            : "Step 2 of 2 — Package contents & totals."
+        }
         icon={META_ICONS.parcelBox}
       />
+
       <LineDivider heightClass={dividerHeight} />
-      <RouteFieldRow
-        countryError={errors.originCountry?.message}
-        cityError={errors.originCity?.message}
-        cityValue={cityValue}
-        countryValue={countryValue}
-        registerCity={register("originCity")}
-        registerCountry={register("originCountry")}
-      />
-      <LineDivider heightClass={dividerHeight} />
-      <GoodsCategoryGrid
-        label="What items are you sending?"
-        error={errors.goodsCategoryIds?.message}
-        goods={goodsCategory}
-        selectedIds={selectedIds}
-        onChange={(next) =>
-          setValue("goodsCategoryIds", next, { shouldValidate: true })
-        }
-      />
-      <LineDivider heightClass={dividerHeight} />
-      <DescriptionQuantityRow
-        errors={errors}
-        fields={fields}
-        onRemove={removeField}
-        register={register}
-      />
-      <AddItemButton onClick={addField} />
-      <LineDivider heightClass={dividerHeight} />
-      <span className="flex flex-wrap gap-4 sm:gap-20">
-        <WeightField
-          id="weight"
-          error={errors.totalWeight?.message}
-          register={register("totalWeight", { valueAsNumber: true })}
-        />
-        <PriceField
-          id="price"
-          error={errors.totalPrice?.message}
-          register={register("totalPrice", { valueAsNumber: true })}
-        />
-      </span>
-      <LineDivider heightClass={dividerHeight} />
-      <AgreeToTermsRow
-        register={register("agreeToRules")}
-        id={"terms"}
-        error={errors.agreeToRules?.message}
-      />
-      <LineDivider heightClass={dividerHeight} />
-      <ActionBtn
-        isSubmitting={isSubmitting}
-        onCancel={() => setModalState(false)}
-      />
+
+      {step === 1 ? (
+        <>
+          <RouteFieldRow
+            countryError={errors.originCountry?.message}
+            cityError={errors.originCity?.message}
+            cityValue={cityValue}
+            countryValue={countryValue}
+            registerCity={register("originCity")}
+            registerCountry={register("originCountry")}
+          />
+
+          <LineDivider heightClass={dividerHeight} />
+
+          <GoodsCategoryGrid
+            label="What items are you sending?"
+            error={errors.goodsCategoryIds?.message}
+            goods={goodsCategory}
+            selectedIds={selectedIds}
+            onChange={(next) =>
+              setValue("goodsCategoryIds", next, { shouldValidate: true })
+            }
+          />
+
+          <LineDivider heightClass={dividerHeight} />
+
+          {/* Step actions */}
+          <div className="flex justify-end gap-4 pt-4">
+            <Button type="button" variant="neutral" onClick={() => setModalState(false)} size={"xsm"}>
+              Cancel
+            </Button>
+            <Button type="button" variant="primary" onClick={goNext} size={"xsm"}>
+              Next
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <DescriptionQuantityRow
+            errors={errors}
+            fields={fields as any}
+            onRemove={removeField}
+            register={register}
+          />
+
+          <AddItemButton onClick={addField} />
+
+          <LineDivider heightClass={dividerHeight} />
+
+          <span className="flex flex-wrap gap-4 sm:gap-20">
+            <WeightField
+              id="weight"
+              error={errors.totalWeight?.message}
+              register={register("totalWeight", { valueAsNumber: true })}
+            />
+            <PriceField
+              id="price"
+              error={errors.totalPrice?.message}
+              register={register("totalPrice", { valueAsNumber: true })}
+            />
+          </span>
+
+          <LineDivider heightClass={dividerHeight} />
+
+          <AgreeToTermsRow
+            register={register("agreeToRules")}
+            id={"terms"}
+            error={errors.agreeToRules?.message}
+          />
+
+          <LineDivider heightClass={dividerHeight} />
+
+          {/* Step actions */}
+          <div className="flex items-center justify-between gap-4 pt-4">
+            <Button type="button" variant="neutral" onClick={goBack} size={"xsm"}>
+              Back
+            </Button>
+
+            <div className="flex gap-4">
+              <Button type="button" variant="neutral" onClick={() => setModalState(false)} size={"xsm"}>
+                Cancel
+              </Button>
+
+              <Button type="submit" variant="primary" disabled={isSubmitting} size={"xsm"}>
+                {isSubmitting ? "Posting..." : "Review & Post"}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </FormModal>
   );
 }

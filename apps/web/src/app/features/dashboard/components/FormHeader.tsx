@@ -15,15 +15,15 @@ export default function FormHeader({
   subHeading,
 }: formHeaderProps) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3">
+    <div className="flex flex-col items-center justify-center gap-1">
       <CircleBadge size="lg" bgColor="secondary">
         <SvgIcon size={"xxl"} color="primary" Icon={icon}></SvgIcon>
       </CircleBadge>
-      <span className="flex flex-col gap2 items-center">
-        <CustomText className="formText" textSize="lg">
+      <span className="flex flex-col gap-1 items-center">
+        <CustomText  textSize="lg" textVariant="primary">
           {heading}
         </CustomText>
-        <CustomText textSize="sm" as="h2">
+        <CustomText textSize="sm" as="h2" className="leading-none">
           {subHeading}
         </CustomText>
       </span>

@@ -15,7 +15,7 @@ export default function AgreeToTermsRow({ register, id, error }: AgreeToTermsPro
       <div className="flex flex-col">
         <div className="flex gap-3">
           <CheckBox register={register} id={id}></CheckBox>
-          <CustomText textVariant="formText">
+          <CustomText textVariant="formText" textSize="xsm">
             {"I agree to the terms and conditions."}
           </CustomText>
         </div>

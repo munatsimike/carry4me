@@ -41,7 +41,7 @@ export function Button({
 
   const sizes: Record<ButtonSize, string> = {
     xsm: "h-8 px-3 rounded-full",
-    sm: "h-9 px-3 " + cornerRadius,
+    sm: "h-9 px-6 " + cornerRadius,
     md: "h-10 px-4 " + cornerRadius,
     lg: "h-14 px-4 " + cornerRadius,
     xl: "h-[85px] max-w-sm px-3 rounded-xl",
@@ -53,8 +53,8 @@ export function Button({
     secondary: "bg-secondary-100 hover:bg-secondary-2-00",
     ghost: "bg-transparent hover:bg-tertiary-50",
     tonal: "bg-secondary-50 hover:bg-primary-500 text-primary border border-secondary-200 hover:text-white",
-    neutral: "hover:bg-neutral-50",
-    outline: "hover:bg-neutral-100 border bg-neutral-50",
+    neutral: "hover:bg-neutral-50 text-ink-secondary",
+    outline: "hover:bg-neutral-100 border bg-neutral-50 text-ink-secondary",
     error: "hover:bg-error-100 hover:text-ink-error text-ink-secondary",
   };
 

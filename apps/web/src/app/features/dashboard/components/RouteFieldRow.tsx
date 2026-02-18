@@ -21,12 +21,12 @@ export default function RouteFieldRow({
   return (
     <div>
       <div className="flex flex-col gap-4">
-        <span className="grid grid-cols-[96px_1fr] items-center gap-4">
+        <span className="grid grid-cols-[96px_1fr] items-center gap-3">
           <CustomText className="text-right" textSize="xsm">
             {"Destination :"}
           </CustomText>
           <span >
-            <CustomText as="span" textSize="xsm" textVariant="formText" className="inline-flex bg-neutral-100 rounded-full px-4 py-2">
+            <CustomText as="span" textSize="xsm" textVariant="formText">
               {"Zimbabwe"}
             </CustomText>
           </span>

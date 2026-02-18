@@ -1,4 +1,5 @@
 import type { UseFormRegisterReturn } from "react-hook-form";
+import { baseInput, cn } from "../lib/cn";
 
 type DropDownMenuProps = {
   placeholder: string;
@@ -25,9 +26,7 @@ export default function DropDownMenu({
     <select
       defaultValue=""
       disabled={disabled}
-      className={`px-3 py-2 bg-white border border-neutral-100 ${className} ${
-        isPlaceholder ? `text-ink-secondary ${textSize}` : textVariant
-      }`}
+      className={cn(`px-3 py-2 bg-white ${className} ${textVariant} ${baseInput}`)}
       {...register}
     >
       <option value="" disabled>

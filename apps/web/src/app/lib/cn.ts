@@ -6,7 +6,8 @@ export function cn(...inputs: any[]) {
 }
 
 export const baseInput = cn(
-  "rounded-md border border-neutral-200 font-inter text-sm text-ink-primary",
+  "border border-neutral-200 font-inter text-sm text-ink-primary",
   "focus-within:ring-1 focus-within:ring-primary-100",
-  "focus-within:border-primary-100"
+  "focus-within:border-primary-500",
+  "focus:outline-none focus:ring-0",
 );

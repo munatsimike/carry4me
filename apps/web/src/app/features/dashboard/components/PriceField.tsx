@@ -18,7 +18,7 @@ export default function PriceField({ register, id, error }: PriceFieldProps) {
           <input
             type="number"
             id={id}
-            className={cn(`w-full sm:w-[100px] py-2 px-2 ${baseInput}`)}
+            className={cn(`w-full rounded-lg sm:w-[100px] py-2 px-2 ${baseInput}`)}
             {...register}
           />
         }

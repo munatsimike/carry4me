@@ -23,7 +23,7 @@ export default function FloatingInputField({
   return (
     <div>
       <div
-        className={cn(`relative flex items-center ${baseInput}
+        className={cn(`relative flex items-center rounded-lg ${baseInput}
         ${className ?? ""}`)}
       >
         {leadingIcon && (

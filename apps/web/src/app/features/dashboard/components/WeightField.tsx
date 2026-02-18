@@ -22,7 +22,7 @@ export default function WeightField({ id, register, error }: WeightFieldProps) {
             <input
               type="number"
               id={id}
-              className={cn(`w-full sm:w-[100px] py-2 px-2 ${baseInput}`)}
+              className={cn(`w-full rounded-lg sm:w-[100px] py-2 px-2 ${baseInput}`)}
               {...register}
             ></input>
           }
