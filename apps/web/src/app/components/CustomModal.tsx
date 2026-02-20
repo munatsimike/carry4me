@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { CloseBackBtn } from "./CloseBtn";
 
 type Width = "sm" | "md" | "lg" | "xl" | "2xl";
 
@@ -44,6 +45,7 @@ export default function CustomModal({
         exit={{ opacity: 0, scale: 0.94, y: 32 }}
         transition={{ duration: 0.24, ease: "easeOut" }}
       >
+        <CloseBackBtn onClose={onClose} />
         {children}
       </motion.div>
     </motion.div>

@@ -41,7 +41,7 @@ export function Button({
 
   const sizes: Record<ButtonSize, string> = {
     xsm: "h-8 px-3 rounded-full",
-    sm: "h-9 px-6 " + cornerRadius,
+    sm: "h-9 px-3 " + cornerRadius,
     md: "h-10 px-4 " + cornerRadius,
     lg: "h-14 px-4 " + cornerRadius,
     xl: "h-[85px] max-w-sm px-3 rounded-xl",

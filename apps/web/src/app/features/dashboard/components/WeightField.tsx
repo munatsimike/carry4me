@@ -15,14 +15,14 @@ export default function WeightField({ id, register, error }: WeightFieldProps) {
     <div>
       <div className="flex flex-col gap-2">
         <label id={id} htmlFor="weight">
-          {<CustomText textSize="xsm">{"Available space (Kg)"}</CustomText>}
+          {<CustomText textSize="xsm" textVariant="label">{"Available space (Kg)"}</CustomText>}
         </label>
         <InlineRow>
           {
             <input
               type="number"
               id={id}
-              className={cn(`w-full rounded-lg sm:w-[100px] py-2 px-2 ${baseInput}`)}
+              className={cn(`w-full rounded-md sm:w-[85px] py-2 px-2 ${baseInput}`)}
               {...register}
             ></input>
           }

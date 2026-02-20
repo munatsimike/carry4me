@@ -1,11 +1,10 @@
 import { CreateTripUseCase } from "../trips/application/CreateTripUsecase";
 import FormHeader from "./components/FormHeader";
 import LineDivider from "@/app/components/LineDivider";
-import DateField from "./components/DateField";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import z, { transform } from "zod";
+import z from "zod";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
 import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
 import { useMemo, useState } from "react";
@@ -23,9 +22,8 @@ import WeightField from "./components/WeightField";
 import { useToast } from "@/app/components/Toast";
 import { Button } from "@/components/ui/Button";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
-
 import { StepHeader, type Step } from "@/app/components/forms/formStepper";
-import { ArrowLeft, MoveLeft, X } from "lucide-react";
+import { DateField } from "./components/DateField";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
@@ -89,6 +87,7 @@ export default function CreateTripModal({
   const { toast } = useToast();
 
   const {
+    control,
     register,
     handleSubmit,
     watch,
@@ -108,14 +107,15 @@ export default function CreateTripModal({
       goodsCategoryIds: [],
       agreeToRules: false,
     },
-    mode: "onSubmit",
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
 
   const selectedIds = watch("goodsCategoryIds");
   const countryValue = watch("originCountry");
   const cityValue = watch("originCity");
 
-  const dividerHeight = "my-0";
+  const dividerHeight = "";
 
   const goNext = async () => {
     // validate only step 1 fields
@@ -152,125 +152,126 @@ export default function CreateTripModal({
 
   return (
     <FormModal
-      step={step}
       onSubmit={handleSubmit(onValidSubmit)}
       onClose={() => setModalState(false)}
     >
-      <div className="flex flex-col">
-        <FormHeader
-          heading={"Post your trip"}
-          subHeading={"Share your trip details to get matched with senders."}
-        />
-
-        <CloseBackBtn onClose={setModalState} />
-      </div>
-
       <div className="flex flex-col gap-4">
-        <LineDivider heightClass={dividerHeight} />
-        <StepHeader currentStep={step} />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
+            <FormHeader
+              heading={"Post your trip"}
+              subHeading={
+                "Share your trip details to get matched with senders."
+              }
+            />
+            <StepHeader currentStep={step} />
+          </div>
+        </div>
+
+        {step === 1 ? (
+          <div className="flex flex-col gap-4">
+            <LineDivider heightClass={dividerHeight} />
+            <RouteFieldRow
+              cityError={errors.originCity?.message}
+              countryError={errors.originCountry?.message}
+              cityValue={cityValue}
+              countryValue={countryValue}
+              registerCity={register("originCity")}
+              registerCountry={register("originCountry")}
+              // If you also have destination inputs in this component,
+              // wire these too (recommended):
+              // registerDestinationCity={register("destinationCity")}
+              // registerDestinationCountry={register("destinationCountry")}
+              // destinationCityError={errors.destinationCity?.message}
+              // destinationCountryError={errors.destinationCountry?.message}
+            />
+
+            <LineDivider heightClass={dividerHeight} />
+
+            <DateField<FormFields>
+              error={errors.departureDate?.message}
+              control={control}
+              name={"departureDate"}
+              placeholder="dd/mm/yyyy"
+              fromDate={new Date()}
+            />
+
+            <LineDivider heightClass={dividerHeight} />
+
+            {/* Step actions */}
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="primary"
+                onClick={goNext}
+                size={"sm"}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+          <LineDivider heightClass={dividerHeight} />
+            <GoodsCategoryGrid
+              label="What items do you prefer to carry?"
+              error={errors.goodsCategoryIds?.message}
+              goods={goodsCategory}
+              selectedIds={selectedIds}
+              onChange={(next) =>
+                setValue("goodsCategoryIds", next, { shouldValidate: true })
+              }
+            />
+
+            <LineDivider heightClass={dividerHeight} />
+
+            <span className="flex flex-wrap gap-4 sm:gap-20">
+              <WeightField
+                id="weight"
+                register={register("availableSpace", { valueAsNumber: true })}
+                error={errors.availableSpace?.message}
+              />
+
+              <PriceField
+                id="price"
+                register={register("pricePerKg", { valueAsNumber: true })}
+                error={errors.pricePerKg?.message}
+              />
+            </span>
+
+            <LineDivider heightClass={dividerHeight} />
+
+            <AgreeToTermsRow
+              register={register("agreeToRules")}
+              id={"terms"}
+              error={errors.agreeToRules?.message}
+            />
+
+            <LineDivider heightClass={dividerHeight} />
+
+            {/* Step actions */}
+            <div className="flex items-center justify-between gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={goBack}
+                size={"sm"}
+              >
+                {"Back"}
+              </Button>
+
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isSubmitting}
+                size={"sm"}
+              >
+                {isSubmitting ? "Posting..." : "Submit"}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
-      <LineDivider heightClass={dividerHeight} />
-
-      {step === 1 ? (
-        <>
-          <RouteFieldRow
-            cityError={errors.originCity?.message}
-            countryError={errors.originCountry?.message}
-            cityValue={cityValue}
-            countryValue={countryValue}
-            registerCity={register("originCity")}
-            registerCountry={register("originCountry")}
-            // If you also have destination inputs in this component,
-            // wire these too (recommended):
-            // registerDestinationCity={register("destinationCity")}
-            // registerDestinationCountry={register("destinationCountry")}
-            // destinationCityError={errors.destinationCity?.message}
-            // destinationCountryError={errors.destinationCountry?.message}
-          />
-
-          <LineDivider heightClass={dividerHeight} />
-
-          <DateField
-            error={errors.departureDate?.message}
-            register={register("departureDate")}
-            id="departureDate"
-            label="Departure date"
-          />
-
-          <LineDivider heightClass={dividerHeight} />
-
-          {/* Step actions */}
-          <div className="flex justify-end gap-4 pt-4">
-            <Button
-              type="button"
-              variant="primary"
-              onClick={goNext}
-              size={"sm"}
-            >
-              Next
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          <GoodsCategoryGrid
-            label="What items do you prefer to carry?"
-            error={errors.goodsCategoryIds?.message}
-            goods={goodsCategory}
-            selectedIds={selectedIds}
-            onChange={(next) =>
-              setValue("goodsCategoryIds", next, { shouldValidate: true })
-            }
-          />
-
-          <LineDivider heightClass={dividerHeight} />
-
-          <span className="flex flex-wrap gap-4 sm:gap-20">
-            <WeightField
-              id="weight"
-              register={register("availableSpace", { valueAsNumber: true })}
-              error={errors.availableSpace?.message}
-            />
-
-            <PriceField
-              id="price"
-              register={register("pricePerKg", { valueAsNumber: true })}
-              error={errors.pricePerKg?.message}
-            />
-          </span>
-
-          <LineDivider heightClass={dividerHeight} />
-
-          <AgreeToTermsRow
-            register={register("agreeToRules")}
-            id={"terms"}
-            error={errors.agreeToRules?.message}
-          />
-
-          <LineDivider heightClass={dividerHeight} />
-
-          {/* Step actions */}
-          <div className="flex items-center justify-between gap-4 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={goBack}
-              size={"sm"}
-            >
-              {"Back"}
-            </Button>
-
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isSubmitting}
-              size={"sm"}
-            >
-              {isSubmitting ? "Posting..." : "Submit"}
-            </Button>
-          </div>
-        </>
-      )}
     </FormModal>
   );
 }
@@ -301,22 +302,4 @@ async function SaveGoodsCategories(
   goods: UserGoods,
 ) {
   await saveGoodsUseCase.execute(goods, true);
-}
-
-type CloseBackBtnProps = {
-  onClose: (b: boolean) => void;
-};
-
-function CloseBackBtn({ onClose }: CloseBackBtnProps) {
-  return (
-    <div className="absolute top-3 right-4">
-      <button
-        type="button"
-        onClick={() => onClose(false)}
-        className="flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all p-1 rounded-md hover:-translate-y-0.5"
-      >
-        <X className="h-5 w-5" />
-      </button>
-    </div>
-  );
 }

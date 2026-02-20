@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { Minus } from "lucide-react";
 
 export type Step = 1 | 2;
 
@@ -13,11 +14,11 @@ export function StepHeader({ currentStep }: { currentStep: 1 | 2 }) {
   return (
     <div className="flex justify-between items-center">
       {/* Left: Step text */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-1 min-w-0">
         <span className="inline-flex text-sm h-6 items-center justify-center text-neutral-500">
           Step {currentStep} of {steps.length}
         </span>
-
+        <Minus className="text-neutral-400" />
         <div className="relative overflow-hidden min-w-0">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -26,7 +27,7 @@ export function StepHeader({ currentStep }: { currentStep: 1 | 2 }) {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="text-sm text-ink-primary bg-primary-50 border border-primary-100  rounded-full px-2 p-1"
+              className="text-md text-neutral-600 flex justify-center items-center"
               title={step.title}
             >
               {step.title}

@@ -5,28 +5,21 @@ import CustomText from "@/components/ui/CustomText";
 import FormModal from "./components/FormModal";
 import { useFieldArray, useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SupabaseParcelRepository } from "../parcels/data/SupabaseParcelRepository";
-import { CreateParcelUseCase } from "../parcels/application/CreateParcelUseCase";
-import { useAuthState } from "@/app/shared/supabase/AuthState";
 import FormHeader from "./components/FormHeader";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import RouteFieldRow from "./components/RouteFieldRow";
 import AgreeToTermsRow from "./components/AgreeToTermsRow";
-import ActionBtn from "./components/CreateTripParcelActionBtn";
 import SvgIcon from "@/components/ui/SvgIcon";
 import GoodsCategoryGrid from "./components/GoodsCategoryGrid";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import { SaveGoodsUseCase } from "../goods/application/SaveGoodsUseCase";
-import type { UserGoods } from "../goods/domain/UserGoods";
-import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
-import toGoodsMapper from "../goods/domain/toGoodsMapper";
-import WeightField from "./components/WeightField";
 import PriceField from "./components/PriceField";
-import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
 import z from "zod";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { ParcelItem } from "../parcels/domain/CreateParcel";
-import { useToast } from "@/app/components/Toast";
+import { StepHeader } from "@/app/components/forms/formStepper";
+import { CloseBackBtn } from "@/app/components/CloseBtn";
+import { X } from "lucide-react";
+import WeightField from "./components/WeightField";
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
   description: z.string().trim().min(1, "Item description is required"),
@@ -51,13 +44,20 @@ const parcelSchema = z.object({
 
 export type ParcelFormFields = z.infer<typeof parcelSchema>;
 
-
-
 type Step = 1 | 2;
 
 // choose what belongs to each step
-const parcelStep1Fields = ["originCountry", "originCity", "goodsCategoryIds"] as const;
-const parcelStep2Fields = ["itemDescriptions", "totalWeight", "totalPrice", "agreeToRules"] as const;
+const parcelStep1Fields = [
+  "originCountry",
+  "originCity",
+  "goodsCategoryIds",
+] as const;
+const parcelStep2Fields = [
+  "itemDescriptions",
+  "totalWeight",
+  "totalPrice",
+  "agreeToRules",
+] as const;
 
 export default function CreateParcelModal({
   goodsCategory,
@@ -150,16 +150,15 @@ export default function CreateParcelModal({
     >
       <FormHeader
         heading={"Post a parcel"}
-        subHeading={
-          step === 1
-            ? "Step 1 of 2 — Route & item type."
-            : "Step 2 of 2 — Package contents & totals."
-        }
+        subHeading={"Share your parcel details to get matched with travelers."}
         icon={META_ICONS.parcelBox}
       />
 
+      <div className="flex flex-col gap-4">
+        <LineDivider heightClass={dividerHeight} />
+        <StepHeader currentStep={step} />
+      </div>
       <LineDivider heightClass={dividerHeight} />
-
       {step === 1 ? (
         <>
           <RouteFieldRow
@@ -187,10 +186,12 @@ export default function CreateParcelModal({
 
           {/* Step actions */}
           <div className="flex justify-end gap-4 pt-4">
-            <Button type="button" variant="neutral" onClick={() => setModalState(false)} size={"xsm"}>
-              Cancel
-            </Button>
-            <Button type="button" variant="primary" onClick={goNext} size={"xsm"}>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={goNext}
+              size={"sm"}
+            >
               Next
             </Button>
           </div>
@@ -233,19 +234,23 @@ export default function CreateParcelModal({
 
           {/* Step actions */}
           <div className="flex items-center justify-between gap-4 pt-4">
-            <Button type="button" variant="neutral" onClick={goBack} size={"xsm"}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={goBack}
+              size={"sm"}
+            >
               Back
             </Button>
 
-            <div className="flex gap-4">
-              <Button type="button" variant="neutral" onClick={() => setModalState(false)} size={"xsm"}>
-                Cancel
-              </Button>
-
-              <Button type="submit" variant="primary" disabled={isSubmitting} size={"xsm"}>
-                {isSubmitting ? "Posting..." : "Review & Post"}
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting}
+              size={"sm"}
+            >
+              {"Submit"}
+            </Button>
           </div>
         </>
       )}
@@ -295,7 +300,7 @@ function DescriptionQuantityRow({
               onClick={() => onRemove(index)}
               className="text-ink-error"
             >
-              {<SvgIcon size={"sm"} Icon={META_ICONS.addAccount} />}
+              <X className="h-5 w-5 hover:bg-error-50  rounded-full" />
             </button>
           )}
         </div>
@@ -319,16 +324,4 @@ function AddItemButton({ onClick }: { onClick: () => void }) {
       </span>
     </Button>
   );
-}
-
-async function SaveGoodsCategories(
-  saveGoodsUseCase: SaveGoodsUseCase,
-  goods: UserGoods,
-) {
-  try {
-    await saveGoodsUseCase.execute(goods, false);
-    console.log("Goods saved");
-  } catch (e) {
-    console.log(e);
-  }
 }

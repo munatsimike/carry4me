@@ -4,7 +4,6 @@ import CustomModal from "@/app/components/CustomModal";
 import { motion } from "framer-motion";
 
 type FormModalProps = {
-  step: number;
   children: React.ReactNode;
   onClose: (v: boolean) => void;
   onSubmit: () => void;

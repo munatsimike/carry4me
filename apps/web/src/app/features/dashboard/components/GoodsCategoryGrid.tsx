@@ -28,7 +28,7 @@ export default function GoodsCategoryGrid({
     <div>
       <div className="flex flex-col gap-3">
         <InlineRow>
-          <CustomText textSize="xsm">
+          <CustomText textSize="xsm" textVariant="label">
             {label}
           </CustomText>
         </InlineRow>

@@ -13,12 +13,12 @@ export default function PriceField({ register, id, error }: PriceFieldProps) {
   return (
     <div>
       <div className="flex flex-col gap-2">
-        <CustomText textSize="xsm">{"Price per kg"}</CustomText>
+        <CustomText textSize="xsm" textVariant="label">{"Price per kg"}</CustomText>
         {
           <input
             type="number"
             id={id}
-            className={cn(`w-full rounded-lg sm:w-[100px] py-2 px-2 ${baseInput}`)}
+            className={cn(`w-full rounded-md sm:w-[85px] py-2 px-2 ${baseInput}`)}
             {...register}
           />
         }

@@ -20,13 +20,15 @@ export default function DropDownMenu({
 }: DropDownMenuProps) {
   const isPlaceholder = !value;
   const textSize = "text-[14px]";
-  const textVariant = `text-ink-primary ${textSize}`;
+  const textVariant = `${isPlaceholder ? "text-neutral-400" : "text-ink-primary"} ${textSize}`;
 
   return (
     <select
       defaultValue=""
       disabled={disabled}
-      className={cn(`px-3 py-2 bg-white ${className} ${textVariant} ${baseInput}`)}
+      className={cn(
+        `px-3 py-2 bg-white ${className} ${textVariant} ${baseInput}`,
+      )}
       {...register}
     >
       <option value="" disabled>

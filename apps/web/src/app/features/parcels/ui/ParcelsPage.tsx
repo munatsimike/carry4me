@@ -3,16 +3,13 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useEffect, useMemo, useState } from "react";
 import Parcels from "./Parcels";
 import Search from "@/app/components/Search";
-
 import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
-
 import type { Parcel } from "@/app/features/parcels/domain/Parcel";
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
 import type { Trip } from "@/app/features/trips/domain/Trip";
 import { useAuthState } from "@/app/shared/supabase/AuthState";
 import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
-
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import PageSection from "@/app/components/PageSection";
