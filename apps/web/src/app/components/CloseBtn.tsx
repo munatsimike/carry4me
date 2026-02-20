@@ -9,7 +9,7 @@ export function CloseBackBtn({ onClose }: CloseBackBtnProps) {
       <button
         type="button"
         onClick={() => onClose(false)}
-        className="flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all p-1 rounded-md hover:-translate-y-0.5"
+        className="flex items-center justify-center text-neutral-500 hover:text-slate-900 hover:bg-slate-100 transition-all p-1 rounded-full hover:-translate-y-0.5 bg-neutral-100 "
       >
         <X className="h-5 w-5" />
       </button>

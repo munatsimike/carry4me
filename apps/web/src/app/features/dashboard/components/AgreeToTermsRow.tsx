@@ -9,9 +9,13 @@ type AgreeToTermsProps = {
   register: UseFormRegisterReturn;
 };
 
-export default function AgreeToTermsRow({ register, id, error }: AgreeToTermsProps) {
+export default function AgreeToTermsRow({
+  register,
+  id,
+  error,
+}: AgreeToTermsProps) {
   return (
-    <div>
+    <ErrorText error={error}>
       <div className="flex flex-col">
         <div className="flex gap-3">
           <CheckBox register={register} id={id}></CheckBox>
@@ -20,7 +24,6 @@ export default function AgreeToTermsRow({ register, id, error }: AgreeToTermsPro
           </CustomText>
         </div>
       </div>
-      {error && <ErrorText error={error} />}
-    </div>
+    </ErrorText>
   );
 }

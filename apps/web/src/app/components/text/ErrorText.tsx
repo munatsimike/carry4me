@@ -1,23 +1,46 @@
-import CustomText from "@/components/ui/CustomText";
+import { cn } from "@/app/lib/cn";
+import { AnimatePresence, motion } from "framer-motion";
 
 type ErrorTextProps = {
+  children: React.ReactNode;
   error?: string;
   className?: string;
+  classPadding?: string;
 };
 
-export default function ErrorText({ error, className }: ErrorTextProps) {
+export default function ErrorText({
+  error,
+  className,
+  children,
+}: ErrorTextProps) {
   return (
-    <CustomText
-      as="p"
-      textVariant="error"
-      aria-live="polite"
-      className={`absolute text-sm pt-0
-        transition-all duration-200 ease-out
-        ${error ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"}
-        ${className ?? ""}
-      `}
+    <div
+      className={cn(
+        "relative flex flex-col gap-1",
+        error && "pb-6", // reserve space when error is visible
+      )}
     >
-      {error}
-    </CustomText>
+      {children}
+      <AnimatePresence initial={false}>
+        {error && (
+          <motion.p
+            key="dropdown-error"
+            className={`absolute left-0 bottom-0 text-sm text-error-500 leading-none ${className}`}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 35,
+            }}
+            role="alert"
+            aria-live="polite"
+          >
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

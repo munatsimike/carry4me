@@ -17,7 +17,6 @@ import z from "zod";
 import { useState } from "react";
 import type { ParcelItem } from "../parcels/domain/CreateParcel";
 import { StepHeader } from "@/app/components/forms/formStepper";
-import { CloseBackBtn } from "@/app/components/CloseBtn";
 import { X } from "lucide-react";
 import WeightField from "./components/WeightField";
 export const parcelItemSchema = z.object({
@@ -26,10 +25,10 @@ export const parcelItemSchema = z.object({
 });
 
 const parcelSchema = z.object({
-  originCountry: z.string().min(3, "minimum of three letters is required"),
-  originCity: z.string().min(1, "Origin city is required"),
-  destinationCountry: z.string().min(3, "minimum of three letters is required"),
-  destinationCity: z.string().min(1, "Origin city is required"),
+  originCountry: z.string().min(3, "Country is required"),
+  originCity: z.string().min(1, "city is required"),
+  destinationCountry: z.string().min(3, "Country is required"),
+  destinationCity: z.string().min(1, "City is required"),
   goodsCategoryIds: z.array(z.string()).min(1, "Select at least one category"),
   itemDescriptions: z
     .array(parcelItemSchema)
@@ -78,7 +77,7 @@ export default function CreateParcelModal({
     setValue,
     control,
     trigger,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<ParcelFormFields>({
     resolver: zodResolver(parcelSchema),
     defaultValues: {
@@ -92,7 +91,8 @@ export default function CreateParcelModal({
       totalPrice: 0,
       agreeToRules: false,
     },
-    mode: "onSubmit",
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
 
   const selectedIds = watch("goodsCategoryIds");
@@ -154,9 +154,8 @@ export default function CreateParcelModal({
         icon={META_ICONS.parcelBox}
       />
 
-      <div className="flex flex-col gap-4">
-        <LineDivider heightClass={dividerHeight} />
-        <StepHeader currentStep={step} />
+      <div className="flex flex-col gap-3">
+        <StepHeader currentStep={step} formType="parcel" />
       </div>
       <LineDivider heightClass={dividerHeight} />
       {step === 1 ? (
@@ -168,6 +167,10 @@ export default function CreateParcelModal({
             countryValue={countryValue}
             registerCity={register("originCity")}
             registerCountry={register("originCountry")}
+            isCountryDirty={!!dirtyFields.originCountry}
+            isCountryTouched={!!dirtyFields.originCountry}
+            isCityDirty={!!dirtyFields.originCity}
+            isCityTouched={!!touchedFields.originCity}
           />
 
           <LineDivider heightClass={dividerHeight} />
@@ -185,7 +188,7 @@ export default function CreateParcelModal({
           <LineDivider heightClass={dividerHeight} />
 
           {/* Step actions */}
-          <div className="flex justify-end gap-4 pt-4">
+          <div className="flex justify-end gap-4">
             <Button
               type="button"
               variant="primary"
@@ -214,11 +217,15 @@ export default function CreateParcelModal({
               id="weight"
               error={errors.totalWeight?.message}
               register={register("totalWeight", { valueAsNumber: true })}
+              isTouched={!! touchedFields.totalWeight}
+              isDirty={!!dirtyFields.totalWeight}
             />
             <PriceField
               id="price"
               error={errors.totalPrice?.message}
               register={register("totalPrice", { valueAsNumber: true })}
+              isTouched={!!touchedFields.totalPrice}
+              isDirty={!!dirtyFields.totalPrice}
             />
           </span>
 

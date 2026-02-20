@@ -27,8 +27,8 @@ import { DateField } from "./components/DateField";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
-  originCountry: z.string().min(3, "Minimum of three letters is required"),
-  originCity: z.string().min(1, "Origin city is required"),
+  originCountry: z.string().min(3, "Country is required"),
+  originCity: z.string().min(1, "City is required"),
   destinationCountry: z.string().min(3, "Minimum of three letters is required"),
   destinationCity: z.string().min(1, "Destination city is required"),
 
@@ -36,7 +36,7 @@ export const tripSchema = z.object({
 
   availableSpace: z
     .number()
-    .min(0, "Must be at least 1kg")
+    .min(1, "Must be at least 1kg")
     .max(200, "Too large"),
   pricePerKg: z.number().min(0, "Price must be 0 or more"),
 
@@ -93,7 +93,7 @@ export default function CreateTripModal({
     watch,
     setValue,
     trigger,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<FormFields>({
     resolver: zodResolver(tripSchema),
     defaultValues: {
@@ -103,7 +103,7 @@ export default function CreateTripModal({
       destinationCountry: "Zimbabwe",
       departureDate: "",
       pricePerKg: 0,
-      availableSpace: 1,
+      availableSpace: 0,
       goodsCategoryIds: [],
       agreeToRules: false,
     },
@@ -169,7 +169,7 @@ export default function CreateTripModal({
         </div>
 
         {step === 1 ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             <LineDivider heightClass={dividerHeight} />
             <RouteFieldRow
               cityError={errors.originCity?.message}
@@ -178,6 +178,10 @@ export default function CreateTripModal({
               countryValue={countryValue}
               registerCity={register("originCity")}
               registerCountry={register("originCountry")}
+              isCountryDirty={!!dirtyFields.originCountry}
+              isCountryTouched={!!dirtyFields.originCountry}
+              isCityDirty={!!dirtyFields.originCity}
+              isCityTouched={!!touchedFields.originCity}
               // If you also have destination inputs in this component,
               // wire these too (recommended):
               // registerDestinationCity={register("destinationCity")}
@@ -194,6 +198,8 @@ export default function CreateTripModal({
               name={"departureDate"}
               placeholder="dd/mm/yyyy"
               fromDate={new Date()}
+              isDirty={!!dirtyFields.departureDate}
+              isTouched={!!touchedFields.departureDate}
             />
 
             <LineDivider heightClass={dividerHeight} />
@@ -212,7 +218,7 @@ export default function CreateTripModal({
           </div>
         ) : (
           <>
-          <LineDivider heightClass={dividerHeight} />
+            <LineDivider heightClass={dividerHeight} />
             <GoodsCategoryGrid
               label="What items do you prefer to carry?"
               error={errors.goodsCategoryIds?.message}
@@ -230,12 +236,16 @@ export default function CreateTripModal({
                 id="weight"
                 register={register("availableSpace", { valueAsNumber: true })}
                 error={errors.availableSpace?.message}
+                 isDirty={!!dirtyFields.availableSpace}
+                isTouched={!!touchedFields.availableSpace}
               />
 
               <PriceField
                 id="price"
                 register={register("pricePerKg", { valueAsNumber: true })}
                 error={errors.pricePerKg?.message}
+                isDirty={!!dirtyFields.pricePerKg}
+                isTouched={!!touchedFields.pricePerKg}
               />
             </span>
 

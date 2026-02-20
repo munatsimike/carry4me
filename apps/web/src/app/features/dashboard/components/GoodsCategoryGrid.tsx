@@ -25,7 +25,7 @@ export default function GoodsCategoryGrid({
   };
   
   return (
-    <div>
+     <ErrorText error={error}>
       <div className="flex flex-col gap-3">
         <InlineRow>
           <CustomText textSize="xsm" textVariant="label">
@@ -55,7 +55,7 @@ export default function GoodsCategoryGrid({
           })}
         </div>
       </div>
-      {error && <ErrorText error={error} />}
-    </div>
+      </ErrorText>
+    
   );
 }

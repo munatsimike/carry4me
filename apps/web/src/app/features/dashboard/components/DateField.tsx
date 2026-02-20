@@ -10,6 +10,7 @@ import {
   type Path,
 } from "react-hook-form";
 import ErrorText from "@/app/components/text/ErrorText";
+import { cn, inputError, inputNeutral, inputSuccess } from "@/app/lib/cn";
 
 type DateFieldProps<T extends FieldValues> = {
   control: Control<T>;
@@ -21,6 +22,8 @@ type DateFieldProps<T extends FieldValues> = {
   className?: string;
   fromDate?: Date;
   toDate?: Date;
+  isDirty?: boolean;
+  isTouched?: boolean;
 };
 
 export function DateField<T extends FieldValues>({
@@ -33,9 +36,11 @@ export function DateField<T extends FieldValues>({
   className,
   fromDate,
   toDate,
+  isDirty,
+  isTouched,
 }: DateFieldProps<T>) {
   const [open, setOpen] = React.useState(false);
-
+  const showSuccess = (isDirty || isTouched) && !error;
   const disabledMatchers: Matcher[] = [];
 
   // Disable dates after today
@@ -46,8 +51,12 @@ export function DateField<T extends FieldValues>({
   if (toDate) disabledMatchers.push({ after: toDate });
 
   return (
-    <div className={className}>
-      {label && <label className="block m-0 p-0 text-sm text-neutral-500 leading-none">{label}</label>}
+    <div className={`flex flex-col gap-3 ${className}`}>
+      {label && (
+        <label className="block m-0 p-0 text-sm text-neutral-500 leading-none">
+          {label}
+        </label>
+      )}
 
       <Controller
         control={control}
@@ -58,18 +67,22 @@ export function DateField<T extends FieldValues>({
           const selectedDate = parsed && isValid(parsed) ? parsed : undefined;
 
           return (
-            <div className="mt-3 relative">
+            <ErrorText error={error}>
               <button
                 type="button"
                 disabled={disabled}
                 onClick={() => setOpen((v) => !v)}
                 className={[
                   "w-full sm:w-[150px] h-9 px-3 rounded-md border text-left flex items-center justify-between gap-2",
-                  "bg-white border-neutral-300",
                   "focus:outline-none focus:border-primary-500",
+                  error
+                    ? inputError
+                    : showSuccess
+                      ? inputSuccess
+                      : inputNeutral,
                   disabled
                     ? "opacity-60 cursor-not-allowed"
-                    : "hover:border-neutral-500",
+                    : "hover:border-neutral-400",
                 ].join(" ")}
               >
                 <span
@@ -84,7 +97,7 @@ export function DateField<T extends FieldValues>({
                     : placeholder}
                 </span>
 
-                <CalendarIcon className="h-4 w-4 text-neutral-400" />
+                <CalendarIcon className={`h-4 w-4 text-neutral-400`} />
               </button>
 
               {open && !disabled && (
@@ -94,7 +107,7 @@ export function DateField<T extends FieldValues>({
                     onClick={() => setOpen(false)}
                   />
 
-                  <div className="absolute z-50 mt-2 w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg">
+                  <div className="absolute z-50 mt-2 w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg p-1">
                     <DayPicker
                       mode="single"
                       selected={selectedDate}
@@ -131,7 +144,7 @@ export function DateField<T extends FieldValues>({
                         nav_icon: "text-neutral-700",
 
                         table: "w-full border-collapse",
-                        head_row: "flex gap",
+                        head_row: "flex",
                         head_cell:
                           "w-7 text-[11px] text-neutral-500 text-center",
                         row: "flex w-full",
@@ -150,11 +163,7 @@ export function DateField<T extends FieldValues>({
                   </div>
                 </>
               )}
-
-              {error ? (
-                <ErrorText error={error} />
-              ) : null}
-            </div>
+            </ErrorText>
           );
         }}
       />

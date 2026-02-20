@@ -3,6 +3,19 @@ import ErrorText from "@/app/components/text/ErrorText";
 import CustomText from "@/components/ui/CustomText";
 import type { UseFormRegisterReturn } from "react-hook-form";
 
+type RouteRowProps = {
+  cityError?: string;
+  countryError?: string;
+  countryValue: string;
+  cityValue: string;
+  registerCountry: UseFormRegisterReturn;
+  registerCity: UseFormRegisterReturn;
+  isCountryDirty: boolean;
+  isCountryTouched: boolean;
+  isCityDirty: boolean;
+  isCityTouched: boolean;
+};
+
 export default function RouteFieldRow({
   countryValue,
   cityValue,
@@ -10,41 +23,47 @@ export default function RouteFieldRow({
   registerCity,
   countryError,
   cityError,
-}: {
-  cityError?: string;
-  countryError?: string;
-  countryValue: string;
-  cityValue: string;
-  registerCountry: UseFormRegisterReturn;
-  registerCity: UseFormRegisterReturn;
-}) {
+  isCountryDirty,
+  isCountryTouched,
+  isCityDirty,
+  isCityTouched,
+}: RouteRowProps) {
   return (
-    <div>
-      <div className="flex flex-col gap-4">
+    
+      <div className="flex flex-col gap-4 ">
         <div className="flex">
-        <span className="grid grid-cols-[96px_1fr] items-center gap-4">
-          <CustomText className="text-right" textSize="xsm" textVariant="label">
-            {"Origin"}
-          </CustomText>
-          <span className="inline-flex gap-4">
-            <DropDownMenu
-              value={countryValue}
-              className="rounded-md bg-white border"
-              placeholder={"Select country"}
-              menuItems={["Ireland", "United Kingdom", "USA"]}
-              register={registerCountry}
-            />
+          <span className="grid grid-cols-[96px_1fr] items-center gap-4 ">
+            <CustomText
+              className="text-right"
+              textSize="xsm"
+              textVariant="label"
+            >
+              {"Origin"}
+            </CustomText>
+            <span className="inline-flex gap-4  ">
+              <DropDownMenu
+                value={countryValue}
+                className="rounded-md bg-white border"
+                placeholder={"Select country"}
+                menuItems={["Ireland", "United Kingdom", "USA"]}
+                register={registerCountry}
+                isDirty={isCountryDirty}
+                isTouched={isCountryTouched}
+                error={countryError}
+              />
 
-            <DropDownMenu
-              value={cityValue}
-              register={registerCity}
-              className="rounded-md bg-white border"
-              placeholder={"Select city"}
-              menuItems={["Dublin", "London", "Florida"]}
-            />
+              <DropDownMenu
+                value={cityValue}
+                register={registerCity}
+                className="rounded-md bg-white border"
+                placeholder={"Select city"}
+                menuItems={["Dublin", "London", "Florida"]}
+                isDirty={isCityDirty}
+                isTouched={isCityTouched}
+                error={cityError}
+              />
+            </span>
           </span>
-        </span>
-
         </div>
         <span className="grid grid-cols-[96px_1fr] items-center gap-3">
           <CustomText className="text-right" textSize="xsm" textVariant="label">
@@ -62,10 +81,7 @@ export default function RouteFieldRow({
             </CustomText>
           </span>
         </span>
-      </div>{" "}
-      {(cityError || countryError) && (
-        <ErrorText error="Select country and city" />
-      )}
-    </div>
+      </div>
+  
   );
 }
