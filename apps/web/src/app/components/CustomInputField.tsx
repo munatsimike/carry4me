@@ -1,8 +1,15 @@
-import React, { useState } from "react";
 import ErrorText from "./text/ErrorText";
-import { baseInput, cn } from "../lib/cn";
+import {
+  cn,
+  inputError,
+  inputNeutral,
+  inputStructural,
+  inputSuccess,
+} from "../lib/cn";
 
 type CustomInputFieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  isDirty: boolean;
+  isTouched: boolean;
   className?: string;
   label?: string;
   error?: string;
@@ -18,16 +25,19 @@ export default function FloatingInputField({
   trailingIcon,
   className,
   onIconClick,
+  isDirty,
+  isTouched,
   ...props
 }: CustomInputFieldProps) {
+  const showSuccess = (isDirty || isTouched) && !error;
   return (
-    <div>
+    <ErrorText error={error}>
       <div
-        className={cn(`relative flex items-center rounded-lg ${baseInput}
+        className={cn(`flex items-center rounded-lg ${inputStructural} ${error ? inputError : showSuccess ? inputSuccess : inputNeutral}
         ${className ?? ""}`)}
       >
         {leadingIcon && (
-          <div className="pl-3 text-neutral-400 flex items-center">
+          <div className=" pr-1 text-neutral-400 flex items-center">
             {leadingIcon}
           </div>
         )}
@@ -35,7 +45,7 @@ export default function FloatingInputField({
           <input
             {...props}
             placeholder=" "
-            className="peer w-full bg-transparent px-3 py-3 text-md text-neutral-700
+            className="peer w-full bg-transparent px-1 py-3 text-md text-neutral-700
             focus:outline-none"
           />
 
@@ -50,7 +60,6 @@ export default function FloatingInputField({
         </div>
         {trailingIcon && <button>{trailingIcon}</button>}
       </div>
-      <ErrorText error={error} />
-    </div>
+    </ErrorText>
   );
 }

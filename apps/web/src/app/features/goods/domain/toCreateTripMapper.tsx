@@ -1,7 +1,7 @@
 import type { CreateTrip } from "../../trips/domain/CreateTrip";
-import type { FormFields } from "../../dashboard/CreateTripModal";
+import type { TripFormFields } from "../../dashboard/CreateTripModal";
 
-export default function toCreateTrip(formValues: FormFields): CreateTrip {
+export default function toCreateTrip(formValues: TripFormFields): CreateTrip {
   return {
     originCountry: formValues.originCountry,
     originCity: formValues.originCity,

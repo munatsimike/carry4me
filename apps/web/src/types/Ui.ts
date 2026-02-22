@@ -1,6 +1,3 @@
-import type { CarryRequestStatus } from "@/app/features/carry request/domain/CreateCarryRequest";
-
-
 export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>
 >;

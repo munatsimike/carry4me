@@ -16,7 +16,6 @@ type ParcelProps = {
   onClick: (parcel: Parcel) => void;
 };
 export default function ParcelCard({ parcel, onClick }: ParcelProps) {
-
   const categories = parcel.categories.map((x) => x.name);
   return (
     <Card>
@@ -39,14 +38,20 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       </Stack>
       <LineDivider />
       <WeightAndPrice
-        weightLabel="Weight : "
+        weightLabel="Weight"
         weight={parcel.weightKg}
-        priceLabel="Budget : "
-        price={parcel.pricePerKg}
+        priceLabel="Budget"
+        price={parcel.pricePerKg * parcel.weightKg}
         location={"UK"}
       />
       <LineDivider />
-      <SendRequestBtn buttonTextVariant="tonal" iconColorVariant="tonal"  buttonVariant="tonal" payLoad={parcel} primaryAction={onClick} />
+      <SendRequestBtn
+        buttonTextVariant="tonal"
+        iconColorVariant="tonal"
+        buttonVariant="tonal"
+        payLoad={parcel}
+        primaryAction={onClick}
+      />
     </Card>
   );
 }

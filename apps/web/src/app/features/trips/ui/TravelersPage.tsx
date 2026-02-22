@@ -10,8 +10,6 @@ import { GetTripsUseCase } from "../application/GetTripsUseCase";
 import type { Trip } from "../domain/Trip";
 import { GetGoodsUseCase } from "../../goods/application/GetGoodsUseCase";
 import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepository";
-import { useAsync } from "@/app/hookes/useAsync";
-
 import { AnimatePresence } from "framer-motion";
 import { GetParcelUseCase } from "../../parcels/application/GetParcelUseCase";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";

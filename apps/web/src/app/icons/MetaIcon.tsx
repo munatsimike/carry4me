@@ -46,4 +46,4 @@ export const META_ICONS = {
   userIconOutlined: UserIconOutlined,
   shaakingHands: ShakingHands,
   clockFilled: ClockFilled,
-};
+}

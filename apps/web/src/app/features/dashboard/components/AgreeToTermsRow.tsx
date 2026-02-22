@@ -20,7 +20,7 @@ export default function AgreeToTermsRow({
         <div className="flex gap-3">
           <CheckBox register={register} id={id}></CheckBox>
           <CustomText textVariant="formText" textSize="xsm">
-            {"I agree to the terms and conditions."}
+            {"I confirm I will not carry prohibited or restricted goods."}
           </CustomText>
         </div>
       </div>

@@ -6,13 +6,11 @@
 }
 
 .rdp-custom {
-  --rdp-accent-color: #475467;            /* neutral-600 */
-  --rdp-accent-background-color: #F4F6F8; /* neutral-100 */
-  --rdp-selected-color: #FFFFFF;          /* text on selected day */
+  --rdp-accent-color: #475467; /* neutral-600 */
+  --rdp-accent-background-color: #f4f6f8; /* neutral-100 */
+  --rdp-selected-color: #ffffff; /* text on selected day */
   --rdp-selected-background-color: #667085; /* neutral-500 (or your primary) */
 }
-
-
 
 .logo {
   height: 6em;

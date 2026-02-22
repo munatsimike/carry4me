@@ -49,9 +49,9 @@ export function Price({
 }
 
 export function WeightAndPrice({
-  weightLabel = "Available space :",
+  weightLabel = "Available space",
   weight,
-  priceLabel = "Price per kg :",
+  priceLabel = "Price per kg",
   price,
   location,
 }: WeightAndPriceProps) {

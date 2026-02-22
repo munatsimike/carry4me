@@ -2,7 +2,7 @@ import { Card } from "@/app/components/card/Card";
 import LogoutButton from "./LogoutButton";
 import LineDivider from "@/app/components/LineDivider";
 import CustomText from "@/components/ui/CustomText";
-import { Heart, User, UserRound } from "lucide-react";
+import { Heart,UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import SvgIcon from "@/components/ui/SvgIcon";

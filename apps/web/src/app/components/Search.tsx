@@ -21,7 +21,7 @@ export default function Search({
   cities,
 }: SearchProps) {
   return (
-    <div className="inline-flex items-center gap-5 py-2 px-4 bg-neutral-50 rounded-full border border-neutral-100 shadow-sm">
+    <div className="inline-flex items-center gap-5 py-2 px-4 bg-neutral-100 rounded-full border border-neutral-100 shadow-sm">
       <DropDownMenu
         value={selectedCountry}
         placeholder="Select country"
@@ -34,7 +34,7 @@ export default function Search({
       />
 
       <CustomText as="span" textSize="xsm">
-        {"To : Zimbabwe"}
+        {"to Zimbabwe"}
       </CustomText>
       <Button
         variant={"primary"}

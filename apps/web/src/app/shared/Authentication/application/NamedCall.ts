@@ -1,7 +1,7 @@
 import type { Result } from "../domain/Result";
 
 type NamedResult<T> ={
-  source:String,
+  source:string,
   result: Result<T>
 }
 

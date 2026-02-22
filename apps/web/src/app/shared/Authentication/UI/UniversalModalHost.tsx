@@ -1,8 +1,8 @@
 // src/presentation/modals/UniversalModalHost.tsx
 
 // UniversalModalHost.tsx
-import React, { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect } from "react";
+import { AnimatePresence} from "framer-motion";
 import CustomModal from "@/app/components/CustomModal";
 import type { UniversalModalState } from "../application/DialogBoxModalProvider";
 import LineDivider from "@/app/components/LineDivider";

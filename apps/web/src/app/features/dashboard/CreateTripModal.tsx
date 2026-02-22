@@ -17,13 +17,15 @@ import type { UserGoods } from "../goods/domain/UserGoods";
 import toGoodsMapper from "../goods/domain/toGoodsMapper";
 import AgreeToTermsRow from "./components/AgreeToTermsRow";
 import GoodsCategoryGrid from "./components/GoodsCategoryGrid";
-import PriceField from "./components/PriceField";
-import WeightField from "./components/WeightField";
 import { useToast } from "@/app/components/Toast";
 import { Button } from "@/components/ui/Button";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { StepHeader, type Step } from "@/app/components/forms/formStepper";
 import { DateField } from "./components/DateField";
+import { WeightField } from "./components/WeightField";
+import { PriceField } from "./components/PriceField";
+import CustomText from "@/components/ui/CustomText";
+
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
@@ -47,9 +49,9 @@ export const tripSchema = z.object({
   }),
 });
 
-export type FormFields = z.infer<typeof tripSchema>;
+export type TripFormFields = z.infer<typeof tripSchema>;
 
-const step1Fields: Array<keyof FormFields> = [
+const step1Fields: Array<keyof TripFormFields> = [
   "originCountry",
   "originCity",
   "destinationCountry",
@@ -57,7 +59,7 @@ const step1Fields: Array<keyof FormFields> = [
   "departureDate",
 ];
 
-const step2Fields: Array<keyof FormFields> = [
+const step2Fields: Array<keyof TripFormFields> = [
   "goodsCategoryIds",
   "availableSpace",
   "pricePerKg",
@@ -94,7 +96,7 @@ export default function CreateTripModal({
     setValue,
     trigger,
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
-  } = useForm<FormFields>({
+  } = useForm<TripFormFields>({
     resolver: zodResolver(tripSchema),
     defaultValues: {
       originCountry: "",
@@ -102,8 +104,8 @@ export default function CreateTripModal({
       destinationCity: "Harare",
       destinationCountry: "Zimbabwe",
       departureDate: "",
-      pricePerKg: 0,
-      availableSpace: 0,
+      pricePerKg: 10,
+      availableSpace: 1,
       goodsCategoryIds: [],
       agreeToRules: false,
     },
@@ -114,23 +116,24 @@ export default function CreateTripModal({
   const selectedIds = watch("goodsCategoryIds");
   const countryValue = watch("originCountry");
   const cityValue = watch("originCity");
+  const weightValue = watch("availableSpace");
+  const priceValue = watch("pricePerKg");
 
   const dividerHeight = "";
 
   const goNext = async () => {
     // validate only step 1 fields
-    const ok = await trigger(step1Fields as any, { shouldFocus: true });
+    const ok = await trigger(step1Fields, { shouldFocus: true });
     if (!ok) return;
     setStep(2);
   };
 
   const goBack = () => setStep(1);
 
-  const onValidSubmit = async (values: FormFields) => {
+  const onValidSubmit = async (values: TripFormFields) => {
     if (!userLoggedIn || !userId) return;
 
-    // Optional: ensure step 2 fields are valid before submit
-    const ok = await trigger(step2Fields as any, { shouldFocus: true });
+    const ok = await trigger(step2Fields, { shouldFocus: true });
     if (!ok) return;
 
     try {
@@ -156,16 +159,12 @@ export default function CreateTripModal({
       onClose={() => setModalState(false)}
     >
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-5">
-            <FormHeader
-              heading={"Post your trip"}
-              subHeading={
-                "Share your trip details to get matched with senders."
-              }
-            />
-            <StepHeader currentStep={step} />
-          </div>
+        <div className="flex flex-col gap-5">
+          <FormHeader
+            heading={"Post your trip"}
+            subHeading={"Share your trip details to get matched with senders."}
+          />
+          <StepHeader currentStep={step} />
         </div>
 
         {step === 1 ? (
@@ -192,7 +191,7 @@ export default function CreateTripModal({
 
             <LineDivider heightClass={dividerHeight} />
 
-            <DateField<FormFields>
+            <DateField<TripFormFields>
               error={errors.departureDate?.message}
               control={control}
               name={"departureDate"}
@@ -230,23 +229,42 @@ export default function CreateTripModal({
             />
 
             <LineDivider heightClass={dividerHeight} />
+            <span className="flex flex-col gap-3">
+              <span className="flex flex-wrap gap-4 sm:gap-[34px] items-end">
+                <WeightField<TripFormFields>
+                  id="weight"
+                  register={register("availableSpace", { valueAsNumber: true })}
+                  error={errors.availableSpace?.message}
+                  isDirty={!!dirtyFields.availableSpace}
+                  isTouched={!!touchedFields.availableSpace}
+                  name="availableSpace"
+                  setValue={setValue}
+                  value={weightValue}
+                />
 
-            <span className="flex flex-wrap gap-4 sm:gap-20">
-              <WeightField
-                id="weight"
-                register={register("availableSpace", { valueAsNumber: true })}
-                error={errors.availableSpace?.message}
-                 isDirty={!!dirtyFields.availableSpace}
-                isTouched={!!touchedFields.availableSpace}
-              />
+                <PriceField<TripFormFields>
+                  id="price"
+                  register={register("pricePerKg", { valueAsNumber: true })}
+                  error={errors.pricePerKg?.message}
+                  isDirty={!!dirtyFields.pricePerKg}
+                  isTouched={!!touchedFields.pricePerKg}
+                  name="pricePerKg"
+                  setValue={setValue}
+                  value={priceValue}
+                />
+              </span>
+              <span className="flex gap-2 items-center sm:pl-[170px]">
+                <CustomText textSize="xsm" textVariant="label">
+                  {"You’ll earn"}
+                </CustomText>
 
-              <PriceField
-                id="price"
-                register={register("pricePerKg", { valueAsNumber: true })}
-                error={errors.pricePerKg?.message}
-                isDirty={!!dirtyFields.pricePerKg}
-                isTouched={!!touchedFields.pricePerKg}
-              />
+                <span className="inline-flext rounded-md w-[60px]">
+                  <CustomText textSize="sm" textVariant="primary">
+                    {"$"}
+                    {priceValue * weightValue}
+                  </CustomText>
+                </span>
+              </span>
             </span>
 
             <LineDivider heightClass={dividerHeight} />
@@ -288,7 +306,7 @@ export default function CreateTripModal({
 
 // --- keep your helpers but I fixed a tiny await + naming ---
 async function createTrip(
-  values: FormFields,
+  values: TripFormFields,
   userId: string,
   useCase: CreateTripUseCase,
   onCloseModal: () => void,

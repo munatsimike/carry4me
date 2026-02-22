@@ -21,12 +21,36 @@ export interface NormalizedError {
 
 // src/application/errors/supabase-error-mapper.ts
 
+type AnyRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is AnyRecord {
+  return typeof value === "object" && value !== null;
+}
+
+function getErrorMessage(error: unknown): string | undefined {
+  if (typeof error === "string") return error;
+  if (!isRecord(error)) return undefined;
+
+  const msg = error["message"];
+  return typeof msg === "string" ? msg : undefined;
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  if (!isRecord(error)) return undefined;
+
+  const code = error["code"];
+  return typeof code === "string" ? code : undefined;
+}
+
 export function normalizeSupabaseError(
-  error: any,
+  error: unknown,
   status?: number | null,
 ): NormalizedError {
+  const message = getErrorMessage(error);
+  const code = getErrorCode(error);
+
   // Network-ish
-  if (!error || error?.message?.includes("Failed to fetch")) {
+  if (!error || (message && message.includes("Failed to fetch"))) {
     return {
       category: "NETWORK",
       title: "Connection problem",
@@ -37,7 +61,7 @@ export function normalizeSupabaseError(
   }
 
   // HTTP first
-  switch (status) {
+  switch (status ?? undefined) {
     case 401:
       return {
         category: "AUTH",
@@ -87,7 +111,7 @@ export function normalizeSupabaseError(
   }
 
   // Postgres codes (Supabase)
-  switch (error?.code) {
+  switch (code) {
     case "23505":
       return {
         category: "CONFLICT",

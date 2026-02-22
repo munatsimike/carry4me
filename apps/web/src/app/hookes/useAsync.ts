@@ -6,7 +6,7 @@ type AsyncState<T> = {
   isLoading: boolean;
 };
 
-export function useAsync<T>(fn: () => Promise<T>, deps: any[] = []) {
+export function useAsync<T>(fn: () => Promise<T>, deps: unknown[] = []) {
   const [state, setState] = useState<AsyncState<T>>({
     data: null,
     error: null,

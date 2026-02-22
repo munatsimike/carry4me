@@ -39,7 +39,7 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-50 w-full ${sizes[width]} rounded-2xl bg-white shadow-xl p-6`}
+        className={`relative z-50 w-full ${sizes[width]} rounded-2xl bg-white shadow-xl p-6 border border-neutral-300`}
         initial={{ opacity: 0, scale: 0.96, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 32 }}

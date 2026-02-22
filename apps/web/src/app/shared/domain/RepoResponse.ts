@@ -1,5 +1,5 @@
 export type RepoResponse<T> = {
   data: T | null;
-  error: any | null;
+  error: unknown | null;
   status: number | null;
 };

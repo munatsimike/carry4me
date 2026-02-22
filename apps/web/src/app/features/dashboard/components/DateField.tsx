@@ -10,7 +10,7 @@ import {
   type Path,
 } from "react-hook-form";
 import ErrorText from "@/app/components/text/ErrorText";
-import { cn, inputError, inputNeutral, inputSuccess } from "@/app/lib/cn";
+import { inputError, inputNeutral, inputSuccess } from "@/app/lib/cn";
 
 type DateFieldProps<T extends FieldValues> = {
   control: Control<T>;
@@ -73,7 +73,7 @@ export function DateField<T extends FieldValues>({
                 disabled={disabled}
                 onClick={() => setOpen((v) => !v)}
                 className={[
-                  "w-full sm:w-[150px] h-9 px-3 rounded-md border text-left flex items-center justify-between gap-2",
+                  "w-full sm:w-[150px] h-10 px-3 rounded-md border text-left flex items-center justify-between gap-2",
                   "focus:outline-none focus:border-primary-500",
                   error
                     ? inputError

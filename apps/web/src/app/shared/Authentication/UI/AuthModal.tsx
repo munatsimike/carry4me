@@ -34,7 +34,7 @@ export function AuthModal() {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, dirtyFields, touchedFields },
     reset,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -83,23 +83,22 @@ export function AuthModal() {
   return (
     <CustomModal onClose={closeAuthModal}>
       <form onSubmit={handleSubmit(handleSignIn)}>
-        <div className="flex flex-col min-w-[500px] shrink-0 items-center gap-10">
-          <div className="relative flex items-center justify-center">
-            <span className="inline-flex flex-col gap-2">
-              <SvgIcon size={"xxl"} Icon={META_ICONS.userIcon} />
-              <CustomText textVariant="primary" textSize="xl">
-                {"Sign in to your account."}
-              </CustomText>
-            </span>
-
-            <ErrorText
-              error={loginError?.toString()}
-              className="absolute -bottom-6"
-            />
+        <div className="flex flex-col min-w-[500px] shrink-0 items-center gap-8">
+          <div className="flex items-center justify-center">
+            <ErrorText error={loginError?.toString()}>
+              <span className="inline-flex flex-col gap-2">
+                <SvgIcon size={"xxl"} Icon={META_ICONS.userIcon} />
+                <CustomText textVariant="primary" textSize="xl">
+                  {"Sign in to your account."}
+                </CustomText>
+              </span>
+            </ErrorText>
           </div>
 
-          <span className="inline-flex flex-col gap-7">
+          <span className="inline-flex flex-col gap-5">
             <FloatingInputField
+              isDirty={!!dirtyFields.email}
+              isTouched={!!touchedFields.email}
               type="text"
               leadingIcon={<SvgIcon size={"sm"} Icon={META_ICONS.emailIcon} />}
               {...register("email")}
@@ -108,6 +107,8 @@ export function AuthModal() {
             />
 
             <FloatingInputField
+              isDirty={!!dirtyFields.password}
+              isTouched={!!touchedFields.password}
               type="password"
               onIconClick={setShowPassword}
               leadingIcon={<SvgIcon size={"sm"} Icon={META_ICONS.lockIcon} />}
@@ -117,25 +118,27 @@ export function AuthModal() {
             />
           </span>
 
-          <span className="relative inline-flex flex-col gap-5 items-center">
-            <LoginButton isFormSubmitting={isSubmitting} />
+          <span className="flex flex-col gap-3 pb-2">
+            <span className="relative inline-flex flex-col gap-5 items-center">
+              <LoginButton isFormSubmitting={isSubmitting} />
 
-            <LinkText linkText={"Forgot password"}></LinkText>
-            <span className="inline-flex gap-2">
-              <CustomText textVariant="primary">
-                {"Don’t have an account?"}
-              </CustomText>
-              <LinkText linkText={"Sign up"}></LinkText>
+              <LinkText linkText={"Forgot password"}></LinkText>
+              <span className="inline-flex gap-2">
+                <CustomText textVariant="primary">
+                  {"Don’t have an account?"}
+                </CustomText>
+                <LinkText linkText={"Sign up"}></LinkText>
+              </span>
             </span>
-          </span>
 
-          <span className="inline-flex flex-col gap-2 items-center">
-            <CustomText as="p" textSize="xsm">
-              {"or"}
-            </CustomText>
-            <CustomText as="p">{"Continue with"}</CustomText>
+            <span className="inline-flex flex-col gap-2 items-center">
+              <CustomText as="p" textSize="xsm">
+                {"or"}
+              </CustomText>
+              <CustomText as="p">{"Continue with"}</CustomText>
+            </span>
+            <OtherWaysToSignIn />
           </span>
-          <OtherWaysToSignIn />
         </div>
       </form>
     </CustomModal>
@@ -164,7 +167,7 @@ function OtherWaysToSignIn() {
     if (error) console.error(error.message);
   };
   return (
-    <div className="flex items-center gap-10">
+    <div className="flex items-center gap-8">
       <InlineRow gap={iconTextGap} onClick={onFacebook}>
         <SvgIcon size={iconSize} Icon={META_ICONS.facebookIcon} />
         <CustomText textVariant="primary">{"Facebook"}</CustomText>

@@ -2,22 +2,12 @@ import {
   NumberInputField,
   type NumberInputFieldProps,
 } from "@/app/components/NumberInputField";
+import type { FieldValues } from "react-hook-form";
 
-export default function PriceField({
-  register,
-  id,
-  error,
-  isDirty,
-  isTouched,
-}: NumberInputFieldProps) {
+type PriceFieldProps<T extends FieldValues> = NumberInputFieldProps<T>;
+
+export function PriceField<T extends FieldValues>(props: PriceFieldProps<T>) {
   return (
-    <NumberInputField
-      label="Price per (kg)"
-      register={register}
-      id={id}
-      error={error}
-      isDirty={isDirty}
-      isTouched={isTouched}
-    />
+    <NumberInputField {...props} label={props.label ?? "Price per (kg)"} />
   );
 }

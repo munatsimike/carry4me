@@ -54,6 +54,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
         destination_country: parcel.destinationCountry,
         destination_city: parcel.destinationCity,
         weight_kg: parcel.weightKg,
+        price:parcel.price,
         status: "open",
         items: parcel.items,
       })

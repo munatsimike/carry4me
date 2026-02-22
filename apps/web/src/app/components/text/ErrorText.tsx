@@ -8,32 +8,19 @@ type ErrorTextProps = {
   classPadding?: string;
 };
 
-export default function ErrorText({
-  error,
-  className,
-  children,
-}: ErrorTextProps) {
+export default function ErrorText({ error, className, children }: ErrorTextProps) {
   return (
-    <div
-      className={cn(
-        "relative flex flex-col gap-1",
-        error && "pb-6", // reserve space when error is visible
-      )}
-    >
+    <div className={cn("flex flex-col", error && "gap-2")}>
       {children}
       <AnimatePresence initial={false}>
         {error && (
           <motion.p
-            key="dropdown-error"
-            className={`absolute left-0 bottom-0 text-sm text-error-500 leading-none ${className}`}
+            key="field-error"
+            className={cn("text-sm text-error-500 leading-tight", className)}
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{
-              type: "spring",
-              stiffness: 500,
-              damping: 35,
-            }}
+            transition={{ type: "spring", stiffness: 500, damping: 35 }}
             role="alert"
             aria-live="polite"
           >

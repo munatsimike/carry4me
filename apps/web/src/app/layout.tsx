@@ -6,7 +6,6 @@ import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import { UserProfileMenu } from "./shared/Authentication/UI/userProfileMenu";
 import { useEffect, useState } from "react";
 import { ToastProvider } from "./components/Toast";
-
 export default function AppLayout() {
   const { authChecked, userLoggedIn } = useAuthState();
   const [showProfile, setShowProfile] = useState<boolean>(false);

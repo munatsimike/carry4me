@@ -40,7 +40,7 @@ export function StepHeader({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="text-md text-neutral-600 flex justify-center items-center"
+              className="text-md text-ink-primary flex justify-center items-center"
               title={step.title}
             >
               {step.title}

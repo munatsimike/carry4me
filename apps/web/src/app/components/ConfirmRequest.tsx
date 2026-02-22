@@ -53,7 +53,7 @@ export default function ConfirmRequest({
 
   const handleSendRequest = async () => {
     if (requestLoaded) return;
-    
+
     const requestId = await sendCarryRequestUseCase.execute(
       loggedInUserId,
       parcel,

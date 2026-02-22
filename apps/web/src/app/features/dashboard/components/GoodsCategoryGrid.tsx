@@ -43,6 +43,7 @@ export default function GoodsCategoryGrid({
                 className="flex items-center gap-2 rounded-lg"
               >
                 <input
+                className="accent-primary-500"
                   type="checkbox"
                   checked={checked}
                   onChange={(e) => toggle(item.id, e.target.checked)}

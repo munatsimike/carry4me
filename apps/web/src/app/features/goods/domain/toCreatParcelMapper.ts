@@ -12,6 +12,7 @@ export default function toCreateParcelMapper(
     destinationCountry: values.destinationCountry,
     destinationCity: values.destinationCity,
     weightKg: values.totalWeight,
-    items: values.parcelItem,
+    items: values.itemDescriptions,
+    price: values.pricePerKg,
   };
 }

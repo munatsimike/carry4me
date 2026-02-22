@@ -1,7 +1,19 @@
+import type { CarryRequestEventType } from "../../domain/CarryRequestEvent";
 import type { CarryRequestNotification } from "./CarryRequestNotification";
 
+type NotificationRow = {
+  id: string;
+  user_id: string;
+  type: CarryRequestEventType;
+  title: string;
+  body: string;
+  link: string;
+  created_at: string;
+  read_at: string;
+};
+
 export function toCarryRequestNotificationsMapper(
-  row: any,
+  row: NotificationRow,
 ): CarryRequestNotification {
   return {
     id: row.id,

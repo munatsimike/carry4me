@@ -14,8 +14,6 @@ import Greeting from "@/app/components/Greeting";
 import CreateTripModal from "./CreateTripModal";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
-import { useAsync } from "@/app/hookes/useAsync";
-import { isNetworkError } from "@/app/util/isNetworkError";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";

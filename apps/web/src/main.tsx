@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./app/router";
 import "./index.css";
-import { AuthProvider } from "./app/shared/supabase/AuthProvider";
 import { AppProviders } from "./app/shared/Authentication/application/AppProviders";
 
 // main.tsx

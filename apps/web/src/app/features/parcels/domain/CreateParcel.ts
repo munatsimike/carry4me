@@ -5,6 +5,7 @@ export type CreateParcel = {
   destinationCountry: string;
   destinationCity: string;
   weightKg: number;
+  price: number;
   items: ParcelItem[];
 };
 
