@@ -5,7 +5,7 @@ import type { GoodsCategory } from "../goods/domain/GoodsCategory";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { useAuthState } from "@/app/shared/supabase/AuthState";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
 import { useMemo, useState } from "react";
 import FormModal from "./components/FormModal";
@@ -25,7 +25,6 @@ import { DateField } from "./components/DateField";
 import { WeightField } from "./components/WeightField";
 import { PriceField } from "./components/PriceField";
 import CustomText from "@/components/ui/CustomText";
-
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
@@ -85,7 +84,7 @@ export default function CreateTripModal({
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
   const useCase = useMemo(() => new CreateTripUseCase(repo), [repo]);
 
-  const { userId, userLoggedIn } = useAuthState();
+  const {user } = useAuth();
   const { toast } = useToast();
 
   const {
@@ -131,13 +130,13 @@ export default function CreateTripModal({
   const goBack = () => setStep(1);
 
   const onValidSubmit = async (values: TripFormFields) => {
-    if (!userLoggedIn || !userId) return;
+    if (!user) return;
 
     const ok = await trigger(step2Fields, { shouldFocus: true });
     if (!ok) return;
 
     try {
-      const tripId = await createTrip(values, userId, useCase, () =>
+      const tripId = await createTrip(values, user.id, useCase, () =>
         setModalState(false),
       );
       if (!tripId) return;

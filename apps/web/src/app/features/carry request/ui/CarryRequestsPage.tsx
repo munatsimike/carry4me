@@ -23,7 +23,7 @@ import statusColor from "./StatustColorMapper";
 import actionsMapper, { UIACTIONKEYS, type UIActions } from "./ActionsMapper";
 import { FetchCarryRequestsUseCase } from "../application/FetchCarryRequestsUseCase";
 import { SupabaseCarryRequestRepository } from "../data/SupabaseCarryRequestRepository";
-import { useAuthState } from "@/app/shared/supabase/AuthState";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { CarryRequest } from "../domain/CarryRequest";
 import {
   CARRY_REQUEST_STATUSES,
@@ -67,7 +67,7 @@ export default function CarryRequestsPage() {
   const [isRequestSent, setisRequestSent] = useState(false);
   const [isListLoaded, setIsListLoaded] = useState(false);
   const [isStateLoaded, setIsStateLoaded] = useState(false);
-  const { userId } = useAuthState();
+  const { user } = useAuth();
   const [handoverState, setHandoverState] = useState<
     HandoverConfirmationState | undefined
   >(undefined);
@@ -78,10 +78,10 @@ export default function CarryRequestsPage() {
 
     if (cancelled) return;
     async function fetchRequest() {
-      if (!userId || isListLoaded) return;
+      if (!user || isListLoaded) return;
       const { result } = await namedCall(
         "carryRequest",
-        fetchCarryRequestUseCase.execute(userId),
+        fetchCarryRequestUseCase.execute(user.id),
       );
 
       if (!result.success) {
@@ -98,7 +98,7 @@ export default function CarryRequestsPage() {
     return () => {
       cancelled = true;
     };
-  }, [userId, isListLoaded]);
+  }, [user?.id, isListLoaded]);
 
   const [inputValue, setValue] = useState<string>("");
   const heightClass = "my-2";
@@ -107,7 +107,7 @@ export default function CarryRequestsPage() {
     actions: UIActions,
     carryRequest: CarryRequest,
   ) => {
-    if (!actions.primary || isRequestSent || !userId) return;
+    if (!actions.primary || isRequestSent || !user) return;
 
     const result = await performRequestActions.execute(
       actions.primary.key,
@@ -134,7 +134,7 @@ export default function CarryRequestsPage() {
             setIsStateLoaded(true);
           }
           const viewerRole =
-            userId === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
+            user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
           const requestUI = mapCarryRequestToUI(request, viewerRole);
           const actions = actionsMapper(
             viewerRole,

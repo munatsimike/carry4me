@@ -29,7 +29,7 @@ import { WeightField } from "./components/WeightField";
 import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
 import { CreateParcelUseCase } from "../parcels/application/CreateParcelUseCase";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
-import { useAuthState } from "@/app/shared/supabase/AuthState";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { SupabaseParcelRepository } from "../parcels/data/SupabaseParcelRepository";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { SaveGoodsUseCase } from "../goods/application/SaveGoodsUseCase";
@@ -145,18 +145,18 @@ export default function CreateParcelModal({
     if (!ok) return;
     setStep(2);
   };
-  const { userId, userLoggedIn } = useAuthState();
+  const { user } = useAuth();
 
   const goBack = () => setStep(1);
 
   const onValid = async (values: ParcelFormFields) => {
-    if (!userLoggedIn || !userId) return;
+    if (!user) return;
     const ok = await trigger(parcelStep2Fields, { shouldFocus: true });
     if (!ok) return;
 
     try {
       // your existing save flow...
-      const parcelId = await createParcel(values, userId, useCase, () =>
+      const parcelId = await createParcel(values, user.id, useCase, () =>
         setModalState(false),
       );
 

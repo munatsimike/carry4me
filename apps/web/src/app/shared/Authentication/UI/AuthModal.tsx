@@ -16,7 +16,7 @@ import Spinner from "../../../components/Spinner";
 import LinkText from "../../../components/text/LinkText";
 import ErrorText from "../../../components/text/ErrorText";
 import { LoginUseCase } from "../application/LoginUseCase";
-import { SupabaseAuthRepository } from "../../data/LoginRepository";
+import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 
 const schema = z.object({
   email: z

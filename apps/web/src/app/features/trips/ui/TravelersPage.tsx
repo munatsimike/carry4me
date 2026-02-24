@@ -14,7 +14,7 @@ import { AnimatePresence } from "framer-motion";
 import { GetParcelUseCase } from "../../parcels/application/GetParcelUseCase";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import type { Parcel } from "../../parcels/domain/Parcel";
-import { useAuthState } from "@/app/shared/supabase/AuthState";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
@@ -65,7 +65,7 @@ export default function TravelersPage() {
   const [selectedTrip, setTrip] = useState<Trip | null>(null);
   const [selectedCountry, setCountry] = useState<string>("");
   const [selectedCity, setCity] = useState<string>("");
-  const { userId: userId, userLoggedIn } = useAuthState();
+  const { user} = useAuth();
 
   const [tripLoaded, setTripLoaded] = useState<boolean>(false);
   const [parcel, setParcel] = useState<Parcel | null>(null);
@@ -73,7 +73,7 @@ export default function TravelersPage() {
   const { toast } = useToast();
 
   const handleRequest = async (trip: Trip) => {
-    if (trip.user.id === userId) {
+    if (trip.user.id === user?.id) {
       toast(
         "You can’t match with your own trip. Browse available parcels instead.",
         {
@@ -83,10 +83,10 @@ export default function TravelersPage() {
       return;
     }
 
-    if (!tripLoaded && userId) {
+    if (!tripLoaded && user?.id) {
       const { result } = await namedCall(
         "Parcel",
-        getParcelUseCase.execute(userId),
+        getParcelUseCase.execute(user.id),
       );
 
       if (!result.success) {
@@ -126,14 +126,14 @@ export default function TravelersPage() {
         {tripList && <Travelers trips={tripList} onClick={handleRequest} />}
       </DefaultContainer>
       <AnimatePresence>
-        {selectedTrip && parcel && userId && (
+        {selectedTrip && parcel && user && (
           <CustomModal width="xl" onClose={onClose}>
             <ConfirmRequest
-              loggedInUserId={userId}
+              loggedInUserId={user.id}
               trip={selectedTrip}
               parcel={parcel}
               onClose={onClose}
-              isSenderRequesting={userId === parcel.user.id}
+              isSenderRequesting={user.id === parcel.user.id}
             />
           </CustomModal>
         )}

@@ -7,7 +7,7 @@ import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabasePa
 import type { Parcel } from "@/app/features/parcels/domain/Parcel";
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
 import type { Trip } from "@/app/features/trips/domain/Trip";
-import { useAuthState } from "@/app/shared/supabase/AuthState";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
 import { useToast } from "@/app/components/Toast";
@@ -70,12 +70,13 @@ export default function ParcelsPage() {
   // trip to matched with a parcel. when a user selects a parcel they should have a trip.
   const [userTrip, setUserTrip] = useState<Trip | null>(null);
 
-  const { userId, userLoggedIn } = useAuthState();
+  const { user } = useAuth();
 
   //
   const handleRequest = async (parcel: Parcel) => {
+    if(!user) return
     // check if parcel to be matched to a trip does not belong to the logged in user
-    if (parcel.user.id === userId) {
+    if (parcel.user.id === user.id) {
       toast(
         "You can’t match with your own parcel.Browse available trips instead.",
         { variant: "warning" },
@@ -83,9 +84,9 @@ export default function ParcelsPage() {
       return;
     }
 
-    if (!tripLoaded && userId && userLoggedIn) {
+    if (!tripLoaded) {
       // fetch a trip to be matched with a parcel
-      const trip = await namedCall("trip", getTripUseCase.execute(userId));
+      const trip = await namedCall("trip", getTripUseCase.execute(user.id));
 
       if (!trip.result.success) {
         showSupabaseError(trip.result.error, trip.result.status, {
@@ -126,14 +127,14 @@ export default function ParcelsPage() {
         )}
       </DefaultContainer>
       <AnimatePresence>
-        {selectedParcel && userId && userTrip && (
+        {selectedParcel && user && userTrip && (
           <CustomModal width="xl" onClose={onClose}>
             <ConfirmRequest
-              loggedInUserId={userId}
+              loggedInUserId={user.id}
               trip={userTrip}
               parcel={selectedParcel}
               onClose={onClose}
-              isSenderRequesting={userId === selectedParcel.user.id}
+              isSenderRequesting={user.id === selectedParcel.user.id}
             />
           </CustomModal>
         )}

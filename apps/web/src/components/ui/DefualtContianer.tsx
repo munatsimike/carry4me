@@ -12,7 +12,7 @@ export default function DefaultContainer({
   return (
     <section className={`${outerClassName} py-5 md:py-5`}>
       <div
-        className={`mx-auto max-w-container px-4${
+        className={`mx-auto max-w-container px-4 ${
           className ?? ""
         }`}
       >

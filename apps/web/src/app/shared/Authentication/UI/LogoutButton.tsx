@@ -1,5 +1,5 @@
 import { LogoutUseCase } from "@/app/shared/Authentication/application/LogoutUseCase";
-import { SupabaseAuthRepository } from "@/app/shared/data/LoginRepository";
+import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
 import { isNetworkError } from "@/app/util/isNetworkError";
 import CustomText from "@/components/ui/CustomText";
 import { LogOut } from "lucide-react";
@@ -45,7 +45,10 @@ export default function LogoutButton({
   return (
     <button onClick={logout} disabled={loading}>
       <span className="group w-full inline-flex gap-2 items-center p-2 hover:bg-error-100 rounded-md">
-        <LogOut className={`${"h-6 w-6 text-neutral-500 "}${cls}`} strokeWidth={1.5} />
+        <LogOut
+          className={`${"h-6 w-6 text-neutral-500 "}${cls}`}
+          strokeWidth={1.5}
+        />
         <CustomText as="span" textVariant="primary" className={cls}>
           {loading ? "Signing out..." : "Sign out"}
         </CustomText>

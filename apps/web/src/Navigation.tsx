@@ -1,30 +1,32 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
 import { Bell } from "lucide-react";
+import type { UserProfile } from "./app/shared/Authentication/domain/authTypes";
 
 type ProfileProps = {
-  setShowProfile: (b: boolean) => void;
-  showProfile: boolean;
+  setShowProfile: () => void;
+
+  avatar: string | null | undefined;
 };
 
 type NavigationProps = {
   userLoggedIn: boolean;
-  authChecked: boolean;
-  userProfile: ProfileProps;
+  userProfile: UserProfile | null;
+  setShowProfile: () => void;
 };
 
 export default function Navigation({
   userLoggedIn,
-  authChecked,
   userProfile,
+  setShowProfile,
 }: NavigationProps) {
-  if (!authChecked) {
+  if (!userLoggedIn) {
     return <GuestNavigation />;
   }
   return userLoggedIn ? (
     <AuthenticatedNavigation
-      setShowProfile={userProfile.setShowProfile}
-      showProfile={userProfile.showProfile}
+      setShowProfile={setShowProfile}
+      avatar={userProfile?.avatarUrl}
     />
   ) : (
     <GuestNavigation />
@@ -48,10 +50,11 @@ function GuestNavigation() {
       <Home />
       <NavItem to="/travelers">Trips</NavItem>
       <NavItem to="/parcels">Parcels</NavItem>
-      <button className="text-sm font-medium text-gray-700 hover:text-blue-600">
-        Sign up
-      </button>
-
+      <Link to="signup">
+        <button className="text-sm font-medium text-gray-700 hover:text-blue-600">
+          Sign up
+        </button>
+      </Link>
       <button
         onClick={() =>
           openAuthModal({
@@ -67,10 +70,7 @@ function GuestNavigation() {
   );
 }
 
-function AuthenticatedNavigation({
-  setShowProfile,
-  showProfile,
-}: ProfileProps) {
+function AuthenticatedNavigation({ setShowProfile, avatar }: ProfileProps) {
   return (
     <NavLinks>
       <NavItem to="/dashboard">Dashboard</NavItem>
@@ -88,10 +88,15 @@ function AuthenticatedNavigation({
           Notifications
         </span>
       </button>
+      <Link to="signup">
+        <button className="text-sm font-medium text-gray-700 hover:text-blue-600">
+          Sign up
+        </button>
+      </Link>
       <span className=" relative inline-flex flex-col">
-        <button onClick={() => setShowProfile(!showProfile)}>
+        <button onClick={setShowProfile}>
           <img
-            src="/avatar.svg"
+            src={avatar ? avatar : undefined}
             alt="User profile"
             className="rounded-full h-9 w-9 border border-neutral-50"
           />

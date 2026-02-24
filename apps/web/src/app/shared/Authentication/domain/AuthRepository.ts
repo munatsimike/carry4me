@@ -1,20 +1,10 @@
 import type { RepoResponse } from "../../domain/RepoResponse";
-
-export type User = {
-  id: string;
-  fullName: string;
-  avatarUrl?: string;
-};
-export type LogoutResult =
-  | { success: true }
-  | { success: false; error: string };
-
-export type LoginResult =
-  | { success: true; user: User }
-  | { success: false; error: string };
+import type { AppUser, LoginResult, LogoutResult, UserProfile } from "./authTypes";
 
 export interface AuthRepository {
   login(email: string, password: string): Promise<LoginResult>;
   logout(): Promise<LogoutResult>;
-  fetchUserName(userId: string): Promise<RepoResponse<string>>
+  fetchUserProfile(userId: string): Promise<RepoResponse<UserProfile>>;
+  signUp(user: AppUser, file: File | null): Promise<RepoResponse<string>>;
+  uploadAvatar(file: File, userId: string): Promise<RepoResponse<string>>;
 }

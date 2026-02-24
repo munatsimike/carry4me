@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuthState } from "../../shared/supabase/AuthState";
+import { useAuth } from "../../shared/supabase/AuthProvider";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
@@ -18,7 +18,7 @@ import type { GoodsCategory } from "../goods/domain/GoodsCategory";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
-import { SupabaseAuthRepository } from "@/app/shared/data/LoginRepository";
+import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
 import { GetUsersNameUseCase } from "@/app/shared/Authentication/application/GetUsersNameUseCase";
 import type { StatsItem } from "./domain/stats.types";
 import { GetDashboardDataUseCase } from "./application/GetDashboardData";
@@ -43,7 +43,7 @@ export default function DashboardPage() {
     [goodsRepo],
   );
   const supabaseRepository = useMemo(() => new SupabaseAuthRepository(), []);
-  const getFullNameUseCase = useMemo(
+  const getUserProfileUseCase = useMemo(
     () => new GetUsersNameUseCase(supabaseRepository),
     [supabaseRepository],
   );
@@ -77,7 +77,7 @@ export default function DashboardPage() {
     [],
   );
   const navigate = useNavigate();
-  const { userLoggedIn, authChecked, userId } = useAuthState();
+  const { user, profile } = useAuth();
   const { showSupabaseError } = useUniversalModal();
   // fetch goods category
   const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
@@ -88,18 +88,18 @@ export default function DashboardPage() {
 
   // fetch dashboard data
   useEffect(() => {
-    if (!userId) return;
+    if (!user) return;
+    if (profile) setFullName(profile.fullName);
 
     const fetchDashboardData = async () => {
-      const [dashboardData, name, notifications] = await Promise.all([
-        namedCall("dashboard", getDashboardDataUseCase.execute(userId)),
-        namedCall("UserName", getFullNameUseCase.execute(userId)),
-        namedCall("Notifications", getNotificationUseCase.execute(userId)),
+      const [dashboardData, notifications] = await Promise.all([
+        namedCall("dashboard", getDashboardDataUseCase.execute(user.id)),
+        namedCall("Notifications", getNotificationUseCase.execute(user.id)),
       ]);
 
       if (dashboardData.result.success)
         setDashboardData(dashboardData.result.data);
-      if (name.result.success) setFullName(name.result.data);
+
       if (notifications.result.success)
         setNotification(notifications.result.data);
 
@@ -110,14 +110,6 @@ export default function DashboardPage() {
           dashboardData.result.status,
           { onRetry: onLoad },
         );
-        return;
-      }
-
-      // show fetch user name error
-      if (!name.result.success) {
-        showSupabaseError(name.result.error, name.result.status, {
-          onRetry: onLoad,
-        });
         return;
       }
 
@@ -135,7 +127,7 @@ export default function DashboardPage() {
     };
 
     fetchDashboardData();
-  }, [userId]);
+  }, [user?.id, profile]);
 
   useEffect(() => {
     if (!showTripModal && !showParcelModal) return;
@@ -157,14 +149,14 @@ export default function DashboardPage() {
   // get logged in user session data
   //const { user, loading } = useAuth();
   useEffect(() => {
-    if (!authChecked) return;
+    if (!user) return;
 
-    if (!userLoggedIn) {
+    if (!user) {
       navigate("/", { replace: true });
     }
-  }, [userLoggedIn, authChecked, navigate]);
+  }, [user, navigate]);
 
-  if (!authChecked) return null;
+  if (!user) return null;
 
   return (
     <DefaultContainer>

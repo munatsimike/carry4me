@@ -10,16 +10,19 @@ import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import HomePage from "./features/home/HomePage";
 import { UserProfilePage } from "./shared/Authentication/UI/UserProfilePage";
 import { MyFavouritesPage } from "./features/my favourites/UI/MyFavouritesPage";
+import SignUpPage from "./shared/Authentication/UI/SignUpPage";
+import { AuthProvider } from "./shared/supabase/AuthProvider";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <AppLayout />,
+    element:<AuthProvider><AppLayout /></AuthProvider>,
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
       { path: "about", element: <AboutPage /> },
       { path: "signin", element: <AuthModal /> },
+      { path: "signup", element: <SignUpPage /> },
       { path: "travelers", element: <TravelersPage /> },
       { path: "parcels", element: <ParcelsPage /> },
       { path: "requests", element: <CarryRequestsPage /> },

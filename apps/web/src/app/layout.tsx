@@ -1,20 +1,23 @@
 import Navigation from "@/Navigation";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { useAuthState } from "./shared/supabase/AuthState";
+
 import { AuthModalProvider } from "./shared/Authentication/AuthModalContext";
 import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import { UserProfileMenu } from "./shared/Authentication/UI/userProfileMenu";
 import { useEffect, useState } from "react";
 import { ToastProvider } from "./components/Toast";
+import { useAuth } from "./shared/supabase/AuthProvider";
+
 export default function AppLayout() {
-  const { authChecked, userLoggedIn } = useAuthState();
+  const { loading, profile } = useAuth();
   const [showProfile, setShowProfile] = useState<boolean>(false);
   const location = useLocation();
-
   useEffect(() => {
     if (showProfile) setShowProfile(false);
   }, [location.pathname]);
 
+  if (loading) return null;
+  
   return (
     <AuthModalProvider>
       <ToastProvider>
@@ -22,19 +25,16 @@ export default function AppLayout() {
           <header>
             <div className="relative mx-auto max-w-container px-4 py-4 flex items-center justify-between">
               <Link
-                to={userLoggedIn ? "/dashboard" : ""}
+                to={!!profile ? "/dashboard" : ""}
                 className="font-semibold"
               >
                 <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
               </Link>
 
               <Navigation
-                userLoggedIn={userLoggedIn}
-                authChecked={authChecked}
-                userProfile={{
-                  setShowProfile: setShowProfile,
-                  showProfile: showProfile,
-                }}
+                userLoggedIn={!!profile}
+                userProfile={profile}
+                setShowProfile={() => setShowProfile(!showProfile)}
               />
               {showProfile && (
                 <UserProfileMenu onCloseProfile={() => setShowProfile(false)} />
