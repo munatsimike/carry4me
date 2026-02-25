@@ -26,6 +26,7 @@ export default function TravelerCard({ trip, onClick }: TravelerProps) {
         <HeartToggle />
       </SpaceBetweenRow>
       <User
+      avatar={trip.user.avatarUrl}
         tag={"Traveler"}
         userName={`${trip.user.fullName?.charAt(0)}${"."} ${trip.user.fullName?.split(" ")[1]}`}
       />

@@ -1,9 +1,12 @@
+import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
+
 // features/trips/domain/trip.mappers.ts
 type TripRow = {
   id: string;
   traveler: {
     id: string;
     full_name: string;
+    avatar_url: string;
   };
   origin_country: string;
   origin_city: string;
@@ -25,6 +28,7 @@ type TripRow = {
 
 import type { Trip } from "./Trip";
 export function mapTripRowToTrip(row: TripRow): Trip {
+  const publicUrl = fetchPublicUrl(row.traveler.avatar_url);
   const acceptedGoods =
     row.trip_accepted_categories?.map((x) => x.category).filter(Boolean) ?? [];
 
@@ -33,6 +37,10 @@ export function mapTripRowToTrip(row: TripRow): Trip {
     user: {
       id: row.traveler.id,
       fullName: row.traveler.full_name,
+      avatarUrl: publicUrl,
+      countryCode: null,
+      city: null,
+      phoneNumber: null,
     },
     route: {
       originCountry: row.origin_country,

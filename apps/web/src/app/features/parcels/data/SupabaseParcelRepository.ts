@@ -30,7 +30,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
 
   async fetchParcels(): Promise<RepoResponse<Parcel[]>> {
     const { data, error, status } = await supabase.from("parcels").select(
-      `*, sender:profiles(id,full_name), parcel_categories(
+      `*, sender:profiles(id,full_name,avatar_url), parcel_categories(
       category:goods_categories(
       id,
       slug,
@@ -41,6 +41,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     if (error) {
       return { data: null, error, status };
     }
+    if (!data) return { data: [], status: status, error: null };
     const parcelList = (data ?? []).map(toParcelMapper);
     return { data: parcelList, status: status, error: null };
   }
@@ -54,7 +55,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
         destination_country: parcel.destinationCountry,
         destination_city: parcel.destinationCity,
         weight_kg: parcel.weightKg,
-        price:parcel.price,
+        price: parcel.price,
         status: "open",
         items: parcel.items,
       })

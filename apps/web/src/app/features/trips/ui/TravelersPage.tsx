@@ -47,6 +47,7 @@ export default function TravelersPage() {
       if (cancel) return;
 
       if (!result.success) {
+        console.log(result.error)
         showSupabaseError(result.error, result.status, {
           onRetry: fetchTravelers,
         });

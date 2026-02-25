@@ -29,6 +29,7 @@ export default function SendRequestBtn<T>({
           onClick={() => secondaryAction()}
           variant="neutral"
           size={"sm"}
+          
           leadingIcon={undefined}
         >
           <CustomText
@@ -44,6 +45,7 @@ export default function SendRequestBtn<T>({
       <Button
         onClick={() => primaryAction(payLoad)}
         variant={buttonVariant}
+        className="shadow-sm"
         size={"sm"}
         leadingIcon={
           <SvgIcon size={"sm"} Icon={SendIcon} color={iconColorVariant}></SvgIcon>

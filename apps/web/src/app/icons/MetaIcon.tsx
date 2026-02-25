@@ -18,6 +18,8 @@ import AddAccountIcon from "@/assets/add-account-icon.svg?react";
 import TravelerOutLinedIcon from "@/assets/traveler-outlined-icon.svg?react";
 import TravelerIcon from "@/assets/travelerIcon.svg?react";
 import AddIcon from "@/assets/plus-icon.svg?react";
+import ZimFlag from "@/assets/zim-flag.svg?react";
+import UkFlag from "@/assets/uk-flag.svg?react";
 import ShakingHands from "@/assets/shaking-hands.svg?react";
 import ClockFilled from "@/assets/clock-filled.svg?react";
 import UserIconOutlined from "@/assets/user-icon-outlined.svg?react";
@@ -46,4 +48,6 @@ export const META_ICONS = {
   userIconOutlined: UserIconOutlined,
   shaakingHands: ShakingHands,
   clockFilled: ClockFilled,
+  zimFlag: ZimFlag,
+  ukFlag: UkFlag
 }

@@ -7,6 +7,7 @@ type ParcelRow = {
   sender: {
     id: string;
     full_name: string;
+    avatar_url:string| null
   };
   parcel_categories: {
     category: { id: string; name: string; slug: string };
@@ -23,10 +24,7 @@ type ParcelRow = {
 };
 
 export function toParcelMapper(row: ParcelRow): Parcel {
-  if (!row)
-    throw new Error(
-      "toParcelMapper called with empty row (parcel not found / RLS blocked)",
-    );
+
   const rows =
     row.parcel_categories.map((x) => x.category).filter(Boolean) ?? [];
   return {
@@ -35,6 +33,10 @@ export function toParcelMapper(row: ParcelRow): Parcel {
     user: {
       id: row.sender.id,
       fullName: row.sender.full_name,
+      avatarUrl: row.sender.avatar_url,
+      countryCode: null,
+      city: null,
+      phoneNumber: null
     },
 
     categories: rows.map((item) => ({

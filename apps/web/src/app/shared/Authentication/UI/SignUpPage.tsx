@@ -31,12 +31,12 @@ export default function SignUpPage() {
   const newUser: AppUser = {
     auth: {
       id: null,
-      email: "chokwadi6@gmail.com",
-      password: "RukudzoM7*",
+      email: "munatsimike@gmail.com",
+      password: "Password123",
     },
     profile: {
       id: null,
-      fullName: "Truth Chokwadi",
+      fullName: "Mike Munatsi",
       avatarUrl: null,
       countryCode: "NL",
       city: "Asterdam",

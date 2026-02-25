@@ -1,9 +1,11 @@
+
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
-import type { User } from "../../../shared/Authentication/domain/AuthRepository";
+import type { UserProfile } from "@/app/shared/Authentication/domain/authTypes";
+
 
 export type Trip = {
   id: string;
-  user: User;
+  user: UserProfile;
   acceptedGoods: GoodsCategory[];
   route: {
     originCountry: string;

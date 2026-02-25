@@ -1,4 +1,4 @@
-import { supabase } from "../supabase/client";
+
 import type { AuthRepository } from "../Authentication/domain/AuthRepository";
 import toDomainUser from "./userMapper";
 import type { RepoResponse } from "../domain/RepoResponse";
@@ -8,6 +8,7 @@ import type {
   LogoutResult,
   UserProfile,
 } from "../Authentication/domain/authTypes";
+import { supabase } from "@/app/shared/supabase/client";
 
 export class SupabaseAuthRepository implements AuthRepository {
   async signUp(appUser: AppUser): Promise<RepoResponse<string>> {
@@ -81,7 +82,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       .eq("id", userId)
       .single();
     if (error) return { data: null, status, error };
-    const publicUrl = await this.fetchPublicUrl(data.avatar_url);
+    const publicUrl = fetchPublicUrl(data.avatar_url);
     return {
       data: {
         id: data.id,
@@ -94,19 +95,6 @@ export class SupabaseAuthRepository implements AuthRepository {
       status: status,
       error: error,
     };
-  }
-
-  async fetchPublicUrl(avatar_url: string | null): Promise<string | null> {
-    let busted: string | null = null;
-
-    if (avatar_url) {
-      const { data: publicUrlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(avatar_url);
-
-      busted = `${publicUrlData.publicUrl}?t=${Date.now()}`;
-    }
-    return busted;
   }
 
   async logout(): Promise<LogoutResult> {
@@ -140,3 +128,10 @@ export class SupabaseAuthRepository implements AuthRepository {
     };
   }
 }
+ export function fetchPublicUrl(avatar_url: string | null): string | null {
+    if (!avatar_url) return null;
+
+    const { data } = supabase.storage.from("avatars").getPublicUrl(avatar_url);
+
+    return `${data.publicUrl}?t=${Date.now()}`;
+  }

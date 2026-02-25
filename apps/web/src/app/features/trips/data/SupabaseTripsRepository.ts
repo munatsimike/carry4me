@@ -10,7 +10,7 @@ export class SupabaseTripsRepository implements TripsRepository {
     const { data, error, status } = await supabase
       .from("trips")
       .select(
-        `*,traveler:profiles(id,full_name),trip_accepted_categories(
+        `*,traveler:profiles(id,full_name,avatar_url),trip_accepted_categories(
         category:goods_categories(
           id,
           slug,
@@ -30,7 +30,7 @@ export class SupabaseTripsRepository implements TripsRepository {
     const { data, error, status } = await supabase.from("trips").select(
       `
       *,
-      traveler:profiles(id,full_name),
+      traveler:profiles(id,full_name, avatar_url),
       trip_accepted_categories(
         category:goods_categories(
           id,
@@ -42,7 +42,6 @@ export class SupabaseTripsRepository implements TripsRepository {
     );
 
     if (error) return { data: null, status, error };
-    if (error) return { data: null, status: null, error: null };
     const result = data.map(mapTripRowToTrip);
     return { data: result, error:null, status };
   }

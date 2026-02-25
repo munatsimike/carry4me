@@ -1,8 +1,10 @@
-import { supabase } from "./client";
+
 import { SupabaseAuthRepository } from "../data/SupabaseAuthRepository";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import type { UserProfile } from "../Authentication/domain/authTypes";
+import { supabase } from "@/app/shared/supabase/client";
+
 
 type AuthContextValue = {
   user: User | null;
@@ -12,11 +14,11 @@ type AuthContextValue = {
 
   refreshProfile: () => Promise<void>;
 };
+const authRepository = new SupabaseAuthRepository();
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const authRepository = useMemo(() => new SupabaseAuthRepository(), []);
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);

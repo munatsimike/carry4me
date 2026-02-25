@@ -1,6 +1,9 @@
 import { META_ICONS } from "@/app/icons/MetaIcon";
-import IconTextRow from "./card/IconTextRow";
+
 import { InlineRow } from "./InlineRow";
+import SvgIcon from "@/components/ui/SvgIcon";
+import CustomText from "@/components/ui/CustomText";
+import { MoveRight } from "lucide-react";
 
 export default function RouteRow({
   origin,
@@ -11,12 +14,25 @@ export default function RouteRow({
 }) {
   return (
     <InlineRow>
-      <IconTextRow Icon={META_ICONS.planeIcon} label={origin} />
-      <IconTextRow
-        iconSize="xsm"
-        Icon={META_ICONS.arrow}
-        label={destination}
-      />
+      <span>
+        <SvgIcon size={"sm"} Icon={META_ICONS.planeIcon} />
+      </span>
+      <InlineRow gap="2" className="items-center justify-center">
+        <InlineRow gap="1">
+          <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
+          <CustomText textSize="xsm" textVariant="primary">
+            {origin}
+          </CustomText>
+        </InlineRow>
+
+        <MoveRight className="text-neutral-400" strokeWidth={1.5} />
+        <InlineRow gap="1">
+          <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
+          <CustomText textSize="xsm" textVariant="primary">
+            {destination}
+          </CustomText>
+        </InlineRow>
+      </InlineRow>
     </InlineRow>
   );
 }

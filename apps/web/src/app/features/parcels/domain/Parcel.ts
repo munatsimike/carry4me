@@ -1,10 +1,10 @@
 import type { ParcelItem } from "./CreateParcel";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
-import type { User } from "../../../shared/Authentication/domain/AuthRepository";
+import type { UserProfile } from "@/app/shared/Authentication/domain/authTypes";
 
 export type Parcel = {
   id: string;
-  user: User;
+  user: UserProfile;
   categories: GoodsCategory[];
   route: {
     originCountry: string;

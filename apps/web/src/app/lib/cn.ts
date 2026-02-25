@@ -15,7 +15,7 @@ export const baseInput = cn(
 export const inputStructural =
   "w-full h-10 px-2 rounded-md font-inter text-sm transition-colors focus:outline-none";
 export const inputNeutral =
-  "border border-neutral-300 hover:border-neutral-400 focus:border-primary-500";
+  "border border-neutral-400 hover:border-neutral-400 focus:border-primary-500";
 export const inputError =
   "border border-error-400 focus:border-error-400";
 export const inputSuccess =
