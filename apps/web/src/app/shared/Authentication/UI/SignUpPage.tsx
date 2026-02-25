@@ -16,10 +16,11 @@ import { motion } from "framer-motion";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
+import { useAuthModal } from "../AuthModalContext";
 
 const signupSchema = z
   .object({
@@ -58,6 +59,8 @@ export default function SignUpPage() {
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
   const navigate = useNavigate();
+  const { openAuthModal } = useAuthModal();
+  const location = useLocation();
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
   const {
@@ -146,20 +149,27 @@ export default function SignUpPage() {
                 />
               </CircleBadge>
               <CustomText as="h1" textVariant="primary" textSize="xl">
-                Signup
+                Join Carry4me
               </CustomText>
               <CustomText as="p" textVariant="secondary" textSize="sm">
                 Join a community that helps people send parcels home with ease.
               </CustomText>
-              <CustomText as="p" className="text-sm text-neutral-400">
-                Already have an account?{" "}
-                <Link
-                  to="/signin"
-                  className="text-primary-600 font-medium hover:underline"
-                >
-                  Sign in
-                </Link>
-              </CustomText>
+              <button
+                type="button"
+                onClick={() => {
+                  openAuthModal({
+                    mode: "signin",
+                    redirectTo: "/signup",
+                  });
+                }}
+              >
+                <CustomText as="p" className="text-sm text-neutral-400">
+                  Already have an account?{" "}
+                  <span className="inline-flex text-primary-600 font-medium hover:underline">
+                    Sign in
+                  </span>
+                </CustomText>
+              </button>
             </span>
             <LineDivider heightClass="my-0" />
             {/* Personal details */}
@@ -247,7 +257,7 @@ export default function SignUpPage() {
             <motion.div variants={item} className={contentClass}>
               <span className={headerContent}>
                 <CustomText textVariant="primary" textSize="md">
-                  Location
+                  Your location
                 </CustomText>
 
                 {/* If your DropDownMenu supports register, keep this.

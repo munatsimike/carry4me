@@ -52,7 +52,7 @@ export function Button({
     primary: "bg-primary-500 hover:bg-primary-600 text-white font-heading",
     secondary: "bg-secondary-100 hover:bg-secondary-2-00",
     ghost: "bg-transparent hover:bg-tertiary-50",
-    tonal: "bg-secondary-100 hover:bg-primary-500 text-primary border border-secondary-300 hover:text-white",
+    tonal: "bg-secondary-200 hover:bg-primary-500 text-primary border border-secondary-400 hover:text-white",
     neutral: "hover:bg-neutral-50 text-ink-secondary",
     outline: "hover:bg-neutral-200 border bg-neutral-100 text-ink-secondary",
     error: "hover:bg-error-100 hover:text-ink-error text-ink-secondary",
@@ -72,14 +72,14 @@ export function Button({
              group-active:opacity-100 group-active:duration-150"
       />
       {/* Full-width layout container */}
-      <span className="flex w-full items-center gap-2">
+      <span className="flex w-full items-center gap-2 justify-center">
         {/* Left slot */}
         {leadingIcon && (
           <span className="inline-flex shrink-0">{leadingIcon ?? null}</span>
         )}
 
         {/* Center slot */}
-        <span className={`flex flex-1 items-center justify-center ${gap}`}>
+        <span className={`flex items-center justify-center ${gap}`}>
           {/* If you want the icon to sit next to text but still centered, move leadingIcon here instead */}
           <span className="flex flex-col items-center">
             <span>{children}</span>

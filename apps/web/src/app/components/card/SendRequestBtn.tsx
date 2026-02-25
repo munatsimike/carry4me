@@ -17,35 +17,17 @@ export default function SendRequestBtn<T>({
   secondaryAction,
   payLoad,
   buttonVariant = "primary",
-  buttonTextVariant = "onDark",
+  buttonTextVariant = "primary",
   iconColorVariant ="onDark"
 }: SendRequestBtnProps<T>) {
-  const base = "flex items-center";
+  const base = "flex items-center w-full";
   const alignment = secondaryAction ? "justify-between" : "justify-end";
   return (
     <div className={`${base} ${alignment}`}>
-      {secondaryAction && (
-        <Button
-          onClick={() => secondaryAction()}
-          variant="neutral"
-          size={"sm"}
-          
-          leadingIcon={undefined}
-        >
-          <CustomText
-            as="span"
-            textSize={"xsm"}
-            textVariant="primary"
-            className="px-3"
-          >
-            Cancel
-          </CustomText>
-        </Button>
-      )}
       <Button
         onClick={() => primaryAction(payLoad)}
         variant={buttonVariant}
-        className="shadow-sm"
+        className="shadow-sm w-full"
         size={"sm"}
         leadingIcon={
           <SvgIcon size={"sm"} Icon={SendIcon} color={iconColorVariant}></SvgIcon>
@@ -53,7 +35,7 @@ export default function SendRequestBtn<T>({
       >
         <CustomText
           as="span"
-          textSize={"xsm"}
+          textSize={"sm"}
           textVariant={buttonTextVariant}
         >
           Send request

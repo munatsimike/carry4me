@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthModal } from "../AuthModalContext";
-import CustomModal from "../../../components/CustomModal";
+
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "../../../icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
@@ -17,6 +17,8 @@ import LinkText from "../../../components/text/LinkText";
 import ErrorText from "../../../components/text/ErrorText";
 import { LoginUseCase } from "../application/LoginUseCase";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
+import FormModal from "@/app/features/dashboard/components/FormModal";
+import { AnimatePresence } from "framer-motion";
 
 const schema = z.object({
   email: z
@@ -60,8 +62,6 @@ export function AuthModal() {
     setError(null);
   }, [watch("email"), watch("password")]);
 
-  if (!state.isOpen) return null;
-
   const handleSignIn = async (value: FormValues) => {
     const { email, password } = value;
 
@@ -81,67 +81,74 @@ export function AuthModal() {
   };
 
   return (
-    <CustomModal onClose={closeAuthModal}>
-      <form onSubmit={handleSubmit(handleSignIn)}>
-        <div className="flex flex-col min-w-[500px] shrink-0 items-center gap-8">
-          <div className="flex items-center justify-center">
-            <ErrorText error={loginError?.toString()}>
-              <span className="inline-flex flex-col gap-2">
-                <SvgIcon size={"xxl"} Icon={META_ICONS.userIcon} />
-                <CustomText textVariant="primary" textSize="xl">
-                  {"Sign in to your account."}
-                </CustomText>
+    <AnimatePresence>
+      {state.isOpen && (
+        <FormModal
+          onSubmit={handleSubmit(handleSignIn)}
+          onClose={closeAuthModal}
+        >
+          <div className="flex flex-col min-w-[500px] shrink-0 items-center gap-8">
+            <div className="flex items-center justify-center">
+              <ErrorText error={loginError?.toString()}>
+                <span className="inline-flex flex-col gap-2">
+                  <SvgIcon size={"xxl"} Icon={META_ICONS.userIcon} />
+                  <CustomText textVariant="primary" textSize="xl">
+                    {"Sign in to your account."}
+                  </CustomText>
+                </span>
+              </ErrorText>
+            </div>
+
+            <span className="inline-flex flex-col gap-5">
+              <FloatingInputField
+                isDirty={!!dirtyFields.email}
+                isTouched={!!touchedFields.email}
+                type="text"
+                leadingIcon={
+                  <SvgIcon size={"sm"} Icon={META_ICONS.emailIcon} />
+                }
+                {...register("email")}
+                label={"Enter email"}
+                error={errors.email?.message}
+              />
+
+              <FloatingInputField
+                isDirty={!!dirtyFields.password}
+                isTouched={!!touchedFields.password}
+                type="password"
+                onIconClick={setShowPassword}
+                leadingIcon={<SvgIcon size={"sm"} Icon={META_ICONS.lockIcon} />}
+                {...register("password")}
+                label={"Enter password"}
+                error={errors.password?.message}
+              />
+            </span>
+
+            <span className="flex flex-col gap-3 pb-2">
+              <span className="relative inline-flex flex-col gap-5 items-center">
+                <LoginButton isFormSubmitting={isSubmitting} />
+
+                <LinkText linkText={"Forgot password"}></LinkText>
+                <span className="inline-flex gap-2">
+                  <CustomText textVariant="primary">
+                    {"Don’t have an account?"}
+                  </CustomText>
+                  <LinkText linkText={"Sign up"}></LinkText>
+                </span>
               </span>
-            </ErrorText>
+
+              <span className="inline-flex flex-col gap-2 items-center">
+                <CustomText as="p" textSize="xsm">
+                  {"or"}
+                </CustomText>
+                <CustomText as="p">{"Continue with"}</CustomText>
+              </span>
+              <OtherWaysToSignIn />
+            </span>
           </div>
-
-          <span className="inline-flex flex-col gap-5">
-            <FloatingInputField
-              isDirty={!!dirtyFields.email}
-              isTouched={!!touchedFields.email}
-              type="text"
-              leadingIcon={<SvgIcon size={"sm"} Icon={META_ICONS.emailIcon} />}
-              {...register("email")}
-              label={"Enter email"}
-              error={errors.email?.message}
-            />
-
-            <FloatingInputField
-              isDirty={!!dirtyFields.password}
-              isTouched={!!touchedFields.password}
-              type="password"
-              onIconClick={setShowPassword}
-              leadingIcon={<SvgIcon size={"sm"} Icon={META_ICONS.lockIcon} />}
-              {...register("password")}
-              label={"Enter password"}
-              error={errors.password?.message}
-            />
-          </span>
-
-          <span className="flex flex-col gap-3 pb-2">
-            <span className="relative inline-flex flex-col gap-5 items-center">
-              <LoginButton isFormSubmitting={isSubmitting} />
-
-              <LinkText linkText={"Forgot password"}></LinkText>
-              <span className="inline-flex gap-2">
-                <CustomText textVariant="primary">
-                  {"Don’t have an account?"}
-                </CustomText>
-                <LinkText linkText={"Sign up"}></LinkText>
-              </span>
-            </span>
-
-            <span className="inline-flex flex-col gap-2 items-center">
-              <CustomText as="p" textSize="xsm">
-                {"or"}
-              </CustomText>
-              <CustomText as="p">{"Continue with"}</CustomText>
-            </span>
-            <OtherWaysToSignIn />
-          </span>
-        </div>
-      </form>
-    </CustomModal>
+        </FormModal>
+      )}
+    </AnimatePresence>
   );
 }
 

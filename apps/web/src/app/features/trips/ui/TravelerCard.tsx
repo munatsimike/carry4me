@@ -26,7 +26,7 @@ export default function TravelerCard({ trip, onClick }: TravelerProps) {
         <HeartToggle />
       </SpaceBetweenRow>
       <User
-      avatar={trip.user.avatarUrl}
+        avatar={trip.user.avatarUrl}
         tag={"Traveler"}
         userName={`${trip.user.fullName?.charAt(0)}${"."} ${trip.user.fullName?.split(" ")[1]}`}
       />
@@ -49,9 +49,9 @@ export default function TravelerCard({ trip, onClick }: TravelerProps) {
       <LineDivider />
 
       <SendRequestBtn
-        buttonTextVariant="tonal"
-        iconColorVariant="tonal"
-        buttonVariant="tonal"
+        buttonTextVariant="onDark"
+        iconColorVariant="onDark"
+        buttonVariant="primary"
         payLoad={trip}
         primaryAction={onClick}
       />

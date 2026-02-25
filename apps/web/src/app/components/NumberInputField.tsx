@@ -3,6 +3,7 @@ import {
   cn,
   inputError,
   inputNeutral,
+  inputStructural,
   inputSuccess,
 } from "../lib/cn";
 import type {
@@ -53,7 +54,7 @@ export function NumberInputField<TFieldValues extends FieldValues>({
             id={id}
             inputMode="numeric"
             className={cn(
-              `w-full rounded-md py-1 pl-2 pr-8 appearance-none focus:outline-none focus:ring-0 text-ink-primary`,
+              `${inputStructural} text-ink-primary`,
               error ? inputError : showSuccess ? inputSuccess : inputNeutral,
             )}
             {...register}
