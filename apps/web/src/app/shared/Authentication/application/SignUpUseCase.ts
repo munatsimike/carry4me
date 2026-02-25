@@ -10,8 +10,8 @@ export class SignUpUseCase {
     this.repo = repo;
   }
 
-  async execute(appUser: AppUser, file: File | null): Promise<Result<string>> {
-    const result = await this.repo.signUp(appUser, file);
+  async execute(appUser: AppUser): Promise<Result<string>> {
+    const result = await this.repo.signUp(appUser);
     return toResult(result);
   }
 

@@ -8,15 +8,15 @@ import CarryRequestsPage from "./features/carry request/ui/CarryRequestsPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import HomePage from "./features/home/HomePage";
-import { UserProfilePage } from "./shared/Authentication/UI/UserProfilePage";
+
 import { MyFavouritesPage } from "./features/my favourites/UI/MyFavouritesPage";
 import SignUpPage from "./shared/Authentication/UI/SignUpPage";
-import { AuthProvider } from "./shared/supabase/AuthProvider";
+import ProfilePage from "./shared/Authentication/profile/Profile";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element:<AuthProvider><AppLayout /></AuthProvider>,
+    element:<AppLayout />,
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
       { path: "parcels", element: <ParcelsPage /> },
       { path: "requests", element: <CarryRequestsPage /> },
       { path: "dashboard", element: <DashboardPage /> },
-      { path: "profile", element: <UserProfilePage /> },
+      { path: "profile", element: <ProfilePage /> },
       { path: "favourites", element: <MyFavouritesPage /> },
     ],
   },

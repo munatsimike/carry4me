@@ -5,6 +5,6 @@ export interface AuthRepository {
   login(email: string, password: string): Promise<LoginResult>;
   logout(): Promise<LogoutResult>;
   fetchUserProfile(userId: string): Promise<RepoResponse<UserProfile>>;
-  signUp(user: AppUser, file: File | null): Promise<RepoResponse<string>>;
+  signUp(user: AppUser): Promise<RepoResponse<string>>;
   uploadAvatar(file: File, userId: string): Promise<RepoResponse<string>>;
 }

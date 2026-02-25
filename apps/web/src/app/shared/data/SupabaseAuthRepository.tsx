@@ -1,4 +1,3 @@
-
 import type { AuthRepository } from "../Authentication/domain/AuthRepository";
 import toDomainUser from "./userMapper";
 import type { RepoResponse } from "../domain/RepoResponse";
@@ -81,6 +80,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       .select("id,full_name, avatar_url,city,country_code,phone_number")
       .eq("id", userId)
       .single();
+       if (error) throw error;
     if (error) return { data: null, status, error };
     const publicUrl = fetchPublicUrl(data.avatar_url);
     return {
@@ -111,7 +111,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       email,
       password,
     });
-
+   
     if (error) {
       return { success: false, error: error.message };
     }
@@ -128,10 +128,10 @@ export class SupabaseAuthRepository implements AuthRepository {
     };
   }
 }
- export function fetchPublicUrl(avatar_url: string | null): string | null {
-    if (!avatar_url) return null;
+export function fetchPublicUrl(avatar_url: string | null): string | null {
+  if (!avatar_url) return null;
 
-    const { data } = supabase.storage.from("avatars").getPublicUrl(avatar_url);
+  const { data } = supabase.storage.from("avatars").getPublicUrl(avatar_url);
 
-    return `${data.publicUrl}?t=${Date.now()}`;
-  }
+  return `${data.publicUrl}?t=${Date.now()}`;
+}

@@ -24,7 +24,7 @@ type ParcelRow = {
 };
 
 export function toParcelMapper(row: ParcelRow): Parcel {
-
+     
   const rows =
     row.parcel_categories.map((x) => x.category).filter(Boolean) ?? [];
   return {

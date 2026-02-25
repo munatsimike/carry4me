@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { ToastProvider } from "./components/Toast";
 import { useAuth } from "./shared/supabase/AuthProvider";
 
+
 export default function AppLayout() {
   const { loading, profile } = useAuth();
   const [showProfile, setShowProfile] = useState<boolean>(false);

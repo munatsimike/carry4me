@@ -5,12 +5,6 @@ export function cn(...inputs: unknown[]) {
   return twMerge(clsx(inputs));
 }
 
-export const baseInput = cn(
-  "border border-neutral-300 font-inter text-sm",
-  "focus-within:ring-1 focus-within:ring-primary-00 hover:border-neutral-500",
-  "focus:border-primary-500",
-  "focus:outline-none focus:ring-0",
-);
 
 export const inputStructural =
   "w-full h-10 px-2 rounded-md font-inter text-sm transition-colors focus:outline-none";

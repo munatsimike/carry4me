@@ -23,11 +23,13 @@ export default function Search({
   return (
     <div className="inline-flex items-center gap-5 py-2 px-4 bg-neutral-100 rounded-full border border-neutral-200 shadow-sm">
       <DropDownMenu
+        className="rounded-2xl shadow-sm"
         value={selectedCountry}
         placeholder="Select country"
         menuItems={countries}
       />
       <DropDownMenu
+        className="rounded-2xl shadow-sm"
         value={selectedCity}
         placeholder="Select city"
         menuItems={cities}
