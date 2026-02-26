@@ -1,5 +1,5 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SignUpUseCase } from "../application/SignUpUseCase";
 import type { AppUser } from "../domain/authTypes";
@@ -11,12 +11,11 @@ import FloatingInputField from "@/app/components/CustomInputField";
 import DropDownMenu from "@/app/components/DropDownMenu";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
-
 import { motion } from "framer-motion";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
@@ -63,6 +62,7 @@ export default function SignUpPage() {
   const location = useLocation();
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
+
   const {
     register,
     handleSubmit,
@@ -79,11 +79,19 @@ export default function SignUpPage() {
       city: "",
       password: "",
     },
-    mode: "onSubmit",
-    reValidateMode: "onChange",
+    mode: "onBlur",
+    reValidateMode: "onBlur",
   });
+
   const cityValue = watch("city");
   const countryValue = watch("country");
+  const firstName = watch("firstName");
+  const lastName = watch("lastName");
+
+  const emailAddress = watch("emailAddress");
+  const password = watch("password");
+  const confirmPassword = watch("confirmPassword");
+  const phoneNumber = watch("phoneNumber");
 
   const { toast } = useToast();
 
@@ -151,25 +159,28 @@ export default function SignUpPage() {
               <CustomText as="h1" textVariant="primary" textSize="xl">
                 Join Carry4me
               </CustomText>
-              <CustomText as="p" textVariant="secondary" textSize="sm">
+              <CustomText as="p" textVariant="label" textSize="sm">
                 Join a community that helps people send parcels home with ease.
               </CustomText>
-              <button
-                type="button"
-                onClick={() => {
-                  openAuthModal({
-                    mode: "signin",
-                    redirectTo: "/signup",
-                  });
-                }}
-              >
+              <span className="inline-flex items-center gap-1">
                 <CustomText as="p" className="text-sm text-neutral-400">
-                  Already have an account?{" "}
-                  <span className="inline-flex text-primary-600 font-medium hover:underline">
-                    Sign in
-                  </span>
+                  Already have an account?
                 </CustomText>
-              </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    openAuthModal({
+                      mode: "signin",
+                      redirectTo: "/signup",
+                    });
+                  }}
+                >
+                  <CustomText as="span" textVariant="linkText">
+                    Sign in
+                  </CustomText>
+                </button>
+              </span>
             </span>
             <LineDivider heightClass="my-0" />
             {/* Personal details */}
@@ -181,6 +192,7 @@ export default function SignUpPage() {
                 <span className={contentClass}>
                   <div className="flex w-full flex-wrap gap-5">
                     <FloatingInputField
+                      hasValue={!!firstName}
                       label="First name"
                       error={errors.firstName?.message}
                       isDirty={!!dirtyFields.firstName}
@@ -188,6 +200,7 @@ export default function SignUpPage() {
                       {...register("firstName")}
                     />
                     <FloatingInputField
+                      hasValue={!!lastName}
                       label="Last name"
                       error={errors.lastName?.message}
                       isDirty={!!dirtyFields.lastName}
@@ -197,6 +210,7 @@ export default function SignUpPage() {
                   </div>
 
                   <FloatingInputField
+                    hasValue={!!emailAddress}
                     className="w-full sm:max-w-[350px]"
                     label="Email"
                     type="email"
@@ -208,6 +222,7 @@ export default function SignUpPage() {
 
                   <span className="flex">
                     <FloatingInputField
+                      hasValue={!!phoneNumber}
                       label="Phone number"
                       type="tel"
                       error={errors.phoneNumber?.message}
@@ -230,6 +245,7 @@ export default function SignUpPage() {
                 <span className={contentClass}>
                   <span className="flex">
                     <FloatingInputField
+                      hasValue={!!password}
                       label="Password"
                       type="password"
                       error={errors.password?.message}
@@ -240,6 +256,7 @@ export default function SignUpPage() {
                   </span>
                   <span className="flex">
                     <FloatingInputField
+                      hasValue={!!confirmPassword}
                       label="Confirm password"
                       type="password"
                       error={errors.confirmPassword?.message}

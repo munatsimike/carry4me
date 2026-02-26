@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthModal } from "../AuthModalContext";
 
 import SvgIcon from "@/components/ui/SvgIcon";
@@ -13,7 +13,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { signInWithProvider } from "../../supabase/authOAuthService";
 import Spinner from "../../../components/Spinner";
-import LinkText from "../../../components/text/LinkText";
 import ErrorText from "../../../components/text/ErrorText";
 import { LoginUseCase } from "../application/LoginUseCase";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
@@ -40,10 +39,11 @@ export function AuthModal() {
     reset,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    mode: "onSubmit",
+    mode: "onTouched",
     reValidateMode: "onChange",
   });
-
+  const emailAddress = watch("email");
+  const password = watch("password");
   const [loginError, setError] = useState<string | null>(null);
   const { state, closeAuthModal } = useAuthModal();
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ export function AuthModal() {
 
   useEffect(() => {
     setError(null);
-  }, [watch("email"), watch("password")]);
+  }, [emailAddress, password]);
 
   const handleSignIn = async (value: FormValues) => {
     const { email, password } = value;
@@ -101,6 +101,7 @@ export function AuthModal() {
 
             <span className="inline-flex flex-col gap-5">
               <FloatingInputField
+                hasValue={!!emailAddress}
                 isDirty={!!dirtyFields.email}
                 isTouched={!!touchedFields.email}
                 type="text"
@@ -113,6 +114,7 @@ export function AuthModal() {
               />
 
               <FloatingInputField
+                hasValue={!!password}
                 isDirty={!!dirtyFields.password}
                 isTouched={!!touchedFields.password}
                 type="password"
@@ -128,12 +130,20 @@ export function AuthModal() {
               <span className="relative inline-flex flex-col gap-5 items-center">
                 <LoginButton isFormSubmitting={isSubmitting} />
 
-                <LinkText linkText={"Forgot password"}></LinkText>
+                <CustomText as="p" textVariant="linkText">
+                  {"Forgot password"}
+                </CustomText>
                 <span className="inline-flex gap-2">
                   <CustomText textVariant="primary">
                     {"Don’t have an account?"}
                   </CustomText>
-                  <LinkText linkText={"Sign up"}></LinkText>
+                  <Link to="/signup">
+                    <button onClick={closeAuthModal} type="button">
+                      <CustomText as="span" textVariant="linkText">
+                        {"Sign up"}
+                      </CustomText>
+                    </button>
+                  </Link>
                 </span>
               </span>
 

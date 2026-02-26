@@ -7,6 +7,7 @@ import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function HowItWorks({ steps }: StepsPros) {
   const howItWorksContainer = {
@@ -45,10 +46,7 @@ export default function HowItWorks({ steps }: StepsPros) {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {steps.map((step, index) => (
-            <motion.div
-              key={index}
-              variants={howItWorksItem}
-            >
+            <motion.div key={index} variants={howItWorksItem}>
               <StepItem step={step} />
             </motion.div>
           ))}
@@ -60,22 +58,25 @@ export default function HowItWorks({ steps }: StepsPros) {
           variants={howItWorksItem}
         >
           <motion.div>
-            <Button
-              className="w-full sm:w-auto"
-              variant="secondary"
-              size="lg"
-              leadingIcon={
-                <SvgIcon
-                  color="primary"
-                  size="lg"
-                  Icon={META_ICONS.addAccount}
-                />
-              }
-            >
-              <CustomText textVariant="primary">
-                Sign up to get started
-              </CustomText>
-            </Button>
+            <Link to="/signup">
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                variant="secondary"
+                size="lg"
+                leadingIcon={
+                  <SvgIcon
+                    color="primary"
+                    size="lg"
+                    Icon={META_ICONS.addAccount}
+                  />
+                }
+              >
+                <CustomText textVariant="primary">
+                  Sign up to get started
+                </CustomText>
+              </Button>
+            </Link>
           </motion.div>
         </motion.div>
       </motion.div>

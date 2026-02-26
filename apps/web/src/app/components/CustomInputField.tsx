@@ -10,6 +10,7 @@ import {
 type CustomInputFieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
   isDirty: boolean;
   isTouched: boolean;
+  hasValue: boolean;
   className?: string;
   label?: string;
   error?: string;
@@ -27,13 +28,14 @@ export default function FloatingInputField({
   onIconClick,
   isDirty,
   isTouched,
+  hasValue,
   ...props
 }: CustomInputFieldProps) {
-  const showSuccess = (isDirty || isTouched) && !error;
+  const showSuccess = isTouched && !error && hasValue;
   return (
     <ErrorText error={error}>
       <div
-        className={cn(`flex items-center rounded-lg ${inputStructural} ${error ? inputError : showSuccess ? inputSuccess : inputNeutral}
+        className={cn(`${inputStructural} flex items-center rounded-lg ${error ? inputError : showSuccess ? inputSuccess : inputNeutral}
         ${className ?? ""}`)}
       >
         {leadingIcon && (

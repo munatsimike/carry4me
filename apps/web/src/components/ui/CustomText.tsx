@@ -39,7 +39,7 @@ export default function Text({
     selected: "text-primary-600",
     error: "text-ink-error",
     formText: "text-ink-primary whitespace-normal break-words",
-    linkText: "font-heading text-primary-500 ",
+    linkText: "font-heading text-primary-600 font-medium hover:underline",
     label: "text-neutral-500",
     helperText: "text-neutral-400",
     placeholcer: "text-netural-300",
