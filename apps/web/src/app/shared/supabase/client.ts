@@ -18,5 +18,6 @@ export const supabase =
       detectSessionInUrl: true,
     },
   });
+  
 
 if (isDev) globalThis.__supabase__ = supabase;

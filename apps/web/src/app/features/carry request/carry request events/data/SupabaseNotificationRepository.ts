@@ -11,10 +11,11 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   ): Promise<RepoResponse<CarryRequestNotification[]>> {
     const { data, status, error } = await supabase
       .from("notifications")
-      .select("id,type,title,body,link,read_at,created_at")
+      .select("id,user_id,type,title,body,link,read_at,created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(limit);
+
 
     if (error) return { data: null, error, status };
     const result = (data ?? []).map(toCarryRequestNotificationsMapper);

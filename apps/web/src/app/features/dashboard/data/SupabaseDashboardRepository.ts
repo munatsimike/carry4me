@@ -14,6 +14,7 @@ export class SubabaseDashboardRepository implements DashboardDataRepository {
 
  
     if (error) {
+      
       return { data: null, status: status, error: error };
     }
 

@@ -80,7 +80,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       .select("id,full_name, avatar_url,city,country_code,phone_number")
       .eq("id", userId)
       .single();
-       if (error) throw error;
+
     if (error) return { data: null, status, error };
     const publicUrl = fetchPublicUrl(data.avatar_url);
     return {
@@ -99,8 +99,9 @@ export class SupabaseAuthRepository implements AuthRepository {
 
   async logout(): Promise<LogoutResult> {
     const { error } = await supabase.auth.signOut();
+    if(error) throw Error
     if (error) {
-      return { success: false, error: error.message };
+     // return { success: false, error: error.message };
     }
 
     return { success: true };
@@ -111,12 +112,13 @@ export class SupabaseAuthRepository implements AuthRepository {
       email,
       password,
     });
-   
+
     if (error) {
       return { success: false, error: error.message };
     }
 
     const user = data.user;
+
     if (!user) {
       return { success: false, error: "Login succeeded but no user returned." };
     }

@@ -1,5 +1,5 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useMemo, useState } from "react";
+import { useMemo} from "react";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SignUpUseCase } from "../application/SignUpUseCase";
 import type { AppUser } from "../domain/authTypes";
@@ -21,7 +21,7 @@ import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { useAuthModal } from "../AuthModalContext";
 
-const signupSchema = z
+export const UserDetailsScema = z
   .object({
     firstName: z.string().trim().min(2, "First name is required"),
     lastName: z.string().trim().min(2, "Last name is required"),
@@ -39,7 +39,7 @@ const signupSchema = z
     path: ["confirmPassword"], // 👈 attaches error to confirmPassword
   });
 let submitCount = 0;
-type SignUpFields = z.infer<typeof signupSchema>;
+export type UserDetailsFields = z.infer<typeof UserDetailsScema>;
 
 const container = {
   hidden: { opacity: 0 },
@@ -68,8 +68,8 @@ export default function SignUpPage() {
     handleSubmit,
     watch,
     formState: { errors, isSubmitting, dirtyFields, touchedFields, isValid },
-  } = useForm<SignUpFields>({
-    resolver: zodResolver(signupSchema),
+  } = useForm<UserDetailsFields>({
+    resolver: zodResolver(UserDetailsScema),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -95,7 +95,7 @@ export default function SignUpPage() {
 
   const { toast } = useToast();
 
-  const onSignUp = async (values: SignUpFields) => {
+  const onSignUp = async (values: UserDetailsFields) => {
     const newUser: AppUser = {
       auth: {
         id: null,
@@ -186,7 +186,7 @@ export default function SignUpPage() {
             {/* Personal details */}
             <motion.div variants={item} className={contentClass}>
               <span className={headerContent}>
-                <CustomText textVariant="primary" textSize="md">
+                <CustomText textVariant="primary" textSize="lg">
                   Personal details
                 </CustomText>
                 <span className={contentClass}>
@@ -239,7 +239,7 @@ export default function SignUpPage() {
             {/* Security */}
             <motion.div variants={item} className={contentClass}>
               <span className={headerContent}>
-                <CustomText textVariant="primary" textSize="md">
+                <CustomText textVariant="primary" textSize="lg">
                   Security
                 </CustomText>
                 <span className={contentClass}>
@@ -273,7 +273,7 @@ export default function SignUpPage() {
             {/* Location */}
             <motion.div variants={item} className={contentClass}>
               <span className={headerContent}>
-                <CustomText textVariant="primary" textSize="md">
+                <CustomText textVariant="primary" textSize="lg">
                   Your location
                 </CustomText>
 

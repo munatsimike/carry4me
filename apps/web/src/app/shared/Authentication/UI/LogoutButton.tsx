@@ -18,25 +18,26 @@ export default function LogoutButton({
   const navigate = useNavigate();
 
   const logout = async () => {
-    try {
-      setLoading(true);
-      const result = await useCase.execute();
+    setLoading(true);
+    const result = await useCase.execute();
 
-      if (result.success)
-        sessionStorage.setItem(
-          "redirectToast",
-          JSON.stringify({
-            message: "Signed out successfully.",
-            variant: "success",
-          }),
-        );
+    if (result.success) {
+      sessionStorage.setItem(
+        "redirectToast",
+        JSON.stringify({
+          message: "Signed out successfully.",
+          variant: "success",
+        }),
+      );
       navigate("/", {
         replace: true,
       });
-    } catch (error) {
-      if (isNetworkError(error)) console.log("network error:", error);
-      else console.log(error);
-    } finally {
+    }
+    if (!result.success) {
+      if (isNetworkError(result.error))
+        console.log("network error:", result.error);
+      else console.log(result.error);
+
       setLoading(false);
       onCloseProfile();
     }
@@ -46,7 +47,7 @@ export default function LogoutButton({
     <button onClick={logout} disabled={loading}>
       <span className="group w-full inline-flex gap-2 items-center p-2 hover:bg-error-100 rounded-md">
         <LogOut
-          className={`${"h-6 w-6 text-neutral-500 "}${cls}`}
+          className={`${"h-6 w-6 text-neutral-400 "}${cls}`}
           strokeWidth={1.5}
         />
         <CustomText as="span" textVariant="primary" className={cls}>

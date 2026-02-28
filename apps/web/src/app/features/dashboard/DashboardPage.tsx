@@ -18,11 +18,8 @@ import type { GoodsCategory } from "../goods/domain/GoodsCategory";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
-import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
-import { GetUsersNameUseCase } from "@/app/shared/Authentication/application/GetUsersNameUseCase";
 import type { StatsItem } from "./domain/stats.types";
 import { GetDashboardDataUseCase } from "./application/GetDashboardData";
-import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
 import type { DashboardData } from "./domain/DashboardData";
 import { SubabaseDashboardRepository } from "./data/SupabaseDashboardRepository";
 import { Clock, Truck } from "lucide-react";
@@ -42,13 +39,7 @@ export default function DashboardPage() {
     () => new GetGoodsUseCase(goodsRepo),
     [goodsRepo],
   );
-  const supabaseRepository = useMemo(() => new SupabaseAuthRepository(), []);
-  const getUserProfileUseCase = useMemo(
-    () => new GetUsersNameUseCase(supabaseRepository),
-    [supabaseRepository],
-  );
 
-  const tripRepository = useMemo(() => new SupabaseTripsRepository(), []);
   const dashboardDataRepository = useMemo(
     () => new SubabaseDashboardRepository(),
     [],
@@ -56,7 +47,7 @@ export default function DashboardPage() {
 
   const getDashboardDataUseCase = useMemo(
     () => new GetDashboardDataUseCase(dashboardDataRepository),
-    [tripRepository],
+    [dashboardDataRepository],
   );
 
   const supabaseNotificationRepo = useMemo(
@@ -89,6 +80,7 @@ export default function DashboardPage() {
   // fetch dashboard data
   useEffect(() => {
     if (!user) return;
+  
     if (profile) setFullName(profile.fullName);
 
     const fetchDashboardData = async () => {
@@ -156,7 +148,7 @@ export default function DashboardPage() {
     }
   }, [user, navigate]);
 
-  if (!user) return null;
+  if (!user) return <div className="p-6">Loading...</div>;
 
   return (
     <DefaultContainer>

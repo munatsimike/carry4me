@@ -23,6 +23,10 @@ import UkFlag from "@/assets/uk-flag.svg?react";
 import ShakingHands from "@/assets/shaking-hands.svg?react";
 import ClockFilled from "@/assets/clock-filled.svg?react";
 import UserIconOutlined from "@/assets/user-icon-outlined.svg?react";
+import LoginIcon from "@/assets/login-icon.svg?react";
+import ProfileIcon from "@/assets/user-profile-con.svg?react"
+import CameraIcon from "@/assets/camera.svg?react"
+import RecycleBin from "@/assets/bin.svg?react"
 
 export const META_ICONS = {
   planeIcon: PlaneIcon,
@@ -49,5 +53,9 @@ export const META_ICONS = {
   shaakingHands: ShakingHands,
   clockFilled: ClockFilled,
   zimFlag: ZimFlag,
-  ukFlag: UkFlag
+  loginIcon:LoginIcon,
+  ukFlag: UkFlag,
+  profileIcon: ProfileIcon,
+  cameraIcon: CameraIcon,
+  recycleBin: RecycleBin
 }

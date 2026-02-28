@@ -18,6 +18,7 @@ import { LoginUseCase } from "../application/LoginUseCase";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import FormModal from "@/app/features/dashboard/components/FormModal";
 import { AnimatePresence } from "framer-motion";
+import { CircleBadge } from "@/components/ui/CircleBadge";
 
 const schema = z.object({
   email: z
@@ -90,8 +91,14 @@ export function AuthModal() {
           <div className="flex flex-col min-w-[500px] shrink-0 items-center gap-8">
             <div className="flex items-center justify-center">
               <ErrorText error={loginError?.toString()}>
-                <span className="inline-flex flex-col gap-2">
-                  <SvgIcon size={"xxl"} Icon={META_ICONS.userIcon} />
+                <span className="inline-flex flex-col gap-2 items-center">
+                
+                    <SvgIcon
+                      size={"xxl"}
+                      Icon={META_ICONS.loginIcon}
+                      color="primary"
+                    />
+                 
                   <CustomText textVariant="primary" textSize="xl">
                     {"Sign in to your account."}
                   </CustomText>
@@ -204,6 +211,7 @@ function OtherWaysToSignIn() {
 function LoginButton({ isFormSubmitting }: { isFormSubmitting: boolean }) {
   return (
     <Button
+      className=" w-full sm:max-w-[250px]"
       disabled={isFormSubmitting}
       type="submit"
       aria-busy={isFormSubmitting}
@@ -211,7 +219,7 @@ function LoginButton({ isFormSubmitting }: { isFormSubmitting: boolean }) {
       size={"md"}
       isBusy={isFormSubmitting}
     >
-      <span className="inline-flex items-center gap-2 min-w-[150px] justify-center">
+      <span className="inline-flex items-center gap-2  justify-center">
         {isFormSubmitting && <Spinner />}
         {
           <CustomText textVariant="primary" className="text-white px-1">

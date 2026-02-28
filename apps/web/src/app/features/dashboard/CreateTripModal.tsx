@@ -25,6 +25,7 @@ import { DateField } from "./components/DateField";
 import { WeightField } from "./components/WeightField";
 import { PriceField } from "./components/PriceField";
 import CustomText from "@/components/ui/CustomText";
+import { MoveLeft } from "lucide-react";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
@@ -84,7 +85,7 @@ export default function CreateTripModal({
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
   const useCase = useMemo(() => new CreateTripUseCase(repo), [repo]);
 
-  const {user } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const {
@@ -157,13 +158,27 @@ export default function CreateTripModal({
       onSubmit={handleSubmit(onValidSubmit)}
       onClose={() => setModalState(false)}
     >
-      <div className="flex flex-col gap-4">
+      <div className="relative flex flex-col gap-4">
         <div className="flex flex-col gap-5">
           <FormHeader
             heading={"Post your trip"}
             subHeading={"Share your trip details to get matched with senders."}
           />
           <StepHeader currentStep={step} />
+          {step === 2 && (
+            <span className="inline-flex absolute left-0 top-0">
+              <Button
+                type="button"
+                variant="neutral"
+                onClick={goBack}
+                size={"sm"}
+              >
+                <span className="inline-flex gap-1 items-center">
+                  <MoveLeft className="w-4"/> {"Back"}
+                </span>
+              </Button>
+            </span>
+          )}
         </div>
 
         {step === 1 ? (
@@ -205,10 +220,11 @@ export default function CreateTripModal({
             {/* Step actions */}
             <div className="flex justify-end">
               <Button
+                className="w-full"
                 type="button"
                 variant="primary"
                 onClick={goNext}
-                size={"sm"}
+                size={"md"}
               >
                 Next
               </Button>
@@ -279,21 +295,13 @@ export default function CreateTripModal({
             {/* Step actions */}
             <div className="flex items-center justify-between gap-4">
               <Button
-                type="button"
-                variant="outline"
-                onClick={goBack}
-                size={"sm"}
-              >
-                {"Back"}
-              </Button>
-
-              <Button
+                className="w-full"
                 type="submit"
                 variant="primary"
                 disabled={isSubmitting}
-                size={"sm"}
+                size={"md"}
               >
-                {isSubmitting ? "Posting..." : "Submit"}
+                {isSubmitting ? "Posting..." : "Post trip"}
               </Button>
             </div>
           </>

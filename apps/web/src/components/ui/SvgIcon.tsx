@@ -35,7 +35,7 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
     tonal: "text-primary-500 group-hover:text-ink-onDark",
     tertiary: "text-secondary-50",
     success: "text-success-500",
-    neutral: "text-neutral-400",
+    neutral: "text-neutral-400 ",
     grey: "text-neutral-200",
     onDark: "text-white",
     pending: "text-status-pending",

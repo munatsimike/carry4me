@@ -9,7 +9,7 @@ type NotificationRow = {
   body: string;
   link: string;
   created_at: string;
-  read_at: string;
+  read_at: string |null;
 };
 
 export function toCarryRequestNotificationsMapper(

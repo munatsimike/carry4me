@@ -23,7 +23,7 @@ import z from "zod";
 import { useMemo, useState } from "react";
 import type { ParcelItem } from "../parcels/domain/CreateParcel";
 import { StepHeader } from "@/app/components/forms/formStepper";
-import { X } from "lucide-react";
+import { MoveLeft, X } from "lucide-react";
 import { PriceField } from "./components/PriceField";
 import { WeightField } from "./components/WeightField";
 import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
@@ -184,7 +184,7 @@ export default function CreateParcelModal({
       onClose={() => setModalState(false)}
     >
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-5">
+        <div className="relative flex flex-col gap-5">
           <FormHeader
             heading={"Post a parcel"}
             subHeading={
@@ -196,6 +196,20 @@ export default function CreateParcelModal({
           <div className="flex flex-col gap-3">
             <StepHeader currentStep={step} formType="parcel" />
           </div>
+          {step === 2 && (
+            <span className="inline-flex absolute left-0 top-0">
+              <Button
+                type="button"
+                variant="neutral"
+                onClick={goBack}
+                size={"sm"}
+              >
+                <span className="inline-flex gap-1 items-center">
+                  <MoveLeft className="w-4" /> {"Back"}
+                </span>
+              </Button>
+            </span>
+          )}
         </div>
         {step === 1 ? (
           <div className="flex flex-col gap-5">
@@ -230,10 +244,11 @@ export default function CreateParcelModal({
             {/* Step actions */}
             <div className="flex justify-end gap-4">
               <Button
+                className="w-full"
                 type="button"
                 variant="primary"
                 onClick={goNext}
-                size={"sm"}
+                size={"md"}
               >
                 Next
               </Button>
@@ -249,6 +264,8 @@ export default function CreateParcelModal({
               register={register}
               dirty={dirtyFields}
               touched={touchedFields}
+              hasValueQty={false}
+              hasValueDescription={false}
             />
 
             <AddItemButton onClick={addField} />
@@ -303,19 +320,11 @@ export default function CreateParcelModal({
             {/* Step actions */}
             <div className="flex items-center justify-between gap-4">
               <Button
-                type="button"
-                variant="outline"
-                onClick={goBack}
-                size={"sm"}
-              >
-                Back
-              </Button>
-
-              <Button
+                className="w-full"
                 type="submit"
                 variant="primary"
                 disabled={isSubmitting}
-                size={"sm"}
+                size={"md"}
               >
                 {"Submit"}
               </Button>
@@ -334,6 +343,8 @@ type DescriptionQuantityRowProps = {
   errors: FieldErrors<ParcelFormFields>;
   dirty: FieldNamesMarkedBoolean<ParcelFormFields>;
   touched: FieldNamesMarkedBoolean<ParcelFormFields>;
+  hasValueQty: boolean;
+  hasValueDescription: boolean;
 };
 
 function DescriptionQuantityRow({
@@ -343,6 +354,8 @@ function DescriptionQuantityRow({
   register,
   dirty,
   touched,
+  hasValueQty,
+  hasValueDescription,
 }: DescriptionQuantityRowProps) {
   return (
     <div className="inline-flex flex-col gap-5">
@@ -356,6 +369,7 @@ function DescriptionQuantityRow({
         <div key={index} className="flex gap-4">
           <div className="grid grid-cols-1 md:grid-cols-[80px_190px] gap-4">
             <FloatingInputField
+              hasValue={hasValueQty}
               type="number"
               error={errors.itemDescriptions?.[index]?.quantity?.message}
               {...register(`itemDescriptions.${index}.quantity`, {
@@ -366,6 +380,7 @@ function DescriptionQuantityRow({
               isDirty={!!dirty.itemDescriptions?.[index]?.quantity}
             />
             <FloatingInputField
+              hasValue={hasValueDescription}
               error={errors.itemDescriptions?.[index]?.description?.message}
               {...register(`itemDescriptions.${index}.description`)}
               label="item e.g ladies jeans"

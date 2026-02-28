@@ -1,4 +1,4 @@
-type CircleSize = "sm" | "md" | "lg" | "xl";
+type CircleSize = "sm" | "md" | "lg" | "xl"| "xxl";
 export type CirleBgColor = "success" | "secondary" | "neutral" | "primary" | "onDark"| "transparent";
 
 type CirleBadgeProps = {
@@ -22,6 +22,7 @@ export function CircleBadge({
     md: "h-8 w-8",
     lg: "h-9 w-9",
     xl: "h-11 w-11",
+    xxl: "h-14 w-14"
   };
 
   const bgColors: Record<CirleBgColor, string> = {
@@ -36,7 +37,7 @@ export function CircleBadge({
     <span
       className={`inline-flex ${
         circleSizes[size]
-      } items-center justify-center rounded-full aspect-square ${
+      } items-center justify-center rounded-full aspect-square p-2 ${
         bgColor && bgColors[bgColor]
       } ${paddingClassName} ${className}`}
     >

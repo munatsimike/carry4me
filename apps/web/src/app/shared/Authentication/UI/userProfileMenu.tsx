@@ -19,12 +19,12 @@ export function UserProfileMenu({
 }: {
   onCloseProfile: () => void;
 }) {
-  const cls = "h-6 w-6 text-neutral-500";
+  const cls = "h-6 w-6 text-neutral-400";
   const profileItems: ProfileItem[] = [
-    { name: "Profile", icon: <UserRound className={cls} />, path: "/profile" },
+    { name: "Profile", icon: <UserRound className={cls}  strokeWidth={1.5}/>, path: "/profile" },
     {
       name: "My Favourites",
-      icon: <Heart className={cls} />,
+      icon: <Heart className={cls} strokeWidth={1.5} />,
       path: "/favourites",
     },
   ];

@@ -88,11 +88,7 @@ function AuthenticatedNavigation({ setShowProfile, avatar }: ProfileProps) {
           Notifications
         </span>
       </button>
-      <Link to="signup">
-        <button className="text-sm font-medium text-gray-700 hover:text-blue-600">
-          Sign up
-        </button>
-      </Link>
+
       <span className=" relative inline-flex flex-col">
         <button onClick={setShowProfile}>
           <img

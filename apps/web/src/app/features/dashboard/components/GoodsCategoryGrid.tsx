@@ -10,7 +10,7 @@ export default function GoodsCategoryGrid({
   onChange,
   error,
 }: {
-  label:string,
+  label: string;
   error?: string;
   goods: GoodsCategory[];
   selectedIds: string[];
@@ -23,9 +23,9 @@ export default function GoodsCategoryGrid({
 
     onChange(next);
   };
-  
+
   return (
-     <ErrorText error={error}>
+    <ErrorText error={error}>
       <div className="flex flex-col gap-3">
         <InlineRow>
           <CustomText textSize="xsm" textVariant="label">
@@ -35,20 +35,46 @@ export default function GoodsCategoryGrid({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {goods.map((item) => {
-            const checked = selectedIds.includes(item.id)
+            const checked = selectedIds.includes(item.id);
 
             return (
-              <label
-                key={item.id}
-                className="flex items-center gap-2 rounded-lg"
-              >
-                <input
-                className="accent-primary-500"
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) => toggle(item.id, e.target.checked)}
-                />
-                <CustomText textSize="xsm" textVariant="formText">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <span className="relative inline-flex">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => toggle(item.id, e.target.checked)}
+                    className="
+        peer appearance-none
+        w-4 h-4 rounded-[6px]
+        border border-gray-300 bg-white
+        transition cursor-pointer
+        focus:outline-none focus:ring-2 focus:ring-blue-200
+        checked:bg-primary-500 checked:border-primary-500
+      "
+                  />
+
+                  {/* Check icon visible only when checked */}
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="
+        pointer-events-none
+        absolute inset-0 m-auto w-4 h-4
+        text-white opacity-0 transition
+         peer-checked:opacity-100
+       
+      "
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+
+                <CustomText textVariant="primary" textSize="xsm">
                   {item.name}
                 </CustomText>
               </label>
@@ -56,7 +82,6 @@ export default function GoodsCategoryGrid({
           })}
         </div>
       </div>
-      </ErrorText>
-    
+    </ErrorText>
   );
 }

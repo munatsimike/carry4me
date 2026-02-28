@@ -8,17 +8,32 @@ import { useEffect, useState } from "react";
 import { ToastProvider } from "./components/Toast";
 import { useAuth } from "./shared/supabase/AuthProvider";
 
-
 export default function AppLayout() {
-  const { loading, profile } = useAuth();
-  const [showProfile, setShowProfile] = useState<boolean>(false);
+  const { loading, user, profile } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
   const location = useLocation();
+
   useEffect(() => {
-    if (showProfile) setShowProfile(false);
+    setShowProfile(false);
   }, [location.pathname]);
 
-  if (loading) return null;
-  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
+        <div className="relative h-10 w-10">
+          <div className="absolute inset-0 rounded-full border-4 border-neutral-200" />
+          <div className="absolute inset-0 rounded-full border-4 border-black border-t-transparent animate-spin" />
+        </div>
+
+        <p className="text-sm text-neutral-500 tracking-wide">
+          Loading your account...
+        </p>
+      </div>
+    );
+  }
+
+  const isAuthed = !!user;
+
   return (
     <AuthModalProvider>
       <ToastProvider>
@@ -26,17 +41,18 @@ export default function AppLayout() {
           <header>
             <div className="relative mx-auto max-w-container px-4 py-4 flex items-center justify-between">
               <Link
-                to={!!profile ? "/dashboard" : ""}
+                to={isAuthed ? "/dashboard" : "/"}
                 className="font-semibold"
               >
                 <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
               </Link>
 
               <Navigation
-                userLoggedIn={!!profile}
-                userProfile={profile}
-                setShowProfile={() => setShowProfile(!showProfile)}
+                userLoggedIn={isAuthed}
+                userProfile={profile} // can be null sometimes, that's ok
+                setShowProfile={() => setShowProfile((s) => !s)}
               />
+
               {showProfile && (
                 <UserProfileMenu onCloseProfile={() => setShowProfile(false)} />
               )}
@@ -46,6 +62,7 @@ export default function AppLayout() {
           <main className="flex-1">
             <Outlet />
           </main>
+
           <AuthModal />
 
           <footer className="border-t">
