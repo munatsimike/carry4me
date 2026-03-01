@@ -9,8 +9,23 @@ import type {
 } from "../Authentication/domain/authTypes";
 import { supabase } from "@/app/shared/supabase/client";
 import type { UpdateProfileDto } from "../Authentication/application/updateProfileDTO";
+import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
+
+const emptyRepoResult: RepoResponse<string> = {
+  data: null,
+  status: null,
+  error: null,
+};
 
 export class SupabaseAuthRepository implements AuthRepository {
+  async updateAuthDetails(
+    updateAuthDto: UpdateAuthDto,
+  ): Promise<RepoResponse<string>> {
+    const { data, error } = await supabase.auth.updateUser(updateAuthDto);
+    if (error) return emptyRepoResult;
+    return { data: data.user.id, error: null, status: null };
+  }
+
   async signUp(appUser: AppUser): Promise<RepoResponse<string>> {
     const { data, error } = await supabase.auth.signUp({
       email: appUser.auth.email,
@@ -102,12 +117,12 @@ export class SupabaseAuthRepository implements AuthRepository {
     userId: string,
     updateProfile: Partial<UpdateProfileDto>,
   ): Promise<RepoResponse<string>> {
-    const { data, status, error } = await supabase
+    const { data, error, status } = await supabase
       .from("profiles")
       .update(updateProfile)
       .eq("id", userId);
-      if(error)throw Error
-   // if (error) return { data: null, status, error };
+
+    if (error) return { data: null, status, error };
     return { data: data, error: null, status: null };
   }
 
@@ -143,10 +158,32 @@ export class SupabaseAuthRepository implements AuthRepository {
       user: toDomainUser(user),
     };
   }
+
+  async deleteAvatar(
+    userId: string,
+    publicUrl: string,
+    bucketName: string = "avatars",
+  ): Promise<RepoResponse<string>> {
+    const path = this.extractStoragePath(publicUrl, bucketName);
+    if (!path) return emptyRepoResult;
+    const { error } = await supabase.storage.from("avatars").remove([path]);
+
+    if (error) return { data: null, error: error, status: null };
+    this.updateProfile(userId, { avatar_url: null });
+    return { data: "success", error: null, status: null };
+  }
+
+  extractStoragePath(url: string, bucket: string) {
+    const marker = `/object/public/${bucket}/`;
+    const path = url.split(marker)[1] ?? null;
+
+    return path.split("?")[0];
+  }
 }
+
 export function fetchPublicUrl(avatar_url: string | null): string | null {
   if (!avatar_url) return null;
-
+  console.log(avatar_url);
   const { data } = supabase.storage.from("avatars").getPublicUrl(avatar_url);
 
   return `${data.publicUrl}?t=${Date.now()}`;

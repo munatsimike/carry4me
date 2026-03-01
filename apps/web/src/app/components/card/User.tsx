@@ -11,7 +11,7 @@ export default function User({ userName, tag, avatar }: UserProps) {
   return (
     <div className="flex items-center pl-14 gap-3">
       <img
-        src={avatar ? avatar : "/avatar.svg"}
+        src={avatar ? avatar : "/user-profile-icon.svg"}
         className="rounded-full h-12 w-12 border border-neutral-100"
       />
       <div className="flex flex-col gap-2">

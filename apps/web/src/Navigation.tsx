@@ -92,9 +92,9 @@ function AuthenticatedNavigation({ setShowProfile, avatar }: ProfileProps) {
       <span className=" relative inline-flex flex-col">
         <button onClick={setShowProfile}>
           <img
-            src={avatar ? avatar : undefined}
+            src={avatar ? avatar : "/user-profile-icon.svg"}
             alt="User profile"
-            className="rounded-full h-9 w-9 border border-neutral-50"
+            className="rounded-full h-9 w-9 border border-neutral-300"
           />
         </button>
       </span>

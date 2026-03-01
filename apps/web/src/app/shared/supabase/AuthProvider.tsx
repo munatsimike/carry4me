@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const myRequestId = ++requestIdRef.current;
 
     try {
-      // ✅ Timeout protects against "loading forever"
+      // Timeout protects against "loading forever"
       const { data, error } = await withTimeout(authRepository.fetchUserProfile(userId), 10_000);
 
       // Ignore stale results / unmounted
