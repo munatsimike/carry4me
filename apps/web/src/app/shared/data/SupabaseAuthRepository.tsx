@@ -8,6 +8,7 @@ import type {
   UserProfile,
 } from "../Authentication/domain/authTypes";
 import { supabase } from "@/app/shared/supabase/client";
+import type { UpdateProfileDto } from "../Authentication/application/updateProfileDTO";
 
 export class SupabaseAuthRepository implements AuthRepository {
   async signUp(appUser: AppUser): Promise<RepoResponse<string>> {
@@ -97,11 +98,24 @@ export class SupabaseAuthRepository implements AuthRepository {
     };
   }
 
+  async updateProfile(
+    userId: string,
+    updateProfile: Partial<UpdateProfileDto>,
+  ): Promise<RepoResponse<string>> {
+    const { data, status, error } = await supabase
+      .from("profiles")
+      .update(updateProfile)
+      .eq("id", userId);
+      if(error)throw Error
+   // if (error) return { data: null, status, error };
+    return { data: data, error: null, status: null };
+  }
+
   async logout(): Promise<LogoutResult> {
     const { error } = await supabase.auth.signOut();
-    if(error) throw Error
+    if (error) throw Error;
     if (error) {
-     // return { success: false, error: error.message };
+      // return { success: false, error: error.message };
     }
 
     return { success: true };

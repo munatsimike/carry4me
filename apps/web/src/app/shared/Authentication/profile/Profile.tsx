@@ -9,9 +9,13 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, warning } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useForm, type UseFormRegisterReturn } from "react-hook-form";
+import {
+  useForm,
+  type UseFormRegister,
+  type UseFormRegisterReturn,
+} from "react-hook-form";
 import { UserDetailsScema, type UserDetailsFields } from "../UI/SignUpPage";
 import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
@@ -19,7 +23,7 @@ import CustomText from "@/components/ui/CustomText";
 import { MapPin, ShieldHalf, User2 } from "lucide-react";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
-import User from "@/app/components/card/User";
+import { UpdateProfileUseCase } from "../application/UpdateProfileUseCase";
 
 type AvatarProps = {
   preview: string | null;
@@ -54,15 +58,17 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState<ProfileSection | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const { user, refreshProfile, profile } = useAuth();
 
-  const { user, refreshProfile, profile,loading } = useAuth();
   const { toast } = useToast();
 
   const {
     register,
-    handleSubmit,
+    reset,
     watch,
-    formState: { errors, isSubmitting, dirtyFields, touchedFields, isValid },
+    trigger,
+    getValues,
+    formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<UserDetailsFields>({
     resolver: zodResolver(UserDetailsScema),
     defaultValues: {
@@ -78,13 +84,43 @@ export default function ProfilePage() {
     reValidateMode: "onBlur",
   });
 
+  useEffect(() => {
+    if (!user || !profile) return;
+
+    const fullName = profile.fullName?.trim() ?? "";
+    const parts = fullName.split(/\s+/);
+    const firstName = parts[0] ?? "";
+    const lastName = parts.slice(1).join(" ");
+
+    reset(
+      {
+        firstName,
+        lastName,
+        emailAddress: user.email ?? "",
+        phoneNumber: profile.phoneNumber ?? "",
+        country: profile.countryCode ?? "",
+        city: profile.city ?? "",
+        password: "",
+        confirmPassword: "",
+      },
+      {
+        keepDirty: true, // don’t wipe user edits if profile updates
+        keepTouched: true,
+      },
+    );
+  }, [user?.id, user?.email, profile, reset]);
+
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const upLoadAvatrUseCase = useMemo(
     () => new SignUpUseCase(authRepo),
     [authRepo],
   );
+  const updateProfileUseCase = useMemo(
+    () => new UpdateProfileUseCase(authRepo),
+    [authRepo],
+  );
 
-  // ✅ Hook must be BEFORE any conditional return
+  //  Hook must be BEFORE any conditional return
   useEffect(() => {
     // If user picked a file, don't overwrite their local preview
     if (file) return;
@@ -104,43 +140,85 @@ export default function ProfilePage() {
     const previewUrl = URL.createObjectURL(nextFile);
     setPreview(previewUrl);
 
-    // ✅ Cleanup object URL to prevent memory leaks
+    // Cleanup object URL to prevent memory leaks
     // (cleanup for previous object URL if any)
     return () => URL.revokeObjectURL(previewUrl);
   }
 
-  const onSave = async () => {
-    console.log("save");
-  };
+  if (!user) return <div className="p-6">Please sign in.</div>;
 
-  const uploadAvatar = async () => {
-    if (!user?.id || !file) return;
+  // If profile can be null (row missing), don't blank the whole page:
+  if (!profile) return <div className="p-6">Setting up your profile…</div>;
 
-    const { result } = await namedCall(
-      "avatar",
-      upLoadAvatrUseCase.uploadAvatar(user.id, file),
+  const onUpdate = async () => {
+    const personalDetails: Array<keyof UserDetailsFields> = [
+      "firstName",
+      "lastName",
+      "city",
+      "country",
+      "phoneNumber",
+    ];
+
+    if (editing === "personal") {
+      const personalDirty =
+        !!dirtyFields.firstName ||
+        !!dirtyFields.lastName ||
+        !!dirtyFields.phoneNumber ||
+        !!dirtyFields.emailAddress;
+
+      if (!personalDirty) {
+        toast("Make changes to update profile", { variant: "warning" });
+        return;
+      }
+      const ok = await trigger(personalDetails);
+      console.log(ok);
+      if (!ok) return;
+    }
+
+    if (editing === "security") {
+      const ok = await trigger("password");
+      console.log(ok);
+      if (!ok) return;
+    }
+
+    if (editing === "location") {
+      const location: Array<keyof UserDetailsFields> = ["city", "country"];
+      const ok = await trigger(location);
+      console.log(ok);
+      if (!ok) return;
+    }
+
+    const values = getValues();
+
+    console.log(values);
+
+    const result = await namedCall(
+      "profile update",
+      updateProfileUseCase.execute(user?.id, {
+        fullName: `${values.firstName} ${values.lastName}`,
+        id: null,
+        avatarUrl: null,
+        countryCode: values.country,
+        city: values.city,
+        phoneNumber: values.phoneNumber,
+      }),
     );
 
-    if (!result.success) {
-      console.log(result.error);
+    if (result.result) {
+      toast("Profile updated successfully", { variant: "success" });
+    }
+
+    if (!result.result) {
       toast("Upload failed", { variant: "error" });
       return;
     }
 
+    reset(getValues());
     // optional: clear file after successful upload
     setFile(null);
-
+    toast("Profile updated successfuly", { variant: "success" });
     await refreshProfile();
-    toast("Avatar updated", { variant: "success" });
   };
-
-  if (loading) return <div className="p-6">Loading…</div>;
-
-if (!user) return <div className="p-6">Please sign in.</div>;
-
-// If profile can be null (row missing), don't blank the whole page:
-if (!profile) return <div className="p-6">Setting up your profile…</div>;
-
 
   const iconSpecs: IconSpecs = {
     className: "h-6 w-6 text-neutral-400",
@@ -155,97 +233,104 @@ if (!profile) return <div className="p-6">Setting up your profile…</div>;
     city: {
       value: watch("city"),
       error: "",
-      isDirty: isCountryDirty,
-      isTouched: isCountryTouched,
+      isDirty: isCityDirty,
+      isTouched: isCityTouched,
       register: register("city"),
     },
     country: {
       value: watch("country"),
       error: "",
-      isDirty: isCityDirty,
-      isTouched: isCityTouched,
+      isDirty: isCountryDirty,
+      isTouched: isCountryTouched,
       register: register("country"),
     },
     formBtns: {
       isSubmitting: false,
       isDirty: false,
       onCancel: () => setEditing(null),
+      onClick: function (): void {
+        onUpdate();
+      },
     },
   };
 
   return (
     <DefaultContainer>
       <Card className="mx-auto w-full max-w-2xl" paddingClass="p-8 px-10">
-        <span className="flex flex-col items-center">
-          <span className="relative inline-flex gap-4">
-            <AvatarPicker
-              preview={preview}
-              handleFileChange={handleFileChange}
-            />
-            <span className="inline-flex flex-col">
-              <CustomText textSize="lg" textVariant="primary">
-                {profile.fullName}
-              </CustomText>
-              <CustomText textSize="xsm" textVariant="secondary">
-                {user.email}
-              </CustomText>
-            </span>
+        <form onSubmit={(e) => e.preventDefault()}>
+          <span className="flex flex-col items-center">
+            <span className="relative inline-flex gap-4">
+              <AvatarPicker
+                preview={preview}
+                handleFileChange={handleFileChange}
+              />
+              <span className="inline-flex flex-col">
+                <CustomText textSize="lg" textVariant="primary">
+                  {profile.fullName}
+                </CustomText>
+                <CustomText textSize="xsm" textVariant="secondary">
+                  {user.email}
+                </CustomText>
+              </span>
 
-            {/* <button onClick={uploadAvatar}>Save</button> */}
+              {/* <button onClick={uploadAvatar}>Save</button> */}
+            </span>
           </span>
-        </span>
-        <LineDivider heightClass="my-4" />
-        <motion.div
-          layout
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="flex flex-col gap-4"
-        >
-          <PersonalDetailsSection
-            iconSpecs={iconSpecs}
-            profile={profile}
-            email={user.email ?? ""}
-            editing={editing}
-            setEditing={setEditing}
-            onCancel={() => setEditing(null)}
-            onSave={onSave}
-          />
-          <LineDivider heightClass="my-0" />
-          <SecurityDetailsCard
-            iconSpecs={iconSpecs}
-            editing={editing}
-            setEditing={() => setEditing("security")}
-            actionBtns={{
-              isDirty: !!dirtyFields.password,
-              isSubmitting: isSubmitting,
-              onCancel: () => setEditing(null),
-            }}
-            hasValue={!!watch("password")}
-            error={errors.password?.message}
-            isTouched={!!touchedFields.password}
-            register={register("password")}
-          />
-          <LineDivider heightClass="my-0" />
-          <LocationSection
-            iconSpecs={iconSpecs}
-            userCity={profile.city ?? ""}
-            userCountry={profile!.countryCode ?? ""}
-            formLocation={location}
-            editing={editing}
-            setEditing={() => setEditing("location")}
-            formBtn={{
-              isSubmitting: location.formBtns.isSubmitting,
-              isDirty: location.city.isDirty || location.country.isDirty,
-              onCancel: location.formBtns.onCancel,
-            }}
-          />
-        </motion.div>
+          <LineDivider heightClass="my-4" />
+          <motion.div
+            layout
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="flex flex-col gap-4"
+          >
+            <PersonalDetailsSection
+              onClick={onUpdate}
+              isDirty={isCityDirty}
+              register={register}
+              isSubmitting={isSubmitting}
+              iconSpecs={iconSpecs}
+              profile={profile}
+              email={user.email ?? ""}
+              editing={editing}
+              setEditing={setEditing}
+              onCancel={() => setEditing(null)}
+            />
+            <LineDivider heightClass="my-0" />
+            <SecurityDetailsCard
+              iconSpecs={iconSpecs}
+              editing={editing}
+              setEditing={() => setEditing("security")}
+              actionBtns={{
+                onClick: location.formBtns.onClick,
+                isDirty: !!dirtyFields.password,
+                isSubmitting: isSubmitting,
+                onCancel: () => setEditing(null),
+              }}
+              hasValue={!!watch("password")}
+              error={errors.password?.message}
+              isTouched={!!touchedFields.password}
+              register={register("password")}
+              onClick={location.formBtns.onClick}
+            />
+            <LineDivider heightClass="my-0" />
+            <LocationSection
+              iconSpecs={iconSpecs}
+              formLocation={location}
+              editing={editing}
+              setEditing={() => setEditing("location")}
+              formBtn={{
+                onClick: location.formBtns.onClick,
+                isSubmitting: location.formBtns.isSubmitting,
+                isDirty: location.city.isDirty || location.country.isDirty,
+                onCancel: location.formBtns.onCancel,
+              }}
+            />
+          </motion.div>
+        </form>
       </Card>
     </DefaultContainer>
   );
 }
 type LocationSectionProps = {
-  userCountry: string;
-  userCity: string;
   iconSpecs: IconSpecs;
   formLocation: LocationProps;
   formBtn: ActionButtonProps;
@@ -254,8 +339,6 @@ type LocationSectionProps = {
 };
 
 function LocationSection({
-  userCountry,
-  userCity,
   formLocation,
   formBtn,
   iconSpecs,
@@ -263,7 +346,7 @@ function LocationSection({
   setEditing,
 }: LocationSectionProps) {
   const { city: formCity, country: formCountry } = formLocation;
-  const { onCancel, isSubmitting, isDirty } = formBtn;
+  const { onCancel, isSubmitting, isDirty, onClick } = formBtn;
   const isEditing = editing === "location";
   return (
     <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-3"}`}>
@@ -278,9 +361,9 @@ function LocationSection({
       />
       {!isEditing ? (
         <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <InfoRow label="Country" value={userCountry} />
-            <InfoRow label="City" value={userCity} />
+          <div className="flex flex-col gap-2">
+            <InfoRow label="Country" value={formCity.value} />
+            <InfoRow label="City" value={formCountry.value} />
           </div>
           <EditBtn
             isEditing={isEditing}
@@ -298,6 +381,7 @@ function LocationSection({
             city={formCity}
             country={formCountry}
             formBtns={{
+              onClick: () => onClick(),
               isSubmitting: isSubmitting,
               isDirty: isDirty,
               onCancel: onCancel,
@@ -318,6 +402,7 @@ type securityProps = {
   error: string | undefined;
   isTouched: boolean;
   register: UseFormRegisterReturn;
+  onClick: () => void;
 };
 
 function SecurityDetailsCard({
@@ -329,6 +414,7 @@ function SecurityDetailsCard({
   isTouched,
   register,
   iconSpecs,
+  onClick,
 }: securityProps) {
   const isEditing = editing === "security";
   return (
@@ -373,6 +459,7 @@ function SecurityDetailsCard({
             />
           </div>
           <ActionButton
+            onClick={onClick}
             isSubmitting={actionBtns.isSubmitting}
             isDirty={actionBtns.isDirty}
             onCancel={actionBtns.onCancel}
@@ -389,16 +476,22 @@ function PersonalDetailsSection({
   editing,
   setEditing,
   onCancel,
-  onSave,
+  isSubmitting,
+  register,
+  isDirty,
   iconSpecs,
+  onClick,
 }: {
+  isSubmitting: boolean;
+  isDirty: boolean;
   profile: UserProfile;
   email: string;
   iconSpecs: IconSpecs;
   editing: ProfileSection | null;
   onCancel: () => void;
   setEditing: (s: ProfileSection | null) => void;
-  onSave: (v: UserProfile) => Promise<void>;
+  register: UseFormRegister<UserDetailsFields>;
+  onClick: () => void;
 }) {
   const isEditing = editing === "personal";
 
@@ -438,12 +531,11 @@ function PersonalDetailsSection({
         ) : (
           <motion.div>
             <PersonalEditForm
-              userProfile={profile}
+              register={register}
+              isSubmitting={isSubmitting}
               onCancel={onCancel}
-              onSave={async (values) => {
-                await onSave(values);
-                setEditing(null);
-              }}
+              isDirty={isDirty}
+              onClick={onClick}
             />
           </motion.div>
         )}
@@ -497,8 +589,8 @@ function LocationEditForm({ country, city, formBtns }: LocationProps) {
       <span className="flex gap-7">
         <DropDownMenu
           className="rounded-md"
-          placeholder="Selected country"
-          menuItems={["UK"]}
+          placeholder={"Select country"}
+          menuItems={["UK", "NL"]}
           value={country.value}
           error={country.error}
           isDirty={country.isDirty}
@@ -507,9 +599,9 @@ function LocationEditForm({ country, city, formBtns }: LocationProps) {
         />
 
         <DropDownMenu
-          className="rounded-md w-full sm:max-w-[200px]"
-          placeholder="Selected city"
-          menuItems={["London"]}
+          className="rounded-md"
+          placeholder={"Select city"}
+          menuItems={["London", "Harare", "Amsterdam"]}
           value={city.value}
           error={city.error}
           isDirty={city.isDirty}
@@ -519,6 +611,7 @@ function LocationEditForm({ country, city, formBtns }: LocationProps) {
       </span>
 
       <ActionButton
+        onClick={formBtns.onClick}
         isSubmitting={isSubmitting}
         isDirty={isDirty}
         onCancel={onCancel}
@@ -528,94 +621,81 @@ function LocationEditForm({ country, city, formBtns }: LocationProps) {
 }
 
 function PersonalEditForm({
-  userProfile,
+  isSubmitting,
+  register,
   onCancel,
-  onSave,
+  isDirty,
+  onClick,
 }: {
-  userProfile: UserProfile;
+  register: UseFormRegister<UserDetailsFields>;
+  isSubmitting: boolean;
+  isDirty: boolean;
   onCancel: () => void;
-  onSave: (v: UserProfile) => Promise<void>;
+  onClick: () => void;
 }) {
-  const {
-    register,
-    handleSubmit,
-    formState: { isSubmitting, isDirty },
-  } = useForm<UserDetailsFields>({
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      emailAddress: "",
-      phoneNumber: "",
-      country: "",
-      city: "",
-      password: "",
-    },
-    mode: "onBlur",
-  });
-
   return (
-    <form onSubmit={handleSubmit(() => onSave(userProfile))}>
-      <div className="flex flex-col gap-5">
-        <span className="flex gap-6 items-center">
-          <FloatingInputField
-            hasValue={false}
-            label="Full name"
-            isDirty={false}
-            isTouched={false}
-            {...register("firstName")}
-          />
-          <FloatingInputField
-            hasValue={false}
-            label="last name"
-            isDirty={false}
-            isTouched={false}
-            {...register("lastName")}
-          />
-        </span>
+    <div className="flex flex-col gap-5">
+      <span className="flex gap-6 items-center">
         <FloatingInputField
-          className="w-full sm:max-w-[350px]"
           hasValue={false}
-          label="Email address"
+          label="Full name"
           isDirty={false}
           isTouched={false}
-          {...register("emailAddress")}
+          {...register("firstName")}
         />
         <FloatingInputField
-          className="w-full sm:max-w-[220px]"
           hasValue={false}
-          label="Phone number"
+          label="last name"
           isDirty={false}
           isTouched={false}
-          {...register("phoneNumber")}
+          {...register("lastName")}
         />
-        <ActionButton
-          isDirty={isSubmitting}
-          isSubmitting={isSubmitting}
-          onCancel={onCancel}
-        />
-      </div>
-    </form>
+      </span>
+      <FloatingInputField
+        className="w-full sm:max-w-[350px]"
+        hasValue={false}
+        label="Email address"
+        isDirty={false}
+        isTouched={false}
+        {...register("emailAddress")}
+      />
+      <FloatingInputField
+        className="w-full sm:max-w-[220px]"
+        hasValue={false}
+        label="Phone number"
+        isDirty={false}
+        isTouched={false}
+        {...register("phoneNumber")}
+      />
+      <ActionButton
+        onClick={onClick}
+        isDirty={isDirty}
+        isSubmitting={isSubmitting}
+        onCancel={onCancel}
+      />
+    </div>
   );
 }
 
 type ActionButtonProps = {
   isSubmitting: boolean;
+  onClick: () => void;
   isDirty: boolean;
   onCancel: () => void;
 };
 
-function ActionButton({ isSubmitting, isDirty, onCancel }: ActionButtonProps) {
+function ActionButton({
+  isSubmitting,
+  onClick,
+  isDirty,
+  onCancel,
+}: ActionButtonProps) {
   return (
     <div className="mt-4 flex justify-end gap-3">
       <Button type="button" variant="neutral" onClick={onCancel} size={"sm"}>
         Cancel
       </Button>
-      <Button
-        type="submit"
-        variant="primary"
-        disabled={!isDirty || isSubmitting}
-        size={"sm"}
-      >
+      <Button onClick={onClick} type="button" variant="primary" size={"sm"}>
         {isSubmitting ? "Saving..." : "Save changes"}
       </Button>
     </div>

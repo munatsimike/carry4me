@@ -1,11 +1,19 @@
 import React from "react";
 import { UniversalModalProvider } from "./DialogBoxModalProvider";
 import { AuthProvider } from "../../supabase/AuthProvider";
-// AppProviders.tsx
+import { ToastProvider } from "@/app/components/Toast";
+import { AuthModalProvider } from "../AuthModalContext";
+
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <UniversalModalProvider>{children}</UniversalModalProvider>
+      <ToastProvider>
+        <AuthModalProvider>
+          <UniversalModalProvider>
+            {children}
+          </UniversalModalProvider>
+        </AuthModalProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

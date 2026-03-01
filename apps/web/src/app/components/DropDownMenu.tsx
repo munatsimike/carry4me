@@ -44,7 +44,7 @@ export default function DropDownMenu({
   return (
     <ErrorText error={error}>
       <select
-        defaultValue=""
+     
         disabled={disabled}
         className={cn(
           "px-3 py-2 bg-white" ,

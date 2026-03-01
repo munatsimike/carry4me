@@ -5,11 +5,11 @@ type CloseBackBtnProps = {
 };
 export function CloseBackBtn({ onClose }: CloseBackBtnProps) {
   return (
-    <div className="absolute top-4 right-5">
+    <div className="absolute top-4 right-6">
       <button
         type="button"
         onClick={() => onClose(false)}
-        className="flex items-center justify-center text-neutral-700 hover:text-slate-900 hover:bg-slate-100 transition-all p-1 rounded-md hover:-translate-y-0.5 bg-neutral-100 "
+        className="flex items-center justify-center text-neutral-800 hover:text-slate-900 hover:bg-slate-100 transition-all p-1 rounded-md hover:-translate-y-0.5 bg-neutral-100 "
       >
         <X className="h-5 w-5 text-ink-neutral-900" />
       </button>

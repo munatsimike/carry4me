@@ -3,14 +3,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   @apply font-body;
-}
-
-@layer base {
-  button {
-    font-family: inherit;
-  }
 }
 
 @layer base {
@@ -33,4 +31,18 @@ body {
     -moz-appearance: textfield;
     appearance: textfield;
   }
+}
+
+/*autofill OUTSIDE @layer base (most reliable) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px rgba(245, 245, 220, 0) inset !important;
+  box-shadow: 0 0 0 1000px rgba(245, 245, 220, 0) inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  caret-color: #111827 !important;
+  border-radius: 0.75rem;
+  transition: background-color 9999s ease-in-out 0s;
 }
