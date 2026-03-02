@@ -305,7 +305,7 @@ export default function ProfilePage() {
               touchedFields={dirtyFields}
               actionBtns={{
                 onClick: () => onUpdateProfile(),
-                onCancel: () => setPreview(null),
+                onCancel: () => setEditing(null),
               }}
             />
             <LineDivider heightClass="my-0" />
@@ -321,7 +321,7 @@ export default function ProfilePage() {
               }}
               formBtn={{
                 onClick: () => onUpdateProfile(),
-                onCancel: () => setPreview(null),
+                onCancel: () => setEditing(null),
               }}
               setEditing={() => setEditing("location")}
             />

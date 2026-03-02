@@ -12,7 +12,7 @@ export default function User({ userName, tag, avatar }: UserProps) {
     <div className="flex items-center pl-14 gap-3">
       <img
         src={avatar ? avatar : "/user-profile-icon.svg"}
-        className="rounded-full h-12 w-12 border border-neutral-100"
+        className="rounded-full h-12 w-12 border border-neutral-300"
       />
       <div className="flex flex-col gap-2">
         <CustomText

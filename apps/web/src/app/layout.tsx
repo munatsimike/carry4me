@@ -1,11 +1,10 @@
 import Navigation from "@/Navigation";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-import { AuthModalProvider } from "./shared/Authentication/AuthModalContext";
 import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import { UserProfileMenu } from "./shared/Authentication/UI/userProfileMenu";
 import { useEffect, useState } from "react";
-import { ToastProvider } from "./components/Toast";
+
 import { useAuth } from "./shared/supabase/AuthProvider";
 
 export default function AppLayout() {

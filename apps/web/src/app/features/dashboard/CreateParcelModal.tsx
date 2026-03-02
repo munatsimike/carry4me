@@ -36,6 +36,7 @@ import { SaveGoodsUseCase } from "../goods/application/SaveGoodsUseCase";
 import type { UserGoods } from "../goods/domain/UserGoods";
 import toGoodsMapper from "../goods/domain/toGoodsMapper";
 import { useToast } from "@/app/components/Toast";
+import { AnimatePresence, motion } from "framer-motion";
 
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
@@ -271,42 +272,66 @@ export default function CreateParcelModal({
             <AddItemButton onClick={addField} />
 
             <LineDivider heightClass={dividerHeight} />
-            <span className="flex flex-col gap-3">
-              <span className="flex flex-wrap gap-4 sm:gap-[34px]">
-                <WeightField<ParcelFormFields>
-                  register={register("totalWeight", { valueAsNumber: true })}
-                  id="weight"
-                  error={errors.totalWeight?.message}
-                  isTouched={!!touchedFields.totalWeight}
-                  isDirty={!!dirtyFields.totalWeight}
-                  setValue={setValue}
-                  value={weightValue}
-                  name={"totalWeight"}
-                />
-                <PriceField<ParcelFormFields>
-                  id="price"
-                  error={errors.pricePerKg?.message}
-                  register={register("pricePerKg", { valueAsNumber: true })}
-                  isTouched={!!touchedFields.pricePerKg}
-                  isDirty={!!dirtyFields.pricePerKg}
-                  value={priceValue}
-                  setValue={setValue}
-                  name={"pricePerKg"}
-                />
-              </span>
-              <span className="flex gap-2 items-center sm:pl-[170px]">
-                <CustomText textSize="xsm" textVariant="label">
-                  {"You’ll pay"}
-                </CustomText>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-[20px]">
+              {/* Weight Field */}
+              <WeightField<ParcelFormFields>
+                register={register("totalWeight", { valueAsNumber: true })}
+                id="weight"
+                error={errors.totalWeight?.message}
+                isTouched={!!touchedFields.totalWeight}
+                isDirty={!!dirtyFields.totalWeight}
+                setValue={setValue}
+                value={weightValue}
+                name={"totalWeight"}
+              />
 
-                <span className="inline-flext rounded-md w-[60px]">
-                  <CustomText textSize="sm" textVariant="primary">
-                    {"$"}
-                    {priceValue * weightValue}
+              {/* Price Field */}
+              <PriceField<ParcelFormFields>
+                id="price"
+                error={errors.pricePerKg?.message}
+                register={register("pricePerKg", { valueAsNumber: true })}
+                isTouched={!!touchedFields.pricePerKg}
+                isDirty={!!dirtyFields.pricePerKg}
+                value={priceValue}
+                setValue={setValue}
+                name={"pricePerKg"}
+              />
+
+              {/* Empty left column (keeps alignment clean) */}
+              <div />
+
+              {/* You'll Pay aligned under Price */}
+              <div className="flex">
+                <span className="inline-flex items-center gap-3 bg-primary-50 px-4 py-2 rounded-lg shadow-sm w-fit border border-primary-100">
+                  <CustomText as="span" textSize="xsm" textVariant="label">
+                    You’ll pay
                   </CustomText>
+
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={priceValue * weightValue}
+                      initial={{ scale: 0.95, opacity: 0.8 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="inline-flex"
+                    >
+                      <CustomText
+                        as="span"
+                        textSize="sm"
+                        textVariant="primary"
+                        className={
+                          priceValue * weightValue > 0
+                            ? "text-primary-600 font-semibold"
+                            : ""
+                        }
+                      >
+                        ${(priceValue * weightValue).toFixed(2)}
+                      </CustomText>
+                    </motion.span>
+                  </AnimatePresence>
                 </span>
-              </span>
-            </span>
+              </div>
+            </div>
             <LineDivider heightClass={dividerHeight} />
 
             <AgreeToTermsRow
@@ -367,7 +392,7 @@ function DescriptionQuantityRow({
 
       {fields.map((_, index) => (
         <div key={index} className="flex gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-[80px_190px] gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-[80px_190px] gap-10">
             <FloatingInputField
               hasValue={hasValueQty}
               type="number"

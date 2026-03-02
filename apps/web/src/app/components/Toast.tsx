@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import React, {
   createContext,
   useCallback,
@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { CloseBackBtn } from "./CloseBtn";
 
 type ToastVariant = "success" | "error" | "info" | "warning";
 
@@ -138,7 +139,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   className="absolute right-3 top-1 text-ink-secondary hover:text-ink-primary"
                   aria-label="Close"
                 >
-                  ✕
+                  <X className="h-4 w-4 text-ink-neutral-900" />
                 </button>
               </div>
               {toastItem.action && (

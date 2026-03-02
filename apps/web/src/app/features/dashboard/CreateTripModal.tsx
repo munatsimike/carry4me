@@ -26,6 +26,7 @@ import { WeightField } from "./components/WeightField";
 import { PriceField } from "./components/PriceField";
 import CustomText from "@/components/ui/CustomText";
 import { MoveLeft } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
@@ -174,7 +175,7 @@ export default function CreateTripModal({
                 size={"sm"}
               >
                 <span className="inline-flex gap-1 items-center">
-                  <MoveLeft className="w-4"/> {"Back"}
+                  <MoveLeft className="w-4" /> {"Back"}
                 </span>
               </Button>
             </span>
@@ -244,43 +245,63 @@ export default function CreateTripModal({
             />
 
             <LineDivider heightClass={dividerHeight} />
-            <span className="flex flex-col gap-3">
-              <span className="flex flex-wrap gap-4 sm:gap-[34px] items-end">
-                <WeightField<TripFormFields>
-                  id="weight"
-                  register={register("availableSpace", { valueAsNumber: true })}
-                  error={errors.availableSpace?.message}
-                  isDirty={!!dirtyFields.availableSpace}
-                  isTouched={!!touchedFields.availableSpace}
-                  name="availableSpace"
-                  setValue={setValue}
-                  value={weightValue}
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-[20px]">
+              {/* Available Space */}
+              <WeightField<TripFormFields>
+                id="weight"
+                register={register("availableSpace", { valueAsNumber: true })}
+                error={errors.availableSpace?.message}
+                isDirty={!!dirtyFields.availableSpace}
+                isTouched={!!touchedFields.availableSpace}
+                name="availableSpace"
+                setValue={setValue}
+                value={weightValue}
+              />
 
-                <PriceField<TripFormFields>
-                  id="price"
-                  register={register("pricePerKg", { valueAsNumber: true })}
-                  error={errors.pricePerKg?.message}
-                  isDirty={!!dirtyFields.pricePerKg}
-                  isTouched={!!touchedFields.pricePerKg}
-                  name="pricePerKg"
-                  setValue={setValue}
-                  value={priceValue}
-                />
-              </span>
-              <span className="flex gap-2 items-center sm:pl-[170px]">
-                <CustomText textSize="xsm" textVariant="label">
-                  {"You’ll earn"}
-                </CustomText>
+              {/* Price Per Kg */}
+              <PriceField<TripFormFields>
+                id="price"
+                register={register("pricePerKg", { valueAsNumber: true })}
+                error={errors.pricePerKg?.message}
+                isDirty={!!dirtyFields.pricePerKg}
+                isTouched={!!touchedFields.pricePerKg}
+                name="pricePerKg"
+                setValue={setValue}
+                value={priceValue}
+              />
 
-                <span className="inline-flext rounded-md w-[60px]">
-                  <CustomText textSize="sm" textVariant="primary">
-                    {"$"}
-                    {priceValue * weightValue}
+              {/* Empty column for alignment */}
+              <div />
+
+              {/* You'll Earn aligned under Price */}
+              <div className="flex">
+                <span className="inline-flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-100 w-fit shadow-sm">
+                  <CustomText as="span" textSize="xsm" textVariant="label">
+                    You’ll earn
                   </CustomText>
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={priceValue * weightValue}
+                      initial={{ scale: 0.95, opacity: 0.8 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="inline-flex"
+                    >
+                      <CustomText
+                        as="span"
+                        textSize="sm"
+                        textVariant="primary"
+                        className={`font-semibold ${
+                          priceValue * weightValue > 0 ? "text-green-600" : ""
+                        }`}
+                      >
+                        ${(priceValue * weightValue).toFixed(2)}
+                      </CustomText>
+                    </motion.span>
+                  </AnimatePresence>
                 </span>
-              </span>
-            </span>
+              </div>
+            </div>
 
             <LineDivider heightClass={dividerHeight} />
 
