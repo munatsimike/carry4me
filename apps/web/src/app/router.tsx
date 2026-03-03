@@ -12,11 +12,13 @@ import HomePage from "./features/home/HomePage";
 import { MyFavouritesPage } from "./features/my favourites/UI/MyFavouritesPage";
 import SignUpPage from "./shared/Authentication/UI/SignUpPage";
 import ProfilePage from "./shared/Authentication/profile/Profile";
+import { MyParcelsPage } from "./features/parcels/MyParcelsPage";
+import { MyTripsPage } from "./features/trips/MyTripsPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element:<AppLayout />,
+    element: <AppLayout />,
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomePage /> },
@@ -29,6 +31,8 @@ export const router = createBrowserRouter([
       { path: "dashboard", element: <DashboardPage /> },
       { path: "profile", element: <ProfilePage /> },
       { path: "favourites", element: <MyFavouritesPage /> },
+      { path: "my/trips", element: <MyTripsPage /> },
+      { path: "my/parcels", element: <MyParcelsPage /> },
     ],
   },
 ]);

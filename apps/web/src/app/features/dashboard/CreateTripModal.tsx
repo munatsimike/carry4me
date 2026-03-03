@@ -25,7 +25,7 @@ import { DateField } from "./components/DateField";
 import { WeightField } from "./components/WeightField";
 import { PriceField } from "./components/PriceField";
 import CustomText from "@/components/ui/CustomText";
-import { MoveLeft } from "lucide-react";
+import { ArrowLeft} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
@@ -175,7 +175,7 @@ export default function CreateTripModal({
                 size={"sm"}
               >
                 <span className="inline-flex gap-1 items-center">
-                  <MoveLeft className="w-4" /> {"Back"}
+                  <ArrowLeft className="w-4" /> {"Back"}
                 </span>
               </Button>
             </span>

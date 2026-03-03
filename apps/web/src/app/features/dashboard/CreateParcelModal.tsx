@@ -23,7 +23,7 @@ import z from "zod";
 import { useMemo, useState } from "react";
 import type { ParcelItem } from "../parcels/domain/CreateParcel";
 import { StepHeader } from "@/app/components/forms/formStepper";
-import { MoveLeft, X } from "lucide-react";
+import { ArrowLeft, MoveLeft, X } from "lucide-react";
 import { PriceField } from "./components/PriceField";
 import { WeightField } from "./components/WeightField";
 import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
@@ -206,7 +206,7 @@ export default function CreateParcelModal({
                 size={"sm"}
               >
                 <span className="inline-flex gap-1 items-center">
-                  <MoveLeft className="w-4" /> {"Back"}
+                  <ArrowLeft className="w-4" /> {"Back"}
                 </span>
               </Button>
             </span>

@@ -6,6 +6,9 @@ import { mapTripRowToTrip } from "../domain/tripmappers";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
 export class SupabaseTripsRepository implements TripsRepository {
+  async tripById(userId: string): Promise<RepoResponse<Trip[]>> {
+    return this.listTrips(userId);
+  }
   async fetchTrip(userId: string): Promise<RepoResponse<Trip>> {
     const { data, error, status } = await supabase
       .from("trips")
@@ -26,11 +29,10 @@ export class SupabaseTripsRepository implements TripsRepository {
     return { data: result, status, error: null };
   }
 
-  async listTrips(): Promise<RepoResponse<Trip[]>> {
-    const { data, error, status } = await supabase.from("trips").select(
-      `
+  async listTrips(userId?: string): Promise<RepoResponse<Trip[]>> {
+    let query = supabase.from("trips").select(`
       *,
-      traveler:profiles(id,full_name, avatar_url),
+      traveler:profiles(id, full_name, avatar_url),
       trip_accepted_categories(
         category:goods_categories(
           id,
@@ -38,12 +40,19 @@ export class SupabaseTripsRepository implements TripsRepository {
           name
         )
       )
-    `,
-    );
+    `);
+
+    // Only filter if userId is provided
+    if (userId) {
+      query = query.eq("traveler_user_id", userId);
+    }
+
+    const { data, error, status } = await query;
 
     if (error) return { data: null, status, error };
+
     const result = data.map(mapTripRowToTrip);
-    return { data: result, error:null, status };
+    return { data: result, error: null, status };
   }
 
   async createTrip(
@@ -68,6 +77,6 @@ export class SupabaseTripsRepository implements TripsRepository {
       .single();
 
     if (error) return { data: null, status, error };
-    return { data: data.id, status, error:null };
+    return { data: data.id, status, error: null };
   }
 }

@@ -21,15 +21,15 @@ export default function Search({
   cities,
 }: SearchProps) {
   return (
-    <div className="inline-flex items-center gap-5 py-2 px-4 bg-neutral-100 rounded-full border border-neutral-200 shadow-sm">
+    <div className="inline-flex items-center gap-5 py-2 px-4 bg-neutral-200 rounded-full border border-neutral-300 shadow-sm">
       <DropDownMenu
-        className="rounded-2xl shadow-sm"
+        className="rounded-full shadow-sm"
         value={selectedCountry}
         placeholder="Select country"
         menuItems={countries}
       />
       <DropDownMenu
-        className="rounded-2xl shadow-sm"
+        className="rounded-full shadow-sm"
         value={selectedCity}
         placeholder="Select city"
         menuItems={cities}
@@ -39,6 +39,7 @@ export default function Search({
         {"to Zimbabwe"}
       </CustomText>
       <Button
+      cornerRadiusClass="rounded-full"
         variant={"primary"}
         size={"xsm"}
         leadingIcon={

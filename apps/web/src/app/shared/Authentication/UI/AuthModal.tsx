@@ -95,7 +95,7 @@ export function AuthModal() {
                 
                     <SvgIcon
                       size={"xxl"}
-                      Icon={META_ICONS.loginIcon}
+                      Icon={META_ICONS.profileIcon}
                       color="primary"
                     />
                  

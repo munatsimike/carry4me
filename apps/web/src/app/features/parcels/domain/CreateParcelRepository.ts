@@ -6,4 +6,6 @@ export interface ParcelRepository {
   createParcel(parcel: CreateParcel): Promise<RepoResponse<string>>;
   fetchParcels(): Promise<RepoResponse<Parcel[]>>;
   fetchParcel(userId: string): Promise<RepoResponse<Parcel>>;
+  parcelById(userId: string): Promise<RepoResponse<Parcel[]>>;
+  deleteParcel(parcelId: string): Promise<RepoResponse<string>>;
 }

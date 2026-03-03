@@ -148,8 +148,6 @@ export default function DashboardPage() {
     }
   }, [user, navigate]);
 
-  if (!user) return <div className="p-6">Loading...</div>;
-
   return (
     <DefaultContainer>
       <PageSection align="left">

@@ -22,7 +22,7 @@ export default function LabelTextRow({ label, text }: LabelTextRowProps) {
           {text.map((t: string) => (
             <span
               key={t}
-              className="inline-flex bg-neutral-50 rounded-full px-2 py-[2px] border border-neutral-200"
+              className="inline-flex bg-neutral-100 rounded-full px-2 py-[2px] border border-neutral-200"
             >
               <LabelText text={t} />
             </span>

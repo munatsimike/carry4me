@@ -15,6 +15,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   trailingIcon?: React.ReactNode;
   subtitle?: React.ReactNode;
   isBusy?: boolean;
+  cornerRadiusClass?:string
 };
 
 export function Button({
@@ -25,11 +26,11 @@ export function Button({
   leadingIcon,
   trailingIcon,
   children,
+  cornerRadiusClass = "rounded-lg",
   type = "button",
   isBusy = false,
   ...props
 }: ButtonProps) {
-  const cornerRadius = "rounded-lg";
   const opacityCursor = "opacity-75 cursor-not-allowed";
   const hoverClass =
     "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer";
@@ -40,10 +41,10 @@ export function Button({
   }`;
 
   const sizes: Record<ButtonSize, string> = {
-    xsm: "h-8 px-3 " + cornerRadius,
-    sm: "h-9 px-3 " + cornerRadius,
-    md: "h-10 px-4 " + cornerRadius,
-    lg: "h-14 px-4 " + cornerRadius,
+    xsm: "h-8 px-3 " + cornerRadiusClass,
+    sm: "h-9 px-3 " + cornerRadiusClass,
+    md: "h-10 px-4 " + cornerRadiusClass,
+    lg: "h-14 px-4 " + cornerRadiusClass,
     xl: "h-[85px] max-w-sm px-3 rounded-xl",
     xxl: "h-[110px] min-w-[200px] px-3 rounded-xl motion-safe:animate-scale-in",
   };

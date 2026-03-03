@@ -70,7 +70,7 @@ export default {
 
         ink: {
           primary: "#0A2148",
-          secondary: "#4F5B67",
+          secondary: "#6B7280",
           success: "#10B981",
           onDark: "#ffff",
           error: "#EF4444",

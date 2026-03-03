@@ -1,5 +1,4 @@
 import type { AuthRepository } from "../Authentication/domain/AuthRepository";
-import toDomainUser from "./userMapper";
 import type { RepoResponse } from "../domain/RepoResponse";
 import type {
   AppUser,
@@ -155,7 +154,6 @@ export class SupabaseAuthRepository implements AuthRepository {
     // Map Supabase user -> your domain user (keep it minimal)
     return {
       success: true,
-      user: toDomainUser(user),
     };
   }
 
@@ -183,8 +181,6 @@ export class SupabaseAuthRepository implements AuthRepository {
 
 export function fetchPublicUrl(avatar_url: string | null): string | null {
   if (!avatar_url) return null;
-  console.log(avatar_url);
   const { data } = supabase.storage.from("avatars").getPublicUrl(avatar_url);
-
   return `${data.publicUrl}?t=${Date.now()}`;
 }

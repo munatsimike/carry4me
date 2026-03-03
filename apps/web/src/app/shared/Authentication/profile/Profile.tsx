@@ -22,7 +22,7 @@ import { UserDetailsScema, type UserDetailsFields } from "../UI/SignUpPage";
 import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
 import CustomText from "@/components/ui/CustomText";
-import { MapPin, ShieldHalf, User2 } from "lucide-react";
+import { Link, MapPin, ShieldHalf, User2 } from "lucide-react";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { UpdateProfileUseCase } from "../application/UpdateProfileUseCase";
@@ -132,8 +132,33 @@ export default function ProfilePage() {
     setPreview(url);
   }, [profile?.avatarUrl, file]);
 
-  if (!user) return <div className="p-6">Please sign in.</div>;
+  if (!user) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-6">
+        <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8 text-center border border-gray-100">
+          <div className="mb-4 text-4xl">🔐</div>
 
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            You’re not signed in
+          </h2>
+
+          <p className="text-gray-500 mb-6">
+            Please sign in to manage your trips and parcels.
+          </p>
+
+          <div className="flex gap-3 justify-center">
+            <Button variant={"neutral"} size={"md"}>
+              Create account
+            </Button>
+
+            <Button variant={"primary"} size={"md"}>
+              Sign
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   // If profile can be null (row missing), don't blank the whole page:
   if (!profile) return <div className="p-6">Setting up your profile…</div>;
 

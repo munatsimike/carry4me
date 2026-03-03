@@ -17,7 +17,7 @@ export default function FormHeader({
   return (
     <div className="flex flex-col items-center justify-center gap-1">
       <CircleBadge size="lg" bgColor="secondary">
-        <SvgIcon size={"xxl"} color="primary" Icon={icon}></SvgIcon>
+        <SvgIcon size={"xxl"} color="primary" Icon={icon}/>
       </CircleBadge>
       <span className="flex flex-col gap-1 items-center">
         <CustomText  textSize="lg" textVariant="primary">

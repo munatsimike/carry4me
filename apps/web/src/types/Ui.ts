@@ -64,11 +64,7 @@ type ParcelRequirements = {
   category: Category[];
 };
 
-export type Parcel = {
-  id: number;
-  user: User;
-  details: ParcelRequirements;
-};
+
 
 export const progress = {
   1: "Request sent",

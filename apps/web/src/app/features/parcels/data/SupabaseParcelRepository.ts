@@ -6,6 +6,39 @@ import { toParcelMapper } from "../domain/toParcelMapper";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
 export class SupabaseParcelRepository implements ParcelRepository {
+  async deleteParcel(parcelId: string): Promise<RepoResponse<string>> {
+    const { data, error, status } = await supabase
+      .from("parcels")
+      .delete()
+      .eq("id", parcelId)
+      .select("id");
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        status,
+      };
+    }
+
+    if (!data || data.length === 0) {
+         
+      return {
+        data: null,
+        error: "Parcel not found or not authorized.",
+        status,
+      };
+    }
+
+    return {
+      data: parcelId,
+      error: null,
+      status,
+    };
+  }
+  parcelById(userId: string): Promise<RepoResponse<Parcel[]>> {
+    return this.fetchParcels(userId);
+  }
   async fetchParcel(userId: string): Promise<RepoResponse<Parcel>> {
     const { data, error, status } = await supabase
       .from("parcels")
@@ -28,8 +61,8 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { error: null, data: parcel, status };
   }
 
-  async fetchParcels(): Promise<RepoResponse<Parcel[]>> {
-    const { data, error, status } = await supabase.from("parcels").select(
+  async fetchParcels(userId?: string): Promise<RepoResponse<Parcel[]>> {
+    const query = supabase.from("parcels").select(
       `*, sender:profiles(id,full_name,avatar_url), parcel_categories(
       category:goods_categories(
       id,
@@ -38,6 +71,10 @@ export class SupabaseParcelRepository implements ParcelRepository {
       ))`,
     );
 
+    if (userId) {
+      query.eq("sender_user_id", userId);
+    }
+    const { data, error, status } = await query;
     if (error) {
       return { data: null, error, status };
     }

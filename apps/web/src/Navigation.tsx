@@ -62,7 +62,7 @@ function GuestNavigation() {
             redirectTo: location.pathname,
           })
         }
-        className="rounded-md bg-blue-500 px-4 py-1.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-blue-600"
+        className="rounded-lg bg-blue-500 px-4 py-1.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-blue-600"
       >
         Sign in
       </button>

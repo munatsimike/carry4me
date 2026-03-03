@@ -1,5 +1,6 @@
 import type { Parcel } from "./Parcel";
 import type { ParcelItem } from "./CreateParcel";
+import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
 
 type ParcelRow = {
   id: string;
@@ -24,7 +25,7 @@ type ParcelRow = {
 };
 
 export function toParcelMapper(row: ParcelRow): Parcel {
-     
+       const publicUrl = fetchPublicUrl(row.sender.avatar_url);
   const rows =
     row.parcel_categories.map((x) => x.category).filter(Boolean) ?? [];
   return {
@@ -33,7 +34,7 @@ export function toParcelMapper(row: ParcelRow): Parcel {
     user: {
       id: row.sender.id,
       fullName: row.sender.full_name,
-      avatarUrl: row.sender.avatar_url,
+      avatarUrl: publicUrl,
       countryCode: null,
       city: null,
       phoneNumber: null

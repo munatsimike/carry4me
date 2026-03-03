@@ -1,7 +1,7 @@
 import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
-
+import type { Trip } from "./Trip";
 // features/trips/domain/trip.mappers.ts
-type TripRow = {
+export type TripRow = {
   id: string;
   traveler: {
     id: string;
@@ -26,7 +26,7 @@ type TripRow = {
   }[];
 };
 
-import type { Trip } from "./Trip";
+
 export function mapTripRowToTrip(row: TripRow): Trip {
   const publicUrl = fetchPublicUrl(row.traveler.avatar_url);
   const acceptedGoods =

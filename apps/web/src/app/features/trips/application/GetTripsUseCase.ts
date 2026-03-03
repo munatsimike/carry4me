@@ -12,6 +12,6 @@ export class GetTripsUseCase {
 
   async execute(): Promise<Result<Trip[]>> {
     const data = await this.repo.listTrips();
-    return toResult(data)
+    return toResult(data);
   }
 }

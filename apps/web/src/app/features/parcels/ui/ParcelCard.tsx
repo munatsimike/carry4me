@@ -26,6 +26,7 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       <User
         tag={"Sender"}
         userName={`${parcel.user.fullName?.charAt(0)}${"."} ${parcel.user.fullName.substring(parcel.user.fullName.indexOf(" "))}`}
+        avatar={parcel.user.avatarUrl}
       />
       <LineDivider />
       <Stack>
@@ -46,9 +47,9 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       />
       <LineDivider />
       <SendRequestBtn
-        buttonTextVariant="tonal"
-        iconColorVariant="tonal"
-        buttonVariant="tonal"
+        buttonTextVariant="onDark"
+        iconColorVariant="onDark"
+        buttonVariant="primary"
         payLoad={parcel}
         primaryAction={onClick}
       />
