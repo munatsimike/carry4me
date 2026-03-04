@@ -22,7 +22,7 @@ import { UserDetailsScema, type UserDetailsFields } from "../UI/SignUpPage";
 import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
 import CustomText from "@/components/ui/CustomText";
-import { Link, MapPin, ShieldHalf, User2 } from "lucide-react";
+import { MapPin, ShieldHalf, User2 } from "lucide-react";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { UpdateProfileUseCase } from "../application/UpdateProfileUseCase";
@@ -283,7 +283,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <DefaultContainer>
+    <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <Card className="mx-auto w-full max-w-2xl" paddingClass="p-8 px-10">
         <CardHeaderSection
           avatar={profile.avatarUrl ?? ""}

@@ -8,14 +8,12 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { INFOMODES, progress, type Parcel as ParcelDetails } from "@/types/Ui";
+import { INFOMODES, progress } from "@/types/Ui";
 import RouteRow from "@/app/components/RouteRow";
 import DateRow from "@/app/components/DateRow";
 import CategoryRow from "@/app/components/CategoryRow";
-
 import ButtomSpacer from "@/app/components/BottomSpacer";
 import { Button } from "@/components/ui/Button";
-
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
 import { useEffect, useMemo, useState } from "react";
@@ -31,17 +29,15 @@ import {
   type CarryRequestStatus,
   type Role,
 } from "../domain/CreateCarryRequest";
-
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
 import IconTextRow from "@/app/components/card/IconTextRow";
-
 import { PerformCarryRequestActionUseCase } from "../application/PerformCarryRequestActionUseCase";
 import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActionRepository";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { color, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function CarryRequestsPage() {
   const [carryRequestsList, setCarryRequestList] = useState<CarryRequest[]>([]);

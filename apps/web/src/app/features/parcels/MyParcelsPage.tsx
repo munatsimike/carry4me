@@ -8,7 +8,7 @@ import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { TripParcelTable } from "../dashboard/components/TripParcelTable";
 import { SupabaseParcelRepository } from "./data/SupabaseParcelRepository";
 import { ParcelByIdUseCase } from "./application/ParcelByIdUseCase";
-import type { TableData } from "../trips/application/TripByIDUseCase";
+import type { TableData } from "../trips/application/TripByIdUseCase";
 import CustomText from "@/components/ui/CustomText";
 import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
 import { useToast } from "@/app/components/Toast";
@@ -84,7 +84,7 @@ export function MyParcelsPage() {
   }, [user?.id]);
 
   return (
-    <DefaultContainer>
+    <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <div>
         <div className="flex items-center justify-between">
           <span>My Parcels</span>
@@ -100,17 +100,20 @@ export function MyParcelsPage() {
           <p>Loading…</p>
         ) : sortedParcels.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <h2 className="text-xl font-semibold text-gray-800">
-              No parcels yet
-            </h2>
-            <CustomText as="p" className=" max-w-md pt-2 pb-4">
-              You haven’t posted any parcels yet. Start by creating a new
-              parcels to let others send trips with you.
-            </CustomText>
+            <span className="flex flex-col p-4 gap-4 max-w-md bg-white shadow-md rounded-2xl">
+              <h2 className="text-xl font-semibold text-gray-800">
+                No parcels yet
+              </h2>
 
-            <Button variant={"primary"} size={"sm"}>
-              + Post a parcel
-            </Button>
+              <CustomText as="p">
+                You haven’t posted any parcels yet. Start by creating a new
+                parcels to let others send trips with you.
+              </CustomText>
+
+              <Button variant={"primary"} size={"sm"}>
+                + Post a parcel
+              </Button>
+            </span>
           </div>
         ) : (
           <TripParcelTable

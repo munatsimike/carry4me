@@ -4,38 +4,13 @@ import type { ParcelRepository } from "../domain/CreateParcelRepository";
 import type { Parcel } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
+import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
 
 export class SupabaseParcelRepository implements ParcelRepository {
   async deleteParcel(parcelId: string): Promise<RepoResponse<string>> {
-    const { data, error, status } = await supabase
-      .from("parcels")
-      .delete()
-      .eq("id", parcelId)
-      .select("id");
-
-    if (error) {
-      return {
-        data: null,
-        error: error.message,
-        status,
-      };
-    }
-
-    if (!data || data.length === 0) {
-         
-      return {
-        data: null,
-        error: "Parcel not found or not authorized.",
-        status,
-      };
-    }
-
-    return {
-      data: parcelId,
-      error: null,
-      status,
-    };
+    return deleteById(parcelId, "parcels")
   }
+  
   parcelById(userId: string): Promise<RepoResponse<Parcel[]>> {
     return this.fetchParcels(userId);
   }
@@ -105,3 +80,6 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { data: data.id, error: null, status: status };
   }
 }
+
+
+

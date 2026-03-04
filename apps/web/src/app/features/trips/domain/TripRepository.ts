@@ -7,4 +7,5 @@ export interface TripsRepository {
   listTrips(userId?: string | null): Promise<RepoResponse<Trip[]>>;
   fetchTrip(userId: string): Promise<RepoResponse<Trip>>;
   tripById(userId: string): Promise<RepoResponse<Trip[]>>;
+  deleteTrip(parcelId: string): Promise<RepoResponse<string>>
 }

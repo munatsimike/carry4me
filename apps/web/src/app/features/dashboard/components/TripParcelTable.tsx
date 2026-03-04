@@ -1,4 +1,5 @@
-import type { TableData } from "../../trips/application/TripByIDUseCase";
+import CustomText from "@/components/ui/CustomText";
+import type { TableData } from "../../trips/application/TripByIdUseCase";
 
 export function TripParcelTable({
   data,
@@ -9,65 +10,90 @@ export function TripParcelTable({
   onEdit: (t: TableData | null) => void;
   onDelete: (itemId: string) => void;
 }) {
+  const headerStyle = "pl-4 py-4 font-medium";
   return (
-    <div style={{ marginTop: 16, overflowX: "auto" }}>
+    <div
+      style={{ marginTop: 16, overflowX: "auto" }}
+      className="bg-white shadow-md rounded-xl"
+    >
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr style={{ textAlign: "left" }}>
-            <th style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-              Route
-            </th>
-            <th style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-              Date
-            </th>
-            <th style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-              Space
-            </th>
-            <th style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-              Price/kg
-            </th>
-            <th style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-              Status
-            </th>
-            <th style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-              Actions
-            </th>
+          <tr className="text-left border border-b-neutral-200">
+            <TableTd className={headerStyle}>Route</TableTd>
+            <TableTd className={headerStyle}>Date</TableTd>
+            <TableTd className={headerStyle}>Space</TableTd>
+            <TableTd className={headerStyle}>Price/kg</TableTd>
+            <TableTd className={headerStyle}>Status</TableTd>
+            <TableTd className={headerStyle}>Actions</TableTd>
           </tr>
         </thead>
         <tbody>
           {data.map((data) => (
-            <tr key={data.id} className="hover:bg-neutral-100">
-              <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                {data.originCountry} / {data.originCity} →{" "}
-                {data.destinationCity} / {data.destinationCity}
-              </td>
-              <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                {String(data.departDate).slice(0, 10)}
-              </td>
-              <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                {data.capacityKg} kg
-              </td>
-              <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                {data.pricePerKg}
-              </td>
-              <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                {data.status}
-              </td>
-              <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => onEdit(data)}>Edit</button>
+            <tr
+              key={data.id}
+              className="hover:bg-neutral-100 border border-b-neutral-100 hover:shadow-sm"
+            >
+              <TableTd>
+                <span className="inline-flex gap-2">
+                  <TableText
+                    text={`${data.originCountry} ${"/"} ${data.originCity} → `}
+                  />
+                  <TableText
+                    text={`${data.destinationCity} ${"/"} ${data.destinationCity}`}
+                  />
+                </span>
+              </TableTd>
+              <TableTd>
+                <TableText text={data.departDate.slice(0, 10)} />
+              </TableTd>
+              <TableTd>
+                <TableText text={`${data.capacityKg.toString()} ${"kg"}`} />
+              </TableTd>
+              <TableTd>
+                <TableText text={data.pricePerKg.toString()} />
+              </TableTd>
+              <TableTd>
+                <TableText text={data.status} />
+              </TableTd>
+              <TableTd>
+                <div className="flex gap-2">
                   <button
+                    className="hover:bg-neutral-300 px-3 rounded-md py-1"
+                    onClick={() => onEdit(data)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="hover:bg-error-100 px-2 rounded-md py-1"
                     onClick={() => onDelete(data.id)}
                     style={{ color: "crimson" }}
                   >
                     Delete
                   </button>
                 </div>
-              </td>
+              </TableTd>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+  );
+}
+
+function TableTd({
+  children,
+  className = "pl-4 py-2",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <td className={className}>{children}</td>;
+}
+
+function TableText({ text }: { text: string }) {
+  return (
+    <CustomText textVariant="primary" textSize="sm">
+      {text}
+    </CustomText>
   );
 }

@@ -290,7 +290,7 @@ export default function CreateTripModal({
                       <CustomText
                         as="span"
                         textSize="sm"
-                        textVariant="primary"
+                        textVariant="success"
                         className={`font-semibold ${
                           priceValue * weightValue > 0 ? "text-green-600" : ""
                         }`}

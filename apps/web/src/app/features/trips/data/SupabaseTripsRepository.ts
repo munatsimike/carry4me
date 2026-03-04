@@ -4,8 +4,12 @@ import type { CreateTrip } from "../domain/CreateTrip";
 import type { Trip } from "../domain/Trip";
 import { mapTripRowToTrip } from "../domain/tripmappers";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
+import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
 
 export class SupabaseTripsRepository implements TripsRepository {
+  async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
+    return deleteById(parcelId, "trips");
+  }
   async tripById(userId: string): Promise<RepoResponse<Trip[]>> {
     return this.listTrips(userId);
   }
