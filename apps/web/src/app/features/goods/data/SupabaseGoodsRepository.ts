@@ -3,6 +3,7 @@ import type { GoodsCategory } from "../domain/GoodsCategory";
 import type { GoodsRepository } from "../domain/GoodsRepository";
 import type { UserGoods } from "../domain/UserGoods";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
+import type { EditGoodsDto } from "../application/EditGoodsDto";
 
 export class SupabaseGoodsRepository implements GoodsRepository {
   async list(): Promise<RepoResponse<GoodsCategory[]>> {
@@ -34,7 +35,24 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     return { error: null, status: null, data };
   }
 
-  update(id: string, input: { slug?: string; name?: string }): Promise<void> {
-    throw new Error("Method not implemented.");
+  async editParcel(editGoods: EditGoodsDto[]): Promise<RepoResponse<string>> {
+    this.deleteParcel(editGoods[0].parcel_id);
+    const { data, error } = await supabase
+      .from("parcel_categories")
+      .insert(editGoods)
+      .select("parcel_id");
+    if (error) return { error: null, status: null, data };
+    return { error: null, status: null, data: data[0].parcel_id };
+  }
+
+  async deleteParcel(parcelId: string) {
+    const del = await supabase
+      .from("parcel_categories")
+      .delete()
+      .eq("parcel_id", parcelId);
+
+    if (del.error) {
+      return { data: null, error: del.error.message, status: del.status };
+    }
   }
 }

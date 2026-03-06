@@ -1,10 +1,10 @@
 import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
 import type { TripsRepository } from "../domain/TripRepository";
 import type { Result } from "@/app/shared/Authentication/domain/Result";
-import type { Trip } from "../domain/Trip";
+import type { Item, Trip } from "../domain/Trip";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
 
-export type TableData = {
+export type TableRow = {
   id: string;
   goods: GoodsCategory[];
   originCountry: string;
@@ -14,7 +14,14 @@ export type TableData = {
   pricePerKg: number;
   capacityKg: number;
   departDate: string;
-  status: string
+  status: string;
+  goodsCategory: GoodsCategory[];
+  itemDescription: Item[];
+  user: {
+    id: string;
+    fullName: string;
+    avatarUrl: string | null;
+  };
 };
 
 export class TripByIdUseCase {
@@ -23,7 +30,7 @@ export class TripByIdUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string): Promise<Result<TableData[]> | Result<null>> {
+  async execute(userId: string): Promise<Result<TableRow[]> | Result<null>> {
     const result = await this.repo.tripById(userId);
     if (result.data) {
       const tableData = result.data.map(toTableData);
@@ -37,9 +44,14 @@ export class TripByIdUseCase {
   }
 }
 
-export function toTableData(trip: Trip): TableData {
+export function toTableData(trip: Trip): TableRow {
   return {
-    id:trip.id,
+    user: {
+      id: trip.user!.id ?? "",
+      fullName: trip.user.fullName,
+      avatarUrl: trip.user.avatarUrl,
+    },
+    id: trip.id,
     goods: trip.acceptedGoods,
     originCountry: trip.route.originCountry,
     originCity: trip.route.originCity,
@@ -48,6 +60,8 @@ export function toTableData(trip: Trip): TableData {
     pricePerKg: trip.pricePerKg,
     capacityKg: trip.capacityKg,
     departDate: trip.departDate,
-    status: trip.status
+    status: trip.status,
+    goodsCategory: trip.acceptedGoods,
+    itemDescription: trip.items,
   };
 }

@@ -18,12 +18,11 @@ import AgreeToTermsRow from "./components/AgreeToTermsRow";
 import SvgIcon from "@/components/ui/SvgIcon";
 import GoodsCategoryGrid from "./components/GoodsCategoryGrid";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-
 import z from "zod";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ParcelItem } from "../parcels/domain/CreateParcel";
 import { StepHeader } from "@/app/components/forms/formStepper";
-import { ArrowLeft, MoveLeft, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { PriceField } from "./components/PriceField";
 import { WeightField } from "./components/WeightField";
 import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
@@ -37,6 +36,10 @@ import type { UserGoods } from "../goods/domain/UserGoods";
 import toGoodsMapper from "../goods/domain/toGoodsMapper";
 import { useToast } from "@/app/components/Toast";
 import { AnimatePresence, motion } from "framer-motion";
+import type { Item } from "../trips/domain/Trip";
+import { EditParcelUsecase } from "../parcels/application/EditParcelUsecase";
+import { toParcelDtoMapper } from "../parcels/application/toParcelDtoMapper";
+import { EditGoodsUsecase } from "../goods/application/EditGoodsUseCase";
 
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
@@ -61,6 +64,7 @@ const parcelSchema = z.object({
 });
 
 export type ParcelFormFields = z.infer<typeof parcelSchema>;
+export type ParcelFormMode = "edit" | "create";
 
 type Step = 1 | 2;
 
@@ -77,12 +81,41 @@ const parcelStep2Fields = [
   "agreeToRules",
 ] as const;
 
+export type FormValues = {
+  id: string;
+  originCountry: string;
+  originCity: string;
+  destinationCountry: string;
+  destinationCity: string;
+  goodsCategoryIds: string[];
+  itemDescriptions: Item[];
+  totalWeight: number;
+  pricePerKg: number;
+  agreeToRules: false;
+  sender_id: string;
+};
+
+const emptyDefaultsValues = {
+  originCountry: "",
+  originCity: "",
+  destinationCountry: "Zimbabwe",
+  destinationCity: "Harare",
+  goodsCategoryIds: [],
+  itemDescriptions: [{ quantity: 1, description: "" }],
+  totalWeight: 1,
+  pricePerKg: 0,
+  agreeToRules: false,
+};
+
 export default function CreateParcelModal({
   goodsCategory,
   setModalState,
+  initialFormValues,
+  mode = "create",
 }: {
+  initialFormValues?: FormValues | null;
   goodsCategory: GoodsCategory[];
-  showModal: boolean;
+  mode?: ParcelFormMode;
   setModalState: (v: boolean) => void;
 }) {
   const [step, setStep] = useState<Step>(1);
@@ -90,6 +123,11 @@ export default function CreateParcelModal({
   const repo = useMemo(() => new SupabaseParcelRepository(), []);
   const useCase = useMemo(() => new CreateParcelUseCase(repo), [repo]);
   const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
+  const editParcelUsecase = useMemo(() => new EditParcelUsecase(repo), [repo]);
+  const editGoodsUsecase = useMemo(
+    () => new EditGoodsUsecase(goodsRepo),
+    [goodsRepo],
+  );
   const saveGoodsUseCase = useMemo(
     () => new SaveGoodsUseCase(goodsRepo),
     [goodsRepo],
@@ -99,23 +137,14 @@ export default function CreateParcelModal({
     register,
     handleSubmit,
     watch,
+    reset,
     setValue,
     control,
     trigger,
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<ParcelFormFields>({
     resolver: zodResolver(parcelSchema),
-    defaultValues: {
-      originCountry: "",
-      originCity: "",
-      destinationCountry: "Zimbabwe",
-      destinationCity: "Harare",
-      goodsCategoryIds: [],
-      itemDescriptions: [{ quantity: 1, description: "" }],
-      totalWeight: 1,
-      pricePerKg: 0,
-      agreeToRules: false,
-    },
+    defaultValues: initialFormValues ?? emptyDefaultsValues,
     mode: "onChange",
     reValidateMode: "onChange",
   });
@@ -125,9 +154,8 @@ export default function CreateParcelModal({
   const cityValue = watch("originCity");
   const priceValue = watch("pricePerKg");
   const weightValue = watch("totalWeight");
-
   const dividerHeight = "my-0";
-
+  const { refreshProfile } = useAuth();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "itemDescriptions",
@@ -151,6 +179,48 @@ export default function CreateParcelModal({
   const goBack = () => setStep(1);
 
   const onValid = async (values: ParcelFormFields) => {
+    if (mode === "create") {
+      onCreate(values);
+    } else {
+      onEdit(values);
+    }
+  };
+
+  const onEdit = async (values: ParcelFormFields) => {
+    if (!isEdited(dirtyFields)) {
+      toast("No changes were made", { variant: "warning" });
+      return;
+    }
+
+    if (!initialFormValues?.id) return;
+    const { result } = await namedCall(
+      "edit parcel",
+      editParcelUsecase.execute(
+        toParcelDtoMapper(initialFormValues?.id, values, dirtyFields),
+      ),
+    );
+
+    if (dirtyFields.goodsCategoryIds) {
+      const { result } = await namedCall(
+        "edit goods",
+        editGoodsUsecase.execute(values.goodsCategoryIds, initialFormValues.id),
+      );
+      if (!result.success) {
+        console.log(result.error);
+      }
+    }
+
+    if (!result.success) {
+      console.log(result.error);
+      return;
+    }
+    if (result.success) {
+      toast("changes saved successfully", { variant: "success" });
+      await refreshProfile();
+    }
+  };
+
+  const onCreate = async (values: ParcelFormFields) => {
     if (!user) return;
     const ok = await trigger(parcelStep2Fields, { shouldFocus: true });
     if (!ok) return;
@@ -173,6 +243,11 @@ export default function CreateParcelModal({
     }
   };
 
+  useEffect(() => {
+    if (mode === "edit" && initialFormValues) reset(initialFormValues);
+    if (mode === "create") reset(emptyDefaultsValues);
+  }, [mode, initialFormValues, emptyDefaultsValues]);
+
   const onInvalid = (formErrors: unknown) => {
     // optional: you can auto-jump to the step that contains errors
     // but keep it simple for now
@@ -187,7 +262,7 @@ export default function CreateParcelModal({
       <div className="flex flex-col gap-4">
         <div className="relative flex flex-col gap-5">
           <FormHeader
-            heading={"Post a parcel"}
+            heading={`${mode === "edit" ? "Edit parcel" : "Post parcel"}`}
             subHeading={
               "Share your parcel details to get matched with travelers."
             }
@@ -205,7 +280,7 @@ export default function CreateParcelModal({
                 onClick={goBack}
                 size={"sm"}
               >
-                <span className="inline-flex gap-1 items-center">
+                <span className="inline-flex gap-1 items-center text-ink-black">
                   <ArrowLeft className="w-4" /> {"Back"}
                 </span>
               </Button>
@@ -236,7 +311,11 @@ export default function CreateParcelModal({
               goods={goodsCategory}
               selectedIds={selectedIds}
               onChange={(next) =>
-                setValue("goodsCategoryIds", next, { shouldValidate: true })
+                setValue("goodsCategoryIds", next, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                  shouldTouch: true,
+                })
               }
             />
 
@@ -351,7 +430,7 @@ export default function CreateParcelModal({
                 disabled={isSubmitting}
                 size={"md"}
               >
-                {"Submit"}
+                {`${mode === "edit" ? "Save changes" : "Post parcel"}`}
               </Button>
             </div>
           </div>
@@ -471,4 +550,19 @@ async function SaveGoodsCategories(
   goods: UserGoods,
 ) {
   await saveGoodsUseCase.execute(goods, false);
+}
+
+function isEdited(
+  dirtyFields: FieldNamesMarkedBoolean<ParcelFormFields>,
+): boolean {
+  return [
+    dirtyFields.destinationCity,
+    dirtyFields.destinationCountry,
+    dirtyFields.goodsCategoryIds,
+    dirtyFields.itemDescriptions,
+    dirtyFields.originCity,
+    dirtyFields.originCountry,
+    dirtyFields.pricePerKg,
+    dirtyFields.totalWeight,
+  ].some(Boolean);
 }

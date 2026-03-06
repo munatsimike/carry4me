@@ -1,6 +1,6 @@
 import type { Result } from "@/app/shared/Authentication/domain/Result";
 import type { ParcelRepository } from "../domain/CreateParcelRepository";
-import type { TableData } from "../../trips/application/TripByIDUseCase";
+import type { TableRow } from "../../trips/application/TripByIdUseCase";
 import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
 import type { Parcel } from "../domain/Parcel";
 
@@ -10,7 +10,7 @@ export class ParcelByIdUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string): Promise<Result<TableData[]> | Result<null>> {
+  async execute(userId: string): Promise<Result<TableRow[]> | Result<null>> {
     const result = await this.repo.parcelById(userId);
     if (result.data) {
       const tableData = result.data.map(toTableData);
@@ -24,9 +24,17 @@ export class ParcelByIdUseCase {
   }
 }
 
-function toTableData(parcel: Parcel): TableData {
+function toTableData(parcel: Parcel): TableRow {
   return {
-    id:parcel.id,
+    user: {
+      id: parcel.user.id,
+      fullName: parcel.user.fullName,
+      avatarUrl: parcel.user.avatarUrl,
+      countryCode: parcel.user.countryCode,
+      city: parcel.user.city,
+      phoneNumber: parcel.user.phoneNumber,
+    },
+    id: parcel.id,
     goods: parcel.categories,
     originCountry: parcel.route.originCountry,
     originCity: parcel.route.originCity,
@@ -35,6 +43,8 @@ function toTableData(parcel: Parcel): TableData {
     pricePerKg: parcel.pricePerKg,
     capacityKg: parcel.weightKg,
     departDate: "",
-    status: ""
+    status: "",
+    goodsCategory: parcel.categories,
+    itemDescription: parcel.items,
   };
 }

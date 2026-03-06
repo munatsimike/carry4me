@@ -36,9 +36,11 @@ export default function GoodsCategoryGrid({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {goods.map((item) => {
             const checked = selectedIds.includes(item.id);
-
             return (
-              <label key={item.id} className="flex items-center gap-2 cursor-pointer select-none">
+              <label
+                key={item.id}
+                className="flex items-center gap-2 cursor-pointer select-none"
+              >
                 <span className="relative inline-flex">
                   <input
                     type="checkbox"

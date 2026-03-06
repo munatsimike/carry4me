@@ -31,7 +31,7 @@ export function Button({
   isBusy = false,
   ...props
 }: ButtonProps) {
-  const opacityCursor = "opacity-75 cursor-not-allowed";
+  const opacityCursor = "opacity-70 cursor-not-allowed";
   const hoverClass =
     "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer";
 

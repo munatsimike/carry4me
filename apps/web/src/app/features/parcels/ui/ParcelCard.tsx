@@ -11,17 +11,45 @@ import RouteRow from "@/app/components/RouteRow";
 import Stack from "@/app/components/Stack";
 import type { Parcel } from "@/app/features/parcels/domain/Parcel";
 
+type CardMode = "preview" | "display";
+
 type ParcelProps = {
   parcel: Parcel;
   onClick: (parcel: Parcel) => void;
+  mode?: CardMode;
 };
-export default function ParcelCard({ parcel, onClick }: ParcelProps) {
+
+export default function ParcelCard({
+  parcel,
+  onClick,
+  mode = "display",
+}: ParcelProps) {
   const categories = parcel.categories.map((x) => x.name);
+  const isDisplayMode = mode === "display";
+  const hoverClass = isDisplayMode ? true : false;
+  const borderClass = isDisplayMode ? "border border-neutral-200" : "";
+  const ShandowClass = isDisplayMode ? "shadow-md" : "";
   return (
-    <Card>
-      <div className="flex justify-between">
-        <CardLabel variant={"parcel"} label="Parcel" />
-        <HeartToggle />
+    <Card
+      hover={hoverClass}
+      borderClass={borderClass}
+      shadowClass={ShandowClass}
+    >
+      <div
+        className={`flex justify-between ${isDisplayMode ? "pb-1" : "pb-2"}`}
+      >
+        <span className="flex flex-col gap-2">
+          {!isDisplayMode && (
+            <span className="flex justify-center text-sm pb-2 text-neutral-500">
+              This is how your parcel will appear to travelers
+            </span>
+          )}
+          <span className="flex justify-between gap-2">
+            <CardLabel variant={"parcel"} label="Parcel" />
+          </span>
+        </span>
+
+        <HeartToggle isActive={isDisplayMode} />
       </div>
       <User
         tag={"Sender"}
@@ -47,6 +75,7 @@ export default function ParcelCard({ parcel, onClick }: ParcelProps) {
       />
       <LineDivider />
       <SendRequestBtn
+        isActive={!isDisplayMode}
         buttonTextVariant="onDark"
         iconColorVariant="onDark"
         buttonVariant="primary"

@@ -80,7 +80,7 @@ export default function DashboardPage() {
   // fetch dashboard data
   useEffect(() => {
     if (!user) return;
-  
+
     if (profile) setFullName(profile.fullName);
 
     const fetchDashboardData = async () => {
@@ -175,7 +175,6 @@ export default function DashboardPage() {
         {showTripModal && (
           <CreateTripModal
             goodsCategory={goodsCategory}
-            showModal={showTripModal}
             setModalState={setTripModalState}
           />
         )}
@@ -184,7 +183,6 @@ export default function DashboardPage() {
         {showParcelModal && (
           <CreatParcelModal
             goodsCategory={goodsCategory}
-            showModal={showParcelModal}
             setModalState={setParcelModalState}
           />
         )}

@@ -1,0 +1,2 @@
+drop policy "parcel_categories_read_authenticated"
+on public.parcel_categories;

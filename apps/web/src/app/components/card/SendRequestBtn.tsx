@@ -7,9 +7,10 @@ type SendRequestBtnProps<T> = {
   payLoad: T;
   primaryAction: (payLoad: T) => void;
   secondaryAction?: () => void;
-  buttonVariant?: ButtonVariant,
-  iconColorVariant?:IconColor,
-  buttonTextVariant?: TextVariant
+  buttonVariant?: ButtonVariant;
+  iconColorVariant?: IconColor;
+  buttonTextVariant?: TextVariant;
+  isActive?: boolean;
 };
 
 export default function SendRequestBtn<T>({
@@ -18,26 +19,28 @@ export default function SendRequestBtn<T>({
   payLoad,
   buttonVariant = "primary",
   buttonTextVariant = "primary",
-  iconColorVariant ="onDark"
+  iconColorVariant = "onDark",
+  isActive = false,
 }: SendRequestBtnProps<T>) {
   const base = "flex items-center w-full";
   const alignment = secondaryAction ? "justify-between" : "justify-end";
   return (
     <div className={`${base} ${alignment}`}>
       <Button
+        isBusy={isActive}
         onClick={() => primaryAction(payLoad)}
         variant={buttonVariant}
         className="shadow-sm w-full"
         size={"sm"}
         leadingIcon={
-          <SvgIcon size={"sm"} Icon={SendIcon} color={iconColorVariant}></SvgIcon>
+          <SvgIcon
+            size={"sm"}
+            Icon={SendIcon}
+            color={iconColorVariant}
+          ></SvgIcon>
         }
       >
-        <CustomText
-          as="span"
-          textSize={"sm"}
-          textVariant={buttonTextVariant}
-        >
+        <CustomText as="span" textSize={"sm"} textVariant={buttonTextVariant}>
           Send request
         </CustomText>
       </Button>

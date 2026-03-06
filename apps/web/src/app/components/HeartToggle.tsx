@@ -4,17 +4,19 @@ import { useState } from "react";
 import HeartWhite from "@/assets/heartWhite.svg?react";
 import HeartFilled from "@/assets/heartFilled.svg?react";
 
-export default function HeartToggle() {
+export default function HeartToggle({ isActive }: { isActive: boolean }) {
   const [isLiked, setIsLiked] = useState(false);
   return (
-    <button
-      className="rounded-full"
-      type="button"
-      onClick={() => setIsLiked((v) => !v)}
-    >
-      <CircleBadge className="hover:shadow-md" bgColor="neutral">
-        <SvgIcon size={"lg"} Icon={isLiked ? HeartFilled : HeartWhite} />
-      </CircleBadge>
-    </button>
+    isActive && (
+      <button
+        className={`rounded-full`}
+        type="button"
+        onClick={() => setIsLiked((v) => !v)}
+      >
+        <CircleBadge className={"hover:shadow-md"} bgColor="neutral">
+          <SvgIcon size={"lg"} Icon={isLiked ? HeartFilled : HeartWhite} />
+        </CircleBadge>
+      </button>
+    )
   );
 }

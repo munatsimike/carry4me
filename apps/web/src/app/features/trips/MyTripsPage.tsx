@@ -8,11 +8,12 @@ import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { SupabaseTripsRepository } from "./data/SupabaseTripsRepository";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
-import { TripByIdUseCase, type TableData } from "./application/TripByIdUseCase";
+
 import { TripParcelTable } from "../dashboard/components/TripParcelTable";
 import { DeleteTripUseCase } from "./application/DeleteTripUseCase";
 import { useToast } from "@/app/components/Toast";
 import CustomText from "@/components/ui/CustomText";
+import { TripByIdUseCase} from "./application/TripByIdUseCase";
 export type TripStatus = "draft" | "active" | "paused" | "completed";
 
 export const tripEditSchema = z.object({

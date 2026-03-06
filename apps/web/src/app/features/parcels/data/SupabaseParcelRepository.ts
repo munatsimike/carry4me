@@ -5,12 +5,28 @@ import type { Parcel } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
+import type { ParcelDto } from "../application/ParcelDto";
 
 export class SupabaseParcelRepository implements ParcelRepository {
   async deleteParcel(parcelId: string): Promise<RepoResponse<string>> {
-    return deleteById(parcelId, "parcels")
+    return deleteById(parcelId, "parcels");
   }
-  
+
+  async editParcel(
+    editParcel: Partial<ParcelDto>,
+  ): Promise<RepoResponse<string>> {
+    console.log(editParcel)
+    const { data, error } = await supabase
+      .from("parcels")
+      .update(editParcel)
+      .eq("id", editParcel.id)
+      .select("id");
+    if (error) {
+      return { data: null, error: error, status: null };
+    }
+    return { data: data[0].id, error: null, status: null };
+  }
+
   parcelById(userId: string): Promise<RepoResponse<Parcel[]>> {
     return this.fetchParcels(userId);
   }
@@ -49,6 +65,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     if (userId) {
       query.eq("sender_user_id", userId);
     }
+
     const { data, error, status } = await query;
     if (error) {
       return { data: null, error, status };
@@ -57,6 +74,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     const parcelList = (data ?? []).map(toParcelMapper);
     return { data: parcelList, status: status, error: null };
   }
+  
   async createParcel(parcel: CreateParcel): Promise<RepoResponse<string>> {
     const { data, error, status } = await supabase
       .from("parcels")
@@ -80,6 +98,3 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { data: data.id, error: null, status: status };
   }
 }
-
-
-

@@ -8,10 +8,18 @@ import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { TripParcelTable } from "../dashboard/components/TripParcelTable";
 import { SupabaseParcelRepository } from "./data/SupabaseParcelRepository";
 import { ParcelByIdUseCase } from "./application/ParcelByIdUseCase";
-import type { TableData } from "../trips/application/TripByIdUseCase";
 import CustomText from "@/components/ui/CustomText";
 import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
 import { useToast } from "@/app/components/Toast";
+import { AnimatePresence } from "framer-motion";
+import { useGoods } from "@/app/shared/Authentication/UI/GoodsProvider";
+import CreateParcelModal, {
+  type FormValues,
+} from "../dashboard/CreateParcelModal";
+import type { Parcel } from "./domain/Parcel";
+import ParcelCard from "./ui/ParcelCard";
+import CustomModal from "@/app/components/CustomModal";
+import type { TableRow } from "../trips/application/TripByIdUseCase";
 export type TripStatus = "draft" | "active" | "paused" | "completed";
 
 export const tripEditSchema = z.object({
@@ -29,8 +37,11 @@ export type TripEditInput = z.infer<typeof tripEditSchema>;
 
 export function MyParcelsPage() {
   const [loading, setLoading] = useState(true);
-  const [parcels, setTableData] = useState<TableData[]>([]);
-  const [editTrip, setEditParcel] = useState<TableData | null>(null);
+  const [parcels, setTableData] = useState<TableRow[]>([]);
+  const [formValues, setFormValues] = useState<FormValues | null>(null);
+  const [showParcelPreviewModal, setPreviewModalState] =
+    useState<boolean>(false);
+  const [parcelPreiew, setParcel] = useState<Parcel | null>(null);
   const { user, refreshProfile, profile } = useAuth();
   const { toast } = useToast();
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -43,10 +54,12 @@ export function MyParcelsPage() {
     [parcelRepo],
   );
 
+  const [showParcelModal, setParcelModalState] = useState<boolean>(false);
   const sortedParcels = useMemo(() => {
     return [...parcels].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
   }, [parcels]);
 
+  // delete parcel
   const deleteParcel = async (parcelId: string) => {
     const { result } = await namedCall(
       "delete parcel",
@@ -59,6 +72,17 @@ export function MyParcelsPage() {
     await refreshProfile();
     toast("Parcel deleted successfully", { variant: "success" });
   };
+
+  const {
+    goodsCategories,
+    ensureGoodsLoaded,
+    loading: goodsLoading,
+  } = useGoods();
+
+  useEffect(() => {
+    if (!showParcelModal) return;
+    ensureGoodsLoaded();
+  }, [showParcelModal, ensureGoodsLoaded]);
 
   useEffect(() => {
     async function loadTrips() {
@@ -90,13 +114,13 @@ export function MyParcelsPage() {
           <span>My Parcels</span>
 
           {sortedParcels.length > 0 && (
-            <Button variant={"primary"} size={"xsm"}>
+            <Button  variant={"primary"} size={"xsm"}>
               + Post a parcel
             </Button>
           )}
         </div>
 
-        {loading ? (
+        {loading || goodsLoading ? (
           <p>Loading…</p>
         ) : sortedParcels.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -110,19 +134,48 @@ export function MyParcelsPage() {
                 parcels to let others send trips with you.
               </CustomText>
 
-              <Button variant={"primary"} size={"sm"}>
+              <Button
+                onClick={() => setParcelModalState(true)}
+                variant={"primary"}
+                size={"sm"}
+              >
                 + Post a parcel
               </Button>
             </span>
           </div>
         ) : (
           <TripParcelTable
+            onClick={() => setPreviewModalState(true)} // set preview
+            setParcel={setParcel}
             data={parcels}
-            onEdit={setEditParcel}
+            onEdit={setParcelModalState} // set edit
             onDelete={deleteParcel}
+            setFormValues={setFormValues}
           />
         )}
       </div>
+
+      <AnimatePresence>
+        {/* edit parcel */}
+        {showParcelModal && (
+          <CreateParcelModal
+            mode="edit"
+            initialFormValues={formValues}
+            goodsCategory={goodsCategories}
+            setModalState={setParcelModalState}
+          />
+        )}
+        {/*show preview moda */}
+        {showParcelPreviewModal && parcelPreiew && (
+          <CustomModal onClose={() => setPreviewModalState(false)} width="md">
+            <ParcelCard
+              parcel={parcelPreiew}
+              onClick={() => null}
+              mode="preview"
+            />
+          </CustomModal>
+        )}{" "}
+      </AnimatePresence>
     </DefaultContainer>
   );
 }

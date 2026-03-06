@@ -25,7 +25,7 @@ import { DateField } from "./components/DateField";
 import { WeightField } from "./components/WeightField";
 import { PriceField } from "./components/PriceField";
 import CustomText from "@/components/ui/CustomText";
-import { ArrowLeft} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
@@ -72,7 +72,6 @@ export default function CreateTripModal({
   setModalState,
 }: {
   goodsCategory: GoodsCategory[];
-  showModal: boolean;
   setModalState: (v: boolean) => void;
 }) {
   const [step, setStep] = useState<Step>(1);

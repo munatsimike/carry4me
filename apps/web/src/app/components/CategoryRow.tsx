@@ -8,6 +8,6 @@ export default function CategoryRow({
   category: string[];
   tag?: Tag;
 }) {
-  const label = tag === "traveler" ? "Accepts" : "Sending : ";
+  const label = tag === "traveler" ? "Accepts" : "Sending";
   return <LabelTextRow label={label} text={category} />;
 }
