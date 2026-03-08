@@ -1,10 +1,9 @@
-import type { Parcel } from "@/app/features/parcels/domain/Parcel";
+import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import ParcelCard from "./ParcelCard";
 
 export type ParcelsProps = {
-  parcels: Parcel[];
-  onClick: (parcel: Parcel) => void;
-
+  parcels: ParcelListing[];
+  onClick: (parcel: ParcelListing) => void;
 };
 export default function Travelers({ parcels, onClick }: ParcelsProps) {
   return (

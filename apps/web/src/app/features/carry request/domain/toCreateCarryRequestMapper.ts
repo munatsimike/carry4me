@@ -1,5 +1,5 @@
-import type { Parcel } from "../../parcels/domain/Parcel";
-import type { Trip } from "../../trips/domain/Trip";
+import type { ParcelListing } from "../../parcels/domain/Parcel";
+import type { TripListing } from "../../trips/domain/Trip";
 import {
   type CreateCarryRequest,
   type Role,
@@ -8,8 +8,8 @@ import {
 } from "./CreateCarryRequest";
 
 export function toCreateCarryRequestMapper(
-  parcel: Parcel,
-  trip: Trip,
+  parcel: ParcelListing,
+  trip: TripListing,
   initiatorRole: Role,
   status: CarryRequestStatus,
 ): CreateCarryRequest {

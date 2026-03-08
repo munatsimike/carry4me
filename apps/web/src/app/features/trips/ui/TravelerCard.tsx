@@ -10,21 +10,21 @@ import RouteRow from "@/app/components/RouteRow";
 import CategoryRow from "@/app/components/CategoryRow";
 import DateRow from "@/app/components/DateRow";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
-import type { Trip } from "../domain/Trip";
+import type { TripListing } from "../domain/Trip";
 
 type TravelerProps = {
-  trip: Trip;
-  onClick: (trip: Trip) => void;
+  trip: TripListing;
+  onClick: (trip: TripListing) => void;
 };
 
 export default function TravelerCard({ trip, onClick }: TravelerProps) {
-  const goods = trip.acceptedGoods.map((c) => c.name) ?? "No goods specified";
+  const goods = trip.goodsCategory.map((c) => c.name) ?? "No goods specified";
 
   return (
     <Card>
       <SpaceBetweenRow>
         <CardLabel variant={"trip"} label="Trip" />
-        <HeartToggle />
+        <HeartToggle isActive />
       </SpaceBetweenRow>
       <User
         avatar={trip.user.avatarUrl}

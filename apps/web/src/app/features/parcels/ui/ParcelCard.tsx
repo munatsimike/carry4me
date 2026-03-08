@@ -9,13 +9,13 @@ import HeartToggle from "@/app/components/HeartToggle";
 import LineDivider from "@/app/components/LineDivider";
 import RouteRow from "@/app/components/RouteRow";
 import Stack from "@/app/components/Stack";
-import type { Parcel } from "@/app/features/parcels/domain/Parcel";
-
-type CardMode = "preview" | "display";
+import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
+import type { CardMode } from "@/types/Ui";
+import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
 
 type ParcelProps = {
-  parcel: Parcel;
-  onClick: (parcel: Parcel) => void;
+  parcel: ParcelListing;
+  onClick: (parcel: ParcelListing) => void;
   mode?: CardMode;
 };
 
@@ -24,7 +24,7 @@ export default function ParcelCard({
   onClick,
   mode = "display",
 }: ParcelProps) {
-  const categories = parcel.categories.map((x) => x.name);
+  const categories = parcel.goodsCategory.map((x:GoodsCategory) => x.name);
   const isDisplayMode = mode === "display";
   const hoverClass = isDisplayMode ? true : false;
   const borderClass = isDisplayMode ? "border border-neutral-200" : "";

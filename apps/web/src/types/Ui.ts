@@ -1,3 +1,5 @@
+
+
 export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>
 >;
@@ -33,13 +35,6 @@ export type ContainerProps = {
 type Category = "Documents" | "Clothes & Shoes" | "Electronics";
 export type Location = "Zimbabwe" | "USA" | "UK";
 
-type User = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  avatar?: string; // optional (not everyone uploads one)
-};
-
 export type Route = {
   date: Date;
   availableWeight: number;
@@ -49,22 +44,11 @@ export type Route = {
   acceptedParcels: Category[];
 };
 
-export type TestUITrip = {
-  id: number;
-  user: User;
-  route: Route;
-};
-
-type ParcelRequirements = {
-  date?: Date;
-  pricePerKg: number;
-  weight: number;
-  origin: Location;
-  destination: Location;
-  category: Category[];
-};
 
 
+export type FormMode = "edit" | "create";
+
+export type CardMode = "preview" | "display";
 
 export const progress = {
   1: "Request sent",

@@ -12,8 +12,8 @@ import DateRow from "./DateRow";
 import RouteRow from "./RouteRow";
 import TravelerRow from "./TravelerRow";
 import ButtomSpacer from "./BottomSpacer";
-import type { Trip } from "../features/trips/domain/Trip";
-import type { Parcel } from "../features/parcels/domain/Parcel";
+import type { TripListing } from "../features/trips/domain/Trip";
+import type { ParcelListing } from "../features/parcels/domain/Parcel";
 import LabelTextRow from "./LabelTextRow";
 import IconTextRow from "./card/IconTextRow";
 import { useMemo, useState } from "react";
@@ -23,8 +23,8 @@ import { SendCarryRequestUseCase } from "../features/carry request/application/S
 
 type ConfirmRequestProps = {
   loggedInUserId: string;
-  trip: Trip;
-  parcel: Parcel;
+  trip: TripListing;
+  parcel: ParcelListing;
   onClose: () => void;
   isSenderRequesting: boolean;
 };
@@ -83,7 +83,7 @@ export default function ConfirmRequest({
       <LineDivider />
       <UITrip trip={trip} isSenderRequesting={isSenderRequesting} />
       <LineDivider />
-      <Parcel
+      <ParcelListing
         parcel={parcel}
         isSenderRequesting={isSenderRequesting}
         travelerPricePerKg={trip.pricePerKg}
@@ -101,11 +101,11 @@ function UITrip({
   trip,
   isSenderRequesting,
 }: {
-  trip: Trip;
+  trip: TripListing;
   isSenderRequesting: boolean;
 }) {
   const label = isSenderRequesting ? "Traveler`s Trip" : "Your Trip";
-  const items = trip.acceptedGoods.map((item) => item.name).join("-");
+  const items = trip.goodsCategory.map((item) => item.name).join("-");
   return (
     <Stack>
       <span>
@@ -124,12 +124,12 @@ function UITrip({
   );
 }
 
-function Parcel({
+function ParcelListing({
   parcel,
   isSenderRequesting,
   travelerPricePerKg,
 }: {
-  parcel: Parcel;
+  parcel: ParcelListing;
   isSenderRequesting: boolean;
   travelerPricePerKg: number;
 }) {

@@ -9,11 +9,14 @@ import { Button } from "@/components/ui/Button";
 import { SupabaseTripsRepository } from "./data/SupabaseTripsRepository";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 
-import { TripParcelTable } from "../dashboard/components/TripParcelTable";
+import { ListingTable } from "../dashboard/components/ListingTable";
 import { DeleteTripUseCase } from "./application/DeleteTripUseCase";
 import { useToast } from "@/app/components/Toast";
 import CustomText from "@/components/ui/CustomText";
-import { TripByIdUseCase} from "./application/TripByIdUseCase";
+import { MyTripsUseCase } from "./application/MyTripsUseCase";
+import type { FormValues } from "../dashboard/CreateParcelModal";
+import type { ParcelListing } from "../parcels/domain/Parcel";
+import type { TripListing } from "./domain/Trip";
 export type TripStatus = "draft" | "active" | "paused" | "completed";
 
 export const tripEditSchema = z.object({
@@ -31,14 +34,14 @@ export type TripEditInput = z.infer<typeof tripEditSchema>;
 
 export function MyTripsPage() {
   const [loading, setLoading] = useState(true);
-  const [trips, setTableData] = useState<TableData[]>([]);
-  const [editTrip, setEditTrip] = useState<TableData | null>(null);
+  const [tripsListing, setTableData] = useState<TripListing[]>([]);
+  const [editTrip, setEditTrip] = useState<boolean | null>(null);
   const { user, refreshProfile, profile } = useAuth();
   const tripRepo = useMemo(() => new SupabaseTripsRepository(), []);
   const { toast } = useToast();
 
   const tripByIdUseCase = useMemo(
-    () => new TripByIdUseCase(tripRepo),
+    () => new MyTripsUseCase(tripRepo),
     [tripRepo],
   );
   const deleteTripUseCase = useMemo(
@@ -47,8 +50,10 @@ export function MyTripsPage() {
   );
 
   const sortedTrips = useMemo(() => {
-    return [...trips].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
-  }, [trips]);
+    return [...tripsListing].sort((a, b) =>
+      a.departDate > b.departDate ? 1 : -1,
+    );
+  }, [tripsListing]);
 
   const deleteTrip = async (parcelId: string) => {
     const { result } = await namedCall(
@@ -79,7 +84,6 @@ export function MyTripsPage() {
 
       if (result.data) {
         setLoading(false);
-        result.data;
         setTableData(result.data);
       }
     }
@@ -119,10 +123,17 @@ export function MyTripsPage() {
             </span>
           </div>
         ) : (
-          <TripParcelTable
-            data={trips}
+          <ListingTable
+            onClick={() => null}
+            data={tripsListing}
             onEdit={setEditTrip}
             onDelete={deleteTrip}
+            setFormValues={function (v: FormValues): void {
+              throw new Error("Function not implemented.");
+            }}
+            setParcel={function (p: ParcelListing): void {
+              throw new Error("Function not implemented.");
+            }}
           />
         )}
       </div>

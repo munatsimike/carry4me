@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import Parcels from "./Parcels";
 import Search from "@/app/components/Search";
 import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
-import type { Parcel } from "@/app/features/parcels/domain/Parcel";
+import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
-import type { Trip } from "@/app/features/trips/domain/Trip";
+import type { TripListing } from "@/app/features/trips/domain/Trip";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
@@ -30,7 +30,7 @@ export default function ParcelsPage() {
     [parcelRepo],
   );
 
-  const [parcelsList, setParcelsList] = useState<Parcel[]>([]);
+  const [parcelsList, setParcelsList] = useState<ParcelListing[]>([]);
 
   useEffect(() => {
     let cancel = false;
@@ -60,7 +60,7 @@ export default function ParcelsPage() {
     };
   }, []);
 
-  const [selectedParcel, setParcel] = useState<Parcel | null>(null);
+  const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
   const onClose = () => setParcel(null);
   const [selectedCountry, setCountry] = useState<string>("");
   const [selectedCity, setCity] = useState<string>("");
@@ -68,13 +68,13 @@ export default function ParcelsPage() {
   const { toast } = useToast();
 
   // trip to matched with a parcel. when a user selects a parcel they should have a trip.
-  const [userTrip, setUserTrip] = useState<Trip | null>(null);
+  const [userTrip, setUserTrip] = useState<TripListing | null>(null);
 
   const { user } = useAuth();
 
   //
-  const handleRequest = async (parcel: Parcel) => {
-    if(!user) return
+  const handleRequest = async (parcel: ParcelListing) => {
+    if (!user) return;
     // check if parcel to be matched to a trip does not belong to the logged in user
     if (parcel.user.id === user.id) {
       toast(

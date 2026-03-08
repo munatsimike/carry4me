@@ -1,19 +1,3 @@
-import type { ParcelItem } from "./CreateParcel";
-import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
-import type { UserProfile } from "@/app/shared/Authentication/domain/authTypes";
+import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 
-export type Parcel = {
-  id: string;
-  user: UserProfile;
-  categories: GoodsCategory[];
-  route: {
-    originCountry: string;
-    originCity: string;
-    destinationCountry: string;
-    destinationCity: string;
-  };
-
-  weightKg: number;
-  items: ParcelItem[];
-  pricePerKg: number;
-};
+export interface ParcelListing extends Listing {}

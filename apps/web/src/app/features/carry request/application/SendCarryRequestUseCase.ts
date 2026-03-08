@@ -1,6 +1,6 @@
 import type { Result } from "@/app/shared/Authentication/domain/Result";
-import type { Parcel } from "../../parcels/domain/Parcel";
-import type { Trip } from "../../trips/domain/Trip";
+import type { ParcelListing } from "../../parcels/domain/Parcel";
+import type { TripListing } from "../../trips/domain/Trip";
 import { CARRY_REQUEST_STATUSES, ROLES } from "../domain/CreateCarryRequest";
 import { toCreateCarryRequestMapper } from "../domain/toCreateCarryRequestMapper";
 import type { CreateCarryRequestUseCase } from "./CreateCarryReaquest";
@@ -14,8 +14,8 @@ export class SendCarryRequestUseCase {
 
   async execute(
     loggedInUserId: string,
-    parcel: Parcel,
-    trip: Trip,
+    parcel: ParcelListing,
+    trip: TripListing,
   ): Promise<Result<string>> {
     const userRole =
       loggedInUserId === parcel.user.id ? ROLES.SENDER : ROLES.TRAVELER;

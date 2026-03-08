@@ -1,10 +1,9 @@
-
-import type { Trip } from "../domain/Trip";
+import type { TripListing } from "../domain/Trip";
 import TravelerCard from "./TravelerCard";
 
 export type TravlersProps = {
-  trips: Trip[];
-  onClick: (trip: Trip) => void;
+  trips: TripListing[];
+  onClick: (trip: TripListing) => void;
 };
 export default function Travelers({ trips, onClick }: TravlersProps) {
   return (

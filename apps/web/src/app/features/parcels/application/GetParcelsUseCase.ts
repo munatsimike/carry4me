@@ -1,17 +1,17 @@
 import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
-import type { ParcelRepository } from "../domain/CreateParcelRepository";
-import type { Parcel } from "../domain/Parcel";
+import type { ParcelListingRepository } from "../domain/CreateParcelRepository";
+import type { ParcelListing } from "../domain/Parcel";
 import type { Result } from "@/app/shared/Authentication/domain/Result";
 
 export class GetParcelsUseCase {
-  repo: ParcelRepository;
+  repo: ParcelListingRepository;
 
-  constructor(repo: ParcelRepository) {
+  constructor(repo: ParcelListingRepository) {
     this.repo = repo;
   }
 
-  async execute(): Promise<Result<Parcel[]>> {
-    const result = await this.repo.fetchParcels()
+  async execute(): Promise<Result<ParcelListing[]>> {
+    const result = await this.repo.fetchParcels();
     return toResult(result);
   }
 }

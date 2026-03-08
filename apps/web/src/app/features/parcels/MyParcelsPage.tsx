@@ -5,9 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
-import { TripParcelTable } from "../dashboard/components/TripParcelTable";
+import { ListingTable } from "../dashboard/components/ListingTable";
 import { SupabaseParcelRepository } from "./data/SupabaseParcelRepository";
-import { ParcelByIdUseCase } from "./application/ParcelByIdUseCase";
+import { MyParcelsIdUseCase } from "./application/MyParcelsUseCase";
 import CustomText from "@/components/ui/CustomText";
 import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
 import { useToast } from "@/app/components/Toast";
@@ -16,10 +16,10 @@ import { useGoods } from "@/app/shared/Authentication/UI/GoodsProvider";
 import CreateParcelModal, {
   type FormValues,
 } from "../dashboard/CreateParcelModal";
-import type { Parcel } from "./domain/Parcel";
+import type { ParcelListing } from "./domain/Parcel";
 import ParcelCard from "./ui/ParcelCard";
 import CustomModal from "@/app/components/CustomModal";
-import type { TableRow } from "../trips/application/TripByIdUseCase";
+import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 export type TripStatus = "draft" | "active" | "paused" | "completed";
 
 export const tripEditSchema = z.object({
@@ -37,16 +37,16 @@ export type TripEditInput = z.infer<typeof tripEditSchema>;
 
 export function MyParcelsPage() {
   const [loading, setLoading] = useState(true);
-  const [parcels, setTableData] = useState<TableRow[]>([]);
+  const [parcels, setTableData] = useState<Listing[]>([]);
   const [formValues, setFormValues] = useState<FormValues | null>(null);
   const [showParcelPreviewModal, setPreviewModalState] =
     useState<boolean>(false);
-  const [parcelPreiew, setParcel] = useState<Parcel | null>(null);
+  const [parcelPreiew, setParcel] = useState<Listing | null>(null);
   const { user, refreshProfile, profile } = useAuth();
   const { toast } = useToast();
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
   const tripByIdUseCase = useMemo(
-    () => new ParcelByIdUseCase(parcelRepo),
+    () => new MyParcelsIdUseCase(parcelRepo),
     [parcelRepo],
   );
   const deleteParcelUseCase = useMemo(
@@ -114,7 +114,7 @@ export function MyParcelsPage() {
           <span>My Parcels</span>
 
           {sortedParcels.length > 0 && (
-            <Button  variant={"primary"} size={"xsm"}>
+            <Button variant={"primary"} size={"xsm"}>
               + Post a parcel
             </Button>
           )}
@@ -144,7 +144,7 @@ export function MyParcelsPage() {
             </span>
           </div>
         ) : (
-          <TripParcelTable
+          <ListingTable
             onClick={() => setPreviewModalState(true)} // set preview
             setParcel={setParcel}
             data={parcels}

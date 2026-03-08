@@ -7,13 +7,13 @@ import PageSection from "@/app/components/PageSection";
 import Search from "@/app/components/Search";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
 import { GetTripsUseCase } from "../application/GetTripsUseCase";
-import type { Trip } from "../domain/Trip";
+import type { TripListing } from "../domain/Trip";
 import { GetGoodsUseCase } from "../../goods/application/GetGoodsUseCase";
 import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepository";
 import { AnimatePresence } from "framer-motion";
 import { GetParcelUseCase } from "../../parcels/application/GetParcelUseCase";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
-import type { Parcel } from "../../parcels/domain/Parcel";
+import type { ParcelListing } from "../../parcels/domain/Parcel";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
@@ -34,7 +34,7 @@ export default function TravelersPage() {
     [goodsRepo],
   );
 
-  const [tripList, setTripList] = useState<Trip[]>([]);
+  const [tripList, setTripList] = useState<TripListing[]>([]);
 
   useEffect(() => {
     let cancel = false;
@@ -47,7 +47,7 @@ export default function TravelersPage() {
       if (cancel) return;
 
       if (!result.success) {
-        console.log(result.error)
+        console.log(result.error);
         showSupabaseError(result.error, result.status, {
           onRetry: fetchTravelers,
         });
@@ -63,17 +63,17 @@ export default function TravelersPage() {
     };
   }, []);
 
-  const [selectedTrip, setTrip] = useState<Trip | null>(null);
+  const [selectedTrip, setTrip] = useState<TripListing | null>(null);
   const [selectedCountry, setCountry] = useState<string>("");
   const [selectedCity, setCity] = useState<string>("");
-  const { user} = useAuth();
+  const { user } = useAuth();
 
   const [tripLoaded, setTripLoaded] = useState<boolean>(false);
-  const [parcel, setParcel] = useState<Parcel | null>(null);
+  const [parcel, setParcel] = useState<ParcelListing | null>(null);
   const onClose = () => setTrip(null);
   const { toast } = useToast();
 
-  const handleRequest = async (trip: Trip) => {
+  const handleRequest = async (trip: TripListing) => {
     if (trip.user.id === user?.id) {
       toast(
         "You can’t match with your own trip. Browse available parcels instead.",

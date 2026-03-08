@@ -27,6 +27,7 @@ import { PriceField } from "./components/PriceField";
 import CustomText from "@/components/ui/CustomText";
 import { ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import type { FormMode } from "@/types/Ui";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
@@ -68,11 +69,13 @@ const step2Fields: Array<keyof TripFormFields> = [
 ];
 
 export default function CreateTripModal({
+
   goodsCategory,
   setModalState,
 }: {
   goodsCategory: GoodsCategory[];
   setModalState: (v: boolean) => void;
+  formMode: FormMode
 }) {
   const [step, setStep] = useState<Step>(1);
 

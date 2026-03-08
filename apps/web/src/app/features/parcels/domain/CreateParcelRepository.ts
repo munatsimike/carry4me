@@ -1,13 +1,13 @@
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import type { CreateParcel } from "./CreateParcel";
-import type { Parcel } from "./Parcel";
+import type { ParcelListing } from "./Parcel";
 import type { ParcelDto } from "../application/ParcelDto";
 
-export interface ParcelRepository {
+export interface ParcelListingRepository {
   createParcel(parcel: CreateParcel): Promise<RepoResponse<string>>;
-  fetchParcels(): Promise<RepoResponse<Parcel[]>>;
-  fetchParcel(userId: string): Promise<RepoResponse<Parcel>>;
-  parcelById(userId: string): Promise<RepoResponse<Parcel[]>>;
+  fetchParcels(): Promise<RepoResponse<ParcelListing[]>>;
+  fetchParcel(userId: string): Promise<RepoResponse<ParcelListing>>;
+  parcelById(userId: string): Promise<RepoResponse<ParcelListing[]>>;
   deleteParcel(parcelId: string): Promise<RepoResponse<string>>;
   editParcel(editParcel: Partial<ParcelDto>): Promise<RepoResponse<string>>;
 }

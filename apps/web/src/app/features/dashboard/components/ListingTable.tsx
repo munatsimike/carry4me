@@ -1,10 +1,9 @@
 import CustomText from "@/components/ui/CustomText";
 import { AnimatePresence, motion } from "framer-motion";
-import type { TableRow } from "../../trips/application/TripByIdUseCase";
 import type { FormValues } from "../CreateParcelModal";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
-import type { Parcel } from "../../parcels/domain/Parcel";
-import {useState } from "react";
+import { useState } from "react";
+import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 
 // 1) Variants
 const tableWrap = {
@@ -35,52 +34,25 @@ const rowVariants = {
   },
 };
 
-type TableProps = {
-  data: TableRow[];
+type ListingTableProps = {
+  data: Listing[];
   onEdit: (b: boolean) => void;
   onDelete: (s: string) => void;
   setFormValues: (v: FormValues) => void;
   onClick: () => void;
-  setParcel: (p: Parcel) => void;
+  setParcel: (p: Listing) => void;
 };
 
-export function TripParcelTable({
+export function ListingTable({
   data,
   onEdit,
   onDelete,
   setFormValues,
   onClick,
   setParcel,
-}: TableProps) {
+}: ListingTableProps) {
   const headerStyle = "pl-4 py-4 font-medium";
-
   const [hoverId, sethover] = useState<string | null>(null);
-
-  const previewParcel = (row: TableRow) => {
-    // set parcel for preview
-    setParcel({
-      id: row.id,
-      user: {
-        fullName: row.user.fullName,
-        avatarUrl: row.user.avatarUrl,
-        id: null,
-        countryCode: null,
-        city: null,
-        phoneNumber: null,
-      },
-      categories: row.goodsCategory,
-      route: {
-        originCountry: row.originCountry,
-        originCity: row.originCity,
-        destinationCountry: row.destinationCountry,
-        destinationCity: row.destinationCity,
-      },
-      weightKg: 0,
-      items: [],
-      pricePerKg: 0,
-    });
-    onClick();
-  };
 
   return (
     <motion.div
@@ -104,7 +76,9 @@ export function TripParcelTable({
 
         {/* Animate tbody + rows */}
         <motion.tbody variants={tbodyVariants} initial="hidden" animate="show">
-          {data.map((row: TableRow) => (
+           
+          {data.map((row: Listing) => (
+            
             <motion.tr
               key={row.id}
               onMouseEnter={() => sethover(row.id)}
@@ -120,10 +94,10 @@ export function TripParcelTable({
                   {/* Left text stays stable */}
                   <span className="inline-flex gap-2 min-w-0">
                     <TableText
-                      text={`${row.originCountry} / ${row.originCity} → `}
+                      text={`${row.route.originCountry} / ${row.route.originCity} → `}
                     />
                     <TableText
-                      text={`${row.destinationCountry ?? ""} / ${row.destinationCity}`}
+                      text={`${row.route.destinationCountry ?? ""} / ${row.route.destinationCity}`}
                     />
                   </span>
 
@@ -132,11 +106,14 @@ export function TripParcelTable({
                     {hoverId === row.id && (
                       <motion.button
                         type="button"
-                        onClick={() => previewParcel(row)}
+                        onClick={() => {
+                          setParcel(row);
+                          onClick();
+                        }}
                         initial={{ opacity: 0, x: 6, scale: 0.98 }}
                         animate={{ opacity: 1, x: 0, scale: 1 }}
                         exit={{ opacity: 0, x: 6, scale: 0.98 }}
-                        transition={{ duration: 0.40, ease: "easeOut" }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
                         className="absolute right-0 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100 hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                       >
                         Preview
@@ -147,11 +124,13 @@ export function TripParcelTable({
               </TableTd>
 
               <TableTd>
-                <TableText text={row.departDate.slice(0, 10)} />
+                <TableText
+                  text={row.type === "trip" ? row.departDate.slice(0, 10) : ""}
+                />
               </TableTd>
 
               <TableTd>
-                <TableText text={`${row.capacityKg.toString()} kg`} />
+                <TableText text={`${row.weightKg.toString()} kg`} />
               </TableTd>
 
               <TableTd>
@@ -160,9 +139,9 @@ export function TripParcelTable({
 
               <TableTd>
                 <span className="iniline-flex rounded-full bg-success-50 px-2 py-1 text-success-500 border border-success-100 text-sm">
-                  Active
+                 {row.status}
                 </span>
-                <TableText text={row.status} />
+               
               </TableTd>
 
               <TableTd>
@@ -176,8 +155,8 @@ export function TripParcelTable({
                       // set form values for editing
                       setFormValues({
                         id: row.id,
-                        originCountry: row.originCountry,
-                        originCity: row.originCity,
+                        originCountry: row.route.originCountry,
+                        originCity: row.route.originCity,
                         destinationCountry: "Zimbabwe",
                         destinationCity: "Harare",
                         goodsCategoryIds: row.goodsCategory.map(
@@ -187,7 +166,7 @@ export function TripParcelTable({
                         totalWeight: row.capacityKg,
                         pricePerKg: row.pricePerKg,
                         agreeToRules: false,
-                        sender_id: row.user.id,
+                        sender_id: row.user.id ?? "",
                       });
                     }}
                   >

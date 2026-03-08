@@ -1,7 +1,7 @@
 import { supabase } from "@/app/shared/supabase/client";
 import type { CreateParcel } from "../domain/CreateParcel";
-import type { ParcelRepository } from "../domain/CreateParcelRepository";
-import type { Parcel } from "../domain/Parcel";
+import type { ParcelListingRepository as ParcelRepository } from "../domain/CreateParcelRepository";
+import type { ParcelListing } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
@@ -15,7 +15,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
   async editParcel(
     editParcel: Partial<ParcelDto>,
   ): Promise<RepoResponse<string>> {
-    console.log(editParcel)
+    console.log(editParcel);
     const { data, error } = await supabase
       .from("parcels")
       .update(editParcel)
@@ -27,10 +27,12 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { data: data[0].id, error: null, status: null };
   }
 
-  parcelById(userId: string): Promise<RepoResponse<Parcel[]>> {
+  parcelById(userId: string): Promise<RepoResponse<ParcelListing[]>> {
+  
     return this.fetchParcels(userId);
+       
   }
-  async fetchParcel(userId: string): Promise<RepoResponse<Parcel>> {
+  async fetchParcel(userId: string): Promise<RepoResponse<ParcelListing>> {
     const { data, error, status } = await supabase
       .from("parcels")
       .select(
@@ -52,7 +54,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { error: null, data: parcel, status };
   }
 
-  async fetchParcels(userId?: string): Promise<RepoResponse<Parcel[]>> {
+  async fetchParcels(userId?: string): Promise<RepoResponse<ParcelListing[]>> {
     const query = supabase.from("parcels").select(
       `*, sender:profiles(id,full_name,avatar_url), parcel_categories(
       category:goods_categories(
@@ -67,6 +69,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     }
 
     const { data, error, status } = await query;
+    
     if (error) {
       return { data: null, error, status };
     }
@@ -74,7 +77,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     const parcelList = (data ?? []).map(toParcelMapper);
     return { data: parcelList, status: status, error: null };
   }
-  
+
   async createParcel(parcel: CreateParcel): Promise<RepoResponse<string>> {
     const { data, error, status } = await supabase
       .from("parcels")

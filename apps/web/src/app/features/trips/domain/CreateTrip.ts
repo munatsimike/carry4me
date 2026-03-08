@@ -1,6 +1,6 @@
 // features/trips/data/trips.repository.ts
 
-export type CreateTrip = {
+export type CreateTripListing = {
   originCountry: string;
   originCity: string;
   destinationCountry: string;

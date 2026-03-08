@@ -1,7 +1,7 @@
 import { supabase } from "@/app/shared/supabase/client";
 import type { TripsRepository } from "../domain/TripRepository";
-import type { CreateTrip } from "../domain/CreateTrip";
-import type { Trip } from "../domain/Trip";
+import type { CreateTripListing } from "../domain/CreateTrip";
+import type { TripListing } from "../domain/Trip";
 import { mapTripRowToTrip } from "../domain/tripmappers";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
@@ -10,10 +10,10 @@ export class SupabaseTripsRepository implements TripsRepository {
   async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
     return deleteById(parcelId, "trips");
   }
-  async tripById(userId: string): Promise<RepoResponse<Trip[]>> {
+  async tripById(userId: string): Promise<RepoResponse<TripListing[]>> {
     return this.listTrips(userId);
   }
-  async fetchTrip(userId: string): Promise<RepoResponse<Trip>> {
+  async fetchTrip(userId: string): Promise<RepoResponse<TripListing>> {
     const { data, error, status } = await supabase
       .from("trips")
       .select(
@@ -33,7 +33,7 @@ export class SupabaseTripsRepository implements TripsRepository {
     return { data: result, status, error: null };
   }
 
-  async listTrips(userId?: string): Promise<RepoResponse<Trip[]>> {
+  async listTrips(userId?: string): Promise<RepoResponse<TripListing[]>> {
     let query = supabase.from("trips").select(`
       *,
       traveler:profiles(id, full_name, avatar_url),
@@ -61,7 +61,7 @@ export class SupabaseTripsRepository implements TripsRepository {
 
   async createTrip(
     userId: string,
-    input: CreateTrip,
+    input: CreateTripListing,
   ): Promise<RepoResponse<string>> {
     const { data, error, status } = await supabase
       .from("trips")
