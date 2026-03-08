@@ -1,3 +1,5 @@
+import type { GoodsItem } from "@/types/Ui";
+
 export type CreateParcel = {
   senderUserId: string;
   originCountry: string;
@@ -6,10 +8,6 @@ export type CreateParcel = {
   destinationCity: string;
   weightKg: number;
   price: number;
-  items: ParcelItem[];
+  items: GoodsItem[];
 };
 
-export type ParcelItem = {
-  quantity: number;
-  description: string;
-};

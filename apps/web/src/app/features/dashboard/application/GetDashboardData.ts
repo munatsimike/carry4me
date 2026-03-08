@@ -17,10 +17,22 @@ export class GetDashboardDataUseCase {
         success: true,
         data: {
           stats: [
-            { itemName: "Posted Trips", count: stats.postedTrips },
-            { itemName: "Posted  Parcel", count: stats.postedParcels },
+            {
+              itemName: "Posted Trips",
+              count: stats.postedTrips,
+              link: "/my/trips",
+            },
+            {
+              itemName: "Posted  Parcel",
+              count: stats.postedParcels,
+              link: "/my/parcels",
+            },
             { itemName: "Deliveries completed", count: stats.delivered },
-            { itemName: "Matches", count: stats.totalMatches },
+            {
+              itemName: "Matches",
+              count: stats.totalMatches,
+              link: "/requests",
+            },
           ],
           activity: [
             {

@@ -20,6 +20,7 @@ import { useMemo, useState } from "react";
 import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
 import { CreateCarryRequestUseCase } from "../features/carry request/application/CreateCarryReaquest";
 import { SendCarryRequestUseCase } from "../features/carry request/application/SendCarryRequestUseCase";
+import type { GoodsCategory } from "../features/goods/domain/GoodsCategory";
 
 type ConfirmRequestProps = {
   loggedInUserId: string;
@@ -83,7 +84,7 @@ export default function ConfirmRequest({
       <LineDivider />
       <UITrip trip={trip} isSenderRequesting={isSenderRequesting} />
       <LineDivider />
-      <ParcelListing
+      <Parcel
         parcel={parcel}
         isSenderRequesting={isSenderRequesting}
         travelerPricePerKg={trip.pricePerKg}
@@ -124,7 +125,7 @@ function UITrip({
   );
 }
 
-function ParcelListing({
+function Parcel({
   parcel,
   isSenderRequesting,
   travelerPricePerKg,
@@ -134,7 +135,7 @@ function ParcelListing({
   travelerPricePerKg: number;
 }) {
   const label = isSenderRequesting ? "Your parcel" : "Sender`s Parcel";
-  const items = parcel.categories.map((item) => item.name);
+  const items = parcel.goodsCategory.map((item: GoodsCategory) => item.name);
   const pricePerKg = isSenderRequesting
     ? travelerPricePerKg
     : parcel.pricePerKg;

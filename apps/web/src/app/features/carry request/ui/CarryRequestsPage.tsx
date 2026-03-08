@@ -436,7 +436,7 @@ function ParcelDetails({
 }) {
   const cardLabel =
     viewerRole === ROLES.SENDER ? "Your parcel details" : "Parcel details";
-  const categories = parcel.categories.map((item) => item.name);
+  const categories = parcel.goods_category.map((item) => item.name);
   return (
     <Stack>
       <span className="pb-1">

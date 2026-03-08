@@ -5,8 +5,21 @@ import type { TripListing } from "../domain/Trip";
 import { mapTripRowToTrip } from "../domain/tripmappers";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
+import type { TripDto } from "../application/TripDto";
 
 export class SupabaseTripsRepository implements TripsRepository {
+  async editTrip(editTrip: Partial<TripDto>): Promise<RepoResponse<string>> {
+    const { data, error } = await supabase
+      .from("trips")
+      .update(editTrip)
+      .eq("id", editTrip.id)
+      .select("id");
+    if (error) {
+      return { data: null, error: error, status: null };
+    }
+    return { data: data[0].id, error: null, status: null };
+  }
+
   async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
     return deleteById(parcelId, "trips");
   }

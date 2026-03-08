@@ -12,6 +12,7 @@ export class EditParcelUsecase {
 
   async execute(editParcel: Partial<ParcelDto>): Promise<Result<string>> {
     const result = await this.repo.editParcel(editParcel);
+   
     return toResult(result);
   }
 }

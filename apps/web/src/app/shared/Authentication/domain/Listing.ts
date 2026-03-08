@@ -1,7 +1,8 @@
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
-import type { Item, TripListing } from "@/app/features/trips/domain/Trip";
+import type { TripListing } from "@/app/features/trips/domain/Trip";
 import type { UserProfile } from "./authTypes";
+import type { GoodsItem } from "@/types/Ui";
 
 export type ListingType = "parcel" | "trip";
 
@@ -13,7 +14,7 @@ export interface Listing {
   id: string;
   user: UserProfile;
   goodsCategory: GoodsCategory[];
-  items: Item[];
+  items: GoodsItem[];
   route: {
     originCountry: string;
     originCity: string;

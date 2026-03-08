@@ -1,8 +1,6 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useEffect, useMemo, useState } from "react";
-// trips.types.ts
-import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { ListingTable } from "../dashboard/components/ListingTable";
@@ -13,39 +11,24 @@ import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
 import { useToast } from "@/app/components/Toast";
 import { AnimatePresence } from "framer-motion";
 import { useGoods } from "@/app/shared/Authentication/UI/GoodsProvider";
-import CreateParcelModal, {
-  type FormValues,
-} from "../dashboard/CreateParcelModal";
-import type { ParcelListing } from "./domain/Parcel";
+import CreateParcelModal from "./ui/CreateParcelModal";
 import ParcelCard from "./ui/ParcelCard";
 import CustomModal from "@/app/components/CustomModal";
-import type { Listing } from "@/app/shared/Authentication/domain/Listing";
+import type { FormValues } from "@/types/Ui";
+import type { ParcelListing } from "./domain/Parcel";
 export type TripStatus = "draft" | "active" | "paused" | "completed";
-
-export const tripEditSchema = z.object({
-  from_country: z.string().min(2),
-  from_city: z.string().min(1),
-  to_country: z.string().min(2),
-  to_city: z.string().min(1),
-  departure_date: z.string().min(8), // keep simple; you can refine to date
-  available_kg: z.coerce.number().min(0),
-  price_per_kg: z.coerce.number().min(0),
-  status: z.enum(["draft", "active", "paused", "completed"]),
-});
-
-export type TripEditInput = z.infer<typeof tripEditSchema>;
 
 export function MyParcelsPage() {
   const [loading, setLoading] = useState(true);
-  const [parcels, setTableData] = useState<Listing[]>([]);
-  const [formValues, setFormValues] = useState<FormValues | null>(null);
-  const [showParcelPreviewModal, setPreviewModalState] =
-    useState<boolean>(false);
-  const [parcelPreiew, setParcel] = useState<Listing | null>(null);
-  const { user, refreshProfile, profile } = useAuth();
+  const [myParcels, setMyParcels] = useState<ParcelListing[]>([]);
+  const [editParcel, setFormValues] = useState<FormValues | null>(null);
+  const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
+    null,
+  );
+  const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
-  const tripByIdUseCase = useMemo(
+  const myParcelsUsecase = useMemo(
     () => new MyParcelsIdUseCase(parcelRepo),
     [parcelRepo],
   );
@@ -56,8 +39,10 @@ export function MyParcelsPage() {
 
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
   const sortedParcels = useMemo(() => {
-    return [...parcels].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
-  }, [parcels]);
+    return [...myParcels].sort((a, b) =>
+      a.departDate > b.departDate ? 1 : -1,
+    );
+  }, [myParcels]);
 
   // delete parcel
   const deleteParcel = async (parcelId: string) => {
@@ -89,19 +74,18 @@ export function MyParcelsPage() {
       if (!user?.id) return;
       setLoading(true);
       const { result } = await namedCall(
-        "my trips",
-        tripByIdUseCase.execute(user?.id),
+        "myParcels",
+        myParcelsUsecase.execute(user?.id),
       );
       if (!result.success) {
         setLoading(false);
-        console.log(result);
         return;
       }
 
       if (result.data) {
         setLoading(false);
         result.data;
-        setTableData(result.data);
+        setMyParcels(result.data);
       }
     }
     loadTrips();
@@ -145,31 +129,30 @@ export function MyParcelsPage() {
           </div>
         ) : (
           <ListingTable
-            onClick={() => setPreviewModalState(true)} // set preview
-            setParcel={setParcel}
-            data={parcels}
-            onEdit={setParcelModalState} // set edit
+            setListingPreview={setParcelPreview}
+            data={myParcels}
+            onEdit={setFormValues} // set edit
             onDelete={deleteParcel}
-            setFormValues={setFormValues}
+            setModalState={setParcelModalState}
           />
         )}
       </div>
 
       <AnimatePresence>
         {/* edit parcel */}
-        {showParcelModal && (
+        {showParcelModal && editParcel && (
           <CreateParcelModal
             mode="edit"
-            initialFormValues={formValues}
+            initialFormValues={editParcel}
             goodsCategory={goodsCategories}
             setModalState={setParcelModalState}
           />
         )}
         {/*show preview moda */}
-        {showParcelPreviewModal && parcelPreiew && (
-          <CustomModal onClose={() => setPreviewModalState(false)} width="md">
+        {parcelPreview && (
+          <CustomModal onClose={() => setParcelPreview(null)} width="md">
             <ParcelCard
-              parcel={parcelPreiew}
+              parcel={parcelPreview}
               onClick={() => null}
               mode="preview"
             />

@@ -1,5 +1,5 @@
 import type { CreateTripListing } from "../../trips/domain/CreateTrip";
-import type { TripFormFields } from "../../dashboard/CreateTripModal";
+import type { TripFormFields } from "../../trips/ui/CreateTripModal";
 
 export default function toCreateTrip(
   formValues: TripFormFields,
@@ -11,7 +11,7 @@ export default function toCreateTrip(
     destinationCity: formValues.destinationCity,
     departureDate: formValues.departureDate,
     arrivalDate: null,
-    capacityKg: formValues.availableSpace,
+    capacityKg: formValues.weight,
     pricePerKg: formValues.pricePerKg,
   };
 }

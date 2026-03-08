@@ -20,4 +20,5 @@ export type StatsItem = {
   itemName: string;
   count: number;
   status?: Status;
+  link?: string
 };

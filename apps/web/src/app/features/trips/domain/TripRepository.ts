@@ -1,6 +1,7 @@
 import type { TripListing as TripListing } from "./Trip";
 import type { CreateTripListing } from "./CreateTrip";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
+import type { TripDto } from "../application/TripDto";
 
 export interface TripsRepository {
   createTrip(
@@ -11,4 +12,5 @@ export interface TripsRepository {
   fetchTrip(userId: string): Promise<RepoResponse<TripListing>>;
   tripById(userId: string): Promise<RepoResponse<TripListing[]>>;
   deleteTrip(parcelId: string): Promise<RepoResponse<string>>;
+  editTrip(editTrip: Partial<TripDto>): Promise<RepoResponse<string>>;
 }

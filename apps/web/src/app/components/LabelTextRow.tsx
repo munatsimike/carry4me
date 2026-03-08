@@ -19,7 +19,7 @@ export default function LabelTextRow({ label, text }: LabelTextRowProps) {
 
   {Array.isArray(text) ? (
     (() => {
-      const maxVisible = 3; // change to 2/3/4 depending on your card width
+      const maxVisible = 2; // change to 2/3/4 depending on your card width
       const visible = text.slice(0, maxVisible);
       const remaining = text.length - visible.length;
 
@@ -35,8 +35,8 @@ export default function LabelTextRow({ label, text }: LabelTextRowProps) {
           ))}
 
           {remaining > 0 && (
-            <span className="inline-flex bg-neutral-200 rounded-full px-2 py-[2px] border border-neutral-300">
-              <LabelText text={`+${remaining}`} />
+            <span className="px-2 py-1 text-xs border border-gray-300 rounded-full text-gray-600">
+              <LabelText text={`+${remaining} more`} />
             </span>
           )}
         </span>

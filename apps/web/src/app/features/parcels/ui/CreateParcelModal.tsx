@@ -2,7 +2,7 @@ import FloatingInputField from "@/app/components/CustomInputField";
 import LineDivider from "@/app/components/LineDivider";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
-import FormModal from "./components/FormModal";
+import FormModal from "../../dashboard/components/FormModal";
 import {
   useFieldArray,
   useForm,
@@ -11,35 +11,35 @@ import {
   type UseFormRegister,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import FormHeader from "./components/FormHeader";
+import FormHeader from "../../dashboard/components/FormHeader";
 import { META_ICONS } from "@/app/icons/MetaIcon";
-import RouteFieldRow from "./components/RouteFieldRow";
-import AgreeToTermsRow from "./components/AgreeToTermsRow";
+import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
+import AgreeToTermsRow from "../../dashboard/components/AgreeToTermsRow";
 import SvgIcon from "@/components/ui/SvgIcon";
-import GoodsCategoryGrid from "./components/GoodsCategoryGrid";
-import type { GoodsCategory } from "../goods/domain/GoodsCategory";
+import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
+import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
 import z from "zod";
 import { useEffect, useMemo, useState } from "react";
-import type { ParcelItem } from "../parcels/domain/CreateParcel";
+
 import { StepHeader } from "@/app/components/forms/formStepper";
 import { ArrowLeft, X } from "lucide-react";
-import { PriceField } from "./components/PriceField";
-import { WeightField } from "./components/WeightField";
-import toCreateParcelMapper from "../goods/domain/toCreatParcelMapper";
-import { CreateParcelUseCase } from "../parcels/application/CreateParcelUseCase";
+import { PriceField } from "../../dashboard/components/PriceField";
+import { WeightField } from "../../dashboard/components/WeightField";
+import toCreateParcelMapper from "../../goods/domain/toCreatParcelMapper";
+import { CreateParcelUseCase } from "../application/CreateParcelUseCase";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import { SupabaseParcelRepository } from "../parcels/data/SupabaseParcelRepository";
-import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
-import { SaveGoodsUseCase } from "../goods/application/SaveGoodsUseCase";
-import type { UserGoods } from "../goods/domain/UserGoods";
-import toGoodsMapper from "../goods/domain/toGoodsMapper";
+import { SupabaseParcelRepository } from "../data/SupabaseParcelRepository";
+import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepository";
+import { SaveGoodsUseCase } from "../../goods/application/SaveGoodsUseCase";
+import type { UserGoods } from "../../goods/domain/UserGoods";
+import toGoodsMapper from "../../goods/domain/toGoodsMapper";
 import { useToast } from "@/app/components/Toast";
 import { AnimatePresence, motion } from "framer-motion";
-import type { Item } from "../trips/domain/Trip";
-import { EditParcelUsecase } from "../parcels/application/EditParcelUsecase";
-import { toParcelDtoMapper } from "../parcels/application/toParcelDtoMapper";
-import { EditGoodsUsecase } from "../goods/application/EditGoodsUseCase";
+import { EditParcelUsecase } from "../application/EditParcelUsecase";
+import { toParcelDtoMapper } from "../application/toParcelDtoMapper";
+import { EditGoodsUsecase } from "../../goods/application/EditGoodsUseCase";
+import type { FormValues, GoodsItem } from "@/types/Ui";
 
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
@@ -55,7 +55,7 @@ const parcelSchema = z.object({
   itemDescriptions: z
     .array(parcelItemSchema)
     .min(1, "Enter item quantity and description"),
-  totalWeight: z.number().min(1, "Quantity should be 1 or more"),
+  weight: z.number().min(1, "Quantity should be 1 or more"),
   pricePerKg: z.number().min(1, "Price should be 1 or more"),
 
   agreeToRules: z
@@ -74,26 +74,13 @@ const parcelStep1Fields = [
   "originCity",
   "goodsCategoryIds",
 ] as const;
+
 const parcelStep2Fields = [
   "itemDescriptions",
-  "totalWeight",
+  "weight",
   "pricePerKg",
   "agreeToRules",
 ] as const;
-
-export type FormValues = {
-  id: string;
-  originCountry: string;
-  originCity: string;
-  destinationCountry: string;
-  destinationCity: string;
-  goodsCategoryIds: string[];
-  itemDescriptions: Item[];
-  totalWeight: number;
-  pricePerKg: number;
-  agreeToRules: false;
-  sender_id: string;
-};
 
 const emptyDefaultsValues = {
   originCountry: "",
@@ -102,7 +89,7 @@ const emptyDefaultsValues = {
   destinationCity: "Harare",
   goodsCategoryIds: [],
   itemDescriptions: [{ quantity: 1, description: "" }],
-  totalWeight: 1,
+  weight: 1,
   pricePerKg: 0,
   agreeToRules: false,
 };
@@ -113,7 +100,7 @@ export default function CreateParcelModal({
   initialFormValues,
   mode = "create",
 }: {
-  initialFormValues?: FormValues | null;
+  initialFormValues?: FormValues;
   goodsCategory: GoodsCategory[];
   mode?: ParcelFormMode;
   setModalState: (v: boolean) => void;
@@ -153,7 +140,7 @@ export default function CreateParcelModal({
   const countryValue = watch("originCountry");
   const cityValue = watch("originCity");
   const priceValue = watch("pricePerKg");
-  const weightValue = watch("totalWeight");
+  const weightValue = watch("weight");
   const dividerHeight = "my-0";
   const { refreshProfile } = useAuth();
   const { fields, append, remove } = useFieldArray({
@@ -203,7 +190,11 @@ export default function CreateParcelModal({
     if (dirtyFields.goodsCategoryIds) {
       const { result } = await namedCall(
         "edit goods",
-        editGoodsUsecase.execute(values.goodsCategoryIds, initialFormValues.id),
+        editGoodsUsecase.execute(
+          values.goodsCategoryIds,
+          initialFormValues.id,
+          "parcel",
+        ),
       );
       if (!result.success) {
         console.log(result.error);
@@ -260,7 +251,7 @@ export default function CreateParcelModal({
       onClose={() => setModalState(false)}
     >
       <div className="flex flex-col gap-4">
-        <div className="relative flex flex-col gap-5">
+        <div className="flex flex-col gap-5">
           <FormHeader
             heading={`${mode === "edit" ? "Edit parcel" : "Post parcel"}`}
             subHeading={
@@ -273,18 +264,23 @@ export default function CreateParcelModal({
             <StepHeader currentStep={step} formType="parcel" />
           </div>
           {step === 2 && (
-            <span className="inline-flex absolute left-0 top-0">
+            <motion.span
+              className="inline-flex absolute left-5 top-4"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4 }}
+            >
               <Button
                 type="button"
                 variant="neutral"
                 onClick={goBack}
-                size={"sm"}
+                size="sm"
               >
-                <span className="inline-flex gap-1 items-center text-ink-black">
-                  <ArrowLeft className="w-4" /> {"Back"}
+                <span className="inline-flex gap-1 items-center text-black">
+                  <ArrowLeft className="w-4" /> Back
                 </span>
               </Button>
-            </span>
+            </motion.span>
           )}
         </div>
         {step === 1 ? (
@@ -354,14 +350,14 @@ export default function CreateParcelModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-[20px]">
               {/* Weight Field */}
               <WeightField<ParcelFormFields>
-                register={register("totalWeight", { valueAsNumber: true })}
+                register={register("weight", { valueAsNumber: true })}
                 id="weight"
-                error={errors.totalWeight?.message}
-                isTouched={!!touchedFields.totalWeight}
-                isDirty={!!dirtyFields.totalWeight}
+                error={errors.weight?.message}
+                isTouched={!!touchedFields.weight}
+                isDirty={!!dirtyFields.weight}
                 setValue={setValue}
                 value={weightValue}
-                name={"totalWeight"}
+                name={"weight"}
               />
 
               {/* Price Field */}
@@ -441,7 +437,7 @@ export default function CreateParcelModal({
 }
 
 type DescriptionQuantityRowProps = {
-  fields: ParcelItem[];
+  fields: GoodsItem[];
   onRemove: (index: number) => void;
   register: UseFormRegister<ParcelFormFields>;
   errors: FieldErrors<ParcelFormFields>;
@@ -563,6 +559,6 @@ function isEdited(
     dirtyFields.originCity,
     dirtyFields.originCountry,
     dirtyFields.pricePerKg,
-    dirtyFields.totalWeight,
+    dirtyFields.weight,
   ].some(Boolean);
 }

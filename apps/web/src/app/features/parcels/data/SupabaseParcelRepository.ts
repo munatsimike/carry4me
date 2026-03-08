@@ -15,7 +15,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
   async editParcel(
     editParcel: Partial<ParcelDto>,
   ): Promise<RepoResponse<string>> {
-    console.log(editParcel);
+
     const { data, error } = await supabase
       .from("parcels")
       .update(editParcel)
@@ -65,7 +65,8 @@ export class SupabaseParcelRepository implements ParcelRepository {
     );
 
     if (userId) {
-      query.eq("sender_user_id", userId);
+      query
+      .eq("sender_user_id", userId)
     }
 
     const { data, error, status } = await query;

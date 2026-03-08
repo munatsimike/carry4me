@@ -33,6 +33,7 @@ export function mapTripRowToTrip(row: TripRow): TripListing {
 
   return {
     id: row.id,
+    type: "trip",
     user: {
       id: row.traveler.id,
       fullName: row.traveler.full_name,
@@ -53,9 +54,10 @@ export function mapTripRowToTrip(row: TripRow): TripListing {
       slug: c.slug,
     })),
     pricePerKg: row.price_per_kg,
-    capacityKg: row.capacity_kg,
+    weightKg: row.capacity_kg,
     departDate: row.depart_date,
     arriveDate: row.arrive_date,
     status: row.status,
+    items: [],
   };
 }

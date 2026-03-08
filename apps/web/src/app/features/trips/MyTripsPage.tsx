@@ -1,45 +1,33 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-
 import { useEffect, useMemo, useState } from "react";
-
-// trips.types.ts
-import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { SupabaseTripsRepository } from "./data/SupabaseTripsRepository";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
-
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { DeleteTripUseCase } from "./application/DeleteTripUseCase";
 import { useToast } from "@/app/components/Toast";
 import CustomText from "@/components/ui/CustomText";
 import { MyTripsUseCase } from "./application/MyTripsUseCase";
-import type { FormValues } from "../dashboard/CreateParcelModal";
-import type { ParcelListing } from "../parcels/domain/Parcel";
 import type { TripListing } from "./domain/Trip";
+import type { FormValues } from "@/types/Ui";
+import { AnimatePresence } from "framer-motion";
+import CreateTripModal from "./ui/CreateTripModal";
+import CustomModal from "@/app/components/CustomModal";
+import TravelerCard from "./ui/TravelerCard";
+import { useGoods } from "@/app/shared/Authentication/UI/GoodsProvider";
 export type TripStatus = "draft" | "active" | "paused" | "completed";
-
-export const tripEditSchema = z.object({
-  from_country: z.string().min(2),
-  from_city: z.string().min(1),
-  to_country: z.string().min(2),
-  to_city: z.string().min(1),
-  departure_date: z.string().min(8), // keep simple; you can refine to date
-  available_kg: z.coerce.number().min(0),
-  price_per_kg: z.coerce.number().min(0),
-  status: z.enum(["draft", "active", "paused", "completed"]),
-});
-
-export type TripEditInput = z.infer<typeof tripEditSchema>;
-
 export function MyTripsPage() {
   const [loading, setLoading] = useState(true);
-  const [tripsListing, setTableData] = useState<TripListing[]>([]);
-  const [editTrip, setEditTrip] = useState<boolean | null>(null);
-  const { user, refreshProfile, profile } = useAuth();
+  const [mypTrips, setMyTrips] = useState<TripListing[]>([]);
+
+  const { user, refreshProfile } = useAuth();
+  const [tripreview, setTripPreview] = useState<TripListing | null>(null);
+  const [showCreateTripModal, setCreatTripModalState] =
+    useState<boolean>(false);
+  const [editTrip, setEditTrip] = useState<FormValues | null>(null);
   const tripRepo = useMemo(() => new SupabaseTripsRepository(), []);
   const { toast } = useToast();
-
   const tripByIdUseCase = useMemo(
     () => new MyTripsUseCase(tripRepo),
     [tripRepo],
@@ -50,10 +38,19 @@ export function MyTripsPage() {
   );
 
   const sortedTrips = useMemo(() => {
-    return [...tripsListing].sort((a, b) =>
-      a.departDate > b.departDate ? 1 : -1,
-    );
-  }, [tripsListing]);
+    return [...mypTrips].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
+  }, [mypTrips]);
+
+  const {
+    goodsCategories,
+    ensureGoodsLoaded,
+    loading: goodsLoading,
+  } = useGoods();
+
+  useEffect(() => {
+    if (!showCreateTripModal) return;
+    ensureGoodsLoaded();
+  }, [showCreateTripModal, ensureGoodsLoaded]);
 
   const deleteTrip = async (parcelId: string) => {
     const { result } = await namedCall(
@@ -84,7 +81,7 @@ export function MyTripsPage() {
 
       if (result.data) {
         setLoading(false);
-        setTableData(result.data);
+        setMyTrips(result.data);
       }
     }
     loadTrips();
@@ -124,19 +121,35 @@ export function MyTripsPage() {
           </div>
         ) : (
           <ListingTable
-            onClick={() => null}
-            data={tripsListing}
+            data={mypTrips}
             onEdit={setEditTrip}
             onDelete={deleteTrip}
-            setFormValues={function (v: FormValues): void {
-              throw new Error("Function not implemented.");
-            }}
-            setParcel={function (p: ParcelListing): void {
-              throw new Error("Function not implemented.");
-            }}
+            setListingPreview={setTripPreview}
+            setModalState={setCreatTripModalState}
           />
         )}
       </div>
+      <AnimatePresence>
+        {/* edit parcel */}
+        {showCreateTripModal && editTrip && (
+          <CreateTripModal
+            mode="edit"
+            initialFormValues={editTrip}
+            goodsCategory={goodsCategories}
+            setModalState={setCreatTripModalState}
+          />
+        )}
+        {/*show preview moda */}
+        {tripreview && (
+          <CustomModal onClose={() => setTripPreview(null)} width="md">
+            <TravelerCard
+              trip={tripreview}
+              onClick={() => null}
+              mode="preview"
+            />
+          </CustomModal>
+        )}{" "}
+      </AnimatePresence>
     </DefaultContainer>
   );
 }

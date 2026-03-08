@@ -1,33 +1,36 @@
-import { CreateTripUseCase } from "../trips/application/CreateTripUsecase";
-import FormHeader from "./components/FormHeader";
+import { CreateTripUseCase } from "../application/CreateTripUsecase";
+import FormHeader from "../../dashboard/components/FormHeader";
 import LineDivider from "@/app/components/LineDivider";
-import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import { useForm } from "react-hook-form";
+import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
+import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import { SupabaseTripsRepository } from "../trips/data/SupabaseTripsRepository";
-import { useMemo, useState } from "react";
-import FormModal from "./components/FormModal";
-import RouteFieldRow from "./components/RouteFieldRow";
-import toCreateTrip from "../goods/domain/toCreateTripMapper";
-import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
-import { SaveGoodsUseCase } from "../goods/application/SaveGoodsUseCase";
-import type { UserGoods } from "../goods/domain/UserGoods";
-import toGoodsMapper from "../goods/domain/toGoodsMapper";
-import AgreeToTermsRow from "./components/AgreeToTermsRow";
-import GoodsCategoryGrid from "./components/GoodsCategoryGrid";
+import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
+import { useEffect, useMemo, useState } from "react";
+import FormModal from "../../dashboard/components/FormModal";
+import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
+import toCreateTrip from "../../goods/domain/toCreateTripMapper";
+import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepository";
+import { SaveGoodsUseCase } from "../../goods/application/SaveGoodsUseCase";
+import type { UserGoods } from "../../goods/domain/UserGoods";
+import toGoodsMapper from "../../goods/domain/toGoodsMapper";
+import AgreeToTermsRow from "../../dashboard/components/AgreeToTermsRow";
+import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
 import { useToast } from "@/app/components/Toast";
 import { Button } from "@/components/ui/Button";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { StepHeader, type Step } from "@/app/components/forms/formStepper";
-import { DateField } from "./components/DateField";
-import { WeightField } from "./components/WeightField";
-import { PriceField } from "./components/PriceField";
+import { DateField } from "../../dashboard/components/DateField";
+import { WeightField } from "../../dashboard/components/WeightField";
+import { PriceField } from "../../dashboard/components/PriceField";
 import CustomText from "@/components/ui/CustomText";
 import { ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { FormMode } from "@/types/Ui";
+import type { FormMode, FormValues } from "@/types/Ui";
+import { EditGoodsUsecase } from "../../goods/application/EditGoodsUseCase";
+import { toTripDtoMapper } from "../application/toTripDtoMapper";
+import { EditTripUsecase } from "../application/EditTripUsecase";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
@@ -35,21 +38,26 @@ export const tripSchema = z.object({
   originCity: z.string().min(1, "City is required"),
   destinationCountry: z.string().min(3, "Minimum of three letters is required"),
   destinationCity: z.string().min(1, "Destination city is required"),
-
   departureDate: z.string().min(1, "Departure date is required"),
-
-  availableSpace: z
-    .number()
-    .min(1, "Must be at least 1kg")
-    .max(200, "Too large"),
+  weight: z.number().min(1, "Must be at least 1kg").max(200, "Too large"),
   pricePerKg: z.number().min(0, "Price must be 0 or more"),
-
   goodsCategoryIds: z.array(z.string()).min(1, "Select at least one category"),
-
   agreeToRules: z.boolean().refine((v) => v === true, {
     message: "You must agree to the rules",
   }),
 });
+
+const emptyDefaultsValues = {
+  originCountry: "",
+  originCity: "",
+  destinationCity: "Harare",
+  destinationCountry: "Zimbabwe",
+  departureDate: "",
+  pricePerKg: 10,
+  weight: 1,
+  goodsCategoryIds: [],
+  agreeToRules: false,
+};
 
 export type TripFormFields = z.infer<typeof tripSchema>;
 
@@ -63,32 +71,37 @@ const step1Fields: Array<keyof TripFormFields> = [
 
 const step2Fields: Array<keyof TripFormFields> = [
   "goodsCategoryIds",
-  "availableSpace",
+  "weight",
   "pricePerKg",
   "agreeToRules",
 ];
 
 export default function CreateTripModal({
-
+  mode ="create",
   goodsCategory,
   setModalState,
+  initialFormValues,
 }: {
   goodsCategory: GoodsCategory[];
   setModalState: (v: boolean) => void;
-  formMode: FormMode
+  initialFormValues?: FormValues;
+  mode?: FormMode;
 }) {
   const [step, setStep] = useState<Step>(1);
-
+  const repo = useMemo(() => new SupabaseTripsRepository(), []);
+  const editTripUsecase = useMemo(() => new EditTripUsecase(repo), [repo]);
   const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
   const saveGoodsUseCase = useMemo(
     () => new SaveGoodsUseCase(goodsRepo),
     [goodsRepo],
   );
-
-  const repo = useMemo(() => new SupabaseTripsRepository(), []);
+  const editGoodsUsecase = useMemo(
+    () => new EditGoodsUsecase(goodsRepo),
+    [goodsRepo],
+  );
   const useCase = useMemo(() => new CreateTripUseCase(repo), [repo]);
 
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
 
   const {
@@ -98,20 +111,11 @@ export default function CreateTripModal({
     watch,
     setValue,
     trigger,
+    reset,
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<TripFormFields>({
     resolver: zodResolver(tripSchema),
-    defaultValues: {
-      originCountry: "",
-      originCity: "",
-      destinationCity: "Harare",
-      destinationCountry: "Zimbabwe",
-      departureDate: "",
-      pricePerKg: 10,
-      availableSpace: 1,
-      goodsCategoryIds: [],
-      agreeToRules: false,
-    },
+    defaultValues: initialFormValues ?? emptyDefaultsValues,
     mode: "onChange",
     reValidateMode: "onChange",
   });
@@ -119,10 +123,17 @@ export default function CreateTripModal({
   const selectedIds = watch("goodsCategoryIds");
   const countryValue = watch("originCountry");
   const cityValue = watch("originCity");
-  const weightValue = watch("availableSpace");
+  const weightValue = watch("weight");
   const priceValue = watch("pricePerKg");
 
   const dividerHeight = "";
+  const isEditMode = mode === "edit";
+  useEffect(() => {
+    if (isEditMode && initialFormValues) {
+      reset(initialFormValues);
+    }
+    if (mode === "create") reset(emptyDefaultsValues);
+  }, [mode, initialFormValues, emptyDefaultsValues]);
 
   const goNext = async () => {
     // validate only step 1 fields
@@ -131,9 +142,51 @@ export default function CreateTripModal({
     setStep(2);
   };
 
+  const onSubmit = async (values: TripFormFields) => {
+    if (mode === "create") {
+      onCreate(values);
+    } else {
+      onEdit(values);
+    }
+  };
+
+  const onEdit = async (values: TripFormFields) => {
+    if (!isEdited(dirtyFields)) {
+      toast("No changes were made", { variant: "warning" });
+      return;
+    }
+
+    if (!initialFormValues?.id) return;
+    const { result } = await namedCall(
+      "edit trip",
+      editTripUsecase.execute(
+        toTripDtoMapper(initialFormValues?.id, values, dirtyFields),
+      ),
+    );
+
+    if (dirtyFields.goodsCategoryIds) {
+      const { result } = await namedCall(
+        "edit goods",
+        editGoodsUsecase.execute(values.goodsCategoryIds, initialFormValues.id, "trip"),
+      );
+      if (!result.success) {
+        console.log(result.error);
+      }
+    }
+
+    if (!result.success) {
+      console.log(result.error);
+      return;
+    }
+    if (result.success) {
+      toast("changes saved successfully", { variant: "success" });
+      await refreshProfile();
+    }
+  };
+
   const goBack = () => setStep(1);
 
-  const onValidSubmit = async (values: TripFormFields) => {
+  const onCreate = async (values: TripFormFields) => {
     if (!user) return;
 
     const ok = await trigger(step2Fields, { shouldFocus: true });
@@ -158,13 +211,13 @@ export default function CreateTripModal({
 
   return (
     <FormModal
-      onSubmit={handleSubmit(onValidSubmit)}
+      onSubmit={handleSubmit(onSubmit)}
       onClose={() => setModalState(false)}
     >
-      <div className="relative flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-5">
           <FormHeader
-            heading={"Post your trip"}
+            heading={isEditMode ? "Edit trip" : "Post your trip"}
             subHeading={"Share your trip details to get matched with senders."}
           />
           <StepHeader currentStep={step} />
@@ -198,12 +251,6 @@ export default function CreateTripModal({
               isCountryTouched={!!dirtyFields.originCountry}
               isCityDirty={!!dirtyFields.originCity}
               isCityTouched={!!touchedFields.originCity}
-              // If you also have destination inputs in this component,
-              // wire these too (recommended):
-              // registerDestinationCity={register("destinationCity")}
-              // registerDestinationCountry={register("destinationCountry")}
-              // destinationCityError={errors.destinationCity?.message}
-              // destinationCountryError={errors.destinationCountry?.message}
             />
 
             <LineDivider heightClass={dividerHeight} />
@@ -242,7 +289,11 @@ export default function CreateTripModal({
               goods={goodsCategory}
               selectedIds={selectedIds}
               onChange={(next) =>
-                setValue("goodsCategoryIds", next, { shouldValidate: true })
+                setValue("goodsCategoryIds", next, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                  shouldTouch: true,
+                })
               }
             />
 
@@ -251,11 +302,11 @@ export default function CreateTripModal({
               {/* Available Space */}
               <WeightField<TripFormFields>
                 id="weight"
-                register={register("availableSpace", { valueAsNumber: true })}
-                error={errors.availableSpace?.message}
-                isDirty={!!dirtyFields.availableSpace}
-                isTouched={!!touchedFields.availableSpace}
-                name="availableSpace"
+                register={register("weight", { valueAsNumber: true })}
+                error={errors.weight?.message}
+                isDirty={!!dirtyFields.weight}
+                isTouched={!!touchedFields.weight}
+                name="weight"
                 setValue={setValue}
                 value={weightValue}
               />
@@ -324,7 +375,13 @@ export default function CreateTripModal({
                 disabled={isSubmitting}
                 size={"md"}
               >
-                {isSubmitting ? "Posting..." : "Post trip"}
+                {mode === "create"
+                  ? isSubmitting
+                    ? "Posting..."
+                    : "Post trip"
+                  : isSubmitting
+                    ? "Saving..."
+                    : "Save changes"}
               </Button>
             </div>
           </>
@@ -334,7 +391,6 @@ export default function CreateTripModal({
   );
 }
 
-// --- keep your helpers but I fixed a tiny await + naming ---
 async function createTrip(
   values: TripFormFields,
   userId: string,
@@ -348,7 +404,6 @@ async function createTrip(
   onCloseModal();
 
   if (!result.success) {
-    console.log("");
     return "";
   }
 
@@ -360,4 +415,19 @@ async function SaveGoodsCategories(
   goods: UserGoods,
 ) {
   await saveGoodsUseCase.execute(goods, true);
+}
+
+function isEdited(
+  dirtyFields: FieldNamesMarkedBoolean<TripFormFields>,
+): boolean {
+  return [
+    dirtyFields.destinationCity,
+    dirtyFields.destinationCountry,
+    dirtyFields.weight,
+    dirtyFields.goodsCategoryIds,
+    dirtyFields.originCity,
+    dirtyFields.originCountry,
+    dirtyFields.pricePerKg,
+    dirtyFields.weight,
+  ].some(Boolean);
 }

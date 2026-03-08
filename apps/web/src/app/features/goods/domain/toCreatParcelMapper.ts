@@ -1,4 +1,4 @@
-import type { ParcelFormFields } from "../../dashboard/CreateParcelModal";
+import type { ParcelFormFields } from "../../parcels/ui/CreateParcelModal";
 import type { CreateParcel } from "../../parcels/domain/CreateParcel";
 
 export default function toCreateParcelMapper(
@@ -11,7 +11,7 @@ export default function toCreateParcelMapper(
     originCity: values.originCity,
     destinationCountry: values.destinationCountry,
     destinationCity: values.destinationCity,
-    weightKg: values.totalWeight,
+    weightKg: values.weight,
     items: values.itemDescriptions,
     price: values.pricePerKg,
   };

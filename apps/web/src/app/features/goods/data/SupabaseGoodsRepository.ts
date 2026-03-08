@@ -4,6 +4,7 @@ import type { GoodsRepository } from "../domain/GoodsRepository";
 import type { UserGoods } from "../domain/UserGoods";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import type { EditGoodsDto } from "../application/EditGoodsDto";
+import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 
 export class SupabaseGoodsRepository implements GoodsRepository {
   async list(): Promise<RepoResponse<GoodsCategory[]>> {
@@ -35,24 +36,94 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     return { error: null, status: null, data };
   }
 
-  async editParcel(editGoods: EditGoodsDto[]): Promise<RepoResponse<string>> {
-    this.deleteParcel(editGoods[0].parcel_id);
-    const { data, error } = await supabase
-      .from("parcel_categories")
-      .insert(editGoods)
-      .select("parcel_id");
-    if (error) return { error: null, status: null, data };
-    return { error: null, status: null, data: data[0].parcel_id };
+  async editListingGoods(
+    type: ListingType,
+    editGoods: EditGoodsDto[],
+  ): Promise<RepoResponse<string>> {
+    if (editGoods.length === 0) {
+      return {
+        data: null,
+        error: "No goods categories provided",
+        status: 400,
+      };
+    }
+
+    const isTrip = type === "trip";
+    const table = isTrip ? "trip_accepted_categories" : "parcel_categories";
+    const idColumnName = isTrip ? "trip_id" : "parcel_id";
+
+    const listingId = isTrip ? editGoods[0].trip_id : editGoods[0].parcel_id;
+
+    if (!listingId) {
+      return {
+        data: null,
+        error: "No goods categories provided",
+        status: 400,
+      };
+    }
+    const deleteResult = await this.deleteListingGoods(
+      table,
+      idColumnName,
+      listingId,
+    );
+
+    if (deleteResult?.error) {
+      return {
+        data: null,
+        error: deleteResult.error,
+        status: deleteResult.status,
+      };
+    }
+
+    const rows = isTrip
+      ? editGoods.map((item) => ({
+          trip_id: item.trip_id!,
+          category_id: item.category_id,
+        }))
+      : editGoods.map((item) => ({
+          parcel_id: item.parcel_id!,
+          category_id: item.category_id,
+        }));
+
+    const { error, status } = await supabase.from(table).insert(rows);
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        status,
+      };
+    }
+
+    return {
+      data: listingId,
+      error: null,
+      status,
+    };
   }
 
-  async deleteParcel(parcelId: string) {
-    const del = await supabase
-      .from("parcel_categories")
+  async deleteListingGoods(
+    tableName: string,
+    idColumnName: string,
+    listingId: string,
+  ): Promise<RepoResponse<null>> {
+    const { error, status } = await supabase
+      .from(tableName)
       .delete()
-      .eq("parcel_id", parcelId);
+      .eq(idColumnName, listingId);
 
-    if (del.error) {
-      return { data: null, error: del.error.message, status: del.status };
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        status,
+      };
     }
+
+    return {
+      data: null,
+      error: null,
+      status,
+    };
   }
 }

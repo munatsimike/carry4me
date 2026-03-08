@@ -1,5 +1,4 @@
 
-
 export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>
 >;
@@ -44,7 +43,25 @@ export type Route = {
   acceptedParcels: Category[];
 };
 
+export type GoodsItem = {
+  quantity: number;
+  description: string;
+};
 
+export type FormValues = {
+  id: string;
+  originCountry: string;
+  originCity: string;
+  destinationCountry: string;
+  destinationCity: string;
+  goodsCategoryIds: string[];
+  itemDescriptions: GoodsItem[];
+  weight: number;
+  pricePerKg: number;
+  agreeToRules: false;
+  senderId: string;
+  departureDate?: string;
+};
 
 export type FormMode = "edit" | "create";
 

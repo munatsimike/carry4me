@@ -4,11 +4,11 @@ import { supabase } from "../../supabase/client";
 
 export type Table = "parcels"| "trips"
 
-export async function deleteById(parcelId: string, table: Table): Promise<RepoResponse<string>> {
+export async function deleteById(listingId: string, table: Table): Promise<RepoResponse<string>> {
   const { data, error, status } = await supabase
     .from(table)
     .delete()
-    .eq("id", parcelId)
+    .eq("id", listingId)
     .select("id");
 
   if (error) {
@@ -28,7 +28,7 @@ export async function deleteById(parcelId: string, table: Table): Promise<RepoRe
   }
 
   return {
-    data: parcelId,
+    data: listingId,
     error: null,
     status,
   };

@@ -1,14 +1,11 @@
 
-import type { GoodsItem } from "@/types/Ui";
-
-export type ParcelDto = {
+export type TripDto = {
   id: string;
   category_id: string[];
   origin_country: string;
   origin_city: string;
   destination_country: string;
   destination_city: string;
-  weight_kg: number;
-  items: GoodsItem[];
-  price: number;
+  capacity_kg: number;
+  price_per_kg: number;
 };

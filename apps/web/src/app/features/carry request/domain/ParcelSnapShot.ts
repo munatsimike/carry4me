@@ -14,7 +14,7 @@ export type ParcelSnapshot = {
     country: string;
     city: string;
   };
-  categories: {
+  goods_category: {
     id: string;
     name: string;
     slug: string;

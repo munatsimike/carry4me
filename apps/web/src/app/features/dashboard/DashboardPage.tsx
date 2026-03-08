@@ -9,9 +9,9 @@ import { CircleBadge, type CirleBgColor } from "@/components/ui/CircleBadge";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import type { SvgIconComponent } from "@/types/Ui";
-import CreatParcelModal from "./CreateParcelModal";
+import CreatParcelModal from "../parcels/ui/CreateParcelModal";
 import Greeting from "@/app/components/Greeting";
-import CreateTripModal from "./CreateTripModal";
+import CreateTripModal from "../trips/ui/CreateTripModal";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
@@ -331,13 +331,16 @@ function StatsSection({ statsList }: StatsProps) {
       <div className="w-fit">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {statsList.map((item) => (
-            <Card
-              key={item.itemName}
-              className="flex flex-col items-center gap-3"
-            >
-              <CustomText>{item.itemName}</CustomText>
-              <CustomText textSize={"md"}>{item.count}</CustomText>
-            </Card>
+            <Link to={item.link ?? ""}>
+              <Card
+                hover={false}
+                key={item.itemName}
+                className="flex flex-col items-center gap-3 hover:bg-neutral-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
+              >
+                <CustomText>{item.itemName}</CustomText>
+                <CustomText textSize={"md"}>{item.count}</CustomText>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

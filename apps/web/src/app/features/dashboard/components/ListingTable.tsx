@@ -1,9 +1,9 @@
 import CustomText from "@/components/ui/CustomText";
 import { AnimatePresence, motion } from "framer-motion";
-import type { FormValues } from "../CreateParcelModal";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
 import { useState } from "react";
 import type { Listing } from "@/app/shared/Authentication/domain/Listing";
+import type { FormValues } from "@/types/Ui";
 
 // 1) Variants
 const tableWrap = {
@@ -34,23 +34,21 @@ const rowVariants = {
   },
 };
 
-type ListingTableProps = {
-  data: Listing[];
-  onEdit: (b: boolean) => void;
+interface ListingTableProps<T extends Listing> {
+  data: T[];
+  onEdit: (v: FormValues) => void;
   onDelete: (s: string) => void;
-  setFormValues: (v: FormValues) => void;
-  onClick: () => void;
-  setParcel: (p: Listing) => void;
-};
+  setListingPreview: (p: T) => void;
+  setModalState: (b: boolean) => void;
+}
 
-export function ListingTable({
+export function ListingTable<T extends Listing>({
   data,
   onEdit,
   onDelete,
-  setFormValues,
-  onClick,
-  setParcel,
-}: ListingTableProps) {
+  setListingPreview,
+  setModalState,
+}: ListingTableProps<T>) {
   const headerStyle = "pl-4 py-4 font-medium";
   const [hoverId, sethover] = useState<string | null>(null);
 
@@ -76,9 +74,7 @@ export function ListingTable({
 
         {/* Animate tbody + rows */}
         <motion.tbody variants={tbodyVariants} initial="hidden" animate="show">
-           
           {data.map((row: Listing) => (
-            
             <motion.tr
               key={row.id}
               onMouseEnter={() => sethover(row.id)}
@@ -107,8 +103,7 @@ export function ListingTable({
                       <motion.button
                         type="button"
                         onClick={() => {
-                          setParcel(row);
-                          onClick();
+                          setListingPreview(row as T);
                         }}
                         initial={{ opacity: 0, x: 6, scale: 0.98 }}
                         animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -139,9 +134,8 @@ export function ListingTable({
 
               <TableTd>
                 <span className="iniline-flex rounded-full bg-success-50 px-2 py-1 text-success-500 border border-success-100 text-sm">
-                 {row.status}
+                  {row.status}
                 </span>
-               
               </TableTd>
 
               <TableTd>
@@ -151,9 +145,9 @@ export function ListingTable({
                     whileTap={{ scale: 0.98 }}
                     className="hover:bg-neutral-300 px-3 rounded-md py-1"
                     onClick={() => {
-                      onEdit(true);
+                      setModalState(true);
                       // set form values for editing
-                      setFormValues({
+                      onEdit({
                         id: row.id,
                         originCountry: row.route.originCountry,
                         originCity: row.route.originCity,
@@ -162,11 +156,12 @@ export function ListingTable({
                         goodsCategoryIds: row.goodsCategory.map(
                           (x: GoodsCategory) => x.id,
                         ),
-                        itemDescriptions: row.itemDescription,
-                        totalWeight: row.capacityKg,
+                        itemDescriptions: row.items,
+                        weight: row.weightKg,
                         pricePerKg: row.pricePerKg,
                         agreeToRules: false,
-                        sender_id: row.user.id ?? "",
+                        senderId: row.user.id ?? "",
+                        departureDate: row.type === "trip" ? row.departDate : "",
                       });
                     }}
                   >
