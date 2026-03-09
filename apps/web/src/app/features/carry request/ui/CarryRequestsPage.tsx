@@ -38,9 +38,23 @@ import type { HandoverConfirmationState } from "../handover confirmations/domain
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { motion } from "framer-motion";
+import EmptyState from "@/app/components/EmptyState";
+import {
+  toEmptyStateForMapper,
+  type EmptyStateConfig,
+} from "../application/toEmptyStateForMapper";
+import { Link, useSearchParams } from "react-router-dom";
+
+export type SelectedTab = "ongoing" | "completed" | "declined" | "cancelled";
+type NavItem = {
+  id: SelectedTab;
+  label: string;
+  count: number;
+};
 
 export default function CarryRequestsPage() {
   const [carryRequestsList, setCarryRequestList] = useState<CarryRequest[]>([]);
+  const [selectedTab, setSelectedTab] = useState<SelectedTab | null>(null);
   const carryRequestRepository = useMemo(
     () => new SupabaseCarryRequestRepository(),
     [],
@@ -61,40 +75,54 @@ export default function CarryRequestsPage() {
 
   const { showSupabaseError } = useUniversalModal();
   const [isRequestSent, setisRequestSent] = useState(false);
-  const [isListLoaded, setIsListLoaded] = useState(false);
   const [isStateLoaded, setIsStateLoaded] = useState(false);
   const { user } = useAuth();
+
   const [handoverState, setHandoverState] = useState<
     HandoverConfirmationState | undefined
   >(undefined);
 
-  //fetch carry requests
-  useEffect(() => {
-    let cancelled = false;
+  const [loading, setLoading] = useState(false);
+  const [emptyStateMessage, setEmptyState] = useState<EmptyStateConfig | null>(
+    null,
+  );
 
-    if (cancelled) return;
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const tab = searchParams.get("tab") ?? "ongoing";
+    setSelectedTab(tab as SelectedTab);
+  }, [searchParams]);
+
+  useEffect(() => {
     async function fetchRequest() {
-      if (!user || isListLoaded) return;
+      if (!user || !selectedTab) return;
+      setLoading(true);
+
       const { result } = await namedCall(
         "carryRequest",
-        fetchCarryRequestUseCase.execute(user.id),
+        fetchCarryRequestUseCase.execute(user.id, selectedTab),
       );
 
       if (!result.success) {
         showSupabaseError(result.error, result.status);
+        setLoading(false);
         return;
       }
-      if (result.success) {
+
+      if (result.data.length === 0) {
+        setEmptyState(toEmptyStateForMapper(selectedTab));
+        setCarryRequestList([]);
+      } else {
+        setEmptyState(null);
         setCarryRequestList(result.data);
-        setIsListLoaded(true);
       }
+
+      setLoading(false);
     }
 
     fetchRequest();
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id, isListLoaded]);
+  }, [user?.id, selectedTab]);
 
   const [inputValue, setValue] = useState<string>("");
   const heightClass = "my-2";
@@ -111,107 +139,134 @@ export default function CarryRequestsPage() {
     );
 
     if (result) {
-      setIsListLoaded(false);
       setisRequestSent(true);
     }
   };
 
   return (
     <>
-      <PageTopSection />
+      {selectedTab && (
+        <PageTopSection
+          selectedTab={selectedTab}
+          setSelectedTab={setSelectedTab}
+        />
+      )}
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {carryRequestsList.map((request) => {
-          if (
-            request.status == CARRY_REQUEST_STATUSES.PENDING_HANDOVER &&
-            !isStateLoaded
-          ) {
-            ``;
-            setHandoverState(request.handoverState);
-            setIsStateLoaded(true);
-          }
-          const viewerRole =
-            user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
-          const requestUI = mapCarryRequestToUI(request, viewerRole);
-          const actions = actionsMapper(
-            viewerRole,
-            request.status,
-            request.initiatorRole,
-            handoverState ?? undefined,
-          );
-          return (
-            <Card
-              key={request.carryRequestId}
-              cornerRadiusClass="rounded-2xl"
-              className="px-6 w-full max-w-[1000px] mx-auto shadow-sm"
-            >
-              <div className="flex flex-col gap-2 mx-2">
-                <Header
-                  title={requestUI.title}
-                  description={requestUI.description}
-                  requestId={request.carryRequestId.substring(
-                    request.carryRequestId.length - 5,
-                  )}
-                  status={request.status}
-                />
-                <LineDivider heightClass={heightClass} />
-                <ProgressRow
-                  currentStep={requestUI.currentStep}
-                  isInitiator={viewerRole === request.initiatorRole}
-                />
-                <LineDivider heightClass={heightClass} />
-                <Deails
-                  trip={request.tripSnapshot}
-                  parcel={request.parcelSnapshot}
-                  viewerRole={viewerRole}
-                />
-                <LineDivider heightClass={heightClass} />
-                {actions.infoBlock?.displayText ? (
-                  <RequestCompleted actions={actions} />
-                ) : (
-                  <SpaceBetweenRow>
-                    {actions.secondary ? (
-                      <Button
-                        variant={"error"}
-                        size={"md"}
-                        leadingIcon={undefined}
-                      >
-                        {actions.secondary?.label}
+        {emptyStateMessage && (
+          <EmptyState
+            title={emptyStateMessage.title}
+            description={emptyStateMessage.body}
+            action={
+              emptyStateMessage.actions && (
+                <div className="flex items-center justify-around">
+                  {emptyStateMessage.actions.map((action) => (
+                    <Link key={action.href} to={action.href}>
+                      <Button variant={action.variant} size={"md"}>
+                        {action.label}
                       </Button>
-                    ) : (
-                      <span /> // place holder to push primary button to the right
+                    </Link>
+                  ))}
+                </div>
+              )
+            }
+          />
+        )}
+
+        {carryRequestsList &&
+          carryRequestsList.map((request) => {
+            if (
+              request.status == CARRY_REQUEST_STATUSES.PENDING_HANDOVER &&
+              !isStateLoaded
+            ) {
+              ``;
+              setHandoverState(request.handoverState);
+              setIsStateLoaded(true);
+            }
+            const viewerRole =
+              user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
+            const requestUI = mapCarryRequestToUI(request, viewerRole);
+            const actions = actionsMapper(
+              viewerRole,
+              request.status,
+              request.initiatorRole,
+              handoverState ?? undefined,
+            );
+
+            return (
+              <Card
+                key={request.carryRequestId}
+                cornerRadiusClass="rounded-2xl"
+                className="px-6 w-full max-w-[1000px] mx-auto shadow-sm"
+              >
+                <div className="flex flex-col gap-2 mx-2">
+                  <Header
+                    title={requestUI.title}
+                    description={requestUI.description}
+                    requestId={request.carryRequestId.substring(
+                      request.carryRequestId.length - 5,
                     )}
-                    {actions.primary &&
-                      actions.primary.key !== UIACTIONKEYS.RELEASE_PAYMENT && (
+                    status={request.status}
+                  />
+                  <LineDivider heightClass={heightClass} />
+                  <ProgressRow
+                    currentStep={requestUI.currentStep}
+                    isInitiator={viewerRole === request.initiatorRole}
+                  />
+                  <LineDivider heightClass={heightClass} />
+                  <Deails
+                    trip={request.tripSnapshot}
+                    parcel={request.parcelSnapshot}
+                    viewerRole={viewerRole}
+                  />
+                  <LineDivider heightClass={heightClass} />
+                  {actions.infoBlock?.displayText ? (
+                    <RequestCompleted actions={actions} />
+                  ) : (
+                    <SpaceBetweenRow>
+                      {actions.secondary ? (
                         <Button
-                          onClick={() => handleActions(actions, request)}
-                          variant="primary"
-                          size="md"
-                          leadingIcon
+                          variant={"error"}
+                          size={"md"}
+                          leadingIcon={undefined}
                         >
-                          {actions.primary.label}
+                          {actions.secondary?.label}
                         </Button>
+                      ) : (
+                        <span /> // place holder to push primary button to the right
                       )}
+                      {actions.primary &&
+                        actions.primary.key !==
+                          UIACTIONKEYS.RELEASE_PAYMENT && (
+                          <Button
+                            onClick={() => handleActions(actions, request)}
+                            variant="primary"
+                            size="md"
+                            leadingIcon
+                          >
+                            {actions.primary.label}
+                          </Button>
+                        )}
 
-                    {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
-                      actions.infoBlock.displayText !== null && (
-                        <InfoBlockDisplay actions={actions} />
+                      {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
+                        actions.infoBlock.displayText !== null && (
+                          <InfoBlockDisplay actions={actions} />
+                        )}
+
+                      {actions.infoBlock?.mode === INFOMODES.INPUT && (
+                        <InfoBlockInput
+                          handleActions={handleActions}
+                          carryRequest={request}
+                          actions={actions}
+                          onChange={setValue}
+                          inputValue={inputValue}
+                        />
                       )}
-
-                    {actions.infoBlock?.mode === INFOMODES.INPUT && (
-                      <InfoBlockInput
-                        handleActions={handleActions}
-                        carryRequest={request}
-                        actions={actions}
-                        onChange={setValue}
-                        inputValue={inputValue}
-                      />
-                    )}
-                  </SpaceBetweenRow>
-                )}
-              </div>
-            </Card>
-          );
-        })}
+                    </SpaceBetweenRow>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
       </DefaultContainer>
     </>
   );
@@ -292,9 +347,14 @@ function InfoBlockDisplay({ actions }: { actions: UIActions }) {
   );
 }
 
-function PageTopSection() {
-  const [selectedId, setSelected] = useState<string>("ongoing");
-  const tabs = [
+function PageTopSection({
+  selectedTab,
+  setSelectedTab,
+}: {
+  selectedTab: SelectedTab;
+  setSelectedTab: (v: SelectedTab) => void;
+}) {
+  const tabs: NavItem[] = [
     { id: "ongoing", label: "Ongoing", count: 1 },
     { id: "completed", label: "Completed", count: 0 },
     { id: "cancelled", label: "Cancelled", count: 0 },
@@ -305,13 +365,13 @@ function PageTopSection() {
       <span className="inline-flex bg-neutral-100 rounded-full py-3 px-10 shadow-sm  border border-neutral-200">
         <div className="flex gap-6 relative">
           {tabs.map((item) => {
-            const isActive = item.id === selectedId;
+            const isActive = item.id === selectedTab;
 
             return (
               <motion.span
                 key={item.id}
                 className="relative cursor-pointer pb-2"
-                onClick={() => setSelected(item.id)}
+                onClick={() => setSelectedTab(item.id)}
                 whileTap={{
                   y: 0,
                   scale: 0.95,
@@ -320,7 +380,7 @@ function PageTopSection() {
                   y: -2,
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                animate={{ y: item.id === selectedId ? -3 : 0 }}
+                animate={{ y: item.id === selectedTab ? -3 : 0 }}
               >
                 <CustomText
                   textSize="xsm"

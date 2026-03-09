@@ -18,6 +18,16 @@ export class GetDashboardDataUseCase {
         data: {
           stats: [
             {
+              itemName: "Active Requests",
+              count: stats.totalMatches,
+              link: "/requests?tab=ongoing",
+            },
+            {
+              itemName: "Deliveries completed",
+              count: stats.delivered,
+              link: "/requests?tab=completed",
+            },
+            {
               itemName: "Posted Trips",
               count: stats.postedTrips,
               link: "/my/trips",
@@ -26,12 +36,6 @@ export class GetDashboardDataUseCase {
               itemName: "Posted  Parcel",
               count: stats.postedParcels,
               link: "/my/parcels",
-            },
-            { itemName: "Deliveries completed", count: stats.delivered },
-            {
-              itemName: "Matches",
-              count: stats.totalMatches,
-              link: "/requests",
             },
           ],
           activity: [

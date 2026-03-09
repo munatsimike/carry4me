@@ -85,7 +85,6 @@ function AuthenticatedNavigation({ setShowProfile, avatar }: ProfileProps) {
               {1}
             </span>
           </span>
-          Notifications
         </span>
       </button>
 

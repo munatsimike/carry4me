@@ -7,7 +7,7 @@ import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 export class SupabaseNotificationRepository implements NotificationRepository {
   async fetchNotifications(
     userId: string,
-    limit: number = 3,
+    limit: number,
   ): Promise<RepoResponse<CarryRequestNotification[]>> {
     const { data, status, error } = await supabase
       .from("notifications")

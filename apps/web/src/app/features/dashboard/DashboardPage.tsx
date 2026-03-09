@@ -22,7 +22,7 @@ import type { StatsItem } from "./domain/stats.types";
 import { GetDashboardDataUseCase } from "./application/GetDashboardData";
 import type { DashboardData } from "./domain/DashboardData";
 import { SubabaseDashboardRepository } from "./data/SupabaseDashboardRepository";
-import { Clock, Truck } from "lucide-react";
+import {  Clock, Truck } from "lucide-react";
 import { GetNotificationUseCase } from "../carry request/carry request events/application/CreateNotificationUseCase";
 import { SupabaseNotificationRepository } from "../carry request/carry request events/data/SupabaseNotificationRepository";
 import type { CarryRequestNotification } from "../carry request/carry request events/domain/CarryRequestNotification";
@@ -260,14 +260,6 @@ function RecentActivity({
                       {formatRelativeTime(activity.createdAt)}
                     </p>
                   </div>
-                  <CustomText
-                    as="span"
-                    textVariant="secondary"
-                    textSize="xsm"
-                    className="leading-[1.2] "
-                  >
-                    {activity.body}
-                  </CustomText>
                 </div>
               </div>
               {index !== recentActivities.length - 1 && (
@@ -291,7 +283,7 @@ function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
               <Truck className="text-neutral-600" strokeWidth={1.5} />
             </CircleBadge>
             <CustomText textVariant="primary" textSize="md">
-              {"My deliveries"}
+              {"Delivery Summary"}
             </CustomText>
           </span>
 
@@ -335,10 +327,10 @@ function StatsSection({ statsList }: StatsProps) {
               <Card
                 hover={false}
                 key={item.itemName}
-                className="flex flex-col items-center gap-3 hover:bg-neutral-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
+                className="flex flex-col items-center gap-3 hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
               >
                 <CustomText>{item.itemName}</CustomText>
-                <CustomText textSize={"md"}>{item.count}</CustomText>
+                <CustomText textVariant="primary" textSize={"md"}>{item.count}</CustomText>
               </Card>
             </Link>
           ))}

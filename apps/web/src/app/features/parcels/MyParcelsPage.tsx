@@ -16,6 +16,8 @@ import ParcelCard from "./ui/ParcelCard";
 import CustomModal from "@/app/components/CustomModal";
 import type { FormValues } from "@/types/Ui";
 import type { ParcelListing } from "./domain/Parcel";
+import EmptyState from "@/app/components/EmptyState";
+import { DessertIcon } from "lucide-react";
 export type TripStatus = "draft" | "active" | "paused" | "completed";
 
 export function MyParcelsPage() {
@@ -107,26 +109,22 @@ export function MyParcelsPage() {
         {loading || goodsLoading ? (
           <p>Loading…</p>
         ) : sortedParcels.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="flex flex-col p-4 gap-4 max-w-md bg-white shadow-md rounded-2xl">
-              <h2 className="text-xl font-semibold text-gray-800">
-                No parcels yet
-              </h2>
-
-              <CustomText as="p">
-                You haven’t posted any parcels yet. Start by creating a new
-                parcels to let others send trips with you.
-              </CustomText>
-
+          <EmptyState
+            title={"No parcels"}
+            description={
+              "You haven’t posted any parcels yet. Start by creating a new parcels to let others send trips with you."
+            }
+            action={
               <Button
+              className="w-full"
                 onClick={() => setParcelModalState(true)}
                 variant={"primary"}
                 size={"sm"}
               >
                 + Post a parcel
               </Button>
-            </span>
-          </div>
+            }
+          />
         ) : (
           <ListingTable
             setListingPreview={setParcelPreview}

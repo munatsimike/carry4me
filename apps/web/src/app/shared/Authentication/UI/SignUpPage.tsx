@@ -36,7 +36,7 @@ export const UserDetailsScema = z
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
-    path: ["confirmPassword"], // 👈 attaches error to confirmPassword
+    path: ["confirmPassword"], //  attaches error to confirmPassword
   });
 let submitCount = 0;
 export type UserDetailsFields = z.infer<typeof UserDetailsScema>;
@@ -59,7 +59,6 @@ export default function SignUpPage() {
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
   const navigate = useNavigate();
   const { openAuthModal } = useAuthModal();
-  const location = useLocation();
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
 
@@ -316,7 +315,7 @@ export default function SignUpPage() {
                 className="w-full"
                 disabled={isSubmitting || (submitCount > 0 && !isValid)}
               >
-                <CustomText textVariant="onDark" textSize="lg">
+                <CustomText textVariant="onDark" textSize="md">
                   {isSubmitting ? "processing..." : "Join Carry4me"}
                 </CustomText>
               </Button>

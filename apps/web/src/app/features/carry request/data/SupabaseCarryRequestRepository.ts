@@ -28,6 +28,7 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
 
   async fetchCarryRequestsForUser(
     userId: string,
+   requeststatus: CarryRequestStatus[]
   ): Promise<RepoResponse<CarryRequest[]>> {
     const { data, status, error } = await supabase
       .from("carry_requests")
@@ -38,6 +39,7 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
         handover_confirmations:carry_request_handover_confirmations(role, confirmed_at)
       `,
       )
+      .in("status", requeststatus)
       .or(`sender_user_id.eq.${userId},traveler_user_id.eq.${userId}`)
       .order("created_at", { ascending: false });
 

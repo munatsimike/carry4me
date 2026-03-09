@@ -16,6 +16,7 @@ import CreateTripModal from "./ui/CreateTripModal";
 import CustomModal from "@/app/components/CustomModal";
 import TravelerCard from "./ui/TravelerCard";
 import { useGoods } from "@/app/shared/Authentication/UI/GoodsProvider";
+import EmptyState from "@/app/components/EmptyState";
 export type TripStatus = "draft" | "active" | "paused" | "completed";
 export function MyTripsPage() {
   const [loading, setLoading] = useState(true);
@@ -103,22 +104,19 @@ export function MyTripsPage() {
         {loading ? (
           <p>Loading…</p>
         ) : sortedTrips.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="flex flex-col p-4 gap-4 max-w-md bg-white shadow-md rounded-2xl">
-              <h2 className="text-xl font-semibold text-gray-800">
-                No parcels yet
-              </h2>
-
-              <CustomText as="p">
-                You haven’t posted any parcels yet. Start by creating a new
-                parcels to let others send trips with you.
-              </CustomText>
-
-              <Button variant={"primary"} size={"sm"}>
+          <EmptyState
+            title={"No Trips"}
+            description={
+              "You haven’t posted any trips yet. Start by creating a new trips to let others send trips with you."
+            }
+            action={
+              <Button
+               className="w-full"
+               variant={"primary"} size={"sm"}>
                 + Post a trip
               </Button>
-            </span>
-          </div>
+            }
+          />
         ) : (
           <ListingTable
             data={mypTrips}
