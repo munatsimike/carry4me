@@ -3,7 +3,7 @@ import type { Status } from "../application/toColorMapper";
 type Statistics = {
   postedTrips: number;
   postedParcels: number;
-  totalMatches: number;
+  activeRequests: number;
   pendingAproval: number;
   awaitingPayment: number;
   awaitingHandover: number;

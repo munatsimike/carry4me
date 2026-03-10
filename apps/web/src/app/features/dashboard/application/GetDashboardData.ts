@@ -13,14 +13,15 @@ export class GetDashboardDataUseCase {
       await this.dashboardRepo.getDashboardStats(userId);
     if (data) {
       const stats = data.stats;
+      const href = "/requests?tab=ongoing";
       return {
         success: true,
         data: {
           stats: [
             {
               itemName: "Active Requests",
-              count: stats.totalMatches,
-              link: "/requests?tab=ongoing",
+              count: stats.activeRequests,
+              link: href,
             },
             {
               itemName: "Deliveries completed",
@@ -43,26 +44,31 @@ export class GetDashboardDataUseCase {
               itemName: "Pending Approval",
               status: "Pending",
               count: stats.pendingAproval,
+              link: href,
             },
             {
               itemName: "Awaiting payment",
               status: "Pending",
               count: stats.awaitingPayment,
+              link: href,
             },
             {
               itemName: "Awaiting handover",
               status: "Pending",
               count: stats.awaitingHandover,
+              link: href,
             },
             {
               itemName: "In progress",
               status: "InProgress",
               count: stats.inProgress,
+              link: href,
             },
             {
               itemName: "Completed",
               status: "Completed",
               count: stats.delivered,
+              link: "/requests?tab=completed",
             },
           ],
         },

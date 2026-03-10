@@ -15,14 +15,14 @@ import CreateTripModal from "../trips/ui/CreateTripModal";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, time } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";
 import { GetDashboardDataUseCase } from "./application/GetDashboardData";
 import type { DashboardData } from "./domain/DashboardData";
 import { SubabaseDashboardRepository } from "./data/SupabaseDashboardRepository";
-import {  Clock, Truck } from "lucide-react";
+import { Clock, Truck } from "lucide-react";
 import { GetNotificationUseCase } from "../carry request/carry request events/application/CreateNotificationUseCase";
 import { SupabaseNotificationRepository } from "../carry request/carry request events/data/SupabaseNotificationRepository";
 import type { CarryRequestNotification } from "../carry request/carry request events/domain/CarryRequestNotification";
@@ -68,7 +68,7 @@ export default function DashboardPage() {
     [],
   );
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const { showSupabaseError } = useUniversalModal();
   // fetch goods category
   const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
@@ -76,6 +76,12 @@ export default function DashboardPage() {
   const onLoad = async () => {
     console.log("what are you looking at?");
   };
+
+  useEffect(() => {
+    if (!user && !loading) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
 
   // fetch dashboard data
   useEffect(() => {
@@ -137,16 +143,6 @@ export default function DashboardPage() {
 
     fetchGoods();
   }, [showParcelModal, showTripModal]);
-
-  // get logged in user session data
-  //const { user, loading } = useAuth();
-  useEffect(() => {
-    if (!user) return;
-
-    if (!user) {
-      navigate("/", { replace: true });
-    }
-  }, [user, navigate]);
 
   return (
     <DefaultContainer>
@@ -210,7 +206,7 @@ function YourActivitySection({
         {"Your activities"}
       </CustomText>
       <div className="flex flex-wrap gap-6">
-        <MyDeliveries activityList={activityList} />
+        <DeliverySummary activityList={activityList} />
         <RecentActivity recentActivities={recentActivityList} />
       </div>
     </div>
@@ -250,10 +246,10 @@ function RecentActivity({
 
                 <div
                   key={activity.id}
-                  className="flex flex-col bg-neutral w-full sm:min-w-[330px] max-w-sm"
+                  className="flex flex-col bg-neutral w-full sm:min-w-[250px] max-w-sm"
                 >
                   <div className="flex justify-between">
-                    <CustomText textVariant="primary">
+                    <CustomText textVariant="secondary">
                       {activity.title}
                     </CustomText>
                     <p className="text-[12px] text-neutral-500">
@@ -273,7 +269,7 @@ function RecentActivity({
 }
 
 // card to disply activity items
-function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
+function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
   return (
     <div className="flex flex-col gap-3 max-w-sm">
       <Card>
@@ -287,14 +283,14 @@ function MyDeliveries({ activityList }: { activityList: StatsItem[] }) {
             </CustomText>
           </span>
 
-          <ActivityItems activityList={activityList} />
+          <DeliverySummaryItem activityList={activityList} />
         </span>
       </Card>
     </div>
   );
 }
 
-function ActivityItems({ activityList }: { activityList: StatsItem[] }) {
+function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
   return (
     <span className="flex flex-col gap-3">
       {activityList.map((item) => (
@@ -302,13 +298,17 @@ function ActivityItems({ activityList }: { activityList: StatsItem[] }) {
           <span
             className={`w-2 h-2 rounded-full ${item.status && toColorMapper[item.status]}`}
           />
-          <CustomText
-            textVariant="secondary"
-            textSize="xsm"
-            className="cursor-pointer"
-          >
-            {item.itemName} {`(${item.count})`}
-          </CustomText>
+          <Link to={`${item.count > 0 ? item.link : ""}`}>
+            <span className="inline-flex gap-2 items-center">
+              <CustomText
+                textVariant={`${item.count > 0 ? "secondary" : "helperText"}`}
+                className={`${item.count > 0 ? "cursor-pointer" : "cursor-text"}`}
+              >
+                {item.itemName}
+              </CustomText>
+              <CustomText textVariant={`${item.count > 0 ? "secondary" : "helperText"}`} textSize="xsm">{`[${item.count}]`}</CustomText>
+            </span>
+          </Link>
         </span>
       ))}
     </span>
@@ -323,14 +323,16 @@ function StatsSection({ statsList }: StatsProps) {
       <div className="w-fit">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {statsList.map((item) => (
-            <Link to={item.link ?? ""}>
+            <Link key={item.itemName} to={item.link ?? ""}>
               <Card
                 hover={false}
                 key={item.itemName}
                 className="flex flex-col items-center gap-3 hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
               >
                 <CustomText>{item.itemName}</CustomText>
-                <CustomText textVariant="primary" textSize={"md"}>{item.count}</CustomText>
+                <CustomText textVariant="primary" textSize={"md"}>
+                  {item.count}
+                </CustomText>
               </Card>
             </Link>
           ))}

@@ -23,7 +23,7 @@ export class SubabaseDashboardRepository implements DashboardDataRepository {
         stats: {
           postedParcels: data.total_posted_parcels,
           postedTrips: data.total_posted_trips,
-          totalMatches: data.total_requests,
+          activeRequests: data.active_requests,
           pendingAproval: data.pending_matches,
           awaitingPayment: data.pending_payment,
           awaitingHandover: data.pending_handover,

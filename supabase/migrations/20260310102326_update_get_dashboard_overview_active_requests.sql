@@ -11,13 +11,18 @@ AS $$
     'total_posted_trips',
       (SELECT COUNT(*) FROM trips WHERE traveler_user_id = p_user_id),
 
-    -- Carry Request Lifecycle
-    'total_requests',
+    -- Active Requests
+    'active_requests',
       (SELECT COUNT(*) FROM carry_requests
-       WHERE sender_user_id = p_user_id
-          OR traveler_user_id = p_user_id) 
-          AND
-          status = `PENDING_ACCEPTANCE`OR  `PENDING_PAYMENT`,OR 'PENDING_HANDOVER',OR'IN_TRANSIT',OR'PENDING_PAYOUT'
+       WHERE (sender_user_id = p_user_id OR traveler_user_id = p_user_id)
+       AND status IN (
+         'PENDING_ACCEPTANCE',
+         'PENDING_PAYMENT',
+         'PENDING_HANDOVER',
+         'IN_TRANSIT',
+         'PENDING_PAYOUT'
+       )
+      ),
 
     'pending_matches',
       (SELECT COUNT(*) FROM carry_requests

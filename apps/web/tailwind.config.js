@@ -70,7 +70,7 @@ export default {
 
         ink: {
           primary: "#0A2148",
-          secondary: "#6B7280",
+          secondary: "#667085",
           success: "#10B981",
           onDark: "#ffff",
           error: "#EF4444",
@@ -118,5 +118,5 @@ export default {
     },
   },
 
- plugins: [require('tailwind-scrollbar-hide')]
+  plugins: [require("tailwind-scrollbar-hide")],
 };

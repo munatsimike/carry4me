@@ -362,7 +362,7 @@ function PageTopSection({
   ];
   return (
     <PageSection>
-      <span className="inline-flex bg-neutral-100 rounded-full py-3 px-10 shadow-sm  border border-neutral-200">
+      <span className="inline-flex bg-neutral-0 rounded-full py-3 px-10 ">
         <div className="flex gap-6 relative">
           {tabs.map((item) => {
             const isActive = item.id === selectedTab;
@@ -383,8 +383,8 @@ function PageTopSection({
                 animate={{ y: item.id === selectedTab ? -3 : 0 }}
               >
                 <CustomText
-                  textSize="xsm"
-                  textVariant={isActive ? "selected" : "secondary"}
+                  textSize="sm"
+                  textVariant={isActive ? "selected" : "primary"}
                 >
                   {item.label}
                 </CustomText>
@@ -424,6 +424,7 @@ function Deails({
         <Stack>
           <span className="pb-1">
             <CustomText
+              textVariant="primary"
               as="span"
               textSize="xsm"
               className="inline-flex bg-neutral-100 rounded-full py-1 px-3 border"
