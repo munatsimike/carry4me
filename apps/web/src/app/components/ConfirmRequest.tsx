@@ -26,7 +26,7 @@ type ConfirmRequestProps = {
   loggedInUserId: string;
   trip: TripListing;
   parcel: ParcelListing;
-  onClose: () => void;
+  onSubmitted: () => void;
   isSenderRequesting: boolean;
 };
 
@@ -34,7 +34,7 @@ export default function ConfirmRequest({
   loggedInUserId,
   trip,
   parcel,
-  onClose,
+  onSubmitted,
   isSenderRequesting,
 }: ConfirmRequestProps) {
   const carryRequestRepository = useMemo(
@@ -62,12 +62,12 @@ export default function ConfirmRequest({
     );
     if (requestId) {
       setLoadRequest(true);
-      onClose();
+      onSubmitted();
     }
   };
 
   return (
-    <div className="flex flex-col px-5">
+    <div className="flex flex-col px-5 py-2">
       <div className="flex justify-center mb-1">
         <SvgIcon color="primary" size={"lg"} Icon={META_ICONS.sendArrow} />
       </div>
@@ -91,9 +91,10 @@ export default function ConfirmRequest({
       />
       <LineDivider />
       <SendRequestBtn
+        buttonTextVariant="onDark"
         payLoad={undefined as never}
         primaryAction={handleSendRequest}
-        secondaryAction={onClose}
+        secondaryAction={onSubmitted}
       />
     </div>
   );

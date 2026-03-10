@@ -3,53 +3,120 @@ import DropDownMenu from "./DropDownMenu";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "../icons/MetaIcon";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const searchScema = z.object({
+  country: z.string().min(1, "Select country"),
+  city: z.string().min(1, "Select city"),
+});
+
+type SearchFields = z.infer<typeof searchScema>;
 
 type SearchProps = {
-  selectedCountry: string;
-  selectedCity: string;
   countries: string[];
   cities: string[];
-  onCountryChange: (country: string) => void;
-  onCityChange: (country: string) => void;
-  onClick: () => void;
 };
 
-export default function Search({
-  selectedCountry,
-  selectedCity,
-  countries,
-  cities,
-}: SearchProps) {
-  return (
-    <div className="inline-flex items-center gap-5 py-2 px-4 bg-neutral-50 rounded-xl border border-neutral-300 shadow-sm">
-      <DropDownMenu
-        className="rounded-xl shadow-sm"
-        value={selectedCountry}
-        placeholder="Select country"
-        menuItems={countries}
-      />
-      <DropDownMenu
-        className="rounded-xl shadow-sm"
-        value={selectedCity}
-        placeholder="Select city"
-        menuItems={cities}
-      />
+export default function Search({ countries, cities }: SearchProps) {
+  const heightClass = "py-0";
+  const {
+    register,
+    watch,
+    handleSubmit,
+    resetField,
+    formState: { dirtyFields, errors, touchedFields },
+  } = useForm<SearchFields>({
+    resolver: zodResolver(searchScema),
+    defaultValues: {
+      country: "",
+      city: "",
+    },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
 
-      <CustomText as="span" textSize="xsm">
-        {"to Zimbabwe"}
+  const countryValue = watch("country");
+  const cityValue = watch("city");
+
+  const handleSearch = async () => {
+    console.log(cityValue);
+    console.log(countryValue);
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit(handleSearch)}
+      className="flex flex-wrap items-center gap-4 rounded-2xl border border-neutral-100 bg-neutral-50 px-4 py-2 shadow-sm md:flex-nowrap"
+    >
+      <span className="flex flex-wrap gap-4">
+        <div className="min-w-[150px] flex-1">
+          <DropDownMenu
+            register={register("country", {
+              onChange: (e) => {
+                if (e.target.value && !!dirtyFields.city && cityValue !== "") {
+                  resetField("city");
+                }
+              },
+            })}
+            className="w-full rounded-xl bg-white shadow-sm"
+            value={countryValue}
+            placeholder={"Select country"}
+            menuItems={countries}
+            error={errors.country?.message}
+            isTouched={!!touchedFields.country}
+            isDirty={!!dirtyFields.country}
+            heightClass={heightClass}
+            textSize="text-md"
+          />
+        </div>
+
+        <div className="min-w-[170px] flex-1">
+          <DropDownMenu
+            register={register("city")}
+            className="w-full rounded-xl bg-white shadow-sm"
+            value={cityValue}
+            placeholder={"Select city"}
+            menuItems={cities}
+            heightClass={heightClass}
+            error={errors.city?.message}
+            isTouched={!!touchedFields.city}
+            isDirty={!!dirtyFields.city}
+            textSize="text-md"
+          />
+        </div>
+      </span>
+
+      <CustomText
+        as="span"
+        textSize="xsm"
+        className="text-neutral-500 whitespace-nowrap"
+      >
+        to
       </CustomText>
+
+      <div className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-white px-3 py-2 shadow-sm">
+        <SvgIcon size="md" Icon={META_ICONS.zimFlag} />
+        <CustomText as="span" textSize="xsm" className="text-neutral-700">
+          Zimbabwe
+        </CustomText>
+      </div>
+
       <Button
-      cornerRadiusClass="rounded-xl"
-        variant={"primary"}
-        size={"sm"}
+        type="submit"
+        cornerRadiusClass="rounded-xl"
+        variant="primary"
+        size="sm"
+        className="flex items-center gap-2 md:w-auto"
         leadingIcon={
-          <SvgIcon color="onDark" size={"sm"} Icon={META_ICONS.searchIcon} />
+          <SvgIcon color="onDark" size="sm" Icon={META_ICONS.searchIcon} />
         }
       >
         <CustomText textSize="sm" textVariant="onDark">
-          {"Search"}
+          Search
         </CustomText>
       </Button>
-    </div>
+    </form>
   );
 }

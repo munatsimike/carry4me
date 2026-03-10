@@ -42,7 +42,7 @@ export class SupabaseTripsRepository implements TripsRepository {
       .maybeSingle();
     if (error) return { data: null, status, error };
     if (error) return { data: null, status: null, error: null };
-    const result = data.mapTripRowToTrip(data);
+    const result = mapTripRowToTrip(data);
     return { data: result, status, error: null };
   }
 

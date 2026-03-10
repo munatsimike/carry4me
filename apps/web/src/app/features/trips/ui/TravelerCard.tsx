@@ -4,10 +4,14 @@ import { ListingCard } from "@/app/components/card/ListingCard";
 
 type TravelerProps = {
   trip: TripListing;
-  mode: CardMode;
+  mode?: CardMode;
   onClick: (trip: TripListing) => void;
 };
 
-export default function TravelerCard({ trip, onClick, mode }: TravelerProps) {
+export default function TravelerCard({
+  trip,
+  onClick,
+  mode = "display",
+}: TravelerProps) {
   return <ListingCard mode={mode} listing={trip} onClick={onClick} />;
 }

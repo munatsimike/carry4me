@@ -8,6 +8,7 @@ import {
 } from "../lib/cn";
 
 import ErrorText from "./text/ErrorText";
+import { ChevronDown } from "lucide-react";
 
 type DropDownMenuProps = {
   placeholder: string;
@@ -19,6 +20,8 @@ type DropDownMenuProps = {
   isDirty?: boolean;
   isTouched?: boolean;
   error?: string;
+  heightClass?: string;
+  textSize?: string;
 };
 
 export default function DropDownMenu({
@@ -27,14 +30,14 @@ export default function DropDownMenu({
   disabled = false,
   className = "rounded-full",
   register,
-  value = "",
+  value,
   isDirty,
+  heightClass = "py-2",
+  textSize = "text-sm",
   isTouched,
   error,
 }: DropDownMenuProps) {
   const isPlaceholder = !value;
-
-  const textSize = "text-[14px]";
   const textVariant = `${
     isPlaceholder ? "text-neutral-400" : "text-ink-primary"
   } ${textSize}`;
@@ -43,28 +46,34 @@ export default function DropDownMenu({
 
   return (
     <ErrorText error={error}>
-      <select
-     
-        disabled={disabled}
-        className={cn(
-          "px-3 py-2 bg-white" ,
-          inputStructural,
-          className,
-          textVariant,
-          error ? inputError : showSuccess ? inputSuccess : inputNeutral,
-        )}
-        {...register}
-      >
-        <option value="" disabled>
-          {placeholder}
-        </option>
-
-        {menuItems.map((item) => (
-          <option key={item} value={item} className={textVariant}>
-            {item}
+      <div className="relative min-w-[160px] w-full">
+        <select
+          disabled={disabled}
+          className={cn(
+            `${heightClass ?? "h-11"} w-full rounded-xl bg-white pl-3 pr-12 appearance-none`,
+            "overflow-hidden text-ellipsis whitespace-nowrap",
+            inputStructural,
+            className,
+            textVariant,
+            error ? inputError : showSuccess ? inputSuccess : inputNeutral,
+          )}
+          {...register}
+        >
+          <option value="" disabled>
+            {placeholder}
           </option>
-        ))}
-      </select>
+
+          {menuItems.map((item) => (
+            <option key={item} value={item} className={textVariant}>
+              {item}
+            </option>
+          ))}
+        </select>
+
+        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+          <ChevronDown className="h-4 w-4 text-gray-500" />
+        </div>
+      </div>
     </ErrorText>
   );
 }

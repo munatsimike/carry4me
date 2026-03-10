@@ -362,7 +362,7 @@ function PageTopSection({
   ];
   return (
     <PageSection>
-      <span className="inline-flex bg-neutral-0 rounded-full py-3 px-10 ">
+      <span className="inline-flex bg-neutral-0 rounded-full px-10 ">
         <div className="flex gap-6 relative">
           {tabs.map((item) => {
             const isActive = item.id === selectedTab;

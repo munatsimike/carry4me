@@ -62,9 +62,7 @@ export default function ParcelsPage() {
 
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
   const onClose = () => setParcel(null);
-  const [selectedCountry, setCountry] = useState<string>("");
-  const [selectedCity, setCity] = useState<string>("");
-  const [tripLoaded, setTripLoaded] = useState(false);
+  const [modalState, setModalState] = useState<boolean>(false);
   const { toast } = useToast();
 
   // trip to matched with a parcel. when a user selects a parcel they should have a trip.
@@ -74,7 +72,11 @@ export default function ParcelsPage() {
 
   //
   const handleRequest = async (parcel: ParcelListing) => {
-    if (!user) return;
+    if (!user) {
+      return;
+    } else {
+      setModalState(true);
+    }
     // check if parcel to be matched to a trip does not belong to the logged in user
     if (parcel.user.id === user.id) {
       toast(
@@ -84,7 +86,7 @@ export default function ParcelsPage() {
       return;
     }
 
-    if (!tripLoaded) {
+    if (!userTrip) {
       // fetch a trip to be matched with a parcel
       const trip = await namedCall("trip", getTripUseCase.execute(user.id));
 
@@ -104,7 +106,6 @@ export default function ParcelsPage() {
       }
       setUserTrip(trip.result.data);
       setParcel(parcel);
-      setTripLoaded(true);
     }
   };
 
@@ -114,11 +115,6 @@ export default function ParcelsPage() {
         <Search
           countries={["UK", "USA"]}
           cities={["London", "Birmingham"]}
-          onClick={() => () => null}
-          onCityChange={setCity}
-          onCountryChange={setCountry}
-          selectedCountry={selectedCountry}
-          selectedCity={selectedCity}
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
@@ -127,13 +123,13 @@ export default function ParcelsPage() {
         )}
       </DefaultContainer>
       <AnimatePresence>
-        {selectedParcel && user && userTrip && (
-          <CustomModal width="xl" onClose={onClose}>
+        {selectedParcel && user && userTrip && modalState && (
+          <CustomModal width="xl" onClose={() => setModalState(false)}>
             <ConfirmRequest
               loggedInUserId={user.id}
               trip={userTrip}
               parcel={selectedParcel}
-              onClose={onClose}
+              onSubmitted={onClose}
               isSenderRequesting={user.id === selectedParcel.user.id}
             />
           </CustomModal>

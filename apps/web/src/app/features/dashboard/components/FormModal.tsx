@@ -20,7 +20,7 @@ export default function FormModal({
         <motion.div
           layout
           transition={{ type: "spring", stiffness: 200, damping: 25 }}
-          className="flex flex-col px-4"
+          className="flex flex-col px-4 py-2"
         >
           {children}
         </motion.div>

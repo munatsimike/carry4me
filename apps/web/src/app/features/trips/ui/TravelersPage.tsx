@@ -8,8 +8,6 @@ import Search from "@/app/components/Search";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
 import { GetTripsUseCase } from "../application/GetTripsUseCase";
 import type { TripListing } from "../domain/Trip";
-import { GetGoodsUseCase } from "../../goods/application/GetGoodsUseCase";
-import { SupabaseGoodsRepository } from "../../goods/data/SupabaseGoodsRepository";
 import { AnimatePresence } from "framer-motion";
 import { GetParcelUseCase } from "../../parcels/application/GetParcelUseCase";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
@@ -28,12 +26,6 @@ export default function TravelersPage() {
     [parcelRepo],
   );
   const { showSupabaseError } = useUniversalModal();
-  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
-  const getGoodsUseCase = useMemo(
-    () => new GetGoodsUseCase(goodsRepo),
-    [goodsRepo],
-  );
-
   const [tripList, setTripList] = useState<TripListing[]>([]);
 
   useEffect(() => {
@@ -64,16 +56,20 @@ export default function TravelersPage() {
   }, []);
 
   const [selectedTrip, setTrip] = useState<TripListing | null>(null);
-  const [selectedCountry, setCountry] = useState<string>("");
-  const [selectedCity, setCity] = useState<string>("");
   const { user } = useAuth();
 
-  const [tripLoaded, setTripLoaded] = useState<boolean>(false);
   const [parcel, setParcel] = useState<ParcelListing | null>(null);
+  const [modalState, setModalState] = useState<boolean>(false);
   const onClose = () => setTrip(null);
   const { toast } = useToast();
 
   const handleRequest = async (trip: TripListing) => {
+    if (!user?.id) {
+      return;
+    } else {
+      setModalState(true);
+    }
+
     if (trip.user.id === user?.id) {
       toast(
         "You can’t match with your own trip. Browse available parcels instead.",
@@ -84,7 +80,7 @@ export default function TravelersPage() {
       return;
     }
 
-    if (!tripLoaded && user?.id) {
+    if (!parcel) {
       const { result } = await namedCall(
         "Parcel",
         getParcelUseCase.execute(user.id),
@@ -106,7 +102,6 @@ export default function TravelersPage() {
 
       setParcel(result.data);
       setTrip(trip);
-      setTripLoaded(true);
     }
   };
 
@@ -116,24 +111,19 @@ export default function TravelersPage() {
         <Search
           countries={["UK", "USA", "Ireland"]}
           cities={["London", "Birmingham"]}
-          onClick={() => () => null}
-          onCityChange={setCity}
-          onCountryChange={setCountry}
-          selectedCountry={selectedCountry}
-          selectedCity={selectedCity}
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {tripList && <Travelers trips={tripList} onClick={handleRequest} />}
       </DefaultContainer>
       <AnimatePresence>
-        {selectedTrip && parcel && user && (
-          <CustomModal width="xl" onClose={onClose}>
+        {selectedTrip && parcel && user && modalState && (
+          <CustomModal width="xl" onClose={() => setModalState(false)}>
             <ConfirmRequest
               loggedInUserId={user.id}
               trip={selectedTrip}
               parcel={parcel}
-              onClose={onClose}
+              onSubmitted={onClose}
               isSenderRequesting={user.id === parcel.user.id}
             />
           </CustomModal>

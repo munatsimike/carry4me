@@ -20,7 +20,6 @@ import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
 import z from "zod";
 import { useEffect, useMemo, useState } from "react";
-
 import { StepHeader } from "@/app/components/forms/formStepper";
 import { ArrowLeft, X } from "lucide-react";
 import { PriceField } from "../../dashboard/components/PriceField";
@@ -513,7 +512,7 @@ function AddItemButton({ onClick }: { onClick: () => void }) {
       size={"sm"}
     >
       <span className="inline-flex items-center gap-2">
-        <SvgIcon Icon={META_ICONS.addIcon} size={"xsm"} color="dark" />
+        <SvgIcon Icon={META_ICONS.addIcon} size={"xs"} color="dark" />
         <CustomText textVariant="primary" textSize="sm">
           {"Add item"}
         </CustomText>

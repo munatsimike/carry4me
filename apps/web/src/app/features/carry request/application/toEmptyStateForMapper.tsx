@@ -16,16 +16,16 @@ export function toEmptyStateForMapper(navTab: string): EmptyStateConfig {
         body: "You have no ongoing requests yet. Start by browsing parcels or trips to connect with other users.",
         actions: [
           {
-            label: "Browse Parcels",
-            href: "/parcels",
-            variant: "primary",
-          },
-          {
             label: "Browse Trips",
             href: "/travelers",
             variant: "secondary",
           },
-        ],
+          {
+            label: "Browse Parcels",
+            href: "/parcels",
+            variant: "primary",
+          },
+        ]
       };
 
     case "declined":
@@ -46,16 +46,16 @@ export function toEmptyStateForMapper(navTab: string): EmptyStateConfig {
         body: "You haven't completed any deliveries yet.",
         actions: [
           {
-            label: "Browse Parcels",
-            href: "/parcels",
-            variant: "primary",
-          },
-          {
             label: "Browse Trips",
             href: "/travelers",
             variant: "secondary",
           },
-        ],
+          {
+            label: "Browse Parcels",
+            href: "/parcels",
+            variant: "primary",
+          },
+        ]
       };
 
     default:

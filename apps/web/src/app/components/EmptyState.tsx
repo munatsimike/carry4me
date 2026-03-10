@@ -16,12 +16,12 @@ export default function EmptyState({
   action,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-10 text-center">
+    <div className="flex flex-col items-center justify-center text-center">
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="flex max-w-md flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm"
+        className="flex max-w-md flex-col gap-4 rounded-2xl bg-white p-6 shadow-md"
       >
         {icon && (
           <motion.div
