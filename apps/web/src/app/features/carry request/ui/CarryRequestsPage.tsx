@@ -196,7 +196,7 @@ export default function CarryRequestsPage() {
               <Card
                 key={request.carryRequestId}
                 cornerRadiusClass="rounded-2xl"
-                className="px-6 w-full max-w-[1000px] mx-auto shadow-sm"
+                className="px-6 w-full max-w-[1000px] mx-auto"
               >
                 <div className="flex flex-col gap-2 mx-2">
                   <Header
@@ -298,7 +298,7 @@ function InfoBlockInput({
   handleActions: (actions: UIActions, request: CarryRequest) => void;
 }) {
   return (
-    <span className="inline-flex flex-col gap-2">
+    <span className="inline-flex flex-col gap-3">
       <span className="inline-flex items-center gap-6">
         <CustomText textSize="xsm">{actions.infoBlock?.label}</CustomText>
         <input
@@ -418,7 +418,7 @@ function Deails({
   const totalPrice = parcel.price_per_kg * parcel.weight_kg;
   return (
     <div className="flex flex-col">
-      <span className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.7fr] gap-10">
+      <span className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.8fr] gap-10 ">
         <TripDetails trip={trip} viewerRole={viewerRole} />
         <ParcelDetails parcel={parcel} viewerRole={viewerRole} />
         <Stack>
@@ -432,32 +432,25 @@ function Deails({
               {"Cost summary"}
             </CustomText>
           </span>
-          <div className="grid grid-cols-2 gap-y-2">
-            <CustomText
-              textSize="xsm"
-              textVariant="neutral"
-              as="span"
-              className="text-right"
-            >
-              {"Parcel weight :"}
+          <div className="grid grid-cols-2 gap-y-3">
+            <CustomText textVariant="neutral" as="span" className="text-right">
+              {"Parcel weight"}
             </CustomText>
             <CustomText
               className="pl-1"
-              textSize="xsm"
               as="span"
               textVariant="primary"
             >{`${parcel.weight_kg.toString()}kg`}</CustomText>
 
             <CustomText
-              textSize="xsm"
+              textSize="sm"
               as="span"
               textVariant="neutral"
               className="text-right"
             >
-              {"Price :"}
+              {"Price"}
             </CustomText>
             <CustomText
-              textSize="xsm"
               as="span"
               textVariant="primary"
               className="leading-1 pl-1"
@@ -465,16 +458,11 @@ function Deails({
               {`${parcel.price_per_kg.toString()}`}/kg
             </CustomText>
 
-            <CustomText
-              textSize="xsm"
-              as="span"
-              textVariant="neutral"
-              className="text-right "
-            >
-              {"Total price :"}
+            <CustomText as="span" textVariant="neutral" className="text-right ">
+              {"Total price"}
             </CustomText>
             <CustomText
-              textSize="xsm"
+              textSize="sm"
               as="span"
               className="pl-1"
               textVariant="primary"
@@ -553,8 +541,8 @@ function Header({ title, description, requestId, status }: HeaaderProps) {
     <SpaceBetweenRow>
       <CurrentStatus title={title} description={description} status={status} />
       <span className="inline-flex flex-col gap-1">
-        <CustomText textSize="xsm"> {"Request"}</CustomText>
-        <CustomText textSize="xsm"> {`#${requestId}`}</CustomText>
+        <CustomText textSize="sm"> {"Request"}</CustomText>
+        <CustomText textSize="sm"> {`#${requestId}`}</CustomText>
       </span>
     </SpaceBetweenRow>
   );

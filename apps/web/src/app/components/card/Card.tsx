@@ -1,4 +1,4 @@
-import { motion, scale, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 type CardProps = {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ export function Card({
   paddingClass = "p-5",
   borderClass = "border border-neutral-200",
   cornerRadiusClass = "rounded-2xl",
-  shadowClass = "shadow-sm",
+  shadowClass = "shadow-md",
 }: CardProps) {
   const shouldReduceMotion = useReducedMotion();
   const hoverClass = hover

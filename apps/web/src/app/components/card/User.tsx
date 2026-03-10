@@ -17,7 +17,7 @@ export default function User({ userName, tag, avatar }: UserProps) {
       <div className="flex flex-col gap-2">
         <CustomText
           textVariant="primary"
-          textSize="sm"
+          textSize="md"
           className="leading-none"
         >
           {userName}

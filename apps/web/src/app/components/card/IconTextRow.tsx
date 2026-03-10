@@ -23,7 +23,7 @@ export default function IconTextRow({
       <span>
         <SvgIcon size={iconSize} Icon={Icon} color={iconColor} />
       </span>
-      <CustomText textSize={"xsm"} textVariant="primary">
+      <CustomText textSize={"sm"} textVariant="primary">
         {label}
       </CustomText>
     </div>
