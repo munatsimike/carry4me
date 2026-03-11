@@ -31,7 +31,7 @@ type PriceProps = {
 export function Price({
   unitPriceLabel,
   unitPrice,
-  totalPriceLabel = "Total price : ",
+  totalPriceLabel = "Total price",
   totalPrice,
   location,
   className,
@@ -40,7 +40,7 @@ export function Price({
   return (
     <LableValueStack
       className={className}
-      firstLabel={`${unitPriceLabel}${" : "}`}
+      firstLabel={`${unitPriceLabel}`}
       secondLabel={totalPriceLabel}
       firstValue={`${currency}${unitPrice.toString()}`}
       secondValue={`${currency}${totalPrice.toString()}`}
@@ -60,7 +60,7 @@ export function WeightAndPrice({
     <LableValueStack
       firstLabel={weightLabel}
       secondLabel={priceLabel}
-      firstValue={`${weight.toString()} ${"kg"}`}
+      firstValue={`${weight.toString()}${"kg"}`}
       secondValue={`${currency}${price.toString()}`}
     />
   );
@@ -78,7 +78,7 @@ function LableValueStack({
   const textSize = "xsm";
   return (
     <div className={`flex items-start gap-2 justify-end ${className}`}>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <CustomText
           className={baseLabel}
           as="div"

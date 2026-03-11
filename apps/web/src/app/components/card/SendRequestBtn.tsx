@@ -31,7 +31,7 @@ export default function SendRequestBtn<T>({
         onClick={() => primaryAction(payLoad)}
         variant={buttonVariant}
         className="shadow-sm w-full"
-        size={"sm"}
+        size={"md"}
         leadingIcon={
           <SvgIcon
             size={"sm"}

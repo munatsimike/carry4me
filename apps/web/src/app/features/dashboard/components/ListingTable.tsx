@@ -49,7 +49,8 @@ export function ListingTable<T extends Listing>({
   setListingPreview,
   setModalState,
 }: ListingTableProps<T>) {
-  const headerStyle = "pl-4 py-4 font-medium";
+  const textStyle = "font-medium text-ink-primary py-4"
+  const headerStyle = `pl-4 ${textStyle}` ;
   const [hoverId, sethover] = useState<string | null>(null);
 
   return (
@@ -68,7 +69,7 @@ export function ListingTable<T extends Listing>({
             <TableTd className={headerStyle}>Space</TableTd>
             <TableTd className={headerStyle}>Price/kg</TableTd>
             <TableTd className={headerStyle}>Status</TableTd>
-            <TableTd className="pl-6 py-4 font-medium">Actions</TableTd>
+            <TableTd className={`pl-6 ${textStyle}`}>Actions</TableTd>
           </tr>
         </thead>
 
@@ -109,7 +110,7 @@ export function ListingTable<T extends Listing>({
                         animate={{ opacity: 1, x: 0, scale: 1 }}
                         exit={{ opacity: 0, x: 6, scale: 0.98 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
-                        className="absolute right-0 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100 hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                        className="absolute right-0 inline-flex items-center gap-1 rounded-lg px-3 py-1 text-sm text-blue-600 hover:bg-blue-100 hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                       >
                         Preview
                       </motion.button>
@@ -125,7 +126,7 @@ export function ListingTable<T extends Listing>({
               </TableTd>
 
               <TableTd>
-                <TableText text={`${row.weightKg.toString()} kg`} />
+                <TableText text={`${row.weightKg.toString()}kg`} />
               </TableTd>
 
               <TableTd>
@@ -133,8 +134,8 @@ export function ListingTable<T extends Listing>({
               </TableTd>
 
               <TableTd>
-                <span className="iniline-flex rounded-full bg-success-50 px-2 py-1 text-success-500 border border-success-100 text-sm">
-                  {row.status}
+                <span className="iniline-flex rounded-full bg-success-50 px-2 py-1 text-success-500 border border-success-200 text-[12px]">
+                  {row.status.charAt(0).toUpperCase() + row.status.slice(1).toLowerCase()}
                 </span>
               </TableTd>
 
@@ -161,7 +162,8 @@ export function ListingTable<T extends Listing>({
                         pricePerKg: row.pricePerKg,
                         agreeToRules: false,
                         senderId: row.user.id ?? "",
-                        departureDate: row.type === "trip" ? row.departDate : "",
+                        departureDate:
+                          row.type === "trip" ? row.departDate : "",
                       });
                     }}
                   >

@@ -1,6 +1,12 @@
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
-import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
-import type { TripListing } from "@/app/features/trips/domain/Trip";
+import type {
+  ParcelListing,
+  ParcelStatuses,
+} from "@/app/features/parcels/domain/Parcel";
+import type {
+  TripListing,
+  TripStatuses,
+} from "@/app/features/trips/domain/Trip";
 import type { UserProfile } from "./authTypes";
 import type { GoodsItem } from "@/types/Ui";
 
@@ -23,5 +29,5 @@ export interface Listing {
   };
   pricePerKg: number;
   weightKg: number;
-  status: "open" | "closed";
+  status: TripStatuses | ParcelStatuses;
 }

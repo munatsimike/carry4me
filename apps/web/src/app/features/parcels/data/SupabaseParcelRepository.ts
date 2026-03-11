@@ -1,7 +1,7 @@
 import { supabase } from "@/app/shared/supabase/client";
 import type { CreateParcel } from "../domain/CreateParcel";
 import type { ParcelListingRepository as ParcelRepository } from "../domain/CreateParcelRepository";
-import type { ParcelListing } from "../domain/Parcel";
+import { PARCELSTATUSES, type ParcelListing } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
@@ -32,6 +32,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return this.fetchParcels(userId);
        
   }
+  //fetch parcels and my parcels
   async fetchParcel(userId: string): Promise<RepoResponse<ParcelListing>> {
     const { data, error, status } = await supabase
       .from("parcels")
@@ -90,7 +91,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
         destination_city: parcel.destinationCity,
         weight_kg: parcel.weightKg,
         price: parcel.price,
-        status: "open",
+        status: parcel.status,
         items: parcel.items,
       })
       .select("id")

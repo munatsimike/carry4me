@@ -1,4 +1,5 @@
 import type { CreateTripListing } from "../../trips/domain/CreateTrip";
+import { TRIPSTATUSES } from "../../trips/domain/Trip";
 import type { TripFormFields } from "../../trips/ui/CreateTripModal";
 
 export default function toCreateTrip(
@@ -13,5 +14,6 @@ export default function toCreateTrip(
     arrivalDate: null,
     capacityKg: formValues.weight,
     pricePerKg: formValues.pricePerKg,
+    status: TRIPSTATUSES.ACTIVE
   };
 }

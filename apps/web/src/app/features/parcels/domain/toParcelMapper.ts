@@ -1,10 +1,11 @@
+import type { GoodsItem } from "@/types/Ui";
 import type { ParcelListing } from "./Parcel";
-import type { ParcelItem } from "./CreateParcel";
 import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
 
 type ParcelRow = {
   id: string;
   price: number;
+  status: string;
   sender: {
     id: string;
     full_name: string;
@@ -28,7 +29,7 @@ export function toParcelMapper(row: ParcelRow): ParcelListing {
   const publicUrl = fetchPublicUrl(row.sender.avatar_url);
   const rows =
     row.parcel_categories.map((x) => x.category).filter(Boolean) ?? [];
-    
+
   return {
     type: "parcel",
     id: row.id,
@@ -54,10 +55,10 @@ export function toParcelMapper(row: ParcelRow): ParcelListing {
       destinationCountry: row.destination_country,
     },
     weightKg: row.weight_kg,
-    items: row.items.map((x: ParcelItem) => ({
+    items: row.items.map((x: GoodsItem) => ({
       quantity: x.quantity,
       description: x.description,
     })),
-    status: "open",
+    status: row.status,
   };
 }

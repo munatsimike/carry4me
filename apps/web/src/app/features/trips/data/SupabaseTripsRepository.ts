@@ -88,7 +88,7 @@ export class SupabaseTripsRepository implements TripsRepository {
         arrive_date: input.arrivalDate ?? null,
         capacity_kg: input.capacityKg,
         price_per_kg: input.pricePerKg,
-        status: "open",
+        status: input.status,
       })
       .select("id")
       .single();

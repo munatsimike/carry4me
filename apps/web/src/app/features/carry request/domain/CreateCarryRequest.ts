@@ -17,6 +17,7 @@ export const CARRY_REQUEST_STATUSES = {
   IN_TRANSIT: "IN_TRANSIT",
   PENDING_PAYOUT: "PENDING_PAYOUT",
   PAID_OUT: "PAID_OUT",
+  EXPIRED: "EXPIRED",
 } as const;
 export type CarryRequestStatus =
   (typeof CARRY_REQUEST_STATUSES)[keyof typeof CARRY_REQUEST_STATUSES];

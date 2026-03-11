@@ -5,7 +5,7 @@ export default function WeightRow({ weight }: { weight: number }) {
   return (
     <IconTextRow
       Icon={META_ICONS.scale}
-      label={`${weight.toString()} ${"kg"}`}
+      label={`${weight.toString()}${"kg"}`}
     />
   );
 }

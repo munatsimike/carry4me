@@ -6,7 +6,6 @@ import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { SupabaseParcelRepository } from "./data/SupabaseParcelRepository";
 import { MyParcelsIdUseCase } from "./application/MyParcelsUseCase";
-import CustomText from "@/components/ui/CustomText";
 import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
 import { useToast } from "@/app/components/Toast";
 import { AnimatePresence } from "framer-motion";
@@ -17,8 +16,7 @@ import CustomModal from "@/app/components/CustomModal";
 import type { FormValues } from "@/types/Ui";
 import type { ParcelListing } from "./domain/Parcel";
 import EmptyState from "@/app/components/EmptyState";
-import { DessertIcon } from "lucide-react";
-export type TripStatus = "draft" | "active" | "paused" | "completed";
+import CustomText from "@/components/ui/CustomText";
 
 export function MyParcelsPage() {
   const [loading, setLoading] = useState(true);
@@ -97,7 +95,7 @@ export function MyParcelsPage() {
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <div>
         <div className="flex items-center justify-between">
-          <span>My Parcels</span>
+          <CustomText textSize="xl" textVariant="primary" className="pl-4">My Parcels</CustomText>
 
           {sortedParcels.length > 0 && (
             <Button variant={"primary"} size={"xsm"}>

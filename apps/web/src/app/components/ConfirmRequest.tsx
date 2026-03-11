@@ -121,7 +121,7 @@ function UITrip({
         destination={trip.route.destinationCountry}
       />
       <DateRow date={trip.departDate} />
-      <LabelTextRow label={"Accepted Items:"} text={items} />
+      <LabelTextRow label={"Accepted Items"} text={items} />
     </Stack>
   );
 }

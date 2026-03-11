@@ -17,7 +17,7 @@ import CustomModal from "@/app/components/CustomModal";
 import TravelerCard from "./ui/TravelerCard";
 import { useGoods } from "@/app/shared/Authentication/UI/GoodsProvider";
 import EmptyState from "@/app/components/EmptyState";
-export type TripStatus = "draft" | "active" | "paused" | "completed";
+
 export function MyTripsPage() {
   const [loading, setLoading] = useState(true);
   const [mypTrips, setMyTrips] = useState<TripListing[]>([]);
@@ -92,7 +92,9 @@ export function MyTripsPage() {
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <div>
         <div className="flex items-center justify-between">
-          <span>My Trips</span>
+          <CustomText textSize="xl" textVariant="primary" className="pl-4">
+            My Trips
+          </CustomText>
 
           {sortedTrips.length > 0 && (
             <Button variant={"primary"} size={"xsm"}>
@@ -110,9 +112,7 @@ export function MyTripsPage() {
               "You haven’t posted any trips yet. Start by creating a new trips to let others send trips with you."
             }
             action={
-              <Button
-               className="w-full"
-               variant={"primary"} size={"sm"}>
+              <Button className="w-full" variant={"primary"} size={"sm"}>
                 + Post a trip
               </Button>
             }
