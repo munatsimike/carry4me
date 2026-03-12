@@ -8,7 +8,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { CloseBackBtn } from "./CloseBtn";
 
 type ToastVariant = "success" | "error" | "info" | "warning";
 

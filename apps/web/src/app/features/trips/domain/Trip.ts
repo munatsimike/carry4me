@@ -10,5 +10,5 @@ export type TripStatuses = (typeof TRIPSTATUSES)[keyof typeof TRIPSTATUSES];
 export interface TripListing extends Listing {
   departDate: string;
   arriveDate?: string;
-  tripStatuses: TripStatuses;
+ 
 }

@@ -26,10 +26,32 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
     return { data: data.id, error: null, status: null };
   }
 
+  async isExpired(requestId: string): Promise<RepoResponse<boolean>> {
+    const { data, error } = await supabase.rpc("perform_carry_request_action", {
+      request_id: requestId,
+      action_key: "PAY",
+    });
+
+    if (error) return { data: null, error: error, status: null };
+
+    if (!data.ok && data.reason === "PAYMENT_EXPIRED") {
+      return { data: false, error: error, status: null };
+    }
+
+    return { data: true, error: error, status: null };
+  }
+
   async fetchCarryRequestsForUser(
     userId: string,
-   requeststatus: CarryRequestStatus[]
+    requeststatus: CarryRequestStatus[],
   ): Promise<RepoResponse<CarryRequest[]>> {
+    const {error: isExpiredErrors } = await supabase.rpc(
+      "expire_overdue_carry_requests"
+    );
+
+    if (isExpiredErrors)
+      return { data: null, error: isExpiredErrors, status: null };
+  
     const { data, status, error } = await supabase
       .from("carry_requests")
       .select(
@@ -45,6 +67,7 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
 
     if (error) return { data: null, status, error };
     const result = (data ?? []).map(toCarryRequestMapper);
+
     return { data: result, error: null, status: null };
   }
 

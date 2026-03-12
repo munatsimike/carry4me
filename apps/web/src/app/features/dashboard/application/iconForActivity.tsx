@@ -6,6 +6,7 @@ import {
   Package,
   BadgeDollarSign,
   Bell,
+  Hourglass,
 } from "lucide-react";
 
 export function iconForActivity(type: string) {
@@ -42,6 +43,14 @@ export function iconForActivity(type: string) {
     case "PAYMENT_RELEASED":
       return (
         <BadgeDollarSign
+          className="h-5 w-5 text-amber-500"
+          strokeWidth={width}
+        />
+      );
+
+       case "REQUEST_EXPIRED":
+      return (
+        <Hourglass   
           className="h-5 w-5 text-amber-500"
           strokeWidth={width}
         />

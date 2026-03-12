@@ -96,7 +96,7 @@ export default function Search({ countries, cities }: SearchProps) {
         to
       </CustomText>
 
-      <div className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-white px-3 py-2 shadow-sm">
+      <div className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-white px-3 py-2 shadow-sm border">
         <SvgIcon size="md" Icon={META_ICONS.zimFlag} />
         <CustomText as="span" textSize="xsm" className="text-neutral-700">
           Zimbabwe

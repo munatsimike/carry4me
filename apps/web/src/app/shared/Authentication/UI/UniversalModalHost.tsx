@@ -2,7 +2,7 @@
 
 // UniversalModalHost.tsx
 import { useEffect } from "react";
-import { AnimatePresence} from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import CustomModal from "@/app/components/CustomModal";
 import type { UniversalModalState } from "../application/DialogBoxModalProvider";
 import LineDivider from "@/app/components/LineDivider";
@@ -16,6 +16,7 @@ export function UniversalModalHost({
   modal: UniversalModalState;
   onRequestClose: () => void;
 }) {
+  const isInfo = modal?.type === "info";
   // ESC close (host stays mounted so exit works)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -25,12 +26,19 @@ export function UniversalModalHost({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onRequestClose]);
 
-  const primary = (() => {
+  const action = (() => {
     switch (modal?.type) {
       case "error":
         return { label: "Retry", onClick: modal.onRetry ?? onRequestClose };
       case "confirm":
         return { label: "Confirm", onClick: modal.onConfirm ?? modal.onCancel };
+      case "info":
+        return {
+          label: modal.label,
+          onclick: modal.onClick ?? onRequestClose,
+          secondaryLabel: modal.secondaryLabel,
+          secondaryAction: modal.secondaryAction,
+        };
       default:
         return { label: "Close", onClick: onRequestClose };
     }
@@ -40,19 +48,58 @@ export function UniversalModalHost({
     <AnimatePresence mode="wait">
       {modal && (
         <div>
-          <CustomModal width="md" onClose={onRequestClose}>
-            {/* Render modal body based on type */}
-            <CustomText textVariant="primary">{modal.message}</CustomText>
+          <CustomModal width="lg" onClose={onRequestClose}>
+            <div className="p-4">
+              <span className="flex flex-col gap-2">
+                <span className="flex gap-2 items-center">
+                  {modal.icon ?? ""}
+                  <CustomText
+                    textVariant="primary"
+                    textSize="lg"
+                    className="font-semi-medium"
+                  >
+                    {modal.title ?? ""}
+                  </CustomText>
+                </span>
 
-            <LineDivider />
-            {/* Add your buttons here like before */}
-            <div className="mt-5 flex justify-end gap-8">
-              <Button onClick={onRequestClose} variant={"neutral"} size={"md"}>
-                <CustomText>{"Cancel"}</CustomText>
-              </Button>
-              <Button onClick={primary.onClick} variant={"primary"} size={"md"}>
-                <CustomText textVariant="onDark">{primary.label}</CustomText>
-              </Button>
+                {/* Render modal body based on type */}
+                <CustomText textVariant="secondary">{modal.message}</CustomText>
+              </span>
+
+              <LineDivider />
+              {/* Add your buttons here like before */}
+              <div className="mt-5 flex justify-end gap-8">
+                {action.secondaryAction && (
+                  <Button
+                    className="min-w-[100px]"
+                    onClick={() => {
+                      if (action.secondaryAction) {
+                        action.secondaryAction();
+                        onRequestClose();
+                      }
+                    }}
+                    variant={"outline"}
+                    size={"sm"}
+                  >
+                    <CustomText textVariant="primary">
+                      {action.secondaryLabel}
+                    </CustomText>
+                  </Button>
+                )}
+                <Button
+                  className="min-w-[100px]"
+                  onClick={() => {
+                    if (action.onclick) {
+                      action.onclick();
+                      onRequestClose();
+                    }
+                  }}
+                  variant={"primary"}
+                  size={"sm"}
+                >
+                  <CustomText textVariant="onDark">{action.label}</CustomText>
+                </Button>
+              </div>
             </div>
           </CustomModal>
         </div>

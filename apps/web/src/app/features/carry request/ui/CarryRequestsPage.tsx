@@ -43,7 +43,12 @@ import {
   toEmptyStateForMapper,
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { SupabaseTripsRepository } from "../../trips/data/SupabaseTripsRepository";
+import { Package, PackageX } from "lucide-react";
+import { dialogIconStyle } from "@/app/lib/cn";
+import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
+import { useToast } from "@/app/components/Toast";
 
 export type SelectedTab = "ongoing" | "completed" | "declined" | "cancelled";
 type NavItem = {
@@ -68,15 +73,31 @@ export default function CarryRequestsPage() {
     () => new SupabasePerformActionRepository(),
     [],
   );
+
+  const parcelRepository = useMemo(() => new SupabaseParcelRepository(), []);
+  const tripRepository = useMemo(() => new SupabaseTripsRepository(), []);
   const performRequestActions = useMemo(
-    () => new PerformCarryRequestActionUseCase(performActionRepository),
-    [performActionRepository],
+    () =>
+      new PerformCarryRequestActionUseCase(
+        carryRequestRepository,
+        performActionRepository,
+        tripRepository,
+        parcelRepository,
+      ),
+    [
+      performActionRepository,
+      carryRequestRepository,
+      tripRepository,
+      parcelRepository,
+    ],
   );
 
-  const { showSupabaseError } = useUniversalModal();
+  const { openInfo, showSupabaseError } = useUniversalModal();
   const [isRequestSent, setisRequestSent] = useState(false);
   const [isStateLoaded, setIsStateLoaded] = useState(false);
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [handoverState, setHandoverState] = useState<
     HandoverConfirmationState | undefined
@@ -127,19 +148,122 @@ export default function CarryRequestsPage() {
   const [inputValue, setValue] = useState<string>("");
   const heightClass = "my-2";
 
+  const checkTravelersWeight = async (carryRequest: CarryRequest) => {
+    const { result } = await namedCall(
+      "check space before accept",
+      performRequestActions.isSpaceAvailable(
+        carryRequest.tripId,
+        carryRequest.parcelSnapshot.weight_kg,
+      ),
+    );
+
+    if (!result.success) {
+      showSupabaseError(result.error, result.status);
+      return false;
+    }
+
+    if (result.success && result.data === false) {
+      openInfo({
+        icon: <Package className={dialogIconStyle} />,
+        title: "Not enough space",
+        message:
+          "This parcel exceeds your available space. Try browsing documents, smaller parcels or adjust your weight.",
+        label: "Adjust weight",
+        secondaryLabel: "Browse parcels",
+        onClick: () => navigate("/my/trips"),
+        secondaryAction: () => navigate("/parcels"),
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const isParcelAvailable = async (carryRequest: CarryRequest) => {
+    const { result } = await namedCall(
+      "is parcle available",
+      performRequestActions.isParcelAvailable(carryRequest.parcelId),
+    );
+
+    if (!result.success && result.error) {
+      showSupabaseError(result.error);
+      return false;
+    }
+
+    if (result.success && !result.data) {
+      openInfo({
+        icon: <PackageX className={dialogIconStyle} />,
+        title: "Parcel no longer available",
+        message: "This parcel is no longer available. Browse other parcels.",
+        label: "Browse parcels",
+        onClick: () => navigate("/parcels"),
+      });
+
+      return false;
+    }
+    return true;
+  };
+
   const handleActions = async (
     actions: UIActions,
     carryRequest: CarryRequest,
   ) => {
     if (!actions.primary || isRequestSent || !user) return;
 
-    const result = await performRequestActions.execute(
-      actions.primary.key,
-      carryRequest.carryRequestId,
-    );
+    if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
+      const weightResult = await checkTravelersWeight(carryRequest);
+      if (!weightResult) return;
 
-    if (result) {
+      const parcelAvailability = await isParcelAvailable(carryRequest);
+      if (!parcelAvailability) return;
+    }
+
+    if (actions.primary.key === UIACTIONKEYS.PAY) {
+      const { result } = await namedCall(
+        "isExpired",
+        performRequestActions.isExpired(carryRequest.carryRequestId),
+      );
+
+      if (!result.success) {
+        // showSupabaseError(result.error)
+      }
+
+      if (result.success && !result.data) {
+        openInfo({
+          title: "Request Expired",
+          message: "The request has expired, you can send another request.",
+          label:
+            carryRequest.initiatorRole === ROLES.SENDER
+              ? "Browse trips"
+              : "Browse parcels",
+        });
+      }
+    }
+
+    const [response, result] = await Promise.all([
+      performRequestActions.execute(
+        actions.primary.key,
+        carryRequest.carryRequestId,
+      ),
+
+      namedCall(
+        "reserve",
+        performRequestActions.reserveWeight(
+          carryRequest.tripId,
+          carryRequest.parcelSnapshot.weight_kg,
+        ),
+      ),
+    ]);
+
+    if (!result.result || !response.progressed) {
+      return;
+    }
+
+    if (result.result && response) {
       setisRequestSent(true);
+      refreshProfile();
+      toast("Parcel accepted. Waiting for payment from the sender.", {
+        variant: "success",
+      });
     }
   };
 
@@ -152,121 +276,125 @@ export default function CarryRequestsPage() {
         />
       )}
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {emptyStateMessage && (
-          <EmptyState
-            title={emptyStateMessage.title}
-            description={emptyStateMessage.body}
-            action={
-              emptyStateMessage.actions && (
-                <div className="flex items-center justify-around">
-                  {emptyStateMessage.actions.map((action) => (
-                    <Link key={action.href} to={action.href}>
-                      <Button variant={action.variant} size={"md"}>
-                        {action.label}
-                      </Button>
-                    </Link>
-                  ))}
-                </div>
-              )
-            }
-          />
-        )}
-
-        {carryRequestsList &&
-          carryRequestsList.map((request) => {
-            if (
-              request.status == CARRY_REQUEST_STATUSES.PENDING_HANDOVER &&
-              !isStateLoaded
-            ) {
-              ``;
-              setHandoverState(request.handoverState);
-              setIsStateLoaded(true);
-            }
-            const viewerRole =
-              user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
-            const requestUI = mapCarryRequestToUI(request, viewerRole);
-            const actions = actionsMapper(
-              viewerRole,
-              request.status,
-              request.initiatorRole,
-              handoverState ?? undefined,
-            );
-
-            return (
-              <Card
-                key={request.carryRequestId}
-                cornerRadiusClass="rounded-2xl"
-                className="px-6 w-full max-w-[1000px] mx-auto"
-              >
-                <div className="flex flex-col gap-2 mx-2">
-                  <Header
-                    title={requestUI.title}
-                    description={requestUI.description}
-                    requestId={request.carryRequestId.substring(
-                      request.carryRequestId.length - 5,
-                    )}
-                    status={request.status}
-                  />
-                  <LineDivider heightClass={heightClass} />
-                  <ProgressRow
-                    currentStep={requestUI.currentStep}
-                    isInitiator={viewerRole === request.initiatorRole}
-                  />
-                  <LineDivider heightClass={heightClass} />
-                  <Deails
-                    trip={request.tripSnapshot}
-                    parcel={request.parcelSnapshot}
-                    viewerRole={viewerRole}
-                  />
-                  <LineDivider heightClass={heightClass} />
-                  {actions.infoBlock?.displayText ? (
-                    <RequestCompleted actions={actions} />
-                  ) : (
-                    <SpaceBetweenRow>
-                      {actions.secondary ? (
-                        <Button
-                          variant={"error"}
-                          size={"md"}
-                          leadingIcon={undefined}
-                        >
-                          {actions.secondary?.label}
+        <div className="flex flex-col gap-6">
+          {emptyStateMessage && (
+            <EmptyState
+              title={emptyStateMessage.title}
+              description={emptyStateMessage.body}
+              action={
+                emptyStateMessage.actions && (
+                  <div className="flex items-center justify-around">
+                    {emptyStateMessage.actions.map((action) => (
+                      <Link key={action.href} to={action.href}>
+                        <Button variant={action.variant} size={"md"}>
+                          {action.label}
                         </Button>
-                      ) : (
-                        <span /> // place holder to push primary button to the right
+                      </Link>
+                    ))}
+                  </div>
+                )
+              }
+            />
+          )}
+
+          {carryRequestsList &&
+            carryRequestsList.map((request) => {
+              if (
+                request.status == CARRY_REQUEST_STATUSES.PENDING_HANDOVER &&
+                !isStateLoaded
+              ) {
+                ``;
+                setHandoverState(request.handoverState);
+                setIsStateLoaded(true);
+              }
+              const viewerRole =
+                user?.id === request.senderUserId
+                  ? ROLES.SENDER
+                  : ROLES.TRAVELER;
+              const requestUI = mapCarryRequestToUI(request, viewerRole);
+              const actions = actionsMapper(
+                viewerRole,
+                request.status,
+                request.initiatorRole,
+                handoverState ?? undefined,
+              );
+
+              return (
+                <Card
+                  key={request.carryRequestId}
+                  cornerRadiusClass="rounded-2xl"
+                  className="px-6 w-full max-w-[1000px] mx-auto"
+                >
+                  <div className="flex flex-col gap-2 mx-2">
+                    <Header
+                      title={requestUI.title}
+                      description={requestUI.description}
+                      requestId={request.carryRequestId.substring(
+                        request.carryRequestId.length - 5,
                       )}
-                      {actions.primary &&
-                        actions.primary.key !==
-                          UIACTIONKEYS.RELEASE_PAYMENT && (
+                      status={request.status}
+                    />
+                    <LineDivider heightClass={heightClass} />
+                    <ProgressRow
+                      currentStep={requestUI.currentStep}
+                      isInitiator={viewerRole === request.initiatorRole}
+                    />
+                    <LineDivider heightClass={heightClass} />
+                    <Deails
+                      trip={request.tripSnapshot}
+                      parcel={request.parcelSnapshot}
+                      viewerRole={viewerRole}
+                    />
+                    <LineDivider heightClass={heightClass} />
+                    {actions.infoBlock?.displayText ? (
+                      <RequestCompleted actions={actions} />
+                    ) : (
+                      <span className="flex gap-10 justify-end">
+                        {actions.secondary ? (
                           <Button
-                            onClick={() => handleActions(actions, request)}
-                            variant="primary"
-                            size="md"
-                            leadingIcon
+                            variant={"error"}
+                            size={"md"}
+                            leadingIcon={undefined}
                           >
-                            {actions.primary.label}
+                            {actions.secondary?.label}
                           </Button>
+                        ) : (
+                          <span /> // place holder to push primary button to the right
                         )}
+                        {actions.primary &&
+                          actions.primary.key !==
+                            UIACTIONKEYS.RELEASE_PAYMENT && (
+                            <Button
+                              onClick={() => handleActions(actions, request)}
+                              variant="primary"
+                              size="md"
+                              leadingIcon
+                            >
+                              {actions.primary.label}
+                            </Button>
+                          )}
 
-                      {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
-                        actions.infoBlock.displayText !== null && (
-                          <InfoBlockDisplay actions={actions} />
+                        {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
+                          actions.infoBlock.displayText !== null && (
+                            <InfoBlockDisplay actions={actions} />
+                          )}
+
+                        {actions.infoBlock?.mode === INFOMODES.INPUT && (
+                          <InfoBlockInput
+                            handleActions={handleActions}
+                            carryRequest={request}
+                            actions={actions}
+                            onChange={setValue}
+                            inputValue={inputValue}
+                          />
                         )}
-
-                      {actions.infoBlock?.mode === INFOMODES.INPUT && (
-                        <InfoBlockInput
-                          handleActions={handleActions}
-                          carryRequest={request}
-                          actions={actions}
-                          onChange={setValue}
-                          inputValue={inputValue}
-                        />
-                      )}
-                    </SpaceBetweenRow>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+        </div>
       </DefaultContainer>
     </>
   );
@@ -541,8 +669,11 @@ function Header({ title, description, requestId, status }: HeaaderProps) {
     <SpaceBetweenRow>
       <CurrentStatus title={title} description={description} status={status} />
       <span className="inline-flex flex-col gap-1">
-        <CustomText textSize="sm"> {"Request"}</CustomText>
-        <CustomText textSize="sm"> {`#${requestId}`}</CustomText>
+        <CustomText textSize="sm" textVariant="primary">
+          {" "}
+          {"Request"}
+        </CustomText>
+        <CustomText textSize="xsm"> {`#${requestId}`}</CustomText>
       </span>
     </SpaceBetweenRow>
   );
@@ -569,7 +700,7 @@ function CurrentStatus({ title, description, status }: StatusProps) {
           </CustomText>
         </div>
       </span>
-      <CustomText textSize="xsm" as="span" className="pl-[77px]">
+      <CustomText textSize="sm" as="span" className="pl-[77px]">
         {description}
       </CustomText>
     </div>

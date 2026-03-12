@@ -30,7 +30,7 @@ export function ListingCard<T extends Listing>({
 
   const isDisplayMode = mode === "display";
   const borderClass = isDisplayMode ? "border border-neutral-200" : "";
-  const shadowClass = isDisplayMode ? "shadow-md" : "";
+  const shadowClass = isDisplayMode ? "shadow-md hover:shadow-lg" : "";
   const isTripListing = listing.type === "trip";
 
   return (
@@ -91,6 +91,7 @@ export function ListingCard<T extends Listing>({
         buttonVariant="primary"
         payLoad={listing}
         primaryAction={onClick}
+       listingType={listing.type}
       />
     </Card>
   );

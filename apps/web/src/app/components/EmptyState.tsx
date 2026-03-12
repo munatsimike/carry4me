@@ -53,16 +53,7 @@ export default function EmptyState({
           </motion.div>
         )}
 
-        {action && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.28, duration: 0.25 }}
-            className="mt-2"
-          >
-            {action}
-          </motion.div>
-        )}
+        {action && <div className="mt-2">{action}</div>}
       </motion.div>
     </div>
   );

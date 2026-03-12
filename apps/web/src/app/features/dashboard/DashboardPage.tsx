@@ -99,7 +99,7 @@ export default function DashboardPage() {
         setDashboardData(dashboardData.result.data);
 
       if (notifications.result.success)
-        setNotification(notifications.result.data);
+        setNotification(notifications.result.data.slice(0, 4));
 
       // show fetch dashboard data error
       if (!dashboardData.result.success) {
@@ -306,7 +306,10 @@ function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
               >
                 {item.itemName}
               </CustomText>
-              <CustomText textVariant={`${item.count > 0 ? "secondary" : "helperText"}`} textSize="xsm">{`[${item.count}]`}</CustomText>
+              <CustomText
+                textVariant={`${item.count > 0 ? "secondary" : "helperText"}`}
+                textSize="xsm"
+              >{`[${item.count}]`}</CustomText>
             </span>
           </Link>
         </span>

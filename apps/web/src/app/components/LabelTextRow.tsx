@@ -35,7 +35,7 @@ export default function LabelTextRow({ label, text }: LabelTextRowProps) {
           ))}
 
           {remaining > 0 && (
-            <span className="px-2 py-1 text-xs border border-gray-300 rounded-full text-gray-600">
+            <span className="px-2 py-1 text-xs border border-gray-200 rounded-full text-gray-600">
               <LabelText text={`+${remaining} more`} />
             </span>
           )}

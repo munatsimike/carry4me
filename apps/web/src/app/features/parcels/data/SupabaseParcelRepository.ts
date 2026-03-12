@@ -1,7 +1,11 @@
 import { supabase } from "@/app/shared/supabase/client";
 import type { CreateParcel } from "../domain/CreateParcel";
 import type { ParcelListingRepository as ParcelRepository } from "../domain/CreateParcelRepository";
-import { PARCELSTATUSES, type ParcelListing } from "../domain/Parcel";
+import {
+  PARCELSTATUSES,
+  type ParcelListing,
+  type ParcelStatuses,
+} from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
@@ -15,22 +19,35 @@ export class SupabaseParcelRepository implements ParcelRepository {
   async editParcel(
     editParcel: Partial<ParcelDto>,
   ): Promise<RepoResponse<string>> {
-
     const { data, error } = await supabase
       .from("parcels")
       .update(editParcel)
       .eq("id", editParcel.id)
-      .select("id");
+      .select("id")
+      .single();
     if (error) {
       return { data: null, error: error, status: null };
     }
-    return { data: data[0].id, error: null, status: null };
+    return { data: data.id, error: null, status: null };
+  }
+
+  async isParcelOpen(parcelId: string): Promise<RepoResponse<boolean>> {
+    const { data, error, status } = await supabase
+      .from("parcels")
+      .select("id")
+      .eq("id", parcelId)
+      .eq("status", PARCELSTATUSES.OPEN)
+      .maybeSingle();
+
+    if (error) {
+      return { data: null, error, status };
+    }
+
+    return { data: !!data, error: null, status };
   }
 
   parcelById(userId: string): Promise<RepoResponse<ParcelListing[]>> {
-  
     return this.fetchParcels(userId);
-       
   }
   //fetch parcels and my parcels
   async fetchParcel(userId: string): Promise<RepoResponse<ParcelListing>> {
@@ -66,12 +83,11 @@ export class SupabaseParcelRepository implements ParcelRepository {
     );
 
     if (userId) {
-      query
-      .eq("sender_user_id", userId)
+      query.eq("sender_user_id", userId);
     }
 
     const { data, error, status } = await query;
-    
+
     if (error) {
       return { data: null, error, status };
     }

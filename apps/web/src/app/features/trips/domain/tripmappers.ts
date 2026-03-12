@@ -14,6 +14,8 @@ export type TripRow = {
   destination_city: string;
   price_per_kg: number;
   capacity_kg: number;
+  reserved_weight_kg: number;
+  used_weight_kg: number;
   depart_date: string;
   arrive_date: string;
   status: "open" | "closed";
@@ -54,7 +56,7 @@ export function mapTripRowToTrip(row: TripRow): TripListing {
       slug: c.slug,
     })),
     pricePerKg: row.price_per_kg,
-    weightKg: row.capacity_kg,
+    weightKg: row.capacity_kg - (row.reserved_weight_kg + row.used_weight_kg),
     departDate: row.depart_date,
     arriveDate: row.arrive_date,
     status: row.status,

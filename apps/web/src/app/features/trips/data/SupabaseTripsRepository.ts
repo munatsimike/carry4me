@@ -13,11 +13,12 @@ export class SupabaseTripsRepository implements TripsRepository {
       .from("trips")
       .update(editTrip)
       .eq("id", editTrip.id)
-      .select("id");
+      .select("id")
+      .single();
     if (error) {
       return { data: null, error: error, status: null };
     }
-    return { data: data[0].id, error: null, status: null };
+    return { data: data.id, error: null, status: null };
   }
 
   async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
@@ -44,6 +45,56 @@ export class SupabaseTripsRepository implements TripsRepository {
     if (error) return { data: null, status: null, error: null };
     const result = mapTripRowToTrip(data);
     return { data: result, status, error: null };
+  }
+
+  async reserveWeight(
+    tripId: string,
+    parcelWeight: number,
+  ): Promise<RepoResponse<string>> {
+    const {
+      data: trip,
+      error: fetchError,
+      status: fetchStatus,
+    } = await supabase
+      .from("trips")
+      .select("reserved_weight_kg")
+      .eq("id", tripId)
+      .single();
+
+    if (fetchError) {
+      return { data: null, error: fetchError, status: fetchStatus };
+    }
+
+    const currentReservedWeight = trip.reserved_weight_kg ?? 0;
+    const newReservedWeight = currentReservedWeight + parcelWeight;
+
+    const { data, error, status } = await supabase
+      .from("trips")
+      .update({ reserved_weight_kg: newReservedWeight })
+      .eq("id", tripId)
+      .select("id")
+      .single();
+
+    if (error) {
+      return { data: null, error, status };
+    }
+
+    return { data: data.id, error: null, status };
+  }
+
+  async availableSpace(
+    tripId: string,
+    parcelWeight: number,
+  ): Promise<RepoResponse<boolean>> {
+    const { data, status, error } = await supabase.rpc(
+      "trip_has_available_capacity",
+      {
+        p_trip_id: tripId,
+        p_required_weight: parcelWeight,
+      },
+    );
+    if (error) return { data: null, status, error };
+    return { data, status, error: null };
   }
 
   async listTrips(userId?: string): Promise<RepoResponse<TripListing[]>> {

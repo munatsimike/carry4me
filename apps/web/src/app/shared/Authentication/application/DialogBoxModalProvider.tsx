@@ -12,9 +12,9 @@ import {
 } from "./normalizeSupabaseError";
 import { UniversalModalHost } from "../UI/UniversalModalHost";
 
-
 type ErrorModalPayload = NormalizedError & {
   type: "error";
+  icon?: React.ReactNode;
   onRetry?: () => void;
   onLogin?: () => void;
 };
@@ -24,6 +24,7 @@ type ConfirmModalPayload = {
   title: string;
   message: string;
   confirmText?: string;
+  icon?: React.ReactNode;
   cancelText?: string;
   destructive?: boolean;
   onConfirm: () => void;
@@ -34,8 +35,12 @@ type InfoModalPayload = {
   type: "info";
   title: string;
   message: string;
+  label: string;
+  secondaryLabel?:string,
+  icon?: React.ReactNode;
   buttonText?: string;
-  onClose?: () => void;
+  onClick?: () => void;
+  secondaryAction?: () => void;
 };
 
 export type UniversalModalState =

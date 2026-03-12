@@ -19,3 +19,5 @@ export const inputError =
 export const inputSuccess =
   "border border-success-400 hover:border-success-500 " +
   "focus-within:border-success-500 focus-within:ring-2 focus-within:ring-success-400/40";
+
+  export const dialogIconStyle = "h-6 w-6 text-primary-400"

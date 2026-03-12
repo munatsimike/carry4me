@@ -14,7 +14,7 @@ import TravelerRow from "./TravelerRow";
 import ButtomSpacer from "./BottomSpacer";
 import type { TripListing } from "../features/trips/domain/Trip";
 import type { ParcelListing } from "../features/parcels/domain/Parcel";
-import LabelTextRow from "./LabelTextRow";
+
 import IconTextRow from "./card/IconTextRow";
 import { useMemo, useState } from "react";
 import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
@@ -107,7 +107,7 @@ function UITrip({
   isSenderRequesting: boolean;
 }) {
   const label = isSenderRequesting ? "Traveler`s Trip" : "Your Trip";
-  const items = trip.goodsCategory.map((item) => item.name).join("-");
+  const items = trip.goodsCategory.map((item) => item.name);
   return (
     <Stack>
       <span>
@@ -121,7 +121,7 @@ function UITrip({
         destination={trip.route.destinationCountry}
       />
       <DateRow date={trip.departDate} />
-      <LabelTextRow label={"Accepted Items"} text={items} />
+      <CategoryRow tag={"traveler"} category={items} />
     </Stack>
   );
 }
@@ -149,6 +149,10 @@ function Parcel({
           <CardLabel variant={"parcel"} label={label} />
           <ButtomSpacer />
         </span>
+        <RouteRow
+          origin={parcel.route.originCountry}
+          destination={parcel.route.destinationCountry}
+        />
         <IconTextRow
           iconSize="md"
           Icon={META_ICONS.userIconOutlined}
@@ -156,10 +160,6 @@ function Parcel({
         />
         <CategoryRow tag={"sender"} category={items} />
         <WeightRow weight={parcel.weightKg} />
-        <RouteRow
-          origin={parcel.route.originCountry}
-          destination={parcel.route.destinationCountry}
-        />
       </Stack>
       <LineDivider />
       <Price
