@@ -9,6 +9,7 @@ import {
 
 import ErrorText from "./text/ErrorText";
 import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 type DropDownMenuProps = {
   placeholder: string;
@@ -17,7 +18,7 @@ type DropDownMenuProps = {
   className?: string;
   register?: UseFormRegisterReturn;
   value?: string;
-  isDirty?: boolean;
+  isDirty: boolean;
   isTouched?: boolean;
   error?: string;
   heightClass?: string;
@@ -37,6 +38,7 @@ export default function DropDownMenu({
   isTouched,
   error,
 }: DropDownMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const isPlaceholder = !value;
   const textVariant = `${
     isPlaceholder ? "text-neutral-400" : "text-ink-primary"
@@ -49,6 +51,9 @@ export default function DropDownMenu({
       <div className="relative min-w-[160px] w-full">
         <select
           disabled={disabled}
+          onClick={() => setIsOpen(true)}
+          onBlur={() => setIsOpen(false)}
+          onChange={() => setIsOpen(false)}
           className={cn(
             `${heightClass ?? "h-11"} w-full rounded-xl bg-white pl-3 pr-12 appearance-none`,
             "overflow-hidden text-ellipsis whitespace-nowrap",
@@ -71,7 +76,11 @@ export default function DropDownMenu({
         </select>
 
         <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-          <ChevronDown className="h-4 w-4 text-gray-500" />
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-gray-500 transition-transform duration-200",
+            )}
+          />
         </div>
       </div>
     </ErrorText>

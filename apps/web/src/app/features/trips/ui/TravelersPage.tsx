@@ -16,6 +16,7 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -112,6 +113,7 @@ export default function TravelersPage() {
           countries={["UK", "USA", "Ireland"]}
           cities={["London", "Birmingham"]}
         />
+        <FilterOptionsRow/>
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {tripList && <Travelers trips={tripList} onClick={handleRequest} />}

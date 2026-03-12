@@ -16,6 +16,7 @@ import PageSection from "@/app/components/PageSection";
 import { AnimatePresence } from "framer-motion";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -112,10 +113,8 @@ export default function ParcelsPage() {
   return (
     <>
       <PageSection>
-        <Search
-          countries={["UK", "USA"]}
-          cities={["London", "Birmingham"]}
-        />
+        <Search countries={["UK", "USA"]} cities={["London", "Birmingham"]} />
+        <FilterOptionsRow />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {parcelsList && (
