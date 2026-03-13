@@ -97,7 +97,11 @@ export function MyTripsPage() {
           </CustomText>
 
           {sortedTrips.length > 0 && (
-            <Button variant={"primary"} size={"xsm"}>
+            <Button
+              onClick={() => setCreatTripModalState(true)}
+              variant={"primary"}
+              size={"xsm"}
+            >
               + Post a trip
             </Button>
           )}
@@ -129,10 +133,10 @@ export function MyTripsPage() {
       </div>
       <AnimatePresence>
         {/* edit parcel */}
-        {showCreateTripModal && editTrip && (
+        {showCreateTripModal && (
           <CreateTripModal
-            mode="edit"
-            initialFormValues={editTrip}
+            mode={editTrip ? "edit" : undefined}
+            initialFormValues={editTrip ? editTrip : undefined}
             goodsCategory={goodsCategories}
             setModalState={setCreatTripModalState}
           />

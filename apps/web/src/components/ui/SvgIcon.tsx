@@ -27,7 +27,7 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
     md: "h-5 w-auto",
     lg: "h-6 w-auto",
     xl: "h-7 w-auto",
-    xxl: "h-10 w-auto",
+    xxl: "h-10 w-10",
   };
 
   const iconColors: Record<IconColor, string> = {

@@ -46,30 +46,8 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { data: !!data, error: null, status };
   }
 
-  parcelById(userId: string): Promise<RepoResponse<ParcelListing[]>> {
+  parcelsById(userId: string): Promise<RepoResponse<ParcelListing[]>> {
     return this.fetchParcels(userId);
-  }
-  //fetch parcels and my parcels
-  async fetchParcel(userId: string): Promise<RepoResponse<ParcelListing>> {
-    const { data, error, status } = await supabase
-      .from("parcels")
-      .select(
-        `*, sender:profiles(id,full_name), parcel_categories(
-      category:goods_categories(
-      id,
-      slug,
-      name
-      ))`,
-      )
-      .eq("sender_user_id", userId)
-      .maybeSingle();
-
-    if (error) {
-      return { data: null, error, status };
-    }
-
-    const parcel = toParcelMapper(data);
-    return { error: null, data: parcel, status };
   }
 
   async fetchParcels(userId?: string): Promise<RepoResponse<ParcelListing[]>> {

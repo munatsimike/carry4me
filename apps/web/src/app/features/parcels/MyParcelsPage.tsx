@@ -95,10 +95,16 @@ export function MyParcelsPage() {
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <div>
         <div className="flex items-center justify-between">
-          <CustomText textSize="xl" textVariant="primary" className="pl-4">My Parcels</CustomText>
+          <CustomText textSize="xl" textVariant="primary" className="pl-4">
+            My Parcels
+          </CustomText>
 
           {sortedParcels.length > 0 && (
-            <Button variant={"primary"} size={"xsm"}>
+            <Button
+              onClick={() => setParcelModalState(true)}
+              variant={"primary"}
+              size={"xsm"}
+            >
               + Post a parcel
             </Button>
           )}
@@ -114,7 +120,7 @@ export function MyParcelsPage() {
             }
             action={
               <Button
-              className="w-full"
+                className="w-full"
                 onClick={() => setParcelModalState(true)}
                 variant={"primary"}
                 size={"sm"}
@@ -136,10 +142,10 @@ export function MyParcelsPage() {
 
       <AnimatePresence>
         {/* edit parcel */}
-        {showParcelModal && editParcel && (
+        {showParcelModal && (
           <CreateParcelModal
-            mode="edit"
-            initialFormValues={editParcel}
+            mode={editParcel ? "edit" : undefined}
+            initialFormValues={editParcel ? editParcel : undefined}
             goodsCategory={goodsCategories}
             setModalState={setParcelModalState}
           />

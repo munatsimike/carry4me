@@ -24,27 +24,8 @@ export class SupabaseTripsRepository implements TripsRepository {
   async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
     return deleteById(parcelId, "trips");
   }
-  async tripById(userId: string): Promise<RepoResponse<TripListing[]>> {
+  async tripsById(userId: string): Promise<RepoResponse<TripListing[]>> {
     return this.listTrips(userId);
-  }
-  async fetchTrip(userId: string): Promise<RepoResponse<TripListing>> {
-    const { data, error, status } = await supabase
-      .from("trips")
-      .select(
-        `*,traveler:profiles(id,full_name,avatar_url),trip_accepted_categories(
-        category:goods_categories(
-          id,
-          slug,
-          name
-        )
-      )`,
-      )
-      .eq("traveler_user_id", userId)
-      .maybeSingle();
-    if (error) return { data: null, status, error };
-    if (error) return { data: null, status: null, error: null };
-    const result = mapTripRowToTrip(data);
-    return { data: result, status, error: null };
   }
 
   async reserveWeight(

@@ -1,13 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthModal } from "../AuthModalContext";
-
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "../../../icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import FloatingInputField from "../../../components/CustomInputField";
 import { Button } from "@/components/ui/Button";
 import { InlineRow } from "../../../components/InlineRow";
-import z, { email } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
@@ -18,7 +16,8 @@ import { LoginUseCase } from "../application/LoginUseCase";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import FormModal from "@/app/features/dashboard/components/FormModal";
 import { AnimatePresence } from "framer-motion";
-import { CircleBadge } from "@/components/ui/CircleBadge";
+import z from "zod";
+
 
 const schema = z.object({
   email: z
@@ -95,7 +94,7 @@ export function AuthModal() {
                 
                     <SvgIcon
                       size={"xxl"}
-                      Icon={META_ICONS.profileIcon}
+                      Icon={META_ICONS.loginIcon}
                       color="primary"
                     />
                  

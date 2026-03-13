@@ -203,12 +203,13 @@ export default function CarryRequestsPage() {
     return true;
   };
 
-  const handleActions = async (
+  const handlePrimaryActions = async (
     actions: UIActions,
     carryRequest: CarryRequest,
   ) => {
     if (!actions.primary || isRequestSent || !user) return;
 
+    // check weight and parcel availability before accepting a request
     if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
       const weightResult = await checkTravelersWeight(carryRequest);
       if (!weightResult) return;
@@ -217,6 +218,7 @@ export default function CarryRequestsPage() {
       if (!parcelAvailability) return;
     }
 
+    /// check if request has not expired
     if (actions.primary.key === UIACTIONKEYS.PAY) {
       const { result } = await namedCall(
         "isExpired",
@@ -224,7 +226,7 @@ export default function CarryRequestsPage() {
       );
 
       if (!result.success) {
-        // showSupabaseError(result.error)
+        showSupabaseError(result.error);
       }
 
       if (result.success && !result.data) {
@@ -239,29 +241,55 @@ export default function CarryRequestsPage() {
       }
     }
 
-    const [response, result] = await Promise.all([
-      performRequestActions.execute(
-        actions.primary.key,
-        carryRequest.carryRequestId,
-      ),
+    // process request
+    const response = await performRequestActions.execute(
+      actions.primary.key,
+      carryRequest.carryRequestId,
+    );
 
-      namedCall(
+    if (!response.ok) {
+      return;
+    }
+
+    if (response.ok) {
+      const { result } = await namedCall(
         "reserve",
         performRequestActions.reserveWeight(
           carryRequest.tripId,
           carryRequest.parcelSnapshot.weight_kg,
         ),
-      ),
-    ]);
+      );
 
-    if (!result.result || !response.progressed) {
+      if (!result.success) {
+        showSupabaseError(result.error);
+        return;
+      }
+    }
+
+    setisRequestSent(true);
+    refreshProfile();
+    toast("Parcel accepted. Waiting for payment from the sender.", {
+      variant: "success",
+    });
+  };
+
+  const handleSecondaryAcion = async (
+    actions: UIActions,
+    carryRequest: CarryRequest,
+  ) => {
+    if (!actions.secondary?.key || !user) return;
+    // process request
+    const response = await performRequestActions.execute(
+      actions.secondary.key,
+      carryRequest.carryRequestId,
+    );
+
+    if (!response.ok) {
       return;
     }
 
-    if (result.result && response) {
-      setisRequestSent(true);
-      refreshProfile();
-      toast("Parcel accepted. Waiting for payment from the sender.", {
+    if (response.ok) {
+      toast("Request cancelled. The traveler has been notified.", {
         variant: "success",
       });
     }
@@ -325,7 +353,7 @@ export default function CarryRequestsPage() {
                   cornerRadiusClass="rounded-2xl"
                   className="px-6 w-full max-w-[1000px] mx-auto"
                 >
-                  <div className="flex flex-col gap-2 mx-2">
+                  <div className="flex flex-col gap-2 mx-2 py-2">
                     <Header
                       title={requestUI.title}
                       description={requestUI.description}
@@ -345,13 +373,16 @@ export default function CarryRequestsPage() {
                       parcel={request.parcelSnapshot}
                       viewerRole={viewerRole}
                     />
-                    <LineDivider heightClass={heightClass} />
+                    {requestUI.title !== "Request cancelled" && <LineDivider heightClass={heightClass} />}
                     {actions.infoBlock?.displayText ? (
                       <RequestCompleted actions={actions} />
                     ) : (
                       <span className="flex gap-10 justify-end">
                         {actions.secondary ? (
                           <Button
+                            onClick={() =>
+                              handleSecondaryAcion(actions, request)
+                            }
                             variant={"error"}
                             size={"md"}
                             leadingIcon={undefined}
@@ -365,7 +396,9 @@ export default function CarryRequestsPage() {
                           actions.primary.key !==
                             UIACTIONKEYS.RELEASE_PAYMENT && (
                             <Button
-                              onClick={() => handleActions(actions, request)}
+                              onClick={() =>
+                                handlePrimaryActions(actions, request)
+                              }
                               variant="primary"
                               size="md"
                               leadingIcon
@@ -381,7 +414,7 @@ export default function CarryRequestsPage() {
 
                         {actions.infoBlock?.mode === INFOMODES.INPUT && (
                           <InfoBlockInput
-                            handleActions={handleActions}
+                            handleActions={handlePrimaryActions}
                             carryRequest={request}
                             actions={actions}
                             onChange={setValue}

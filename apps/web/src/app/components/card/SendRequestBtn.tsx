@@ -5,8 +5,9 @@ import CustomText, { type TextVariant } from "@/components/ui/CustomText";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
-import {LockKeyholeOpen } from "lucide-react";
+import { LockKeyholeOpen } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
+import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
 
 type SendRequestBtnProps<T> = {
   listingType?: ListingType;
@@ -31,25 +32,28 @@ export default function SendRequestBtn<T>({
 }: SendRequestBtnProps<T>) {
   const { user } = useAuth();
   const { openInfo } = useUniversalModal();
+  const { openAuthModal } = useAuthModal();
   const isTripListing = listingType === "trip";
-
   const base = "flex items-center w-full";
   const alignment = secondaryAction ? "justify-between" : "justify-end";
+
   return (
     <div className={`${base} ${alignment}`}>
       <Button
         isBusy={isActive}
         onClick={() => {
           if (!user) {
-            openInfo;
             return openInfo({
               icon: <LockKeyholeOpen className={dialogIconStyle} />,
-              label:"Sign in",
+              label: "Sign in",
               title: "Sign in to continue",
               message: `Please sign in to send a request to this ${isTripListing ? "sender" : "traveler"}.`,
-              onClick: ()=>{
-                
-              }
+              onClick: () => {
+                openAuthModal({
+                  mode: "signin",
+                  redirectTo: location.pathname,
+                });
+              },
             });
           }
           primaryAction(payLoad);

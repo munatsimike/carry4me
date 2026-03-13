@@ -18,6 +18,8 @@ import ConfirmRequest from "@/app/components/ConfirmRequest";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 
+import type { User } from "@supabase/supabase-js";
+
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
   const getParcelsUseCase = useMemo(
@@ -62,12 +64,12 @@ export default function ParcelsPage() {
   }, []);
 
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
-  const onClose = () => setParcel(null);
   const [modalState, setModalState] = useState<boolean>(false);
   const { toast } = useToast();
-
-  // trip to matched with a parcel. when a user selects a parcel they should have a trip.
-  const [userTrip, setUserTrip] = useState<TripListing | null>(null);
+  const [tripSelectionOpen, setTripSelectionOpen] = useState(false);
+  // trips to matched with a parcel. when a user selects a parcel they should have a trip.
+  const [userTrips, setUserTrip] = useState<TripListing[]>([]);
+  const [selectedTrip, setSelectedTrip] = useState<TripListing | null>(null);
 
   const { user } = useAuth();
 
@@ -75,9 +77,8 @@ export default function ParcelsPage() {
   const handleRequest = async (parcel: ParcelListing) => {
     if (!user) {
       return;
-    } else {
-      setModalState(true);
     }
+
     // check if parcel to be matched to a trip does not belong to the logged in user
     if (parcel.user.id === user.id) {
       toast(
@@ -87,10 +88,9 @@ export default function ParcelsPage() {
       return;
     }
 
-    if (!userTrip) {
+    if (userTrips.length === 0) {
       // fetch a trip to be matched with a parcel
       const trip = await namedCall("trip", getTripUseCase.execute(user.id));
-
       if (!trip.result.success) {
         showSupabaseError(trip.result.error, trip.result.status, {
           onRetry: () => handleRequest(parcel),
@@ -105,9 +105,22 @@ export default function ParcelsPage() {
         });
         return;
       }
-      setUserTrip(trip.result.data);
-      setParcel(parcel);
+
+      if (trip.result.data.length === 1) {
+        setSelectedTrip(trip.result.data[0]);
+      }
+
+      if (trip.result.data.length > 1) {
+        setUserTrip(trip.result.data);
+        setTripSelectionOpen(true);
+      }
     }
+
+    if (userTrips.length > 1) {
+      setTripSelectionOpen(true);
+    }
+    setParcel(parcel);
+    setModalState(true);
   };
 
   return (
@@ -121,19 +134,108 @@ export default function ParcelsPage() {
           <Parcels parcels={parcelsList} onClick={handleRequest} />
         )}
       </DefaultContainer>
+
+      <TripSelectionModal
+        tripSelectionOpen={tripSelectionOpen}
+        user={user}
+        selectedParcel={selectedParcel}
+        userTrip={userTrips}
+        setTripSelectionOpen={setTripSelectionOpen}
+        setSelectedTrip={setSelectedTrip}
+        setModalState={setModalState}
+      />
       <AnimatePresence>
-        {selectedParcel && user && userTrip && modalState && (
-          <CustomModal width="xl" onClose={() => setModalState(false)}>
+        {selectedParcel && user && selectedTrip && modalState && (
+          <CustomModal
+            width="xl"
+            onClose={() => {
+              setModalState(false);
+              setSelectedTrip(null);
+            }}
+          >
             <ConfirmRequest
               loggedInUserId={user.id}
-              trip={userTrip}
+              trip={selectedTrip}
               parcel={selectedParcel}
-              onSubmitted={onClose}
+              onClose={() => setModalState(false)}
               isSenderRequesting={user.id === selectedParcel.user.id}
             />
           </CustomModal>
         )}
       </AnimatePresence>
     </>
+  );
+}
+
+type TripSelectionModalProps = {
+  tripSelectionOpen: boolean;
+  user: User | null;
+  selectedParcel: ParcelListing | null;
+  userTrip: TripListing[];
+  setTripSelectionOpen: (b: boolean) => void;
+  setSelectedTrip: (trip: TripListing | null) => void;
+  setModalState: (b: boolean) => void;
+};
+
+function TripSelectionModal({
+  tripSelectionOpen,
+  user,
+  selectedParcel,
+  userTrip,
+  setTripSelectionOpen,
+  setSelectedTrip,
+  setModalState,
+}: TripSelectionModalProps) {
+  return (
+    <AnimatePresence>
+      {tripSelectionOpen && user && selectedParcel && (
+        <CustomModal width="xl" onClose={() => setTripSelectionOpen(false)}>
+          <div className="space-y-4 px-5 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-ink-primary">
+                Select a trip
+              </h2>
+              <p className="mt-1 text-sm text-neutral-600">
+                You have multiple active trips. Choose the trip you want to use
+                for this request.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {userTrip.map((trip) => (
+                <button
+                  key={trip.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedTrip(trip);
+                    setTripSelectionOpen(false);
+                    setModalState(true);
+                  }}
+                  className="w-full rounded-2xl border border-neutral-200 p-4 text-left transition hover:border-primary-300 hover:bg-primary-50"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="font-medium text-primary-900">
+                        {trip.from_country} → {trip.to_country}
+                      </p>
+                      <p className="text-sm text-neutral-600">
+                        Departure: {trip.departure_date}
+                      </p>
+                      <p className="text-sm text-neutral-600">
+                        Available space: {trip.available_weight}kg
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-600">
+                      Select
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </CustomModal>
+      )}
+    </AnimatePresence>
   );
 }

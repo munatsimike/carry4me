@@ -59,16 +59,14 @@ export default function TravelersPage() {
   const [selectedTrip, setTrip] = useState<TripListing | null>(null);
   const { user } = useAuth();
 
-  const [parcel, setParcel] = useState<ParcelListing | null>(null);
+  const [parcel, setParcel] = useState<ParcelListing[]>([]);
   const [modalState, setModalState] = useState<boolean>(false);
-  const onClose = () => setTrip(null);
+
   const { toast } = useToast();
 
   const handleRequest = async (trip: TripListing) => {
     if (!user?.id) {
       return;
-    } else {
-      setModalState(true);
     }
 
     if (trip.user.id === user?.id) {
@@ -81,7 +79,7 @@ export default function TravelersPage() {
       return;
     }
 
-    if (!parcel) {
+    if (parcel.length === 0) {
       const { result } = await namedCall(
         "Parcel",
         getParcelUseCase.execute(user.id),
@@ -91,6 +89,7 @@ export default function TravelersPage() {
         showSupabaseError(result.error, result.status, {
           onRetry: () => handleRequest(trip),
         });
+
         return;
       }
 
@@ -102,8 +101,9 @@ export default function TravelersPage() {
       }
 
       setParcel(result.data);
-      setTrip(trip);
     }
+    setTrip(trip);
+    setModalState(true);
   };
 
   return (
@@ -113,20 +113,20 @@ export default function TravelersPage() {
           countries={["UK", "USA", "Ireland"]}
           cities={["London", "Birmingham"]}
         />
-        <FilterOptionsRow/>
+        <FilterOptionsRow />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {tripList && <Travelers trips={tripList} onClick={handleRequest} />}
       </DefaultContainer>
       <AnimatePresence>
-        {selectedTrip && parcel && user && modalState && (
+        {selectedTrip && parcel.length > 0 && user && modalState && (
           <CustomModal width="xl" onClose={() => setModalState(false)}>
             <ConfirmRequest
               loggedInUserId={user.id}
               trip={selectedTrip}
-              parcel={parcel}
-              onSubmitted={onClose}
-              isSenderRequesting={user.id === parcel.user.id}
+              parcel={parcel[0]}
+              onClose={() => setModalState(false)}
+              isSenderRequesting={user.id === parcel[0].user.id}
             />
           </CustomModal>
         )}

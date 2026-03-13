@@ -141,7 +141,7 @@ export default function actionsMapper(
     case CARRY_REQUEST_STATUSES.REJECTED:
       return requestRejected(viewerRole);
     case CARRY_REQUEST_STATUSES.CANCELLED:
-      return requestCanceled(viewerRole);
+     return {};
     default:
       return {};
   }

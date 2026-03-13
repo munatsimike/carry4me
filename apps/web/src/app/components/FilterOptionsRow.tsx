@@ -162,7 +162,7 @@ export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <span className="text-sm font-medium text-ink-primary">Filter by</span>
+      <span className="text-md text-neutral-500">Filter by</span>
 
       <FilterMenuWrapper>
         <FilterChip
@@ -264,7 +264,7 @@ export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
 
       <FilterMenuWrapper>
         <FilterChip
-          label="Space"
+          label="Available space"
           icon={<Scale className="h-4 w-4" />}
           active={hasSpace}
           isOpen={openMenu === "space"}

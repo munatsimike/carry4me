@@ -91,7 +91,7 @@ export function ListingCard<T extends Listing>({
         buttonVariant="primary"
         payLoad={listing}
         primaryAction={onClick}
-       listingType={listing.type}
+        listingType={listing.type}
       />
     </Card>
   );

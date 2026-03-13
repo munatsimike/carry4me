@@ -9,8 +9,7 @@ export interface TripsRepository {
     input: CreateTripListing,
   ): Promise<RepoResponse<string>>;
   listTrips(userId?: string | null): Promise<RepoResponse<TripListing[]>>;
-  fetchTrip(userId: string): Promise<RepoResponse<TripListing>>;
-  tripById(userId: string): Promise<RepoResponse<TripListing[]>>;
+  tripsById(userId: string): Promise<RepoResponse<TripListing[]>>;
   deleteTrip(parcelId: string): Promise<RepoResponse<string>>;
   editTrip(editTrip: Partial<TripDto>): Promise<RepoResponse<string>>;
 }

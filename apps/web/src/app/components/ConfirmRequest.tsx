@@ -14,19 +14,22 @@ import TravelerRow from "./TravelerRow";
 import ButtomSpacer from "./BottomSpacer";
 import type { TripListing } from "../features/trips/domain/Trip";
 import type { ParcelListing } from "../features/parcels/domain/Parcel";
-
 import IconTextRow from "./card/IconTextRow";
 import { useMemo, useState } from "react";
 import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
 import { CreateCarryRequestUseCase } from "../features/carry request/application/CreateCarryReaquest";
-import { SendCarryRequestUseCase } from "../features/carry request/application/SendCarryRequestUseCase";
 import type { GoodsCategory } from "../features/goods/domain/GoodsCategory";
+import { useToast } from "./Toast";
+import { namedCall } from "../shared/Authentication/application/NamedCall";
+import { useUniversalModal } from "../shared/Authentication/application/DialogBoxModalProvider";
+import { CircleCheck, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type ConfirmRequestProps = {
   loggedInUserId: string;
   trip: TripListing;
   parcel: ParcelListing;
-  onSubmitted: () => void;
+  onClose: () => void;
   isSenderRequesting: boolean;
 };
 
@@ -34,7 +37,7 @@ export default function ConfirmRequest({
   loggedInUserId,
   trip,
   parcel,
-  onSubmitted,
+  onClose,
   isSenderRequesting,
 }: ConfirmRequestProps) {
   const carryRequestRepository = useMemo(
@@ -46,23 +49,56 @@ export default function ConfirmRequest({
     [carryRequestRepository],
   );
   const [requestLoaded, setLoadRequest] = useState<boolean>(false);
+  const { showSupabaseError, openInfo } = useUniversalModal();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const sendCarryRequestUseCase = useMemo(
-    () => new SendCarryRequestUseCase(createRequest),
-    [],
-  );
+  const message = isSenderRequesting
+    ? "This traveler does not have enough space for your parcel."
+    : "You do not have enough space to carry this parcel.";
 
   const handleSendRequest = async () => {
     if (requestLoaded) return;
+    if (parcel.weightKg > trip.weightKg) {
+      toast(message, {
+        variant: "warning",
+      });
+      onClose();
+      return;
+    }
 
-    const requestId = await sendCarryRequestUseCase.execute(
-      loggedInUserId,
-      parcel,
-      trip,
+    const { result } = await namedCall(
+      "create carry request",
+      createRequest.execute(loggedInUserId, parcel, trip),
     );
-    if (requestId) {
+
+    if (!result.success) {
+      onClose();
+      if (result.status === 409) {
+        openInfo({
+          icon: <Clock className="h-6 w-6 text-warning-400" />,
+          title: "Pending request exists",
+          message:
+            `You already have a request with this ${isSenderRequesting ? "sender" : "traveler"} that is waiting for a response. Please check the existing request for updates.`,
+          label: "Go to requests",
+          onClick: () => navigate("/requests"),
+        });
+      } else {
+        showSupabaseError(result.error, result.status);
+      }
+    }
+
+    if (result.success) {
+      openInfo({
+        icon: <CircleCheck className="h-6 w-6 text-success-500" />,
+        title: "Request sent",
+        message:
+          "Your request has been sent. You will be notified when the traveler responds.",
+        onClick: () => navigate("/requests"),
+        label: "View requests",
+      });
       setLoadRequest(true);
-      onSubmitted();
+      onClose();
     }
   };
 
@@ -82,7 +118,7 @@ export default function ConfirmRequest({
         </CustomText>
       </div>
       <LineDivider />
-      <UITrip trip={trip} isSenderRequesting={isSenderRequesting} />
+      <Trip trip={trip} isSenderRequesting={isSenderRequesting} />
       <LineDivider />
       <Parcel
         parcel={parcel}
@@ -94,12 +130,12 @@ export default function ConfirmRequest({
         buttonTextVariant="onDark"
         payLoad={undefined as never}
         primaryAction={handleSendRequest}
-        secondaryAction={onSubmitted}
+        secondaryAction={onClose}
       />
     </div>
   );
 }
-function UITrip({
+function Trip({
   trip,
   isSenderRequesting,
 }: {
