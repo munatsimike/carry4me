@@ -17,6 +17,7 @@ import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
+import ListingSelectionModal from "@/app/components/ListingSelectionModal";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -59,8 +60,13 @@ export default function TravelersPage() {
   const [selectedTrip, setTrip] = useState<TripListing | null>(null);
   const { user } = useAuth();
 
-  const [parcel, setParcel] = useState<ParcelListing[]>([]);
+  const [parcels, setParcel] = useState<ParcelListing[]>([]);
   const [modalState, setModalState] = useState<boolean>(false);
+  const [selectedParcel, setSelectedParcel] = useState<ParcelListing | null>(
+    null,
+  );
+  const [parcelSelectionOpen, setParcelSelectionOpen] =
+    useState<boolean>(false);
 
   const { toast } = useToast();
 
@@ -79,7 +85,7 @@ export default function TravelersPage() {
       return;
     }
 
-    if (parcel.length === 0) {
+    if (parcels.length === 0) {
       const { result } = await namedCall(
         "Parcel",
         getParcelUseCase.execute(user.id),
@@ -100,8 +106,20 @@ export default function TravelersPage() {
         return;
       }
 
-      setParcel(result.data);
+      if (result.data.length === 1) {
+        setSelectedParcel(result.data[0]);
+      }
+
+      if (result.data.length > 1) {
+        setParcel(result.data);
+        setParcelSelectionOpen(true);
+      }
     }
+
+    if (parcels.length > 1 && !parcelSelectionOpen) {
+      setParcelSelectionOpen(true);
+    }
+
     setTrip(trip);
     setModalState(true);
   };
@@ -118,15 +136,31 @@ export default function TravelersPage() {
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {tripList && <Travelers trips={tripList} onClick={handleRequest} />}
       </DefaultContainer>
+
+      <ListingSelectionModal
+        listingSelectionOpen={parcelSelectionOpen}
+        user={user}
+        selectedListing={selectedTrip}
+        listings={parcels}
+        setListingSelectionOpen={setParcelSelectionOpen}
+        setSelectedListing={setSelectedParcel}
+        setModalState={setModalState}
+      />
       <AnimatePresence>
-        {selectedTrip && parcel.length > 0 && user && modalState && (
-          <CustomModal width="xl" onClose={() => setModalState(false)}>
+        {selectedTrip && selectedParcel && user && modalState && (
+          <CustomModal
+            width="xl"
+            onClose={() => {
+              setSelectedParcel(null);
+              setModalState(false);
+            }}
+          >
             <ConfirmRequest
               loggedInUserId={user.id}
               trip={selectedTrip}
-              parcel={parcel[0]}
+              parcel={selectedParcel}
               onClose={() => setModalState(false)}
-              isSenderRequesting={user.id === parcel[0].user.id}
+              isSenderRequesting={user.id === selectedParcel.user.id}
             />
           </CustomModal>
         )}
