@@ -8,7 +8,7 @@ export default function CardLabel({ label, variant }: { variant: Variant; label:
 
   return (
     <span
-      className={`inline-flex items-center justify-center px-4 h-7 text-sm border rounded-full ${styles[variant]}`}
+      className={`inline-flex items-center justify-center px-4 h-7 text-sm font-light border rounded-full ${styles[variant]}`}
     >
       {label}
     </span>

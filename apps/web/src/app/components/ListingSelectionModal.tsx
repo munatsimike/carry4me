@@ -33,7 +33,7 @@ export default function ListingSelectionModal<T, U extends Listing>({
                 textSize="lg"
                 textVariant="primary"
                 as="h2"
-                className="font-semibold"
+                className="font-medium"
               >
                 Select a trip
               </CustomText>
@@ -58,16 +58,16 @@ export default function ListingSelectionModal<T, U extends Listing>({
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
                       <CustomText
+                      className="font-medium"
                         textSize="md"
                         as="p"
-                        className="font-medium"
                         textVariant="primary"
                       >
                         {listing.route.originCountry} →{" "}
                         {listing.route.destinationCountry}
                       </CustomText>
                       <span className="flex gap-2">
-                        <CustomText as="p" textVariant="label">
+                        <CustomText as="p" textVariant="label" textSize="xsm">
                           Departure
                         </CustomText>
                         <CustomText as="p" textVariant="primary">
@@ -75,7 +75,7 @@ export default function ListingSelectionModal<T, U extends Listing>({
                         </CustomText>
                       </span>
                       <span className="flex gap-2">
-                        <CustomText as="p" textVariant="label">
+                        <CustomText as="p" textVariant="label" textSize="xsm">
                           Available space
                         </CustomText>
                         <CustomText as="p" textVariant="primary">
