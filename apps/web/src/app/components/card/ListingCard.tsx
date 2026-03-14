@@ -12,6 +12,7 @@ import SendRequestBtn from "./SendRequestBtn";
 import type { CardMode } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import User from "./User";
+import { format } from "date-fns";
 
 interface ListingCardProps<T extends Listing> {
   mode?: CardMode;
@@ -69,7 +70,9 @@ export function ListingCard<T extends Listing>({
           origin={listing.route.originCountry}
           destination={listing.route.destinationCountry}
         />
-        <DateRow date={"Not specific"} />
+        {listing.type === "trip" && (
+          <DateRow date={format(new Date(listing.departDate), "MMM d, yyyy")} />
+        )}
         <CategoryRow
           tag={isTripListing ? "traveler" : "sender"}
           category={goodsCategories}

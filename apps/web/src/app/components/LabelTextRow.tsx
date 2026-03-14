@@ -10,7 +10,7 @@ export default function LabelTextRow({ label, text }: LabelTextRowProps) {
     <span className="flex gap-3">
   <CustomText
     as="span"
-    textSize="xsm"
+    textSize="sm"
     textVariant="neutral"
     className="leading-tight"
   >

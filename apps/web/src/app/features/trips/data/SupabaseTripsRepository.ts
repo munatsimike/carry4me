@@ -1,7 +1,7 @@
 import { supabase } from "@/app/shared/supabase/client";
 import type { TripsRepository } from "../domain/TripRepository";
 import type { CreateTripListing } from "../domain/CreateTrip";
-import type { TripListing } from "../domain/Trip";
+import { TRIPSTATUSES, type TripListing } from "../domain/Trip";
 import { mapTripRowToTrip } from "../domain/tripmappers";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
@@ -94,6 +94,8 @@ export class SupabaseTripsRepository implements TripsRepository {
     // Only filter if userId is provided
     if (userId) {
       query = query.eq("traveler_user_id", userId);
+    } else {
+      query.eq("status", TRIPSTATUSES.ACTIVE);
     }
 
     const { data, error, status } = await query;

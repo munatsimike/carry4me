@@ -71,6 +71,19 @@ export default function ConfirmRequest({
       return;
     }
 
+    const canCarry = parcel.goodsCategory.every((parcelCategory) =>
+      trip.goodsCategory.some(
+        (tripCategory) => tripCategory.name === parcelCategory.name,
+      ),
+    );
+    if (!canCarry) {
+      toast(
+        "This traveler does not accept one or more item categories in your parcel.",
+        { variant: "warning" },
+      );
+      onClose();
+      return;
+    }
     const { result } = await namedCall(
       "create carry request",
       createRequest.execute(loggedInUserId, parcel, trip),

@@ -62,6 +62,8 @@ export class SupabaseParcelRepository implements ParcelRepository {
 
     if (userId) {
       query.eq("sender_user_id", userId);
+    } else {
+      query.eq("status", PARCELSTATUSES.OPEN);
     }
 
     const { data, error, status } = await query;
