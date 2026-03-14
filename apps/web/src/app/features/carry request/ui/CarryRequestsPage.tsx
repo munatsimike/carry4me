@@ -2,17 +2,11 @@ import { Card } from "@/app/components/card/Card";
 import CardLabel from "@/app/components/card/CardLabel";
 import LineDivider from "@/app/components/LineDivider";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
-import Stack from "@/app/components/Stack";
-import TravelerRow from "@/app/components/TravelerRow";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { INFOMODES, progress } from "@/types/Ui";
-import RouteRow from "@/app/components/RouteRow";
-import DateRow from "@/app/components/DateRow";
-import CategoryRow from "@/app/components/CategoryRow";
-import ButtomSpacer from "@/app/components/BottomSpacer";
 import { Button } from "@/components/ui/Button";
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
@@ -31,7 +25,6 @@ import {
 } from "../domain/CreateCarryRequest";
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
-import IconTextRow from "@/app/components/card/IconTextRow";
 import { PerformCarryRequestActionUseCase } from "../application/PerformCarryRequestActionUseCase";
 import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActionRepository";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
@@ -43,7 +36,7 @@ import {
   toEmptyStateForMapper,
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { SupabaseTripsRepository } from "../../trips/data/SupabaseTripsRepository";
 import { Package, PackageX } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
@@ -146,7 +139,7 @@ export default function CarryRequestsPage() {
   }, [user?.id, selectedTab]);
 
   const [inputValue, setValue] = useState<string>("");
-  const heightClass = "my-2";
+  const heightClass = "my-0";
 
   const checkTravelersWeight = async (carryRequest: CarryRequest) => {
     const { result } = await namedCall(
@@ -295,6 +288,17 @@ export default function CarryRequestsPage() {
     }
   };
 
+  const pendingHandoverRequest = carryRequestsList?.find(
+    (request) => request.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER,
+  );
+
+  useEffect(() => {
+    if (pendingHandoverRequest?.handoverState) {
+      setHandoverState(pendingHandoverRequest.handoverState);
+      setIsStateLoaded(true);
+    }
+  }, [pendingHandoverRequest]);
+
   return (
     <>
       {selectedTab && (
@@ -303,6 +307,7 @@ export default function CarryRequestsPage() {
           setSelectedTab={setSelectedTab}
         />
       )}
+
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         <div className="flex flex-col gap-6">
           {emptyStateMessage && (
@@ -311,10 +316,10 @@ export default function CarryRequestsPage() {
               description={emptyStateMessage.body}
               action={
                 emptyStateMessage.actions && (
-                  <div className="flex items-center justify-around">
+                  <div className="flex items-center justify-around gap-3">
                     {emptyStateMessage.actions.map((action) => (
                       <Link key={action.href} to={action.href}>
-                        <Button variant={action.variant} size={"md"}>
+                        <Button variant={action.variant} size="md">
                           {action.label}
                         </Button>
                       </Link>
@@ -325,126 +330,145 @@ export default function CarryRequestsPage() {
             />
           )}
 
-          {carryRequestsList &&
-            carryRequestsList.map((request) => {
-              if (
-                request.status == CARRY_REQUEST_STATUSES.PENDING_HANDOVER &&
-                !isStateLoaded
-              ) {
-                ``;
-                setHandoverState(request.handoverState);
-                setIsStateLoaded(true);
-              }
-              const viewerRole =
-                user?.id === request.senderUserId
-                  ? ROLES.SENDER
-                  : ROLES.TRAVELER;
-              const requestUI = mapCarryRequestToUI(request, viewerRole);
-              const actions = actionsMapper(
-                viewerRole,
-                request.status,
-                request.initiatorRole,
-                handoverState ?? undefined,
-              );
+          {carryRequestsList?.map((request) => {
+            const viewerRole =
+              user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
 
-              return (
-                <Card
-                  key={request.carryRequestId}
-                  cornerRadiusClass="rounded-2xl"
-                  className="px-6 w-full max-w-[1000px] mx-auto"
-                >
-                  <div className="flex flex-col gap-2 mx-2 py-2">
-                    <Header
-                      title={requestUI.title}
-                      description={requestUI.description}
-                      requestId={request.carryRequestId.substring(
-                        request.carryRequestId.length - 5,
-                      )}
-                      status={request.status}
-                    />
+            const requestUI = mapCarryRequestToUI(request, viewerRole);
+
+            const actions = actionsMapper(
+              viewerRole,
+              request.status,
+              request.initiatorRole,
+              handoverState ?? undefined,
+            );
+
+            return (
+              <Card
+                key={request.carryRequestId}
+                cornerRadiusClass="rounded-2xl"
+                className="mx-auto w-full max-w-[1000px] px-6"
+              >
+                <div className="mx-2 flex flex-col gap-4">
+                  <Header
+                    title={requestUI.title}
+                    description={requestUI.description}
+                    requestId={request.carryRequestId.slice(-5)}
+                    status={request.status}
+                  />
+
+                  <LineDivider heightClass={heightClass} />
+
+                  <ProgressRow
+                    currentStep={requestUI.currentStep}
+                    isInitiator={viewerRole === request.initiatorRole}
+                  />
+
+                  <LineDivider heightClass={heightClass} />
+
+                  <DetailsSection
+                    trip={request.tripSnapshot}
+                    parcel={request.parcelSnapshot}
+                    viewerRole={viewerRole}
+                  />
+
+                  {requestUI.title !== "Request cancelled" && (
                     <LineDivider heightClass={heightClass} />
-                    <ProgressRow
-                      currentStep={requestUI.currentStep}
-                      isInitiator={viewerRole === request.initiatorRole}
-                    />
-                    <LineDivider heightClass={heightClass} />
-                    <Deails
-                      trip={request.tripSnapshot}
-                      parcel={request.parcelSnapshot}
-                      viewerRole={viewerRole}
-                    />
-                    {requestUI.title !== "Request cancelled" && <LineDivider heightClass={heightClass} />}
-                    {actions.infoBlock?.displayText ? (
-                      <RequestCompleted actions={actions} />
-                    ) : (
-                      <span className="flex gap-10 justify-end">
-                        {actions.secondary ? (
-                          <Button
-                            onClick={() =>
-                              handleSecondaryAcion(actions, request)
-                            }
-                            variant={"error"}
-                            size={"md"}
-                            leadingIcon={undefined}
-                          >
-                            {actions.secondary?.label}
-                          </Button>
-                        ) : (
-                          <span /> // place holder to push primary button to the right
-                        )}
-                        {actions.primary &&
-                          actions.primary.key !==
-                            UIACTIONKEYS.RELEASE_PAYMENT && (
-                            <Button
-                              onClick={() =>
-                                handlePrimaryActions(actions, request)
-                              }
-                              variant="primary"
-                              size="md"
-                              leadingIcon
-                            >
-                              {actions.primary.label}
-                            </Button>
-                          )}
+                  )}
 
-                        {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
-                          actions.infoBlock.displayText !== null && (
-                            <InfoBlockDisplay actions={actions} />
-                          )}
-
-                        {actions.infoBlock?.mode === INFOMODES.INPUT && (
-                          <InfoBlockInput
-                            handleActions={handlePrimaryActions}
-                            carryRequest={request}
-                            actions={actions}
-                            onChange={setValue}
-                            inputValue={inputValue}
-                          />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
+                  {actions.infoBlock?.displayText ? (
+                    <RequestCompleted actions={actions} />
+                  ) : (
+                    <RequestActions
+                      actions={actions}
+                      request={request}
+                      inputValue={inputValue}
+                      setValue={setValue}
+                      onPrimaryAction={handlePrimaryActions}
+                      onSecondaryAction={handleSecondaryAcion}
+                    />
+                  )}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       </DefaultContainer>
     </>
   );
 }
 
+function RequestActions({
+  actions,
+  request,
+  inputValue,
+  setValue,
+  onPrimaryAction,
+  onSecondaryAction,
+}: {
+  actions: UIActions;
+  request: CarryRequest;
+  inputValue: string;
+  setValue: (value: string) => void;
+  onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
+  onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-start justify-end gap-10">
+      {actions.secondary && (
+        <Button
+          onClick={() => onSecondaryAction(actions, request)}
+          variant="error"
+          size="md"
+          leadingIcon={undefined}
+        >
+          {actions.secondary.label}
+        </Button>
+      )}
+
+      {actions.primary &&
+        actions.primary.key !== UIACTIONKEYS.RELEASE_PAYMENT && (
+          <Button
+            onClick={() => onPrimaryAction(actions, request)}
+            variant="primary"
+            size="md"
+            leadingIcon
+          >
+            {actions.primary.label}
+          </Button>
+        )}
+
+      {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
+        actions.infoBlock.displayText !== null && (
+          <InfoBlockDisplay actions={actions} />
+        )}
+
+      {actions.infoBlock?.mode === INFOMODES.INPUT && (
+        <InfoBlockInput
+          handleActions={onPrimaryAction}
+          carryRequest={request}
+          actions={actions}
+          onChange={setValue}
+          inputValue={inputValue}
+        />
+      )}
+    </div>
+  );
+}
+
 function RequestCompleted({ actions }: { actions: UIActions }) {
   return (
-    <span className="flex flex-col gap-2 items-center">
+    <div className="flex flex-col items-center gap-2 py-2 text-center">
       <CustomText textVariant="primary">
         {actions.infoBlock?.displayText?.title}
       </CustomText>
       <CustomText textSize="xsm">
         {actions.infoBlock?.displayText?.description}
       </CustomText>
-    </span>
+    </div>
   );
 }
+
 function InfoBlockInput({
   handleActions,
   actions,
@@ -459,52 +483,56 @@ function InfoBlockInput({
   handleActions: (actions: UIActions, request: CarryRequest) => void;
 }) {
   return (
-    <span className="inline-flex flex-col gap-3">
-      <span className="inline-flex items-center gap-6">
+    <div className="inline-flex flex-col gap-3">
+      <div className="inline-flex items-center gap-4">
         <CustomText textSize="xsm">{actions.infoBlock?.label}</CustomText>
+
         <input
           value={inputValue}
           maxLength={15}
           inputMode="numeric"
-          className="rounded-md w-[15ch] tracking-widest ... px-3 py-1 border border-neutral-200 text-md focus:ring-2  focus:ring-primary-100 font-mono text-neutral-500 focus:border-primary-100 focus:outline-none"
+          className="w-[15ch] rounded-md border border-neutral-200 px-3 py-1 font-mono tracking-widest text-neutral-500 outline-none focus:border-primary-100 focus:ring-2 focus:ring-primary-100"
           onChange={(e) => onChange(e.target.value)}
         />
+
         <Button
           onClick={() => handleActions(actions, carryRequest)}
-          variant={"primary"}
-          size={"sm"}
+          variant="primary"
+          size="sm"
           leadingIcon={undefined}
         >
           <CustomText textVariant="primary" className="text-white">
-            {"Payout"}
+            Payout
           </CustomText>
         </Button>
-      </span>
+      </div>
+
       <CustomText textVariant="primary" textSize="xsm">
         {actions.infoBlock?.helperText}
       </CustomText>
-    </span>
+    </div>
   );
 }
 
 function InfoBlockDisplay({ actions }: { actions: UIActions }) {
   return (
-    <span className="flex justify-end bg-grey">
-      <span className="inline-flex flex-col gap-2">
-        <span className="inline-flex gap-4 items-center">
-          <CustomText textSize="xsm">{actions.infoBlock?.label}</CustomText>{" "}
+    <div className="flex justify-end">
+      <div className="inline-flex flex-col gap-2">
+        <div className="inline-flex items-center gap-3">
+          <CustomText textSize="xsm">{actions.infoBlock?.label}</CustomText>
           <CustomText
-            className="bg-secondary-100 px-3 py-1 rounded-md"
+            className="rounded-md bg-secondary-100 px-3 py-1"
             textVariant="primary"
           >
             {actions.infoBlock?.value}
           </CustomText>
-        </span>
+        </div>
+
         <CustomText textVariant="primary" textSize="xsm">
           {actions.infoBlock?.helperText}
         </CustomText>
-      </span>
-    </span>
+      </div>
+    </div>
   );
 }
 
@@ -521,10 +549,11 @@ function PageTopSection({
     { id: "cancelled", label: "Cancelled", count: 0 },
     { id: "declined", label: "Declined", count: 0 },
   ];
+
   return (
     <PageSection>
-      <span className="inline-flex bg-neutral-0 rounded-full px-10 ">
-        <div className="flex gap-6 relative">
+      <div className="inline-flex rounded-full bg-neutral-0 px-10">
+        <div className="relative flex gap-6">
           {tabs.map((item) => {
             const isActive = item.id === selectedTab;
 
@@ -533,15 +562,10 @@ function PageTopSection({
                 key={item.id}
                 className="relative cursor-pointer pb-2"
                 onClick={() => setSelectedTab(item.id)}
-                whileTap={{
-                  y: 0,
-                  scale: 0.95,
-                }}
-                whileHover={{
-                  y: -2,
-                }}
+                whileTap={{ y: 0, scale: 0.95 }}
+                whileHover={{ y: -2 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                animate={{ y: item.id === selectedTab ? -3 : 0 }}
+                animate={{ y: isActive ? -3 : 0 }}
               >
                 <CustomText
                   textSize="sm"
@@ -550,7 +574,6 @@ function PageTopSection({
                   {item.label}
                 </CustomText>
 
-                {/* Animated underline */}
                 {isActive && (
                   <motion.div
                     layoutId="tab-underline"
@@ -562,12 +585,12 @@ function PageTopSection({
             );
           })}
         </div>
-      </span>
+      </div>
     </PageSection>
   );
 }
 
-function Deails({
+function DetailsSection({
   trip,
   parcel,
   viewerRole,
@@ -577,63 +600,67 @@ function Deails({
   viewerRole: Role;
 }) {
   const totalPrice = parcel.price_per_kg * parcel.weight_kg;
+
   return (
-    <div className="flex flex-col">
-      <span className="grid grid-cols-1 md:grid-cols-[1fr_1fr_0.8fr] gap-10 ">
-        <TripDetails trip={trip} viewerRole={viewerRole} />
-        <ParcelDetails parcel={parcel} viewerRole={viewerRole} />
-        <Stack>
-          <span className="pb-1">
-            <CustomText
-              textVariant="primary"
-              as="span"
-              textSize="xsm"
-              className="inline-flex bg-neutral-100 rounded-full py-1 px-3 border"
-            >
-              {"Cost summary"}
-            </CustomText>
-          </span>
-          <div className="grid grid-cols-2 gap-y-3">
-            <CustomText textVariant="neutral" as="span" className="text-right">
-              {"Parcel weight"}
-            </CustomText>
-            <CustomText
-              className="pl-1"
-              as="span"
-              textVariant="primary"
-            >{`${parcel.weight_kg.toString()}kg`}</CustomText>
-
-            <CustomText
-              textSize="sm"
-              as="span"
-              textVariant="neutral"
-              className="text-right"
-            >
-              {"Price"}
-            </CustomText>
-            <CustomText
-              as="span"
-              textVariant="primary"
-              className="leading-1 pl-1"
-            >
-              {`${parcel.price_per_kg.toString()}`}/kg
-            </CustomText>
-
-            <CustomText as="span" textVariant="neutral" className="text-right ">
-              {"Total price"}
-            </CustomText>
-            <CustomText
-              textSize="sm"
-              as="span"
-              className="pl-1"
-              textVariant="primary"
-            >
-              {`${totalPrice.toString()}`}
-            </CustomText>
-          </div>
-        </Stack>
-      </span>
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_1fr_0.85fr]">
+      <TripDetails trip={trip} viewerRole={viewerRole} />
+      <ParcelDetails parcel={parcel} viewerRole={viewerRole} />
+      <CostSummary parcel={parcel} totalPrice={totalPrice} />
     </div>
+  );
+}
+
+function TripDetails({
+  trip,
+  viewerRole,
+}: {
+  trip: TripSnapshot;
+  viewerRole: Role;
+}) {
+  const cardLabel =
+    viewerRole === ROLES.TRAVELER ? "Trip details" : "Trip details";
+
+  return (
+    <section className="space-y-3">
+      <CardLabel variant="trip" label={cardLabel} />
+
+      <div className="space-y-2">
+        <span className="flex gap-1 items-center">
+          <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
+          <CustomText
+            textVariant="primary"
+            textSize="md"
+            className="font-medium"
+          >
+            {trip.origin.country} →
+          </CustomText>
+          <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
+          <CustomText
+            textVariant="primary"
+            textSize="md"
+            className="font-medium"
+          >
+            {trip.destination.country}
+          </CustomText>
+        </span>
+
+        <div className="grid grid-cols-[90px_1fr] gap-y-1">
+          <CustomText textVariant="secondary" textSize="sm">
+            Traveler
+          </CustomText>
+          <CustomText textVariant="primary" textSize="sm">
+            {trip.traveler_name}
+          </CustomText>
+
+          <CustomText textVariant="secondary" textSize="sm">
+            Departs
+          </CustomText>
+          <CustomText textVariant="primary" textSize="sm">
+            {trip.departure_date}
+          </CustomText>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -644,102 +671,164 @@ function ParcelDetails({
   parcel: ParcelSnapshot;
   viewerRole: Role;
 }) {
-  const cardLabel =
-    viewerRole === ROLES.SENDER ? "Your parcel details" : "Parcel details";
+  const cardLabel = "Parcel details";
   const categories = parcel.goods_category.map((item) => item.name);
+
   return (
-    <Stack>
-      <span className="pb-1">
-        <CardLabel variant={"parcel"} label={cardLabel} />
-        <ButtomSpacer />
-      </span>
-      <IconTextRow
-        iconSize="md"
-        Icon={META_ICONS.userIconOutlined}
-        label={parcel.sender_name}
-      />
-      <RouteRow
-        origin={parcel.origin.country}
-        destination={parcel.destination.country}
-      />
-      <CategoryRow tag={"sender"} category={categories} />
-    </Stack>
-  );
-}
-function TripDetails({
-  trip,
-  viewerRole,
-}: {
-  trip: TripSnapshot;
-  viewerRole: Role;
-}) {
-  const cardLabel =
-    viewerRole === ROLES.TRAVELER ? "Your trip details" : "Trip details";
-  return (
-    <Stack>
-      <span className="pb-1">
-        <CardLabel variant={"trip"} label={cardLabel} />
-        <ButtomSpacer />
-      </span>
-      <TravelerRow name={trip.traveler_name} />
-      <RouteRow
-        origin={trip.origin.country}
-        destination={trip.destination.country}
-      />
-      <DateRow date={trip.departure_date} />
-    </Stack>
+    <section className="space-y-3">
+      <CardLabel variant="parcel" label={cardLabel} />
+
+      <div className="space-y-2">
+        <span className="flex gap-1 items-center">
+          <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
+          <CustomText
+            textVariant="primary"
+            textSize="md"
+            className="font-medium"
+          >
+            {parcel.origin.country} →
+          </CustomText>
+          <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
+          <CustomText
+            textVariant="primary"
+            textSize="md"
+            className="font-medium"
+          >
+            {parcel.destination.country}
+          </CustomText>
+        </span>
+        <div className="grid grid-cols-[90px_1fr] gap-y-1">
+          <CustomText textVariant="secondary" textSize="sm">
+            Sender
+          </CustomText>
+          <CustomText textVariant="primary" textSize="sm">
+            {parcel.sender_name}
+          </CustomText>
+
+          <CustomText textVariant="secondary" textSize="sm">
+            Items
+          </CustomText>
+          <CustomText textVariant="primary" textSize="sm">
+            {categories.join(", ")}
+          </CustomText>
+        </div>
+      </div>
+    </section>
   );
 }
 
-type HeaaderProps = {
+function CostSummary({
+  parcel,
+  totalPrice,
+}: {
+  parcel: ParcelSnapshot;
+  totalPrice: number;
+}) {
+  return (
+    <section className="space-y-3">
+      <span className="inline-flex rounded-full border bg-neutral-100 px-3 py-1">
+        <CustomText textVariant="primary" as="span" textSize="xsm">
+          Cost summary
+        </CustomText>
+      </span>
+
+      <div className="grid grid-cols-[1fr_auto] gap-y-1">
+        <CustomText textVariant="secondary" textSize="sm">
+          Parcel weight
+        </CustomText>
+        <CustomText textVariant="primary" textSize="sm" className="text-right">
+          {parcel.weight_kg}kg
+        </CustomText>
+
+        <CustomText textVariant="secondary" textSize="sm">
+          Price per kg
+        </CustomText>
+        <div className="grid grid-cols-[auto_auto] justify-end gap-1 tabular-nums">
+          <CustomText textVariant="primary" textSize="sm">
+            $
+          </CustomText>
+          <CustomText textVariant="primary" textSize="sm">
+            {parcel.price_per_kg.toFixed(2)}
+          </CustomText>
+        </div>
+
+        <CustomText textVariant="primary" textSize="md" className="font-medium">
+          Total
+        </CustomText>
+        <div className="grid grid-cols-[auto_auto] justify-end gap-1 tabular-nums">
+          <CustomText
+            textVariant="primary"
+            textSize="md"
+            className="font-medium"
+          >
+            $
+          </CustomText>
+          <CustomText
+            textVariant="primary"
+            textSize="md"
+            className="font-medium"
+          >
+            {totalPrice.toFixed(2)}
+          </CustomText>
+        </div>
+      </div>
+    </section>
+  );
+}
+type HeaderProps = {
   title: string;
   description: string;
   requestId: string;
   status: CarryRequestStatus;
 };
-function Header({ title, description, requestId, status }: HeaaderProps) {
+
+function Header({ title, description, requestId, status }: HeaderProps) {
   return (
     <SpaceBetweenRow>
       <CurrentStatus title={title} description={description} status={status} />
-      <span className="inline-flex flex-col gap-1">
+      <div className="inline-flex flex-col gap-1">
         <CustomText textSize="sm" textVariant="primary">
-          {" "}
-          {"Request"}
+          Request
         </CustomText>
-        <CustomText textSize="xsm"> {`#${requestId}`}</CustomText>
-      </span>
+        <CustomText textSize="xsm">#{requestId}</CustomText>
+      </div>
     </SpaceBetweenRow>
   );
 }
-
-type StatusProps = {
+function CurrentStatus({
+  title,
+  description,
+  status,
+}: {
   title: string;
   description: string;
   status: CarryRequestStatus;
-};
-
-function CurrentStatus({ title, description, status }: StatusProps) {
+}) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="inline-flex items-center gap-2">
-        <CustomText textSize="xsm"> {"Status : "}</CustomText>
+      <div className="inline-flex items-center gap-2">
+        <CustomText textSize="sm">Status:</CustomText>
+
         <div className="inline-flex items-center gap-2">
           <span
-            className={`inline-flex rounded-full h-3 w-3 ${statusColor(status)}`}
+            className={`inline-flex h-3 w-3 rounded-full ${statusColor(status)}`}
           />
-          <CustomText textSize={"md"} textVariant="primary">
-            {" "}
+          <CustomText
+            textSize="lg"
+            textVariant="primary"
+            className="font-medium"
+          >
             {title}
           </CustomText>
         </div>
-      </span>
-      <CustomText textSize="sm" as="span" className="pl-[77px]">
+      </div>
+
+      <CustomText textSize="sm" as="span" className="pl-[60px]">
         {description}
       </CustomText>
     </div>
   );
 }
-
 function ProgressRow({
   currentStep,
   isInitiator,
@@ -748,19 +837,18 @@ function ProgressRow({
   isInitiator: boolean;
 }) {
   const steps = [2, 3, 4, 5, 6] as const;
-  return (
-    <div className="flex flex-wrap items-center gap-6 bg-neutral-50 py-4 px-3 rounded-lg">
-      {isInitiator && <Step isCompleted={isInitiator} stage={progress[1]} />}
 
-      {steps.map((step) => {
-        return (
-          <Step
-            key={step}
-            isCompleted={step - 1 < currentStep && currentStep !== 1}
-            stage={progress[step]}
-          />
-        );
-      })}
+  return (
+    <div className="flex flex-wrap items-center gap-6 rounded-lg px-3 bg-neutral-50 border py-4">
+      {isInitiator && <Step isCompleted stage={progress[1]} />}
+
+      {steps.map((step) => (
+        <Step
+          key={step}
+          isCompleted={step - 1 < currentStep && currentStep !== 1}
+          stage={progress[step]}
+        />
+      ))}
     </div>
   );
 }
@@ -774,9 +862,10 @@ function Step({
 }) {
   const iconColor = isCompleted ? "success" : "grey";
   const textColor = isCompleted ? "primary" : "secondary";
+
   return (
-    <span className="inline-flex gap-2 items-center">
-      <SvgIcon color={iconColor} size={"md"} Icon={META_ICONS.checkedIcon} />
+    <span className="inline-flex items-center gap-2">
+      <SvgIcon color={iconColor} size="md" Icon={META_ICONS.checkedIcon} />
       <CustomText textSize="xsm" textVariant={textColor}>
         {stage}
       </CustomText>
