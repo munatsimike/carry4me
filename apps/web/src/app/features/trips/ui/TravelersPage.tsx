@@ -159,7 +159,10 @@ export default function TravelersPage() {
               loggedInUserId={user.id}
               trip={selectedTrip}
               parcel={selectedParcel}
-              onClose={() => setModalState(false)}
+              onClose={() => {
+                setSelectedParcel(null);
+                setModalState(false);
+              }}
               isSenderRequesting={user.id === selectedParcel.user.id}
             />
           </CustomModal>

@@ -89,7 +89,10 @@ export default function ParcelsPage() {
 
     if (userTrips.length === 0) {
       // fetch a trip to be matched with a parcel
-      const {result} = await namedCall("trip", getTripUseCase.execute(user.id));
+      const { result } = await namedCall(
+        "trip",
+        getTripUseCase.execute(user.id),
+      );
       if (!result.success) {
         showSupabaseError(result.error, result.status, {
           onRetry: () => handleRequest(parcel),
@@ -112,7 +115,6 @@ export default function ParcelsPage() {
       if (result.data.length > 1) {
         setUserTrip(result.data);
         setTripSelectionOpen(true);
-
       }
     }
 
@@ -157,7 +159,10 @@ export default function ParcelsPage() {
               loggedInUserId={user.id}
               trip={selectedTrip}
               parcel={selectedParcel}
-              onClose={() => setModalState(false)}
+              onClose={() => {
+                setSelectedTrip(null);
+                setModalState(false);
+              }}
               isSenderRequesting={user.id === selectedParcel.user.id}
             />
           </CustomModal>

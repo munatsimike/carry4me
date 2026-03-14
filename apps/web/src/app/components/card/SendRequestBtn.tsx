@@ -13,7 +13,6 @@ type SendRequestBtnProps<T> = {
   listingType?: ListingType;
   payLoad: T;
   primaryAction: (payLoad: T) => void;
-  secondaryAction?: () => void;
   buttonVariant?: ButtonVariant;
   iconColorVariant?: IconColor;
   buttonTextVariant?: TextVariant;
@@ -23,7 +22,6 @@ type SendRequestBtnProps<T> = {
 export default function SendRequestBtn<T>({
   listingType,
   primaryAction,
-  secondaryAction,
   payLoad,
   buttonVariant = "primary",
   buttonTextVariant = "primary",
@@ -35,10 +33,10 @@ export default function SendRequestBtn<T>({
   const { openAuthModal } = useAuthModal();
   const isTripListing = listingType === "trip";
   const base = "flex items-center w-full";
-  const alignment = secondaryAction ? "justify-between" : "justify-end";
+ 
 
   return (
-    <div className={`${base} ${alignment}`}>
+    <div className={`${base}`}>
       <Button
         isBusy={isActive}
         onClick={() => {

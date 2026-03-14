@@ -1,15 +1,6 @@
 import CustomText from "@/components/ui/CustomText";
 import { countryToCurrency } from "../../Mapper";
 import type { Location } from "@/types/Ui";
-import Stack from "../Stack";
-
-type LableValueStackProps = {
-  firstLabel: string;
-  firstValue: string;
-  secondLabel: string;
-  secondValue: string;
-  className?: string;
-};
 
 type WeightAndPriceProps = {
   weightLabel?: string;
@@ -19,35 +10,6 @@ type WeightAndPriceProps = {
   location: Location;
 };
 
-type PriceProps = {
-  unitPriceLabel: string;
-  unitPrice: number;
-  totalPriceLabel?: string;
-  totalPrice: number;
-  location: Location;
-  className?: string;
-};
-
-export function Price({
-  unitPriceLabel,
-  unitPrice,
-  totalPriceLabel = "Total price",
-  totalPrice,
-  location,
-  className,
-}: PriceProps) {
-  const currency = countryToCurrency[location];
-  return (
-    <LableValueStack
-      className={className}
-      firstLabel={`${unitPriceLabel}`}
-      secondLabel={totalPriceLabel}
-      firstValue={`${currency}${unitPrice.toString()}`}
-      secondValue={`${currency}${totalPrice.toString()}`}
-    />
-  );
-}
-
 export function WeightAndPrice({
   weightLabel = "Available space",
   weight,
@@ -56,36 +18,19 @@ export function WeightAndPrice({
   location,
 }: WeightAndPriceProps) {
   const currency = countryToCurrency[location];
-  return (
-    <LableValueStack
-      firstLabel={weightLabel}
-      secondLabel={priceLabel}
-      firstValue={`${weight.toString()}${"kg"}`}
-      secondValue={`${currency}${price.toString()}`}
-    />
-  );
-}
-
-function LableValueStack({
-  firstLabel,
-  secondLabel,
-  firstValue,
-  secondValue,
-  className,
-}: LableValueStackProps) {
   const labelColor = "neutral";
   const baseLabel = "flex justify-end";
-  const textSize = "xsm";
+  const textSize = "sm";
   return (
-    <div className={`flex items-start gap-2 justify-end ${className}`}>
-      <div className="flex flex-col gap-3">
+    <div className={`flex flex-col gap-2`}>
+      <div className="flex justify-between items-center">
         <CustomText
           className={baseLabel}
           as="div"
           textSize={textSize}
           textVariant={labelColor}
         >
-          {firstLabel}
+          {weightLabel}
         </CustomText>
         <CustomText
           as="div"
@@ -93,18 +38,29 @@ function LableValueStack({
           className={baseLabel}
           textSize={textSize}
         >
-          {secondLabel}
+          {weight}kg
         </CustomText>
       </div>
 
-      <Stack>
-        <CustomText as="div" textVariant="primary">
-          {firstValue}
+      <div className="flex justify-between items-center">
+        <CustomText
+          as="div"
+          textVariant="primary"
+          className="font-medium"
+          textSize="md"
+        >
+          {priceLabel}
         </CustomText>
-        <CustomText className="leading-none" as="div" textVariant="primary">
-          {secondValue}
+        <CustomText
+          className="leading-none font-medium"
+          as="div"
+          textVariant="primary"
+          textSize="md"
+        >
+          {currency}
+          {price}
         </CustomText>
-      </Stack>
+      </div>
     </div>
   );
 }

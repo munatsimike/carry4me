@@ -20,7 +20,11 @@ export default function RouteRow({
       <InlineRow gap="2" className="items-center justify-center">
         <InlineRow gap="1">
           <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
-          <CustomText textSize="sm" textVariant="primary">
+          <CustomText
+            textSize="sm"
+            textVariant="primary"
+            className="font-medium"
+          >
             {origin}
           </CustomText>
         </InlineRow>
@@ -28,7 +32,11 @@ export default function RouteRow({
         <MoveRight className="text-neutral-400" strokeWidth={1.5} />
         <InlineRow gap="1">
           <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
-          <CustomText textSize="sm" textVariant="primary">
+          <CustomText
+            textSize="sm"
+            textVariant="primary"
+            className="font-medium"
+          >
             {destination}
           </CustomText>
         </InlineRow>

@@ -15,7 +15,6 @@ import { useUniversalModal } from "../shared/Authentication/application/DialogBo
 import { CircleCheck, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CardLabel from "./card/CardLabel";
-import { size } from "zod";
 import { format } from "date-fns/format";
 
 type ConfirmRequestProps = {
@@ -46,16 +45,28 @@ export default function ConfirmRequest({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const message = isSenderRequesting
-    ? "This traveler does not have enough space for your parcel."
-    : "You do not have enough space to carry this parcel.";
-
   const handleSendRequest = async () => {
     if (requestLoaded) return;
+
     if (parcel.weightKg > trip.weightKg) {
+      const message = isSenderRequesting
+        ? "This traveler does not have enough space for your parcel."
+        : "You do not have enough space to carry this parcel.";
+
       toast(message, {
         variant: "warning",
       });
+      onClose();
+      return;
+    }
+
+    if (
+      parcel.route.originCountry !== trip.route.originCountry ||
+      parcel.route.destinationCountry !== trip.route.destinationCountry
+    ) {
+      const message =
+        "The parcel route must match the trip route (same origin and destination).";
+      toast(message, { variant: "warning" });
       onClose();
       return;
     }
@@ -122,7 +133,6 @@ export default function ConfirmRequest({
         buttonTextVariant="onDark"
         payLoad={undefined as never}
         primaryAction={handleSendRequest}
-        secondaryAction={onClose}
       />
     </div>
   );
@@ -139,7 +149,7 @@ export function ParcelSummary({
   isSenderRequesting,
   travelerPricePerKg,
 }: ParcelSummaryProps) {
-  const label = isSenderRequesting ? "Your parcel" : "Sender's parcel";
+  const label = isSenderRequesting ? "Parcel details" : "Parcel details";
   const items = parcel.goodsCategory.map((item: GoodsCategory) => item.name);
   const pricePerKg = isSenderRequesting
     ? travelerPricePerKg
@@ -156,11 +166,16 @@ export function ParcelSummary({
       <div className="space-y-2">
         <CardLabel variant="parcel" label={label} />
 
-        <CustomText as="div" textSize="md" textVariant="primary" className="font-medium">
+        <CustomText
+          as="div"
+          textSize="md"
+          textVariant="primary"
+          className="font-medium"
+        >
           {parcel.route.originCountry} → {parcel.route.destinationCountry}
         </CustomText>
 
-        <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-[120px_1fr] sm:items-start">
+        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[120px_1fr] sm:items-start">
           <CustomText textVariant={variantSecondary} textSize={textSizeLabel}>
             Sender
           </CustomText>
@@ -193,7 +208,11 @@ export function ParcelSummary({
             Price per kg
           </CustomText>
 
-          <CustomText as="span" className="textabular-nums text-right" textVariant="primary">
+          <CustomText
+            as="span"
+            className="textabular-nums text-right"
+            textVariant="primary"
+          >
             ${pricePerKg.toFixed(2)}
           </CustomText>
         </div>
@@ -201,7 +220,7 @@ export function ParcelSummary({
         <div className="grid grid-cols-[1fr_auto] items-center gap-4">
           <CustomText
             as="span"
-           className="font-semibold"
+            className="font-semibold"
             textVariant="primary"
             textSize="md"
           >
@@ -228,7 +247,7 @@ type TripSummaryProps = {
 };
 
 export function TripSummary({ trip, isSenderRequesting }: TripSummaryProps) {
-  const label = isSenderRequesting ? "Traveler's trip" : "Your trip";
+  const label = isSenderRequesting ? "Trip details" : "Trip details";
   const items = trip.goodsCategory.map((item) => item.name);
   const variantSecondary = "secondary";
   const variantPrimary = "primary";
@@ -240,11 +259,15 @@ export function TripSummary({ trip, isSenderRequesting }: TripSummaryProps) {
       <div className="space-y-2">
         <CardLabel variant={"trip"} label={label} />
 
-        <CustomText textSize="md" textVariant={variantPrimary} className="font-medium">
+        <CustomText
+          textSize="md"
+          textVariant={variantPrimary}
+          className="font-medium"
+        >
           {trip.route.originCountry} → {trip.route.destinationCountry}
         </CustomText>
 
-        <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-[120px_1fr] sm:items-start">
+        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[120px_1fr] sm:items-start">
           {trip.user?.fullName && (
             <>
               <CustomText
@@ -274,6 +297,12 @@ export function TripSummary({ trip, isSenderRequesting }: TripSummaryProps) {
 
           <CustomText textVariant={variantPrimary} textSize={textSize}>
             {items.join(", ")}
+          </CustomText>
+          <CustomText textVariant={variantSecondary} textSize={textSizeLabel}>
+            Space
+          </CustomText>
+          <CustomText textVariant={variantPrimary} textSize={textSize}>
+            {trip.weightKg}kg
           </CustomText>
         </div>
       </div>
