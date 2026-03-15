@@ -18,7 +18,7 @@ import ConfirmRequest from "@/app/components/ConfirmRequest";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
-import CustomText from "@/components/ui/CustomText";
+import { filterByCountryCity } from "@/app/util/filters";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -68,34 +68,24 @@ export default function ParcelsPage() {
   const [tripSelectionOpen, setTripSelectionOpen] = useState(false);
   // trips to matched with a parcel. when a user selects a parcel they should have a trip.
   const [userTrips, setUserTrips] = useState<TripListing[]>([]);
+  // selected parcel to be matched with a trip
   const [selectedTrip, setSelectedTrip] = useState<TripListing | null>(null);
+  //store search results and filtered results
   const [filteredParcels, setFilteredParcels] = useState<ParcelListing[]>([]);
   const [searchCountry, setSearchCountry] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [clearSearchResults, setClearResults] = useState<boolean>(false);
   const { user } = useAuth();
 
+
   const country = searchCountry.toLowerCase().trim();
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
 
   useEffect(() => {
-    if (!isSearchActive) return;
-
-    const filtered = parcelsList.filter((parcel) => {
-      const matchesCountry =
-        !country ||
-        parcel.route.originCountry.toLowerCase().includes(country) ||
-        parcel.route.destinationCountry.toLowerCase().includes(country);
-
-      const matchesCity =
-        !city ||
-        parcel.route.originCity?.toLowerCase().includes(city) ||
-        parcel.route.destinationCity?.toLowerCase().includes(city);
-      return matchesCountry && matchesCity;
-    });
-
-    setFilteredParcels(filtered);
+    if (isSearchActive) {
+      setFilteredParcels(filterByCountryCity(city, country, parcelsList));
+    }
   }, [searchCountry, searchCity, parcelsList]);
 
   //
@@ -162,7 +152,7 @@ export default function ParcelsPage() {
           setClearResults={() => setClearResults(false)}
           clearResults={clearSearchResults}
         />
-        <FilterOptionsRow />
+        <FilterOptionsRow/>
 
         <SearchResults
           isSearchActive={isSearchActive}

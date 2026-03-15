@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -6,12 +5,14 @@ import {
   ChevronDown,
   Package,
   Scale,
-  Tag,
   ArrowUpDown,
   PoundSterling,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import type { CustomRange } from "@/types/Ui";
 
-type TripFiltersFormValues = {
+type FiltersFormValues = {
   date: string;
   minPrice: string;
   maxPrice: string;
@@ -47,7 +48,9 @@ function FilterChip({
           : "border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-100",
       ].join(" ")}
     >
-      <span className={active || isOpen ? "text-primary-500" : "text-neutral-500"}>
+      <span
+        className={active || isOpen ? "text-primary-500" : "text-neutral-500"}
+      >
         {icon}
       </span>
       <span className="text-sm font-semi-medium text-neutral-800">{label}</span>
@@ -84,7 +87,10 @@ function FilterMenuWrapper({ children }: FilterMenuWrapperProps) {
 }
 
 type FilterOptionsRowProps = {
-  onApply?: (values: TripFiltersFormValues) => void;
+  onApply?: (values: FiltersFormValues) => void;
+  setSelectedDate: (s: string) => void;
+  setFilteredList: () => void;
+  setFilterByPrice: (p: CustomRange) => void;
 };
 
 const categoryOptions = [
@@ -102,8 +108,13 @@ const sortOptions = [
   { label: "Most space", value: "space-desc" },
 ];
 
-export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
-  const [openMenu, setOpenMenu] = React.useState<string | null>(null);
+export function FilterOptionsRow({
+  onApply,
+  setSelectedDate,
+  setFilteredList,
+  setFilterByPrice,
+}: FilterOptionsRowProps) {
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const {
     register,
@@ -112,10 +123,11 @@ export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
     watch,
     reset,
     setValue,
-  } = useForm<TripFiltersFormValues>({
+    formState: { dirtyFields },
+  } = useForm<FiltersFormValues>({
     defaultValues: {
       date: "",
-      minPrice: "",
+      minPrice: "0",
       maxPrice: "",
       minSpace: "",
       maxSpace: "",
@@ -127,7 +139,7 @@ export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
   const values = watch();
 
   const hasDate = !!values.date;
-  const hasPrice = !!values.minPrice || !!values.maxPrice;
+  const hasPrice = !!values.maxPrice;
   const hasSpace = !!values.minSpace || !!values.maxSpace;
   const hasCategory = values.categories.length > 0;
   const hasSort = !!values.sort;
@@ -142,15 +154,30 @@ export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
   const closeMenu = () => setOpenMenu(null);
 
   const submitFilters = handleSubmit((formValues) => {
-    onApply?.(formValues);
+    if (!!dirtyFields.date && setSelectedDate) {
+      setSelectedDate(formValues.date);
+    }
+
+    if (!!dirtyFields.maxPrice) {
+      setFilterByPrice({
+        min: Number(formValues.minPrice),
+        max: Number(formValues.maxPrice),
+      });
+    }
+    //onApply?.(formValues);
     closeMenu();
   });
 
   const clearFilters = () => {
+    if (setFilteredList) {
+      setFilteredList();
+      setSelectedDate("");
+      setFilterByPrice({ min: 0, max: 0 });
+    }
     reset();
     onApply?.({
       date: "",
-      minPrice: "",
+      minPrice: "0",
       maxPrice: "",
       minSpace: "",
       maxSpace: "",
@@ -187,7 +214,7 @@ export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
 
             <div className="flex items-center justify-end gap-2">
               <button
-                type="button"
+                type="submit"
                 onClick={() => {
                   setValue("date", "");
                   submitFilters();
@@ -353,13 +380,17 @@ export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
                                 field.onChange([...field.value, category]);
                               } else {
                                 field.onChange(
-                                  field.value.filter((item) => item !== category),
+                                  field.value.filter(
+                                    (item) => item !== category,
+                                  ),
                                 );
                               }
                             }}
                             className="h-4 w-4"
                           />
-                          <span className="text-sm text-primary-900">{category}</span>
+                          <span className="text-sm text-primary-900">
+                            {category}
+                          </span>
                         </label>
                       );
                     })}
@@ -454,15 +485,21 @@ export function FilterOptionsRow({ onApply }: FilterOptionsRowProps) {
         </Popover>
       </FilterMenuWrapper>
 
-      {hasAnyFilter && (
-        <button
-          type="button"
-          onClick={clearFilters}
-          className="ml-1 text-sm font-medium text-primary-500 hover:underline"
-        >
-          Clear filters
-        </button>
-      )}
+      <AnimatePresence>
+        {hasAnyFilter && (
+          <motion.button
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            trinsition={{ duration: 0.3, ease: "easeInOut" }}
+            exit={{ opacity: 0, x: -8 }}
+            type="button"
+            onClick={clearFilters}
+            className="ml-1 text-sm font-medium text-primary-500 hover:underline"
+          >
+            Clear filters
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -81,3 +81,8 @@ export const INFOMODES = {
   INPUT: "INPUT",
 };
 export type InfoBlockMode = (typeof INFOMODES)[keyof typeof INFOMODES];
+
+export type CustomRange = {
+  min:number,
+  max:number
+}

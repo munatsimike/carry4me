@@ -18,6 +18,8 @@ import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
+import { filterByCountryCity, filterByDepartDate, filterByPriceRange } from "@/app/util/filters";
+import type { CustomRange } from "@/types/Ui";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -41,7 +43,6 @@ export default function TravelersPage() {
       if (cancel) return;
 
       if (!result.success) {
-        console.log(result.error);
         showSupabaseError(result.error, result.status, {
           onRetry: fetchTravelers,
         });
@@ -76,26 +77,26 @@ export default function TravelersPage() {
   const [clearSearchResults, setClearResults] = useState<boolean>(false);
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
+  //store filter date
+  const [filterByPrice, setFilterByPrice] = useState<CustomRange>({
+    min: 0,
+    max: 0,
+  });
+  const [filterByDate, setFilterByDate] = useState<string>("");
+  const shouldFilter = !!filterByDate || filterByPrice.max > 0;
 
   useEffect(() => {
-    if (!isSearchActive) return;
+    if (isSearchActive) {
+      setFilteredTrips(filterByCountryCity(city, country, tripList));
+    }
+    if (filterByDate) {
+      setFilteredTrips(filterByDepartDate(filterByDate, tripList));
+    }
 
-    const filtered = tripList.filter((trip) => {
-      const matchesCountry =
-        !country ||
-        trip.route.originCountry.toLowerCase().includes(country) ||
-        trip.route.destinationCountry.toLowerCase().includes(country);
-
-      const matchesCity =
-        !city ||
-        trip.route.originCity?.toLowerCase().includes(city) ||
-        trip.route.destinationCity?.toLowerCase().includes(city);
-      return matchesCountry && matchesCity;
-    });
-
-    setFilteredTrips(filtered);
-  }, [searchCountry, searchCity, tripList]);
-
+    if (filterByPrice.max > 0) {
+      setFilteredTrips(filterByPriceRange(filterByPrice, tripList));
+    }
+  }, [searchCountry, searchCity, tripList, filterByDate, filterByPrice]);
   const handleRequest = async (trip: TripListing) => {
     if (!user?.id) {
       return;
@@ -161,7 +162,11 @@ export default function TravelersPage() {
           setClearResults={() => setClearResults(false)}
           clearResults={clearSearchResults}
         />
-        <FilterOptionsRow />
+        <FilterOptionsRow
+          setSelectedDate={setFilterByDate}
+          setFilterByPrice={setFilterByPrice}
+          setFilteredList={() => setFilteredTrips([])}
+        />
         <SearchResults
           isSearchActive={isSearchActive}
           searchResults={filteredTrips.length}
@@ -171,7 +176,7 @@ export default function TravelersPage() {
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {tripList && (
           <Travelers
-            trips={isSearchActive ? filteredTrips : tripList}
+            trips={isSearchActive || shouldFilter ? filteredTrips : tripList}
             onClick={handleRequest}
           />
         )}

@@ -82,8 +82,8 @@ export function ListingCard<T extends Listing>({
       <WeightAndPrice
         weightLabel={isTripListing ? "Available space" : "Weight"}
         weight={listing.weightKg}
-        priceLabel={isTripListing ? "Price" : "Budget"}
-        price={listing.pricePerKg * listing.weightKg}
+        priceLabel={isTripListing ? "Price/kg" : "Budget/kg"}
+        price={listing.pricePerKg}
         location={"UK"}
       />
       <LineDivider />
