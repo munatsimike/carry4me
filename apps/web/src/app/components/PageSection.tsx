@@ -1,3 +1,4 @@
+
 type Align = "left" | "right" | "center";
 
 export default function PageSection({

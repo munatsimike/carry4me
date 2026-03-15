@@ -6,6 +6,8 @@ import { META_ICONS } from "../icons/MetaIcon";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect } from "react";
 
 const searchScema = z.object({
   country: z.string().min(1, "Select country"),
@@ -17,15 +19,27 @@ type SearchFields = z.infer<typeof searchScema>;
 type SearchProps = {
   countries: string[];
   cities: string[];
+  setSearchCountry: (s: string) => void;
+  setSearchCity: (s: string) => void;
+  setClearResults: () => void;
+  clearResults: boolean;
 };
 
-export default function Search({ countries, cities }: SearchProps) {
+export default function Search({
+  countries,
+  cities,
+  setSearchCity,
+  setSearchCountry,
+  clearResults,
+  setClearResults,
+}: SearchProps) {
   const heightClass = "py-0";
   const {
     register,
     watch,
     handleSubmit,
     resetField,
+    reset,
     formState: { dirtyFields, errors, touchedFields },
   } = useForm<SearchFields>({
     resolver: zodResolver(searchScema),
@@ -37,12 +51,22 @@ export default function Search({ countries, cities }: SearchProps) {
     reValidateMode: "onChange",
   });
 
+  useEffect(() => {
+    if (clearResults) {
+      reset();
+      setSearchCity("");
+      setSearchCountry("");
+      setClearResults();
+    }
+  }, [clearResults]);
+
   const countryValue = watch("country");
   const cityValue = watch("city");
 
-  const handleSearch = async () => {
-    console.log(cityValue);
-    console.log(countryValue);
+  const handleSearch = () => {
+    if (!countryValue || !cityValue) return;
+    setSearchCity(cityValue);
+    setSearchCountry(countryValue);
   };
 
   return (
@@ -118,5 +142,53 @@ export default function Search({ countries, cities }: SearchProps) {
         </CustomText>
       </Button>
     </form>
+  );
+}
+
+type SearchResultsProps = {
+  isSearchActive: boolean;
+  searchResults: number;
+  onClick: () => void;
+};
+
+export function SearchResults({
+  isSearchActive,
+  searchResults,
+  onClick,
+}: SearchResultsProps) {
+  return (
+    <AnimatePresence>
+      {isSearchActive && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+          className="flex items-center gap-10"
+        >
+          <span className="inline-flex gap-2 items-center">
+            <CustomText
+              as="p"
+              textSize="sm"
+              textVariant="primary"
+              className="font-medium"
+            >
+              ({searchResults})
+            </CustomText>
+            <CustomText as="p" textSize="xsm" textVariant="secondary">
+              {searchResults === 1 ? "parcel" : "parcels"} found
+            </CustomText>
+          </span>
+
+          <button
+            onClick={onClick}
+            type="button"
+            className="text-sm font-medium text-primary-500 hover:underline"
+          >
+            Clear search
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -2,7 +2,7 @@ import CustomModal from "@/app/components/CustomModal";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useEffect, useMemo, useState } from "react";
 import Parcels from "./Parcels";
-import Search from "@/app/components/Search";
+import Search, { SearchResults } from "@/app/components/Search";
 import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
@@ -18,6 +18,7 @@ import ConfirmRequest from "@/app/components/ConfirmRequest";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
+import CustomText from "@/components/ui/CustomText";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -31,7 +32,6 @@ export default function ParcelsPage() {
     () => new GetTripUseCase(tripRepo),
     [parcelRepo],
   );
-
   const [parcelsList, setParcelsList] = useState<ParcelListing[]>([]);
 
   useEffect(() => {
@@ -67,10 +67,36 @@ export default function ParcelsPage() {
   const { toast } = useToast();
   const [tripSelectionOpen, setTripSelectionOpen] = useState(false);
   // trips to matched with a parcel. when a user selects a parcel they should have a trip.
-  const [userTrips, setUserTrip] = useState<TripListing[]>([]);
+  const [userTrips, setUserTrips] = useState<TripListing[]>([]);
   const [selectedTrip, setSelectedTrip] = useState<TripListing | null>(null);
-
+  const [filteredParcels, setFilteredParcels] = useState<ParcelListing[]>([]);
+  const [searchCountry, setSearchCountry] = useState("");
+  const [searchCity, setSearchCity] = useState("");
+  const [clearSearchResults, setClearResults] = useState<boolean>(false);
   const { user } = useAuth();
+
+  const country = searchCountry.toLowerCase().trim();
+  const city = searchCity.toLowerCase().trim();
+  const isSearchActive = !!country && !!city;
+
+  useEffect(() => {
+    if (!isSearchActive) return;
+
+    const filtered = parcelsList.filter((parcel) => {
+      const matchesCountry =
+        !country ||
+        parcel.route.originCountry.toLowerCase().includes(country) ||
+        parcel.route.destinationCountry.toLowerCase().includes(country);
+
+      const matchesCity =
+        !city ||
+        parcel.route.originCity?.toLowerCase().includes(city) ||
+        parcel.route.destinationCity?.toLowerCase().includes(city);
+      return matchesCountry && matchesCity;
+    });
+
+    setFilteredParcels(filtered);
+  }, [searchCountry, searchCity, parcelsList]);
 
   //
   const handleRequest = async (parcel: ParcelListing) => {
@@ -113,7 +139,7 @@ export default function ParcelsPage() {
       }
 
       if (result.data.length > 1) {
-        setUserTrip(result.data);
+        setUserTrips(result.data);
         setTripSelectionOpen(true);
       }
     }
@@ -128,12 +154,28 @@ export default function ParcelsPage() {
   return (
     <>
       <PageSection>
-        <Search countries={["UK", "USA"]} cities={["London", "Birmingham"]} />
+        <Search
+          countries={["UK", "USA"]}
+          cities={["London", "Birmingham", "florida"]}
+          setSearchCity={setSearchCity}
+          setSearchCountry={setSearchCountry}
+          setClearResults={() => setClearResults(false)}
+          clearResults={clearSearchResults}
+        />
         <FilterOptionsRow />
+
+        <SearchResults
+          isSearchActive={isSearchActive}
+          searchResults={filteredParcels.length}
+          onClick={() => setClearResults(true)}
+        />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {parcelsList && (
-          <Parcels parcels={parcelsList} onClick={handleRequest} />
+          <Parcels
+            parcels={isSearchActive ? filteredParcels : parcelsList}
+            onClick={handleRequest}
+          />
         )}
       </DefaultContainer>
 

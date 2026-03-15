@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+
 type ContainerProps = {
   children: React.ReactNode;
   className?: string; // inner container
@@ -10,14 +12,14 @@ export default function DefaultContainer({
   outerClassName,
 }: ContainerProps) {
   return (
-    <section className={`${outerClassName} py-5 md:py-5`}>
-      <div
-        className={`mx-auto max-w-container px-4 ${
-          className ?? ""
-        }`}
-      >
+    <motion.section
+      layout
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className={`${outerClassName} py-5 md:py-5`}
+    >
+      <div className={`mx-auto max-w-container px-4 ${className ?? ""}`}>
         {children}
       </div>
-    </section>
+    </motion.section>
   );
 }

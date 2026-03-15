@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import PageSection from "@/app/components/PageSection";
-import Search from "@/app/components/Search";
+import Search, { SearchResults } from "@/app/components/Search";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
 import { GetTripsUseCase } from "../application/GetTripsUseCase";
 import type { TripListing } from "../domain/Trip";
@@ -69,6 +69,32 @@ export default function TravelersPage() {
     useState<boolean>(false);
 
   const { toast } = useToast();
+  const [filteredTrips, setFilteredTrips] = useState<TripListing[]>([]);
+  const [searchCountry, setSearchCountry] = useState("");
+  const [searchCity, setSearchCity] = useState("");
+  const country = searchCountry.toLowerCase().trim();
+  const [clearSearchResults, setClearResults] = useState<boolean>(false);
+  const city = searchCity.toLowerCase().trim();
+  const isSearchActive = !!country && !!city;
+
+  useEffect(() => {
+    if (!isSearchActive) return;
+
+    const filtered = tripList.filter((trip) => {
+      const matchesCountry =
+        !country ||
+        trip.route.originCountry.toLowerCase().includes(country) ||
+        trip.route.destinationCountry.toLowerCase().includes(country);
+
+      const matchesCity =
+        !city ||
+        trip.route.originCity?.toLowerCase().includes(city) ||
+        trip.route.destinationCity?.toLowerCase().includes(city);
+      return matchesCountry && matchesCity;
+    });
+
+    setFilteredTrips(filtered);
+  }, [searchCountry, searchCity, tripList]);
 
   const handleRequest = async (trip: TripListing) => {
     if (!user?.id) {
@@ -130,11 +156,25 @@ export default function TravelersPage() {
         <Search
           countries={["UK", "USA", "Ireland"]}
           cities={["London", "Birmingham"]}
+          setSearchCountry={setSearchCountry}
+          setSearchCity={setSearchCity}
+          setClearResults={() => setClearResults(false)}
+          clearResults={clearSearchResults}
         />
         <FilterOptionsRow />
+        <SearchResults
+          isSearchActive={isSearchActive}
+          searchResults={filteredTrips.length}
+          onClick={() => setClearResults(true)}
+        />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {tripList && <Travelers trips={tripList} onClick={handleRequest} />}
+        {tripList && (
+          <Travelers
+            trips={isSearchActive ? filteredTrips : tripList}
+            onClick={handleRequest}
+          />
+        )}
       </DefaultContainer>
 
       <ListingSelectionModal
