@@ -18,8 +18,20 @@ import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
-import { filterByCountryCity, filterByDepartDate, filterByPriceRange } from "@/app/util/filters";
+import {
+  filterByCountryCity,
+  filterByDepartDate,
+  filterByGoodsCategory,
+  filterByPriceRange,
+  filterByWeightRange,
+} from "@/app/util/filters";
 import type { CustomRange } from "@/types/Ui";
+
+export type TripSortOption =
+  | "date-asc"
+  | "price-asc"
+  | "price-desc"
+  | "space-desc";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -70,33 +82,67 @@ export default function TravelersPage() {
     useState<boolean>(false);
 
   const { toast } = useToast();
-  const [filteredTrips, setFilteredTrips] = useState<TripListing[]>([]);
+
   const [searchCountry, setSearchCountry] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const country = searchCountry.toLowerCase().trim();
   const [clearSearchResults, setClearResults] = useState<boolean>(false);
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
+  const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
   //store filter date
-  const [filterByPrice, setFilterByPrice] = useState<CustomRange>({
+  const [priceRange, setPriceRange] = useState<CustomRange>({
+    min: 0,
+    max: 0,
+  });
+
+  const [weightRange, setWeightRange] = useState<CustomRange>({
     min: 0,
     max: 0,
   });
   const [filterByDate, setFilterByDate] = useState<string>("");
-  const shouldFilter = !!filterByDate || filterByPrice.max > 0;
+  const [sortOption, setSortOption] = useState<TripSortOption | undefined>();
 
-  useEffect(() => {
+
+  const displayedTrips = useMemo(() => {
+    let result = tripList;
+
     if (isSearchActive) {
-      setFilteredTrips(filterByCountryCity(city, country, tripList));
-    }
-    if (filterByDate) {
-      setFilteredTrips(filterByDepartDate(filterByDate, tripList));
+      result = filterByCountryCity(searchCity, searchCountry, result);
     }
 
-    if (filterByPrice.max > 0) {
-      setFilteredTrips(filterByPriceRange(filterByPrice, tripList));
+    if (filterByDate) {
+      result = filterByDepartDate(filterByDate, result);
     }
-  }, [searchCountry, searchCity, tripList, filterByDate, filterByPrice]);
+
+    if (priceRange.max > 0 || priceRange.min > 0) {
+      result = filterByPriceRange(priceRange, result);
+    }
+
+    if (weightRange.max > 0 || weightRange.min > 0) {
+      result = filterByWeightRange(weightRange, result);
+    }
+
+    if (goodsCategory.length > 0) {
+      result = filterByGoodsCategory(goodsCategory, result);
+    }
+
+    if (sortOption) {
+      result = sortTrips(result, sortOption);
+    }
+
+    return result;
+  }, [
+    tripList,
+    isSearchActive,
+    searchCity,
+    searchCountry,
+    filterByDate,
+    priceRange,
+    weightRange,
+    goodsCategory,
+    sortOption,
+  ]);
   const handleRequest = async (trip: TripListing) => {
     if (!user?.id) {
       return;
@@ -164,21 +210,20 @@ export default function TravelersPage() {
         />
         <FilterOptionsRow
           setSelectedDate={setFilterByDate}
-          setFilterByPrice={setFilterByPrice}
-          setFilteredList={() => setFilteredTrips([])}
+          setPriceRange={setPriceRange}
+          setWeightRange={setWeightRange}
+          setGoodsCategory={setGoodsCategory}
+          setSortOption={setSortOption}
         />
         <SearchResults
           isSearchActive={isSearchActive}
-          searchResults={filteredTrips.length}
+          searchResults={displayedTrips.length}
           onClick={() => setClearResults(true)}
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {tripList && (
-          <Travelers
-            trips={isSearchActive || shouldFilter ? filteredTrips : tripList}
-            onClick={handleRequest}
-          />
+          <Travelers trips={displayedTrips} onClick={handleRequest} />
         )}
       </DefaultContainer>
 
@@ -215,4 +260,33 @@ export default function TravelersPage() {
       </AnimatePresence>
     </>
   );
+}
+
+function sortTrips(
+  trips: TripListing[],
+  sortBy?: TripSortOption,
+): TripListing[] {
+  if (!sortBy) return trips;
+
+  const sorted = [...trips];
+
+  switch (sortBy) {
+    case "date-asc":
+      return sorted.sort(
+        (a, b) =>
+          new Date(a.departDate).getTime() - new Date(b.departDate).getTime(),
+      );
+
+    case "price-asc":
+      return sorted.sort((a, b) => a.pricePerKg - b.pricePerKg);
+
+    case "price-desc":
+      return sorted.sort((a, b) => b.pricePerKg - a.pricePerKg);
+
+    case "space-desc":
+      return sorted.sort((a, b) => b.weightKg - a.weightKg);
+
+    default:
+      return sorted;
+  }
 }

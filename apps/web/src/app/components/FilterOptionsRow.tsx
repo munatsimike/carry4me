@@ -8,9 +8,16 @@ import {
   ArrowUpDown,
   PoundSterling,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import type { CustomRange } from "@/types/Ui";
+import type { TripSortOption } from "../features/trips/ui/TravelersPage";
+import type { GoodsCategory } from "../features/goods/domain/GoodsCategory";
+import { SupabaseGoodsRepository } from "../features/goods/data/SupabaseGoodsRepository";
+import { GetGoodsUseCase } from "../features/goods/application/GetGoodsUseCase";
+import { namedCall } from "../shared/Authentication/application/NamedCall";
+import { useUniversalModal } from "../shared/Authentication/application/DialogBoxModalProvider";
+import { cn } from "../lib/cn";
 
 type FiltersFormValues = {
   date: string;
@@ -19,7 +26,7 @@ type FiltersFormValues = {
   minSpace: string;
   maxSpace: string;
   categories: string[];
-  sort: string;
+  sort: TripSortOption | undefined;
 };
 
 type FilterChipProps = {
@@ -89,32 +96,73 @@ function FilterMenuWrapper({ children }: FilterMenuWrapperProps) {
 type FilterOptionsRowProps = {
   onApply?: (values: FiltersFormValues) => void;
   setSelectedDate: (s: string) => void;
-  setFilteredList: () => void;
-  setFilterByPrice: (p: CustomRange) => void;
+
+  setPriceRange: (v: CustomRange) => void;
+  setWeightRange: (v: CustomRange) => void;
+  setGoodsCategory: (s: string[]) => void;
+  setSortOption: (v: TripSortOption | undefined) => void;
 };
 
-const categoryOptions = [
-  "Documents",
-  "Clothes",
-  "Shoes",
-  "Electronics",
-  "Health & Beauty",
-];
-
-const sortOptions = [
+export const tripSortOptions: { label: string; value: TripSortOption }[] = [
   { label: "Earliest departure", value: "date-asc" },
   { label: "Lowest price", value: "price-asc" },
   { label: "Highest price", value: "price-desc" },
   { label: "Most space", value: "space-desc" },
 ];
 
+type FilterState = {
+  date: string;
+  minPrice: string;
+  maxPrice: string;
+  minSpace: string;
+  maxSpace: string;
+  categories: string[];
+  sort?: TripSortOption;
+};
+const filterDefaults: FilterState = {
+  date: "",
+  minPrice: "0",
+  maxPrice: "",
+  minSpace: "1",
+  maxSpace: "",
+  categories: [],
+  sort: undefined,
+};
+
 export function FilterOptionsRow({
-  onApply,
   setSelectedDate,
-  setFilteredList,
-  setFilterByPrice,
+
+  setPriceRange,
+  setWeightRange,
+  setGoodsCategory,
+  setSortOption,
 }: FilterOptionsRowProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
+  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
+  const getGoodsUseCase = useMemo(
+    () => new GetGoodsUseCase(goodsRepo),
+    [goodsRepo],
+  );
+
+  const { showSupabaseError } = useUniversalModal();
+
+  useEffect(() => {
+    if (goodsCategory.length > 1) return;
+
+    async function fetchGoods() {
+      const { result } = await namedCall("goods", getGoodsUseCase.execute());
+      if (!result.success) {
+        showSupabaseError(result.error, result.status, {
+          onRetry: fetchGoods,
+        });
+        return;
+      }
+      setCategory(result.data.filter((item) => item.name !== "Other"));
+    }
+
+    fetchGoods();
+  });
 
   const {
     register,
@@ -125,22 +173,14 @@ export function FilterOptionsRow({
     setValue,
     formState: { dirtyFields },
   } = useForm<FiltersFormValues>({
-    defaultValues: {
-      date: "",
-      minPrice: "0",
-      maxPrice: "",
-      minSpace: "",
-      maxSpace: "",
-      categories: [],
-      sort: "",
-    },
+    defaultValues: filterDefaults,
   });
 
   const values = watch();
 
   const hasDate = !!values.date;
   const hasPrice = !!values.maxPrice;
-  const hasSpace = !!values.minSpace || !!values.maxSpace;
+  const hasSpace = !!values.maxSpace;
   const hasCategory = values.categories.length > 0;
   const hasSort = !!values.sort;
 
@@ -159,31 +199,37 @@ export function FilterOptionsRow({
     }
 
     if (!!dirtyFields.maxPrice) {
-      setFilterByPrice({
+      setPriceRange({
         min: Number(formValues.minPrice),
         max: Number(formValues.maxPrice),
       });
+    }
+
+    if (!!dirtyFields.maxSpace) {
+      setWeightRange({
+        min: Number(formValues.minSpace),
+        max: Number(formValues.maxSpace),
+      });
+    }
+
+    if (!!dirtyFields.categories) {
+      setGoodsCategory(formValues.categories);
+    }
+
+    if (!!dirtyFields.sort) {
+      setSortOption(formValues.sort);
     }
     //onApply?.(formValues);
     closeMenu();
   });
 
   const clearFilters = () => {
-    if (setFilteredList) {
-      setFilteredList();
-      setSelectedDate("");
-      setFilterByPrice({ min: 0, max: 0 });
-    }
+    setSelectedDate("");
+    setPriceRange({ min: 0, max: 0 });
+    setWeightRange({ min: 0, max: 0 });
+    setGoodsCategory([]);
+    setSortOption(undefined);
     reset();
-    onApply?.({
-      date: "",
-      minPrice: "0",
-      maxPrice: "",
-      minSpace: "",
-      maxSpace: "",
-      categories: [],
-      sort: "",
-    });
     closeMenu();
   };
 
@@ -214,7 +260,7 @@ export function FilterOptionsRow({
 
             <div className="flex items-center justify-end gap-2">
               <button
-                type="submit"
+                type="button"
                 onClick={() => {
                   setValue("date", "");
                   submitFilters();
@@ -364,12 +410,12 @@ export function FilterOptionsRow({
                 name="categories"
                 render={({ field }) => (
                   <div className="space-y-2">
-                    {categoryOptions.map((category) => {
-                      const checked = field.value.includes(category);
+                    {goodsCategory.map((category) => {
+                      const checked = field.value?.includes(category.name);
 
                       return (
                         <label
-                          key={category}
+                          key={category.name}
                           className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
                         >
                           <input
@@ -377,11 +423,11 @@ export function FilterOptionsRow({
                             checked={checked}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                field.onChange([...field.value, category]);
+                                field.onChange([...field.value, category.name]);
                               } else {
                                 field.onChange(
                                   field.value.filter(
-                                    (item) => item !== category,
+                                    (item) => item !== category.name,
                                   ),
                                 );
                               }
@@ -389,7 +435,7 @@ export function FilterOptionsRow({
                             className="h-4 w-4"
                           />
                           <span className="text-sm text-primary-900">
-                            {category}
+                            {category.name}
                           </span>
                         </label>
                       );
@@ -441,7 +487,7 @@ export function FilterOptionsRow({
                 name="sort"
                 render={({ field }) => (
                   <div className="space-y-2">
-                    {sortOptions.map((option) => (
+                    {tripSortOptions.map((option) => (
                       <label
                         key={option.value}
                         className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
@@ -467,7 +513,7 @@ export function FilterOptionsRow({
               <button
                 type="button"
                 onClick={() => {
-                  setValue("sort", "");
+                  setValue("sort", undefined);
                   submitFilters();
                 }}
                 className="rounded-xl border border-neutral-200 px-4 py-2 text-sm"
@@ -484,22 +530,23 @@ export function FilterOptionsRow({
           </form>
         </Popover>
       </FilterMenuWrapper>
-
-      <AnimatePresence>
-        {hasAnyFilter && (
-          <motion.button
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            trinsition={{ duration: 0.3, ease: "easeInOut" }}
-            exit={{ opacity: 0, x: -8 }}
-            type="button"
-            onClick={clearFilters}
-            className="ml-1 text-sm font-medium text-primary-500 hover:underline"
-          >
-            Clear filters
-          </motion.button>
+      <motion.button
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        trinsition={{ duration: 0.3, ease: "easeInOut" }}
+        exit={{ opacity: 0, x: -8 }}
+        type="button"
+        disabled={!hasAnyFilter}
+        onClick={clearFilters}
+        className={cn(
+          "ml-1 text-sm ",
+          hasAnyFilter
+            ? "text-primary-500 hover:underline"
+            : "text-neutral-500",
         )}
-      </AnimatePresence>
+      >
+        Clear filters
+      </motion.button>
     </div>
   );
 }

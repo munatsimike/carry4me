@@ -106,8 +106,8 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
     },
 
     tripSnapshot: {
-      traveler_name: row.trip_snapshot.traveler_name,
-      departure_date: row.trip_snapshot.departure_date,
+      travelerName: row.trip_snapshot.traveler_name,
+      departureDate: row.trip_snapshot.departure_date,
       origin: {
         country: row.trip_snapshot.origin.country,
         city: row.trip_snapshot.origin.city,

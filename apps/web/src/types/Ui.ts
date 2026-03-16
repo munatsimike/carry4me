@@ -86,3 +86,5 @@ export type CustomRange = {
   min:number,
   max:number
 }
+
+export const dateFormat = "d MMM yyy"

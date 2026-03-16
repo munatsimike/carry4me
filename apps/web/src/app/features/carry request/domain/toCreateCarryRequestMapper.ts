@@ -18,7 +18,7 @@ export function toCreateCarryRequestMapper(
   return {
     parcelId: parcel.id,
     tripId: trip.id,
-    senderUserId: parcel.user.id?? "",
+    senderUserId: parcel.user.id ?? "",
     travelerUserId: trip.user.id ?? "",
     initiatorRole: initiatorRole,
     status: status,
@@ -38,8 +38,8 @@ export function toCreateCarryRequestMapper(
       goods_category: parcel.goodsCategory,
     },
     tripSnapshot: {
-      traveler_name: trip.user.fullName,
-      departure_date: trip.departDate,
+      travelerName: trip.user.fullName,
+      departureDate: trip.departDate,
       origin: {
         country: trip.route.originCountry,
         city: trip.route.originCity,

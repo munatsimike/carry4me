@@ -9,7 +9,7 @@ import DateRow from "../DateRow";
 import { WeightAndPrice } from "./WeightAndPrice";
 import CategoryRow from "../CategoryRow";
 import SendRequestBtn from "./SendRequestBtn";
-import type { CardMode } from "@/types/Ui";
+import { dateFormat, type CardMode } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import User from "./User";
 import { format } from "date-fns";
@@ -71,7 +71,7 @@ export function ListingCard<T extends Listing>({
           destination={listing.route.destinationCountry}
         />
         {listing.type === "trip" && (
-          <DateRow date={format(new Date(listing.departDate), "MMM d, yyyy")} />
+          <DateRow date={format(new Date(listing.departDate), dateFormat)} />
         )}
         <CategoryRow
           tag={isTripListing ? "traveler" : "sender"}

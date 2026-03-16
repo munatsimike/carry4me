@@ -6,7 +6,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { INFOMODES, progress } from "@/types/Ui";
+import { dateFormat, INFOMODES, progress } from "@/types/Ui";
 import { Button } from "@/components/ui/Button";
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
@@ -42,6 +42,7 @@ import { Package, PackageX } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import { useToast } from "@/app/components/Toast";
+import { format } from "date-fns";
 
 export type SelectedTab = "ongoing" | "completed" | "declined" | "cancelled";
 type NavItem = {
@@ -602,7 +603,7 @@ function DetailsSection({
   const totalPrice = parcel.price_per_kg * parcel.weight_kg;
 
   return (
-    <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_1fr_0.85fr]">
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-[0.80fr_1fr_0.50fr]">
       <TripDetails trip={trip} viewerRole={viewerRole} />
       <ParcelDetails parcel={parcel} viewerRole={viewerRole} />
       <CostSummary parcel={parcel} totalPrice={totalPrice} />
@@ -644,19 +645,19 @@ function TripDetails({
           </CustomText>
         </span>
 
-        <div className="grid grid-cols-[90px_1fr] gap-y-1">
+        <div className="grid grid-cols-[80px_1fr] gap-y-1">
           <CustomText textVariant="secondary" textSize="sm">
             Traveler
           </CustomText>
           <CustomText textVariant="primary" textSize="sm">
-            {trip.traveler_name}
+            {trip.travelerName}
           </CustomText>
 
           <CustomText textVariant="secondary" textSize="sm">
             Departs
           </CustomText>
           <CustomText textVariant="primary" textSize="sm">
-            {trip.departure_date}
+            {format(new Date(trip.departureDate), dateFormat)}
           </CustomText>
         </div>
       </div>
@@ -697,7 +698,7 @@ function ParcelDetails({
             {parcel.destination.country}
           </CustomText>
         </span>
-        <div className="grid grid-cols-[90px_1fr] gap-y-1">
+        <div className="grid grid-cols-[80px_1fr] gap-y-1">
           <CustomText textVariant="secondary" textSize="sm">
             Sender
           </CustomText>

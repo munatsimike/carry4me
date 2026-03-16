@@ -2,6 +2,7 @@ import type { CustomRange } from "@/types/Ui";
 import type { TripListing } from "../features/trips/domain/Trip";
 import type { Listing } from "../shared/Authentication/domain/Listing";
 
+
 export function filterByCountryCity<T extends Listing>(
   city: string,
   country: string,
@@ -31,7 +32,7 @@ export function filterByDepartDate(
   const filteredList = listings.filter(
     (trip) => new Date(trip.departDate).toDateString() === target,
   );
-  console.log(date);
+
   return filteredList;
 }
 
@@ -50,3 +51,31 @@ export function filterByPriceRange<T extends Listing>(
     return meetsMin && meetsMax;
   });
 }
+
+export function filterByWeightRange<T extends Listing>(
+  weightRange: CustomRange,
+  listings: T[],
+): T[] {
+  const { min, max } = weightRange;
+
+  return listings.filter((listing) => {
+    const weight = Number(listing.weightKg);
+
+    const meetsMin = min === undefined || weight >= min;
+    const meetsMax = max === undefined || weight <= max;
+
+    return meetsMin && meetsMax;
+  });
+}
+
+export function filterByGoodsCategory<T extends Listing>(
+  goodsCategories: string[],
+  listings: T[],
+): T[] {
+  return listings.filter((listing) =>
+    listing.goodsCategory.some((item) =>
+      goodsCategories.some((selected) => selected === item.name),
+    ),
+  );
+}
+
