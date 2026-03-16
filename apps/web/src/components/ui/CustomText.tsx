@@ -15,7 +15,7 @@ export type TextVariant =
   | "placeholcer";
 
 type PrimaryTextProps = {
-  as?: "h1" | "h2" | "h3" | "h4" | "p" | "span" | "div";
+  as?: "h1" | "h2" | "h3" | "h4" | "p" | "span" | "div" |"label";
   textSize?: TextSize;
   textVariant?: TextVariant;
   children: React.ReactNode;

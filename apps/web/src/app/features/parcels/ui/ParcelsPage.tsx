@@ -16,9 +16,15 @@ import PageSection from "@/app/components/PageSection";
 import { AnimatePresence } from "framer-motion";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
+import { FilterOptionsRow, sortTrips } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
-import { filterByCountryCity } from "@/app/util/filters";
+import {
+  filterByCountryCity,
+  filterByGoodsCategory,
+  filterByPriceRange,
+  filterByWeightRange,
+} from "@/app/util/filters";
+import type { CustomRange, SortOption } from "@/types/Ui";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -71,23 +77,62 @@ export default function ParcelsPage() {
   // selected parcel to be matched with a trip
   const [selectedTrip, setSelectedTrip] = useState<TripListing | null>(null);
   //store search results and filtered results
-  const [filteredParcels, setFilteredParcels] = useState<ParcelListing[]>([]);
   const [searchCountry, setSearchCountry] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [clearSearchResults, setClearResults] = useState<boolean>(false);
   const { user } = useAuth();
 
-
   const country = searchCountry.toLowerCase().trim();
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
+  const [priceRange, setPriceRange] = useState<CustomRange>({
+    min: 0,
+    max: 0,
+  });
 
-  useEffect(() => {
+  const [weightRange, setWeightRange] = useState<CustomRange>({
+    min: 0,
+    max: 0,
+  });
+  const [filterByDate, setFilterByDate] = useState<string>("");
+  const [sortOption, setSortOption] = useState<SortOption | undefined>();
+  const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
+
+  const displayedTrips = useMemo(() => {
+    let result = parcelsList;
+
     if (isSearchActive) {
-      setFilteredParcels(filterByCountryCity(city, country, parcelsList));
+      result = filterByCountryCity(searchCity, searchCountry, result);
     }
-  }, [searchCountry, searchCity, parcelsList]);
 
+    if (priceRange.max > 0 || priceRange.min > 0) {
+      result = filterByPriceRange(priceRange, result);
+    }
+
+    if (weightRange.max > 0 || weightRange.min > 0) {
+      result = filterByWeightRange(weightRange, result);
+    }
+
+    if (goodsCategory.length > 0) {
+      result = filterByGoodsCategory(goodsCategory, result);
+    }
+
+    if (sortOption) {
+      result = sortTrips(result, sortOption);
+    }
+
+    return result;
+  }, [
+    parcelsList,
+    isSearchActive,
+    searchCity,
+    searchCountry,
+    filterByDate,
+    priceRange,
+    weightRange,
+    goodsCategory,
+    sortOption,
+  ]);
   //
   const handleRequest = async (parcel: ParcelListing) => {
     if (!user) {
@@ -146,26 +191,29 @@ export default function ParcelsPage() {
       <PageSection>
         <Search
           countries={["UK", "USA"]}
-          cities={["London", "Birmingham", "florida"]}
+          cities={["London", "Birmingham", "Florida"]}
           setSearchCity={setSearchCity}
           setSearchCountry={setSearchCountry}
           setClearResults={() => setClearResults(false)}
           clearResults={clearSearchResults}
         />
-        <FilterOptionsRow/>
-
+        <FilterOptionsRow
+          setSelectedDate={setFilterByDate}
+          setPriceRange={setPriceRange}
+          setWeightRange={setWeightRange}
+          setGoodsCategory={setGoodsCategory}
+          setSortOption={setSortOption}
+          tag="sender"
+        />
         <SearchResults
           isSearchActive={isSearchActive}
-          searchResults={filteredParcels.length}
+          searchResults={displayedTrips.length}
           onClick={() => setClearResults(true)}
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {parcelsList && (
-          <Parcels
-            parcels={isSearchActive ? filteredParcels : parcelsList}
-            onClick={handleRequest}
-          />
+          <Parcels parcels={displayedTrips} onClick={handleRequest} />
         )}
       </DefaultContainer>
 

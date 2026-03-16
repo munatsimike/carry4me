@@ -16,7 +16,7 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
+import { FilterOptionsRow, sortTrips } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
 import {
   filterByCountryCity,
@@ -25,13 +25,7 @@ import {
   filterByPriceRange,
   filterByWeightRange,
 } from "@/app/util/filters";
-import type { CustomRange } from "@/types/Ui";
-
-export type TripSortOption =
-  | "date-asc"
-  | "price-asc"
-  | "price-desc"
-  | "space-desc";
+import type { CustomRange, SortOption } from "@/types/Ui";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -101,8 +95,7 @@ export default function TravelersPage() {
     max: 0,
   });
   const [filterByDate, setFilterByDate] = useState<string>("");
-  const [sortOption, setSortOption] = useState<TripSortOption | undefined>();
-
+  const [sortOption, setSortOption] = useState<SortOption | undefined>();
 
   const displayedTrips = useMemo(() => {
     let result = tripList;
@@ -262,31 +255,3 @@ export default function TravelersPage() {
   );
 }
 
-function sortTrips(
-  trips: TripListing[],
-  sortBy?: TripSortOption,
-): TripListing[] {
-  if (!sortBy) return trips;
-
-  const sorted = [...trips];
-
-  switch (sortBy) {
-    case "date-asc":
-      return sorted.sort(
-        (a, b) =>
-          new Date(a.departDate).getTime() - new Date(b.departDate).getTime(),
-      );
-
-    case "price-asc":
-      return sorted.sort((a, b) => a.pricePerKg - b.pricePerKg);
-
-    case "price-desc":
-      return sorted.sort((a, b) => b.pricePerKg - a.pricePerKg);
-
-    case "space-desc":
-      return sorted.sort((a, b) => b.weightKg - a.weightKg);
-
-    default:
-      return sorted;
-  }
-}

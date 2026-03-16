@@ -1,4 +1,3 @@
-
 export type SvgIconComponent = React.ComponentType<
   React.SVGProps<SVGSVGElement>
 >;
@@ -64,7 +63,6 @@ export type FormValues = {
 };
 
 export type FormMode = "edit" | "create";
-
 export type CardMode = "preview" | "display";
 
 export const progress = {
@@ -83,8 +81,10 @@ export const INFOMODES = {
 export type InfoBlockMode = (typeof INFOMODES)[keyof typeof INFOMODES];
 
 export type CustomRange = {
-  min:number,
-  max:number
-}
+  min: number;
+  max: number;
+};
 
-export const dateFormat = "d MMM yyy"
+export const dateFormat = "d MMM yyy";
+
+export type SortOption = "date-asc" | "price-asc" | "price-desc" | "weight-desc";
