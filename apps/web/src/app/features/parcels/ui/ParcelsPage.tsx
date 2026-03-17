@@ -25,6 +25,7 @@ import {
   filterByWeightRange,
 } from "@/app/util/filters";
 import type { CustomRange, SortOption } from "@/types/Ui";
+import EmptyState from "@/app/components/EmptyState";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -97,8 +98,9 @@ export default function ParcelsPage() {
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
+  const [hasFilter, setHasFilter] = useState<boolean>(false);
 
-  const displayedTrips = useMemo(() => {
+  const displayedParcels = useMemo(() => {
     let result = parcelsList;
 
     if (isSearchActive) {
@@ -204,16 +206,23 @@ export default function ParcelsPage() {
           setGoodsCategory={setGoodsCategory}
           setSortOption={setSortOption}
           tag="sender"
+          setHasFilter={setHasFilter}
         />
         <SearchResults
           isSearchActive={isSearchActive}
-          searchResults={displayedTrips.length}
+          searchResults={displayedParcels.length}
           onClick={() => setClearResults(true)}
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {parcelsList && (
-          <Parcels parcels={displayedTrips} onClick={handleRequest} />
+          <Parcels parcels={displayedParcels} onClick={handleRequest} />
+        )}
+        {hasFilter && displayedParcels.length === 0 && (
+          <EmptyState
+            title="No matching parcels"
+            description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
+          />
         )}
       </DefaultContainer>
 

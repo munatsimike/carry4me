@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import SvgIcon from "@/components/ui/SvgIcon";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
+import { useEffect, useRef } from "react";
 
 type ProfileItem = {
   name: string;
@@ -15,10 +16,13 @@ type ProfileItem = {
 };
 
 export function UserProfileMenu({
-  onCloseProfile,
+  onClosePopOver,
+  triggerRef
 }: {
-  onCloseProfile: () => void;
+  onClosePopOver: React.Dispatch<React.SetStateAction<boolean>>;
+   triggerRef: React.RefObject<HTMLButtonElement | null>;
 }) {
+  const ref = useRef<HTMLDivElement | null>(null);
   const cls = "h-6 w-6 text-neutral-400";
   const profileItems: ProfileItem[] = [
     {
@@ -42,20 +46,57 @@ export function UserProfileMenu({
       path: "/my/parcels",
     },
   ];
+
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClosePopOver(false);
+      }
+    }
+
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+
+      const clickedInsidePopover = !!ref.current?.contains(target);
+      const clickedTrigger = !!triggerRef.current?.contains(target);
+
+      if (!clickedInsidePopover && !clickedTrigger) {
+        onClosePopOver(false);
+      }
+    }
+
+    function handleScroll(event: Event) {
+      if (!ref.current) return;
+
+      if (ref.current.contains(event.target as Node)) return;
+
+      onClosePopOver(false);
+    }
+
+    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    window.addEventListener("scroll", handleScroll, true);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [onClosePopOver, triggerRef]);
   return (
     <Card
       borderClass="border border-neutral-200"
       shadowClass="shadow-md"
       paddingClass="p-3"
       hover={false}
-      className="absolute top-16 right-0 z-10 w-56"
+      className="absolute top-full mt-2 right-0 z-10 w-56"
     >
-      <div className="flex flex-col">
+      <div ref={ref} className="flex flex-col">
         {profileItems.map((item) => (
           <ProfileItem key={item.name} profileItem={item} />
         ))}
 
-        <LogoutButton onCloseProfile={onCloseProfile} />
+        <LogoutButton onClosePopOver={onClosePopOver} />
       </div>
     </Card>
   );
@@ -77,7 +118,7 @@ function ProfileItem({ profileItem }: ProfileItemProps) {
           >
             {profileItem.name}
           </CustomText>
-          <SvgIcon size={"xsm"} Icon={META_ICONS.arrowSmall} color="primary" />
+          <SvgIcon size={"xs"} Icon={META_ICONS.arrowSmall} color="primary" />
         </SpaceBetweenRow>
       </span>
 

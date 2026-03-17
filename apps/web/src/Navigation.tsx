@@ -2,32 +2,34 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
 import { Bell } from "lucide-react";
 import type { UserProfile } from "./app/shared/Authentication/domain/authTypes";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { SupabaseNotificationRepository } from "./app/features/carry request/carry request events/data/SupabaseNotificationRepository";
+import { GetNotificationUseCase } from "./app/features/carry request/carry request events/application/CreateNotificationUseCase";
+import { namedCall } from "./app/shared/Authentication/application/NamedCall";
+import { useToast } from "./app/components/Toast";
+import type { CarryRequestNotification } from "./app/features/carry request/carry request events/domain/CarryRequestNotification";
+import { AnimatePresence } from "framer-motion";
+import { UserProfileMenu } from "./app/shared/Authentication/UI/userProfileMenu";
+import NotificationPopover from "./app/shared/Authentication/UI/NotificationPopOver";
 
 type ProfileProps = {
-  setShowProfile: () => void;
-
-  avatar: string | null | undefined;
+  userProfile: UserProfile | null;
 };
 
 type NavigationProps = {
   userLoggedIn: boolean;
   userProfile: UserProfile | null;
-  setShowProfile: () => void;
 };
 
 export default function Navigation({
   userLoggedIn,
   userProfile,
-  setShowProfile,
 }: NavigationProps) {
   if (!userLoggedIn) {
     return <GuestNavigation />;
   }
   return userLoggedIn ? (
-    <AuthenticatedNavigation
-      setShowProfile={setShowProfile}
-      avatar={userProfile?.avatarUrl}
-    />
+    <AuthenticatedNavigation userProfile={userProfile} />
   ) : (
     <GuestNavigation />
   );
@@ -70,32 +72,132 @@ function GuestNavigation() {
   );
 }
 
-function AuthenticatedNavigation({ setShowProfile, avatar }: ProfileProps) {
+function AuthenticatedNavigation({ userProfile }: ProfileProps) {
+  const notificatoinRepo = useMemo(
+    () => new SupabaseNotificationRepository(),
+    [],
+  );
+  const getNotificationUseCase = useMemo(
+    () => new GetNotificationUseCase(notificatoinRepo),
+    [notificatoinRepo],
+  );
+  const [notifications, setNotifications] = useState<
+    CarryRequestNotification[]
+  >([]);
+
+  const [showNotificationPopOver, setShowNotification] =
+    useState<boolean>(false);
+  const [showPopOver, setShowPrfilePopOver] = useState(false);
+
+  const [unreadNotifications, setUnreadNotification] = useState<
+    CarryRequestNotification[]
+  >([]);
+  const { toast } = useToast();
+  const triggerNotRef = useRef<HTMLButtonElement | null>(null);
+  const triggerProfRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    async function markAllAsRead() {
+      if (!userProfile?.id) return;
+      if (unreadNotifications.length > 0 && showNotificationPopOver) {
+        const { result } = await namedCall(
+          "mark notification as read",
+          getNotificationUseCase.makeAllAsRead(userProfile?.id),
+        );
+        if (!result.success) {
+          return;
+        }
+
+        if (result.success) {
+          setNotifications((prev) =>
+            prev.map((n) => ({ ...n, readAt: new Date().toISOString() })),
+          );
+          setUnreadNotification([]);
+        }
+      }
+    }
+
+    markAllAsRead();
+  }, [showNotificationPopOver]);
+
+  useEffect(() => {
+    async function fetchNotification() {
+      if (!userProfile?.id) return;
+      const { result } = await namedCall(
+        "get notifications",
+        getNotificationUseCase.execute(userProfile?.id),
+      );
+
+      if (!result.success) {
+        toast("unable to load notifications at the moment", {
+          variant: "error",
+        });
+      }
+
+      if (result.success) {
+        setNotifications(result.data);
+        if (result.data.length > 0) {
+          const unreadNot = result.data.filter((item) => item.readAt === null);
+          setUnreadNotification(unreadNot);
+        }
+      }
+    }
+    fetchNotification();
+  }, [userProfile?.id]);
+
   return (
     <NavLinks>
-      <NavItem to="/dashboard">Dashboard</NavItem>
-      <NavItem to="/travelers">Trips</NavItem>
-      <NavItem to="/parcels">Parcels</NavItem>
-      <NavItem to="/requests">Requests</NavItem>
-      <button>
-        <span className=" group inline-flex gap-1 items-center hover:text-primary-600">
-          <span className="relative flex rounded-full p-1 group-hover:bg-neutral-200">
-            <Bell className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
-            <span className="flex absolute z-10 right-0 top-[-1px] rounded-full h-4 w-4 bg-error-500 text-[11px] text-white justify-center items-center">
-              {1}
+      <span className="relative flex gap-5 items-center">
+        <NavItem to="/dashboard">Dashboard</NavItem>
+        <NavItem to="/travelers">Trips</NavItem>
+        <NavItem to="/parcels">Parcels</NavItem>
+        <NavItem to="/requests">Requests</NavItem>
+        <button
+          ref={triggerNotRef}
+          type="button"
+          onClick={() => setShowNotification((prev) => !prev)}
+        >
+          <span className=" group inline-flex gap-1 items-center hover:text-primary-600">
+            <span className="relative flex rounded-full p-1 group-hover:bg-neutral-200">
+              <Bell className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
+              {unreadNotifications.length > 0 && (
+                <span className="flex absolute z-10 right-0 top-[-1px] rounded-full h-4 w-4 bg-error-500 text-[11px] text-white justify-center items-center">
+                  {unreadNotifications.length}
+                </span>
+              )}
             </span>
           </span>
-        </span>
-      </button>
-
+        </button>
+        <AnimatePresence>
+          {showNotificationPopOver && (
+            <NotificationPopover
+              notifications={notifications}
+              onClosePopOver={setShowNotification}
+              triggerRef={triggerNotRef}
+            />
+          )}
+        </AnimatePresence>
+      </span>
       <span className=" relative inline-flex flex-col">
-        <button onClick={setShowProfile}>
+        <button ref={triggerProfRef} type="button" onClick={() => setShowPrfilePopOver((prev) => !prev)}>
           <img
-            src={avatar ? avatar : "/user-profile-icon.svg"}
+            src={
+              userProfile?.avatarUrl
+                ? userProfile.avatarUrl
+                : "/user-profile-icon.svg"
+            }
             alt="User profile"
             className="rounded-full h-9 w-9 border border-neutral-300"
           />
         </button>
+        <AnimatePresence>
+          {showPopOver && (
+            <UserProfileMenu
+              onClosePopOver={setShowPrfilePopOver}
+              triggerRef={triggerProfRef}
+            />
+          )}
+        </AnimatePresence>
       </span>
     </NavLinks>
   );

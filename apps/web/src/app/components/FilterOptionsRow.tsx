@@ -4,8 +4,6 @@ import {
   Controller,
   type UseFormSetValue,
   type Control,
-  type UseFormReturn,
-  type UseFormRegisterReturn,
   type UseFormRegister,
 } from "react-hook-form";
 import {
@@ -113,6 +111,7 @@ type FilterOptionsRowProps = {
   setGoodsCategory: (s: string[]) => void;
   setSortOption: (v: SortOption | undefined) => void;
   tag?: Tag;
+  setHasFilter: (b: boolean) => void;
 };
 
 const basSortOptions: { label: string; value: SortOption }[] = [
@@ -157,6 +156,7 @@ export function FilterOptionsRow({
   setGoodsCategory,
   setSortOption,
   tag = "traveler",
+  setHasFilter,
 }: FilterOptionsRowProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
@@ -208,6 +208,10 @@ export function FilterOptionsRow({
   const toggleMenu = (menuName: string) => {
     setOpenMenu((prev) => (prev === menuName ? null : menuName));
   };
+
+  useEffect(() => {
+    setHasFilter(hasAnyFilter);
+  }, [hasAnyFilter]);
 
   const closeMenu = () => setOpenMenu(null);
   const submitFilters = handleSubmit((formValues) => {
@@ -364,7 +368,7 @@ function ActionButton({ setValue, submitFilters }: ActionButtonProps) {
         variant="outline"
         type="button"
         onClick={() => {
-          setValue("minPrice", "");
+          setValue("minPrice", "0");
           setValue("maxPrice", "");
           submitFilters();
         }}
@@ -500,9 +504,13 @@ function FilterByWeightMenu({
       <Popover open={openMenu === "space"}>
         <form onSubmit={submitFilters} className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-primary-900">
+            <CustomText
+              as="label"
+              className="mb-2 block font-medium"
+              textVariant="primary"
+            >
               {isTraveler ? "Available space (kg)" : "Parcel weight"}
-            </label>
+            </CustomText>
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="number"

@@ -13,4 +13,9 @@ export class GetNotificationUseCase {
     const data = await this.repo.fetchNotifications(userId);
     return toResult(data);
   }
+
+  async makeAllAsRead(userId: string): Promise<Result<string>> {
+    const result = await this.repo.markAllAsRead(userId);
+    return toResult(result);
+  }
 }

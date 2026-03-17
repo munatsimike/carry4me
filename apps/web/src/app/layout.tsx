@@ -1,20 +1,10 @@
 import Navigation from "@/Navigation";
-import { Link, Outlet, useLocation } from "react-router-dom";
-
+import { Link, Outlet} from "react-router-dom";
 import { AuthModal } from "./shared/Authentication/UI/AuthModal";
-import { UserProfileMenu } from "./shared/Authentication/UI/userProfileMenu";
-import { useEffect, useState } from "react";
-
 import { useAuth } from "./shared/supabase/AuthProvider";
 
 export default function AppLayout() {
   const { loading, user, profile } = useAuth();
-  const [showProfile, setShowProfile] = useState(false);
-  const location = useLocation();
-
-  useEffect(() => {
-    setShowProfile(false);
-  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -44,12 +34,7 @@ export default function AppLayout() {
           <Navigation
             userLoggedIn={isAuthed}
             userProfile={profile} // can be null sometimes, that's ok
-            setShowProfile={() => setShowProfile((s) => !s)}
           />
-
-          {showProfile && (
-            <UserProfileMenu onCloseProfile={() => setShowProfile(false)} />
-          )}
         </div>
       </header>
 

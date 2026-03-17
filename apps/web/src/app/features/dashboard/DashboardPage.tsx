@@ -15,7 +15,7 @@ import CreateTripModal from "../trips/ui/CreateTripModal";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import { AnimatePresence, motion, time } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";

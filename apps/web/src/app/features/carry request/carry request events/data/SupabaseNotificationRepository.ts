@@ -4,6 +4,7 @@ import type { CarryRequestNotification } from "../domain/CarryRequestNotificatio
 import { toCarryRequestNotificationsMapper } from "../domain/toCarryRequestNotifications";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
+
 export class SupabaseNotificationRepository implements NotificationRepository {
   async fetchNotifications(
     userId: string,
@@ -16,7 +17,6 @@ export class SupabaseNotificationRepository implements NotificationRepository {
       .order("created_at", { ascending: false })
       .limit(limit);
 
-
     if (error) return { data: null, error, status };
     const result = (data ?? []).map(toCarryRequestNotificationsMapper);
     return {
@@ -25,13 +25,21 @@ export class SupabaseNotificationRepository implements NotificationRepository {
       error: null,
     };
   }
-  markAsRead(notificationId: string): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  markAllAsRead(userId: string): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  getUnreadCount(userId: string): Promise<number> {
-    throw new Error("Method not implemented.");
+  async markAllAsRead(userId: string): Promise<RepoResponse<string>> {
+    const { error, status } = await supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .is("read_at", null)
+
+    if (error) {
+      return { data: null, error, status };
+    }
+
+    return {
+      data: "Notifications marked as read",
+      error: null,
+      status,
+    };
   }
 }

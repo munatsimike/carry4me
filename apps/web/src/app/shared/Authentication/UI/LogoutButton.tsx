@@ -7,9 +7,9 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function LogoutButton({
-  onCloseProfile,
+ onClosePopOver,
 }: {
-  onCloseProfile: () => void;
+  onClosePopOver: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const repo = useMemo(() => new SupabaseAuthRepository(), []);
   const useCase = useMemo(() => new LogoutUseCase(repo), [repo]);
@@ -39,7 +39,7 @@ export default function LogoutButton({
       else console.log(result.error);
 
       setLoading(false);
-      onCloseProfile();
+      onClosePopOver(false);
     }
   };
 

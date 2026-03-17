@@ -14,7 +14,6 @@ export default function DefaultContainer({
   return (
     <motion.section
       layout
-      transition={{ duration: 0.3, ease: "easeInOut" }}
       className={`${outerClassName} py-5 md:py-5`}
     >
       <div className={`mx-auto max-w-container px-4  ${className ?? ""}`}>

@@ -26,6 +26,7 @@ import {
   filterByWeightRange,
 } from "@/app/util/filters";
 import type { CustomRange, SortOption } from "@/types/Ui";
+import EmptyState from "@/app/components/EmptyState";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -84,6 +85,7 @@ export default function TravelersPage() {
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
+  const [hasFilter, setHasFilter] = useState<boolean>(false);
   //store filter date
   const [priceRange, setPriceRange] = useState<CustomRange>({
     min: 0,
@@ -207,6 +209,7 @@ export default function TravelersPage() {
           setWeightRange={setWeightRange}
           setGoodsCategory={setGoodsCategory}
           setSortOption={setSortOption}
+          setHasFilter={setHasFilter}
         />
         <SearchResults
           isSearchActive={isSearchActive}
@@ -217,6 +220,13 @@ export default function TravelersPage() {
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {tripList && (
           <Travelers trips={displayedTrips} onClick={handleRequest} />
+        )}
+
+        {hasFilter && displayedTrips.length === 0 && (
+          <EmptyState
+            title="No matching travelers"
+            description="Try adjusting your search or changing filters. Clear filters or search to see all travelers."
+          />
         )}
       </DefaultContainer>
 
@@ -254,4 +264,3 @@ export default function TravelersPage() {
     </>
   );
 }
-
