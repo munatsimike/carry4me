@@ -17,6 +17,8 @@ import {
   type UseFormRegister,
   type FieldErrors,
   type UseFormWatch,
+  Controller,
+  type Control,
 } from "react-hook-form";
 import { UserDetailsScema, type UserDetailsFields } from "../UI/SignUpPage";
 import LineDivider from "@/app/components/LineDivider";
@@ -28,6 +30,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import { UpdateProfileUseCase } from "../application/UpdateProfileUseCase";
 import { UpdateAuthDetailsUseCase } from "../application/UpdateAuthDetailsUseCase";
 import { DeleteAvatarUseCase } from "../application/DeleteAvatarUseCase";
+import ComboBox from "@/app/components/ComboBox";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -58,6 +61,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   const {
+    control,
     register,
     reset,
     watch,
@@ -284,7 +288,11 @@ export default function ProfilePage() {
 
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
-      <CustomText textSize="xl" textVariant="primary" className="pl-4 pb-4">
+      <CustomText
+        textSize="xl"
+        textVariant="primary"
+        className="pl-4 pb-4 font-medium"
+      >
         Profile & Security
       </CustomText>
       <Card className="mx-auto w-full max-w-2xl" paddingClass="p-8 px-10">
@@ -338,6 +346,7 @@ export default function ProfilePage() {
             />
             <LineDivider heightClass="my-0" />
             <LocationSection
+              control={control}
               iconSpecs={iconSpecs}
               editing={editing}
               formProps={{
@@ -361,6 +370,7 @@ export default function ProfilePage() {
 }
 type LocationSectionProps = {
   iconSpecs: IconSpecs;
+  control: Control<UserDetailsFields>;
   formProps: FormProps;
   formBtn: ActionButtonProps;
   editing: ProfileSection | null;
@@ -370,6 +380,7 @@ type LocationSectionProps = {
 function LocationSection({
   formProps,
   formBtn,
+  control,
   iconSpecs,
   editing,
   setEditing,
@@ -404,7 +415,7 @@ function LocationSection({
           exit={{ opacity: 0, y: 5 }}
           transition={{ duraton: 0.5 }}
         >
-          <LocationEditForm formProps={formProps} formBtns={formBtn} />
+          <LocationEditForm control={control} formBtns={formBtn} />
         </motion.div>
       )}
     </div>
@@ -614,36 +625,45 @@ function EditBtn({
 }
 
 type LocationEditFormProps = {
-  formProps: FormProps;
+  control: Control<UserDetailsFields>;
   formBtns: ActionButtonProps;
 };
 
-function LocationEditForm({ formProps, formBtns }: LocationEditFormProps) {
-  const { watch, errors, dirtyFields, touchedFields, register } = formProps;
+function LocationEditForm({ control, formBtns }: LocationEditFormProps) {
   return (
     <span className="flex flex-col gap-5">
       <span className="flex gap-7">
-        <DropDownMenu
-          className="rounded-md"
-          placeholder={"Select country"}
-          menuItems={["UK", "NL"]}
-          value={watch("country")}
-          error={errors.country?.message}
-          isDirty={!!dirtyFields.country}
-          isTouched={!!touchedFields.country}
-          register={register("country")}
-        />
+        <Controller
+          name="country"
+          control={control}
+          render={({ field, fieldState }) => (
+            <ComboBox
+              placeholder={"Select country"}
+              menuItems={["UK", "NL"]}
+              value={field.value}
+              onValueChange={field.onChange}
+              error={fieldState.error?.message}
+              isDirty={fieldState.isDirty}
+              isTouched={fieldState.isTouched}
+            />
+          )}
+        ></Controller>
 
-        <DropDownMenu
-          className="rounded-md"
-          placeholder={"Select city"}
-          menuItems={["London", "Harare", "Amsterdam"]}
-          value={watch("city")}
-          error={errors.city?.message}
-          isDirty={!!dirtyFields.city}
-          isTouched={!!touchedFields.city}
-          register={register("city")}
-        />
+        <Controller
+          name="country"
+          control={control}
+          render={({ field, fieldState }) => (
+            <ComboBox
+              placeholder={"Select city"}
+              menuItems={["London", "Harare", "Amsterdam"]}
+              value={field.value}
+              onValueChange={field.onChange}
+              error={fieldState.error?.message}
+              isDirty={fieldState.isDirty}
+              isTouched={fieldState.isTouched}
+            />
+          )}
+        ></Controller>
       </span>
 
       <ActionButton onClick={formBtns.onClick} onCancel={formBtns.onCancel} />
@@ -852,7 +872,11 @@ function CardHeaderSection({
 
       <span className="flex flex-col gap-4 pl-4">
         <span className="inline-flex flex-col">
-          <CustomText textSize="lg" textVariant="primary">
+          <CustomText
+            textSize="lg"
+            textVariant="primary"
+            className="font-medium"
+          >
             {fullName}
           </CustomText>
           <CustomText textSize="xsm" textVariant="secondary">

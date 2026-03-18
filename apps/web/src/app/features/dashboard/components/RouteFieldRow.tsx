@@ -13,7 +13,7 @@ export default function RouteFieldRow<T extends FieldValues>({
     <div className="flex flex-col gap-4 ">
       <div className="flex">
         <span className="grid grid-cols-[96px_1fr] items-center gap-4 ">
-          <CustomText className="text-right" textSize="xsm" textVariant="label">
+          <CustomText className="text-right" textSize="sm" textVariant="label">
             {"Origin"}
           </CustomText>
           <span className="inline-flex gap-7  ">
@@ -54,15 +54,15 @@ export default function RouteFieldRow<T extends FieldValues>({
         </span>
       </div>
       <span className="grid grid-cols-[96px_1fr] items-center gap-3">
-        <CustomText className="text-right" textSize="xsm" textVariant="label">
+        <CustomText className="text-right" textSize="sm" textVariant="label">
           {"Destination"}
         </CustomText>
 
         <span className="pl-1">
           <CustomText
             as="span"
-            textSize="xsm"
-            textVariant="secondary"
+            textSize="sm"
+            textVariant="primary"
             className="inline-flex rounded-lg bg-neutral-50 border border-slate-300 w-fit px-3 h-10 justify-center items-center "
           >
             {"Zimbabwe"}

@@ -28,7 +28,7 @@ export function StepHeader({
     <div className="flex justify-between items-center">
       {/* Left: Step text */}
       <div className="flex items-center gap-1 min-w-0">
-        <span className="inline-flex text-sm h-6 items-center justify-center text-neutral-600">
+        <span className="inline-flex text-md h-6 items-center justify-center text-neutral-600">
           Step {currentStep} of {tripSteps.length}
         </span>
         <Minus className="text-neutral-400" />
@@ -40,7 +40,7 @@ export function StepHeader({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="text-md text-ink-primary flex justify-center items-center font-medium"
+              className="text-lg text-ink-primary flex justify-center items-center font-semimedium"
               title={step.title}
             >
               {step.title}

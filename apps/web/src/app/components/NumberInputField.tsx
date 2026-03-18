@@ -44,7 +44,7 @@ export function NumberInputField<TFieldValues extends FieldValues>({
   return (
     <ErrorText error={error}>
       <div className="flex flex-col gap-2">
-        <CustomText textSize="xsm" textVariant="label">
+        <CustomText textSize="sm" textVariant="label">
           {label}
         </CustomText>
         <div className="relative w-[80px] ">

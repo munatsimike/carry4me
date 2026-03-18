@@ -18,7 +18,7 @@ export default function User({ userName, tag, avatar }: UserProps) {
         <CustomText
           textVariant="primary"
           textSize="md"
-          className="leading-none"
+          className="leading-none font-semimedium"
         >
           {userName}
         </CustomText>

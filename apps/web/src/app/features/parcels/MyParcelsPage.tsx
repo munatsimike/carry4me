@@ -95,7 +95,11 @@ export function MyParcelsPage() {
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <div>
         <div className="flex items-center justify-between">
-          <CustomText textSize="xl" textVariant="primary" className="pl-4">
+          <CustomText
+            textSize="xl"
+            textVariant="primary"
+            className="pl-4 font-medium"
+          >
             My Parcels
           </CustomText>
 

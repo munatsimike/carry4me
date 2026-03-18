@@ -27,6 +27,8 @@ import LoginIcon from "@/assets/login-icon.svg?react";
 import ProfileIcon from "@/assets/user-profile-con.svg?react"
 import CameraIcon from "@/assets/camera.svg?react"
 import RecycleBin from "@/assets/bin.svg?react"
+import InstagramIcon from "@/assets/instagram-icon.svg?react"
+import USFlagIcon from "@/assets/us-flag-icon.svg?react"
 
 export const META_ICONS = {
   planeIcon: PlaneIcon,
@@ -57,5 +59,7 @@ export const META_ICONS = {
   ukFlag: UkFlag,
   profileIcon: ProfileIcon,
   cameraIcon: CameraIcon,
-  recycleBin: RecycleBin
+  recycleBin: RecycleBin,
+  instagramIcon:InstagramIcon,
+  uSFlagIcon: USFlagIcon
 }

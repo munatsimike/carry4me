@@ -147,7 +147,7 @@ export default function DashboardPage() {
   return (
     <DefaultContainer>
       <PageSection align="left">
-        <CustomText as="span" textVariant="primary" textSize="xxl">
+        <CustomText as="span" textVariant="primary" textSize="xxl" className="font-medium">
           {<Greeting user={fullName} />}
         </CustomText>
       </PageSection>
@@ -202,7 +202,7 @@ function YourActivitySection({
 }: ActivityProps) {
   return (
     <div className="flex flex-col gap-3">
-      <CustomText textVariant="primary" textSize="lg">
+      <CustomText textVariant="primary" textSize="lg" className="font-medium">
         {"Your activities"}
       </CustomText>
       <div className="flex flex-wrap gap-6">
@@ -320,7 +320,7 @@ function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
 function StatsSection({ statsList }: StatsProps) {
   return (
     <div className="flex flex-col gap-3">
-      <CustomText textVariant="primary" textSize="lg">
+      <CustomText textVariant="primary" textSize="lg" className="font-medium">
         {"Your Stats"}
       </CustomText>
       <div className="w-fit">

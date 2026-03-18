@@ -448,7 +448,7 @@ function DescriptionQuantityRow({
   return (
     <div className="inline-flex flex-col gap-5">
       <div>
-        <CustomText textSize="xsm" textVariant="label">
+        <CustomText textSize="sm" textVariant="label">
           {"Contents of your package"}
         </CustomText>
       </div>

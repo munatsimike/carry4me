@@ -29,7 +29,7 @@ export default function GoodsCategoryGrid({
     <ErrorText error={error}>
       <div className="flex flex-col gap-3">
         <InlineRow>
-          <CustomText textSize="xsm" textVariant="label">
+          <CustomText textSize="sm" textVariant="label">
             {label}
           </CustomText>
         </InlineRow>
@@ -64,7 +64,7 @@ export default function GoodsCategoryGrid({
                   </svg>
                 </span>
 
-                <CustomText textVariant="primary" textSize="xsm">
+                <CustomText textVariant="primary" textSize="sm">
                   {item.name}
                 </CustomText>
               </label>

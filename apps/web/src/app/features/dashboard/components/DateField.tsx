@@ -11,6 +11,7 @@ import {
 } from "react-hook-form";
 import ErrorText from "@/app/components/text/ErrorText";
 import { inputError, inputNeutral, inputSuccess } from "@/app/lib/cn";
+import CustomText from "@/components/ui/CustomText";
 
 type DateFieldProps<T extends FieldValues> = {
   control: Control<T>;
@@ -40,9 +41,9 @@ export function DateField<T extends FieldValues>({
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
       {label && (
-        <label className="block m-0 p-0 text-sm text-neutral-500 leading-none">
+        <CustomText textSize="sm" textVariant="label">
           {label}
-        </label>
+        </CustomText>
       )}
 
       <Controller
