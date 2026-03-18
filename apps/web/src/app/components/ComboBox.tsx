@@ -71,7 +71,7 @@ export default function ComboBox({
 
   if (!searchable) {
     return (
-      <div className="relative min-w-[150px] w-full">
+      <div className="relative sm:min-w-[150px]">
         <select
           disabled={disabled}
           value={value}
@@ -102,7 +102,7 @@ export default function ComboBox({
   }
 
   return (
-    <div ref={wrapperRef} className="relative min-w-[150px] w-full">
+    <div ref={wrapperRef} className="relative sm:min-w-[150px]">
       <input
         type="text"
         disabled={disabled}

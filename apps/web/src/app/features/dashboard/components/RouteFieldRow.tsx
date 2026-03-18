@@ -16,7 +16,7 @@ export default function RouteFieldRow<T extends FieldValues>({
           <CustomText className="text-right" textSize="xsm" textVariant="label">
             {"Origin"}
           </CustomText>
-          <span className="inline-flex gap-4  ">
+          <span className="inline-flex gap-7  ">
             <Controller
               name={"originCountry" as Path<T>}
               control={control}

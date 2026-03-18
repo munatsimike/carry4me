@@ -14,12 +14,13 @@ import { Card } from "@/app/components/card/Card";
 import { motion } from "framer-motion";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Controller, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { useAuthModal } from "../AuthModalContext";
+import ComboBox from "@/app/components/ComboBox";
 
 export const UserDetailsScema = z
   .object({
@@ -63,6 +64,7 @@ export default function SignUpPage() {
   const contentClass = "flex flex-col gap-5";
 
   const {
+    control,
     register,
     handleSubmit,
     watch,
@@ -82,8 +84,6 @@ export default function SignUpPage() {
     reValidateMode: "onBlur",
   });
 
-  const cityValue = watch("city");
-  const countryValue = watch("country");
   const firstName = watch("firstName");
   const lastName = watch("lastName");
 
@@ -189,7 +189,7 @@ export default function SignUpPage() {
                   Personal details
                 </CustomText>
                 <span className={contentClass}>
-                  <div className="flex w-full flex-wrap gap-5">
+                  <div className="flex w-full flex-wrap gap-7">
                     <FloatingInputField
                       hasValue={!!firstName}
                       label="First name"
@@ -278,28 +278,43 @@ export default function SignUpPage() {
 
                 {/* If your DropDownMenu supports register, keep this.
                   If it *doesn't* (custom onChange), use Controller instead. */}
-                <span className="flex gap-7">
-                  <DropDownMenu
-                    className="rounded-md"
-                    placeholder="Selected country"
-                    menuItems={["UK"]}
-                    value={countryValue}
-                    error={errors.country?.message}
-                    isDirty={!!dirtyFields.country}
-                    isTouched={!!touchedFields.country}
-                    register={register("country")}
-                  />
+                <span className="flex flex-wrap gap-7">
+                  <Controller
+                    control={control}
+                    name="country"
+                    render={({ field, fieldState }) => (
+                      <ComboBox
+                        className="rounded-lg"
+                        placeholder="Selected country"
+                        menuItems={["UK"]}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        error={fieldState.error?.message}
+                        isDirty={fieldState.isDirty}
+                        isTouched={fieldState.isTouched}
+                        searchable
+                      />
+                    )}
+                  ></Controller>
 
-                  <DropDownMenu
-                    className="rounded-md w-full sm:max-w-[200px]"
-                    placeholder="Selected city"
-                    menuItems={["London"]}
-                    value={cityValue}
-                    error={errors.city?.message}
-                    isDirty={!!dirtyFields.city}
-                    isTouched={!!touchedFields.city}
-                    register={register("city")}
-                  />
+                  <Controller
+                    control={control}
+                    name="city"
+                    render={({ field, fieldState }) => (
+                      <ComboBox
+                        className="rounded-lg"
+                        placeholder="Selected city"
+                        menuItems={["London"]}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        error={fieldState.error?.message}
+                        isDirty={fieldState.isDirty}
+                        isTouched={fieldState.isTouched}
+                        searchable
+                      />
+                    )}
+                  ></Controller>
+            
                 </span>
               </span>
 
