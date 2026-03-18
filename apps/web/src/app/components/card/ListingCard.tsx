@@ -46,7 +46,7 @@ export function ListingCard<T extends Listing>({
         <span className="flex flex-col gap-2">
           {!isDisplayMode && (
             <span className="flex justify-center text-sm pb-2 text-neutral-500">
-              This is how your parcel will appear to travelers
+              {`This is how your ${isTripListing ? "trip" : "parcel"} will appear to ${isTripListing ? "senders" : "travelers"}`}
             </span>
           )}
           <span className="flex justify-between gap-2">
@@ -80,7 +80,7 @@ export function ListingCard<T extends Listing>({
       </Stack>
       <LineDivider />
       <WeightAndPrice
-        weightLabel={isTripListing ? "Available space" : "Weight"}
+        weightLabel={isTripListing ? "Available space" : "Parcel Weight"}
         weight={listing.weightKg}
         priceLabel={isTripListing ? "Price/kg" : "Budget/kg"}
         price={listing.pricePerKg}

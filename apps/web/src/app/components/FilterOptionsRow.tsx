@@ -22,10 +22,11 @@ import { SupabaseGoodsRepository } from "../features/goods/data/SupabaseGoodsRep
 import { GetGoodsUseCase } from "../features/goods/application/GetGoodsUseCase";
 import { namedCall } from "../shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "../shared/Authentication/application/DialogBoxModalProvider";
-import { cn } from "../lib/cn";
+import { checkBox, checkBoxSvg, cn } from "../lib/cn";
 import type { Listing } from "../shared/Authentication/domain/Listing";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
+import { DateField } from "../features/dashboard/components/DateField";
 
 type FiltersFormValues = {
   date: string;
@@ -392,7 +393,7 @@ type FilterByDateProps = {
   hasDate: boolean;
 };
 function FilterByDate({ hasDate, baseProps }: FilterByDateProps) {
-  const { openMenu, toggleMenu, submitFilters, setValue, register } = baseProps;
+  const { openMenu, toggleMenu, submitFilters, setValue, control } = baseProps;
   return (
     <FilterMenuWrapper>
       <FilterChip
@@ -412,10 +413,11 @@ function FilterByDate({ hasDate, baseProps }: FilterByDateProps) {
             >
               Departure date
             </CustomText>
-            <input
-              type="date"
-              {...register("date")}
-              className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
+
+            <DateField<FiltersFormValues>
+              control={control}
+              name={"date"}
+              label=""
             />
           </div>
 
@@ -643,22 +645,35 @@ function FilterByGoodsMenu({
                         key={category.name}
                         className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
                       >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              field.onChange([...field.value, category.name]);
-                            } else {
-                              field.onChange(
-                                field.value.filter(
-                                  (item) => item !== category.name,
-                                ),
-                              );
-                            }
-                          }}
-                          className="h-4 w-4"
-                        />
+                        <span className="relative inline-flex">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                field.onChange([...field.value, category.name]);
+                              } else {
+                                field.onChange(
+                                  field.value.filter(
+                                    (item) => item !== category.name,
+                                  ),
+                                );
+                              }
+                            }}
+                            className={checkBox}
+                          />
+                          <svg
+                            viewBox="0 0 24 24"
+                            className={checkBoxSvg}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </span>
                         <CustomText textVariant="primary">
                           {category.name}
                         </CustomText>

@@ -20,10 +20,6 @@ type DateFieldProps<T extends FieldValues> = {
   disabled?: boolean;
   error?: string;
   className?: string;
-  fromDate?: Date;
-  toDate?: Date;
-  isDirty?: boolean;
-  isTouched?: boolean;
 };
 
 export function DateField<T extends FieldValues>({
@@ -34,21 +30,12 @@ export function DateField<T extends FieldValues>({
   disabled,
   error,
   className,
-  fromDate,
-  toDate,
-  isDirty,
-  isTouched,
 }: DateFieldProps<T>) {
   const [open, setOpen] = React.useState(false);
-  const showSuccess = (isDirty || isTouched) && !error;
-  const disabledMatchers: Matcher[] = [];
 
+  const disabledMatchers: Matcher[] = [];
   // Disable dates after today
   disabledMatchers.push({ before: new Date() });
-
-  // Your optional props
-  if (fromDate) disabledMatchers.push({ before: fromDate });
-  if (toDate) disabledMatchers.push({ after: toDate });
 
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
@@ -61,7 +48,9 @@ export function DateField<T extends FieldValues>({
       <Controller
         control={control}
         name={name}
-        render={({ field }) => {
+        render={({ field, fieldState }) => {
+          const showSuccess =
+            (fieldState.isDirty || fieldState.isTouched) && !fieldState.error;
           const raw = field.value as unknown as string | undefined;
           const parsed = raw ? parseISO(raw) : null;
           const selectedDate = parsed && isValid(parsed) ? parsed : undefined;
@@ -73,7 +62,7 @@ export function DateField<T extends FieldValues>({
                 disabled={disabled}
                 onClick={() => setOpen((v) => !v)}
                 className={[
-                  "w-full sm:w-[150px] h-10 px-3 rounded-md border text-left flex items-center justify-between gap-2",
+                  "w-full sm:w-[150px] h-10 px-3 rounded-lg border border-slate-300 text-left flex items-center justify-between gap-2",
                   "focus:outline-none focus:border-primary-500",
                   error
                     ? inputError
@@ -107,7 +96,7 @@ export function DateField<T extends FieldValues>({
                     onClick={() => setOpen(false)}
                   />
 
-                  <div className="absolute z-50 mt-2 w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg p-1">
+                  <div className="absolute z-50 mt-2 w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg px-1">
                     <DayPicker
                       mode="single"
                       selected={selectedDate}

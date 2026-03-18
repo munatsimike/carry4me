@@ -47,20 +47,20 @@ export function NumberInputField<TFieldValues extends FieldValues>({
         <CustomText textSize="xsm" textVariant="label">
           {label}
         </CustomText>
-        <div className="relative w-[80px]">
+        <div className="relative w-[80px] ">
           <input
             type="number"
             min={0}
             id={id}
             inputMode="numeric"
             className={cn(
-              `${inputStructural} text-ink-primary`,
+              `${inputStructural} text-ink-primary rounded-lg`,
               error ? inputError : showSuccess ? inputSuccess : inputNeutral,
             )}
             {...register}
           />
 
-          <div className="absolute right-2 top-1 flex flex-col text-xs">
+          <div className="absolute right-2 top-2 flex flex-col text-xs">
             <button
               type="button"
               onClick={() =>

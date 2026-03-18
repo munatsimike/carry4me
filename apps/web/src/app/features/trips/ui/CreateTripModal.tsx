@@ -121,8 +121,6 @@ export default function CreateTripModal({
   });
 
   const selectedIds = watch("goodsCategoryIds");
-  const countryValue = watch("originCountry");
-  const cityValue = watch("originCity");
   const weightValue = watch("weight");
   const priceValue = watch("pricePerKg");
 
@@ -215,7 +213,7 @@ export default function CreateTripModal({
       onClose={() => setModalState(false)}
     >
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-5">
+        <div className="relative flex flex-col gap-5">
           <FormHeader
             heading={isEditMode ? "Edit trip" : "Post your trip"}
             subHeading={"Share your trip details to get matched with senders."}
@@ -229,7 +227,7 @@ export default function CreateTripModal({
                 onClick={goBack}
                 size={"sm"}
               >
-                <span className="inline-flex gap-1 items-center">
+                <span className="inline-flex gap-1 items-center text-black">
                   <ArrowLeft className="w-4" /> {"Back"}
                 </span>
               </Button>
@@ -241,16 +239,7 @@ export default function CreateTripModal({
           <div className="flex flex-col gap-5">
             <LineDivider heightClass={dividerHeight} />
             <RouteFieldRow
-              cityError={errors.originCity?.message}
-              countryError={errors.originCountry?.message}
-              cityValue={cityValue}
-              countryValue={countryValue}
-              registerCity={register("originCity")}
-              registerCountry={register("originCountry")}
-              isCountryDirty={!!dirtyFields.originCountry}
-              isCountryTouched={!!dirtyFields.originCountry}
-              isCityDirty={!!dirtyFields.originCity}
-              isCityTouched={!!touchedFields.originCity}
+             control={control}
             />
 
             <LineDivider heightClass={dividerHeight} />
@@ -260,9 +249,6 @@ export default function CreateTripModal({
               control={control}
               name={"departureDate"}
               placeholder="dd/mm/yyyy"
-              fromDate={new Date()}
-              isDirty={!!dirtyFields.departureDate}
-              isTouched={!!touchedFields.departureDate}
             />
 
             <LineDivider heightClass={dividerHeight} />

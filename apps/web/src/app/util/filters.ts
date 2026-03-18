@@ -2,24 +2,23 @@ import type { CustomRange } from "@/types/Ui";
 import type { TripListing } from "../features/trips/domain/Trip";
 import type { Listing } from "../shared/Authentication/domain/Listing";
 
-
 export function filterByCountryCity<T extends Listing>(
   city: string,
   country: string,
   listings: T[],
 ): T[] {
+  const normalize = (value?: string) => value?.toLowerCase().trim() ?? "";
+
   const filtered = listings.filter((listing) => {
     const matchesCountry =
-      !country ||
-      listing.route.originCountry.toLowerCase().includes(country) ||
-      listing.route.destinationCountry.toLowerCase().includes(country);
+      !country || normalize(listing.route.originCountry) === normalize(country);
 
     const matchesCity =
-      !city ||
-      listing.route.originCity?.toLowerCase().includes(city) ||
-      listing.route.destinationCity?.toLowerCase().includes(city);
+      !city || normalize(listing.route.originCity) === normalize(city);
+
     return matchesCountry && matchesCity;
   });
+
   return filtered;
 }
 
@@ -78,4 +77,3 @@ export function filterByGoodsCategory<T extends Listing>(
     ),
   );
 }
-

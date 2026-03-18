@@ -2,6 +2,7 @@ import { InlineRow } from "@/app/components/InlineRow";
 import ErrorText from "@/app/components/text/ErrorText";
 import CustomText from "@/components/ui/CustomText";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
+import { checkBox, checkBoxSvg } from "@/app/lib/cn";
 
 export default function GoodsCategoryGrid({
   label,
@@ -46,26 +47,13 @@ export default function GoodsCategoryGrid({
                     type="checkbox"
                     checked={checked}
                     onChange={(e) => toggle(item.id, e.target.checked)}
-                    className="
-        peer appearance-none
-        w-4 h-4 rounded-[6px]
-        border border-gray-300 bg-white
-        transition cursor-pointer
-        focus:outline-none focus:ring-2 focus:ring-blue-200
-        checked:bg-primary-500 checked:border-primary-500
-      "
+                    className={checkBox}
                   />
 
                   {/* Check icon visible only when checked */}
                   <svg
                     viewBox="0 0 24 24"
-                    className="
-        pointer-events-none
-        absolute inset-0 m-auto w-4 h-4
-        text-white opacity-0 transition
-         peer-checked:opacity-100
-       
-      "
+                    className={checkBoxSvg}
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="3"

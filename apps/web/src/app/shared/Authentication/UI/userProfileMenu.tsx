@@ -17,10 +17,10 @@ type ProfileItem = {
 
 export function UserProfileMenu({
   onClosePopOver,
-  triggerRef
+  triggerRef,
 }: {
   onClosePopOver: React.Dispatch<React.SetStateAction<boolean>>;
-   triggerRef: React.RefObject<HTMLButtonElement | null>;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const cls = "h-6 w-6 text-neutral-400";
@@ -93,7 +93,11 @@ export function UserProfileMenu({
     >
       <div ref={ref} className="flex flex-col">
         {profileItems.map((item) => (
-          <ProfileItem key={item.name} profileItem={item} />
+          <ProfileItem
+            key={item.name}
+            profileItem={item}
+            onClosePopOver={onClosePopOver}
+          />
         ))}
 
         <LogoutButton onClosePopOver={onClosePopOver} />
@@ -103,11 +107,15 @@ export function UserProfileMenu({
 }
 type ProfileItemProps = {
   profileItem: ProfileItem;
+  onClosePopOver: (b: boolean) => void;
 };
 
-function ProfileItem({ profileItem }: ProfileItemProps) {
+function ProfileItem({ profileItem, onClosePopOver }: ProfileItemProps) {
   return (
-    <Link to={profileItem.path ? profileItem.path : "/profile"}>
+    <Link
+      onClick={() => onClosePopOver(false)}
+      to={profileItem.path ? profileItem.path : "/profile"}
+    >
       <span className="group inline-flex gap-2 items-center p-2 hover:bg-neutral-100 w-full rounded-md">
         {profileItem.icon}
         <SpaceBetweenRow className="items-center w-full">

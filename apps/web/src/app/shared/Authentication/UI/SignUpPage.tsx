@@ -1,5 +1,5 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useMemo} from "react";
+import { useMemo } from "react";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SignUpUseCase } from "../application/SignUpUseCase";
 import type { AppUser } from "../domain/authTypes";
@@ -8,7 +8,7 @@ import { useToast } from "@/app/components/Toast";
 import CustomText from "@/components/ui/CustomText";
 import LineDivider from "@/app/components/LineDivider";
 import FloatingInputField from "@/app/components/CustomInputField";
-import DropDownMenu from "@/app/components/DropDownMenu";
+import DropDownMenu from "@/app/components/ComboBox";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
 import { motion } from "framer-motion";

@@ -1,5 +1,6 @@
 import LineDivider from "@/app/components/LineDivider";
 import type { CarryRequestNotification } from "@/app/features/carry request/carry request events/domain/CarryRequestNotification";
+import { cn } from "@/app/lib/cn";
 import CustomText from "@/components/ui/CustomText";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
@@ -83,7 +84,12 @@ export default function NotificationPopover({
       <div className="max-h-[320px] overflow-y-auto pr-2">
         {visibleNotifications.map((item, index) => (
           <div key={item.id}>
-            <div className="flex flex-col rounded-lg p-2 hover:bg-neutral-100">
+            <div
+              className={cn(
+                "flex flex-col rounded-lg p-2 hover:bg-neutral-100 ",
+                index === visibleNotifications.length - 1 ? "mb-8" : "",
+              )}
+            >
               <CustomText textVariant="primary">{item.title}</CustomText>
               <CustomText textSize="xsm" textVariant="secondary">
                 {item.body}

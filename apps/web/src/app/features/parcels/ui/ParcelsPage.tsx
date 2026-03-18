@@ -105,6 +105,7 @@ export default function ParcelsPage() {
 
     if (isSearchActive) {
       result = filterByCountryCity(searchCity, searchCountry, result);
+      
     }
 
     if (priceRange.max > 0 || priceRange.min > 0) {
@@ -193,7 +194,7 @@ export default function ParcelsPage() {
       <PageSection>
         <Search
           countries={["UK", "USA"]}
-          cities={["London", "Birmingham", "Florida"]}
+          cities={["London","Florida"]}
           setSearchCity={setSearchCity}
           setSearchCountry={setSearchCountry}
           setClearResults={() => setClearResults(false)}

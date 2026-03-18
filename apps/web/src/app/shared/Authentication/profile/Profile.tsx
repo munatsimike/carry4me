@@ -1,6 +1,6 @@
 import { Card } from "@/app/components/card/Card";
 import FloatingInputField from "@/app/components/CustomInputField";
-import DropDownMenu from "@/app/components/DropDownMenu";
+import DropDownMenu from "@/app/components/ComboBox";
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { SignUpUseCase } from "@/app/shared/Authentication/application/SignUpUseCase";
@@ -284,6 +284,9 @@ export default function ProfilePage() {
 
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
+      <CustomText textSize="xl" textVariant="primary" className="pl-4 pb-4">
+        Profile & Security
+      </CustomText>
       <Card className="mx-auto w-full max-w-2xl" paddingClass="p-8 px-10">
         <CardHeaderSection
           avatar={profile.avatarUrl ?? ""}

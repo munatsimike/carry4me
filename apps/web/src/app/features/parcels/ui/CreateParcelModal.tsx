@@ -285,18 +285,7 @@ export default function CreateParcelModal({
         {step === 1 ? (
           <div className="flex flex-col gap-5">
             <LineDivider heightClass={dividerHeight} />
-            <RouteFieldRow
-              countryError={errors.originCountry?.message}
-              cityError={errors.originCity?.message}
-              cityValue={cityValue}
-              countryValue={countryValue}
-              registerCity={register("originCity")}
-              registerCountry={register("originCountry")}
-              isCountryDirty={!!dirtyFields.originCountry}
-              isCountryTouched={!!dirtyFields.originCountry}
-              isCityDirty={!!dirtyFields.originCity}
-              isCityTouched={!!touchedFields.originCity}
-            />
+            <RouteFieldRow control={control} />
 
             <LineDivider heightClass={dividerHeight} />
 

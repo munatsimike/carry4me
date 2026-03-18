@@ -47,7 +47,7 @@ export default function FloatingInputField({
           <input
             {...props}
             placeholder=" "
-            className="peer w-full bg-transparent px-1 py-3 text-md text-neutral-700
+            className="peer w-full bg-transparent px-1 py-1 text-md text-neutral-700
             focus:outline-none"
           />
 

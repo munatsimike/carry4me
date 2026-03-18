@@ -20,7 +20,7 @@ export default function FormHeader({
         <SvgIcon size={"xxl"} color="primary" Icon={icon}/>
       </CircleBadge>
       <span className="flex flex-col gap-1 items-center">
-        <CustomText  textSize="lg" textVariant="primary">
+        <CustomText  textSize="lg" textVariant="primary" className="font-medium">
           {heading}
         </CustomText>
         <CustomText textSize="sm" as="h2" className="leading-none">

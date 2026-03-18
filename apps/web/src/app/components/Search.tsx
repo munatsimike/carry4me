@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/Button";
-import DropDownMenu from "./DropDownMenu";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "../icons/MetaIcon";
 import z from "zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
+import ComboBox from "./ComboBox";
 
 const searchScema = z.object({
   country: z.string().min(1, "Select country"),
@@ -33,15 +33,7 @@ export default function Search({
   clearResults,
   setClearResults,
 }: SearchProps) {
-  const heightClass = "py-0";
-  const {
-    register,
-    watch,
-    handleSubmit,
-    resetField,
-    reset,
-    formState: { dirtyFields, errors, touchedFields },
-  } = useForm<SearchFields>({
+  const { control, watch, handleSubmit, reset } = useForm<SearchFields>({
     resolver: zodResolver(searchScema),
     defaultValues: {
       country: "",
@@ -76,38 +68,41 @@ export default function Search({
     >
       <span className="flex flex-wrap gap-4">
         <div className="min-w-[150px] flex-1">
-          <DropDownMenu
-            register={register("country", {
-              onChange: (e) => {
-                if (e.target.value && !!dirtyFields.city && cityValue !== "") {
-                  resetField("city");
-                }
-              },
-            })}
-            className="w-full rounded-xl bg-white shadow-sm"
-            value={countryValue}
-            placeholder={"Select country"}
-            menuItems={countries}
-            error={errors.country?.message}
-            isTouched={!!touchedFields.country}
-            isDirty={!!dirtyFields.country}
-            heightClass={heightClass}
-            textSize="text-md"
+          <Controller
+            name="country"
+            control={control}
+            render={({ field, fieldState }) => (
+              <ComboBox
+                className="rounded-xl"
+                placeholder="Select Country"
+                menuItems={countries}
+                value={field.value}
+                onValueChange={field.onChange}
+                isDirty={fieldState.isDirty}
+                isTouched={fieldState.isTouched}
+                error={fieldState.error?.message}
+                searchable
+              />
+            )}
           />
         </div>
-
-        <div className="min-w-[170px] flex-1">
-          <DropDownMenu
-            register={register("city")}
-            className="w-full rounded-xl bg-white shadow-sm"
-            value={cityValue}
-            placeholder={"Select city"}
-            menuItems={cities}
-            heightClass={heightClass}
-            error={errors.city?.message}
-            isTouched={!!touchedFields.city}
-            isDirty={!!dirtyFields.city}
-            textSize="text-md"
+        <div className="min-w-[150px] flex-1">
+          <Controller
+            name="city"
+            control={control}
+            render={({ field, fieldState }) => (
+              <ComboBox
+                className="rounded-xl"
+                placeholder="Select city"
+                menuItems={cities}
+                value={field.value}
+                onValueChange={field.onChange}
+                isDirty={fieldState.isDirty}
+                isTouched={fieldState.isTouched}
+                error={fieldState.error?.message}
+                searchable
+              />
+            )}
           />
         </div>
       </span>
@@ -120,7 +115,7 @@ export default function Search({
         to
       </CustomText>
 
-      <div className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-white px-3 py-2 shadow-sm border">
+      <div className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-white px-3 py-2 shadow-sm border">
         <SvgIcon size="md" Icon={META_ICONS.zimFlag} />
         <CustomText as="span" textSize="xsm" className="text-neutral-700">
           Zimbabwe

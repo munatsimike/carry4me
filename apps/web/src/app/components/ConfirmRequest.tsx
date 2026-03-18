@@ -171,7 +171,7 @@ export function ParcelSummary({
   const totalPrice = pricePerKg * parcel.weightKg;
   const variantSecondary = "secondary";
   const variantPrimary = "primary";
-  const textSizeLabel = "xsm";
+  const textSizeLabel = "sm";
   const textSize = "sm";
 
   return (
@@ -214,8 +214,8 @@ export function ParcelSummary({
           </CustomText>
         </div>
       </div>
-
-      <div className="space-y-2 border-t border-neutral-200 pt-4">
+      <LineDivider/>
+      <div className="space-y-2">
         <div className="grid grid-cols-[1fr_auto] items-center gap-4">
           <CustomText as="span" textVariant="secondary" textSize="sm">
             Price per kg
@@ -264,7 +264,7 @@ export function TripSummary({ trip, isSenderRequesting }: TripSummaryProps) {
   const items = trip.goodsCategory.map((item) => item.name);
   const variantSecondary = "secondary";
   const variantPrimary = "primary";
-  const textSizeLabel = "xsm";
+  const textSizeLabel = "sm";
   const textSize = "sm";
 
   return (

@@ -1,32 +1,14 @@
-import DropDownMenu from "@/app/components/DropDownMenu";
+import ComboBox from "@/app/components/ComboBox";
 import CustomText from "@/components/ui/CustomText";
-import type { UseFormRegisterReturn } from "react-hook-form";
+import { Controller, type Control, type FieldValues, type Path } from "react-hook-form";
 
-type RouteRowProps = {
-  cityError?: string;
-  countryError?: string;
-  countryValue: string;
-  cityValue: string;
-  registerCountry: UseFormRegisterReturn;
-  registerCity: UseFormRegisterReturn;
-  isCountryDirty: boolean;
-  isCountryTouched: boolean;
-  isCityDirty: boolean;
-  isCityTouched: boolean;
+type RouteRowProps<T extends FieldValues> = {
+  control: Control<T>;
 };
 
-export default function RouteFieldRow({
-  countryValue,
-  cityValue,
-  registerCountry,
-  registerCity,
-  countryError,
-  cityError,
-  isCountryDirty,
-  isCountryTouched,
-  isCityDirty,
-  isCityTouched,
-}: RouteRowProps) {
+export default function RouteFieldRow<T extends FieldValues>({
+  control,
+}: RouteRowProps<T>) {
   return (
     <div className="flex flex-col gap-4 ">
       <div className="flex">
@@ -35,26 +17,38 @@ export default function RouteFieldRow({
             {"Origin"}
           </CustomText>
           <span className="inline-flex gap-4  ">
-            <DropDownMenu
-              value={countryValue}
-              className="rounded-md bg-white border"
-              placeholder={"Select country"}
-              menuItems={["Ireland", "United Kingdom", "USA"]}
-              register={registerCountry}
-              isDirty={isCountryDirty}
-              isTouched={isCountryTouched}
-              error={countryError}
+            <Controller
+              name={"originCountry" as Path<T>}
+              control={control}
+              render={({ field, fieldState }) => (
+                <ComboBox
+                  placeholder="Select Country"
+                  menuItems={["UK", "USA", "Ireland"]}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  isDirty={fieldState.isDirty}
+                  isTouched={fieldState.isTouched}
+                  error={fieldState.error?.message}
+                  searchable
+                />
+              )}
             />
 
-            <DropDownMenu
-              value={cityValue}
-              register={registerCity}
-              className="rounded-md bg-white border"
-              placeholder={"Select city"}
-              menuItems={["Dublin", "London", "Florida"]}
-              isDirty={isCityDirty}
-              isTouched={isCityTouched}
-              error={cityError}
+            <Controller
+              name={"originCity" as Path<T>}
+              control={control}
+              render={({ field, fieldState }) => (
+                <ComboBox
+                  placeholder="Select City"
+                  menuItems={["London", "Birmingham", "Manchester"]}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  isDirty={fieldState.isDirty}
+                  isTouched={fieldState.isTouched}
+                  error={fieldState.error?.message}
+                  searchable
+                />
+              )}
             />
           </span>
         </span>
@@ -69,7 +63,7 @@ export default function RouteFieldRow({
             as="span"
             textSize="xsm"
             textVariant="secondary"
-            className="inline-flex rounded-lg bg-neutral-50 border border-100 w-fit px-3 h-10 justify-center items-center "
+            className="inline-flex rounded-lg bg-neutral-50 border border-slate-300 w-fit px-3 h-10 justify-center items-center "
           >
             {"Zimbabwe"}
           </CustomText>
