@@ -30,7 +30,7 @@ export function Card({
       animate={{ scale: 1, opacity: 1 }}
     transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className={[
-        "bg-white",
+        "overflow-hidden bg-white",
         shadowClass,
         paddingClass,
         cornerRadiusClass,

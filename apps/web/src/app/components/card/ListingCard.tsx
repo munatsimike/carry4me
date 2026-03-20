@@ -117,9 +117,15 @@ export function ListingCard<T extends Listing>({
           origin={listing.route.originCountry}
           destination={listing.route.destinationCountry}
         />
-        {listing.type === "trip" && (
-          <DateRow date={format(new Date(listing.departDate), dateFormat)} />
-        )}
+
+        <DateRow
+          date={
+            listing.type === "trip"
+              ? format(new Date(listing.departDate), dateFormat)
+              : "Flexible"
+          }
+        />
+
         <CategoryRow
           tag={isTripListing ? "traveler" : "sender"}
           category={goodsCategories}

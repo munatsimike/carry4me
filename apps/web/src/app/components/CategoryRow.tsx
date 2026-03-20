@@ -1,5 +1,5 @@
 import type { Tag } from "@/types/Ui";
-import LabelTextRow from "./LabelTextRow";
+import ScrollChipRow from "./ScrollChipRow";
 
 export default function CategoryRow({
   category,
@@ -9,5 +9,7 @@ export default function CategoryRow({
   tag?: Tag;
 }) {
   const label = tag === "traveler" ? "Accepts" : "Sending";
-  return <LabelTextRow label={label} text={category} />;
+  return <ScrollChipRow label={label} items={category} />;
 }
+
+
