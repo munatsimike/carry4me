@@ -15,7 +15,7 @@ import CreateTripModal from "../trips/ui/CreateTripModal";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";
@@ -147,12 +147,17 @@ export default function DashboardPage() {
   return (
     <DefaultContainer>
       <PageSection align="left">
-        <CustomText as="span" textVariant="primary" textSize="xxl" className="font-medium">
+        <CustomText
+          as="span"
+          textVariant="primary"
+          textSize="xxl"
+          className="font-medium"
+        >
           {<Greeting user={fullName} />}
         </CustomText>
       </PageSection>
 
-      <div className="flex flex-col gap-12">
+      <div className="flex flex-col gap-12 pt-4">
         <ActionButtonRow
           setTripModalState={setTripModalState}
           setParcelModalState={setParcelModalState}
@@ -219,74 +224,86 @@ function RecentActivity({
   recentActivities: CarryRequestNotification[];
 }) {
   return (
-    <Card paddingClass="p-3">
-      <div className="flex flex-col max-w-sm">
-        <span className="flex flex-col gap-3">
-          <span className="inline-flex gap-3 items-center">
-            <CircleBadge size="md" bgColor="neutral">
-              <Clock className="text-neutral-600" strokeWidth={1.5} />
-            </CircleBadge>
-            <CustomText textVariant="primary" textSize="md">
-              {"Recent activity"}
-            </CustomText>
+    <motion.div
+      initial={{ scale: 0.96, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className="relative max-w-sm overflow-hidden rounded-2xl pt-1 bg-emerald-200"
+    >
+      <Card paddingClass="p-3" className="h-full">
+        <div className="flex flex-col max-w-sm">
+          <span className="flex flex-col gap-3">
+            <span className="inline-flex gap-3 items-center">
+              <CircleBadge size="md" bgColor="neutral">
+                <Clock className="text-neutral-600" strokeWidth={1.5} />
+              </CircleBadge>
+              <CustomText textVariant="primary" textSize="md">
+                {"Recent activity"}
+              </CustomText>
+            </span>
+            <LineDivider heightClass="my-1" />
           </span>
-          <LineDivider heightClass="my-1" />
-        </span>
 
-        {recentActivities &&
-          recentActivities.map((activity, index) => (
-            <div
-              key={activity.id}
-              className="flex flex-col w-full sm:min-w-[350px] max-w-sm"
-            >
-              <div className="flex gap-3 hover:bg-neutral-100 p-2 rounded-lg">
-                <span className="inline-flex pt-1">
-                  {iconForActivity(activity.type)}
-                </span>
+          {recentActivities &&
+            recentActivities.map((activity, index) => (
+              <div
+                key={activity.id}
+                className="flex flex-col w-full sm:min-w-[350px] max-w-sm"
+              >
+                <div className="flex gap-3 hover:bg-neutral-100 p-2 rounded-lg">
+                  <span className="inline-flex pt-1">
+                    {iconForActivity(activity.type)}
+                  </span>
 
-                <div
-                  key={activity.id}
-                  className="flex flex-col bg-neutral w-full sm:min-w-[250px] max-w-sm"
-                >
-                  <div className="flex justify-between">
-                    <CustomText textVariant="secondary">
-                      {activity.title}
-                    </CustomText>
-                    <p className="text-[12px] text-neutral-500">
-                      {formatRelativeTime(activity.createdAt)}
-                    </p>
+                  <div
+                    key={activity.id}
+                    className="flex flex-col bg-neutral w-full sm:min-w-[250px] max-w-sm"
+                  >
+                    <div className="flex justify-between">
+                      <CustomText textVariant="secondary">
+                        {activity.title}
+                      </CustomText>
+                      <p className="text-[12px] text-neutral-500">
+                        {formatRelativeTime(activity.createdAt)}
+                      </p>
+                    </div>
                   </div>
                 </div>
+                {index !== recentActivities.length - 1 && (
+                  <LineDivider heightClass="my-1" />
+                )}
               </div>
-              {index !== recentActivities.length - 1 && (
-                <LineDivider heightClass="my-1" />
-              )}
-            </div>
-          ))}
-      </div>
-    </Card>
+            ))}
+        </div>
+      </Card>
+    </motion.div>
   );
 }
 
 // card to disply activity items
 function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
   return (
-    <div className="flex flex-col gap-3 max-w-sm">
-      <Card>
-        <span className="flex flex-col gap-4 sm:pr-6">
-          <span className="inline-flex gap-3 items-center">
+    <motion.div
+      initial={{ scale: 0.96, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className="relative max-w-sm overflow-hidden rounded-2xl pt-1 bg-slate-200"
+    >
+      <Card className="h-full">
+        <div className="flex flex-col gap-4 sm:pr-6 bg-white">
+          <span className="inline-flex items-center gap-3">
             <CircleBadge size="md" bgColor="neutral">
               <Truck className="text-neutral-600" strokeWidth={1.5} />
             </CircleBadge>
             <CustomText textVariant="primary" textSize="md">
-              {"Delivery Summary"}
+              Delivery Summary
             </CustomText>
           </span>
 
           <DeliverySummaryItem activityList={activityList} />
-        </span>
+        </div>
       </Card>
-    </div>
+    </motion.div>
   );
 }
 

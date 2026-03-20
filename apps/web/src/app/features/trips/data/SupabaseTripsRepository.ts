@@ -4,7 +4,10 @@ import type { CreateTripListing } from "../domain/CreateTrip";
 import { TRIPSTATUSES, type TripListing } from "../domain/Trip";
 import { mapTripRowToTrip } from "../domain/tripmappers";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
-import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
+import {
+  deleteById,
+  getFavListingIds,
+} from "@/app/shared/Authentication/domain/SupabaseHelper";
 import type { TripDto } from "../application/TripDto";
 
 export class SupabaseTripsRepository implements TripsRepository {
@@ -78,7 +81,7 @@ export class SupabaseTripsRepository implements TripsRepository {
     return { data, status, error: null };
   }
 
-  async listTrips(userId?: string): Promise<RepoResponse<TripListing[]>> {
+  async listTrips(userId?: string, shouldFilter: boolean =false): Promise<RepoResponse<TripListing[]>> {
     let query = supabase.from("trips").select(`
       *,
       traveler:profiles(id, full_name, avatar_url),
@@ -92,7 +95,7 @@ export class SupabaseTripsRepository implements TripsRepository {
     `);
 
     // Only filter if userId is provided
-    if (userId) {
+    if (shouldFilter) {
       query = query.eq("traveler_user_id", userId);
     } else {
       query.eq("status", TRIPSTATUSES.ACTIVE);
@@ -101,8 +104,10 @@ export class SupabaseTripsRepository implements TripsRepository {
     const { data, error, status } = await query;
 
     if (error) return { data: null, status, error };
-
-    const result = data.map(mapTripRowToTrip);
+    const favTripIds = await getFavListingIds(userId ?? "", "trip_id");
+   
+    const favTripIdSet = new Set(favTripIds ?? []);
+    const result = data.map((row) => mapTripRowToTrip(row, favTripIdSet));
     return { data: result, error: null, status };
   }
 

@@ -29,6 +29,7 @@ import CameraIcon from "@/assets/camera.svg?react"
 import RecycleBin from "@/assets/bin.svg?react"
 import InstagramIcon from "@/assets/instagram-icon.svg?react"
 import USFlagIcon from "@/assets/us-flag-icon.svg?react"
+import HeartFilled from "@/assets/heartFilled.svg?react";
 
 export const META_ICONS = {
   planeIcon: PlaneIcon,
@@ -61,5 +62,6 @@ export const META_ICONS = {
   cameraIcon: CameraIcon,
   recycleBin: RecycleBin,
   instagramIcon:InstagramIcon,
-  uSFlagIcon: USFlagIcon
+  uSFlagIcon: USFlagIcon,
+  heartfilled: HeartFilled
 }

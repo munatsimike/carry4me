@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
-import { Bell } from "lucide-react";
+import { Bell, BellRing } from "lucide-react";
 import type { UserProfile } from "./app/shared/Authentication/domain/authTypes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SupabaseNotificationRepository } from "./app/features/carry request/carry request events/data/SupabaseNotificationRepository";
@@ -8,7 +8,7 @@ import { GetNotificationUseCase } from "./app/features/carry request/carry reque
 import { namedCall } from "./app/shared/Authentication/application/NamedCall";
 import { useToast } from "./app/components/Toast";
 import type { CarryRequestNotification } from "./app/features/carry request/carry request events/domain/CarryRequestNotification";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { UserProfileMenu } from "./app/shared/Authentication/UI/userProfileMenu";
 import NotificationPopover from "./app/shared/Authentication/UI/NotificationPopOver";
 
@@ -159,7 +159,37 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
         >
           <span className=" group inline-flex gap-1 items-center hover:text-primary-600">
             <span className="relative flex rounded-full p-1 group-hover:bg-neutral-200">
-              <Bell className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
+              {unreadNotifications.length > 0 ? (
+                <motion.span
+                  animate={
+                    unreadNotifications.length > 0
+                      ? { rotate: [0, -8, 8, -6, 6, 0] }
+                      : { rotate: 0 }
+                  }
+                  transition={{
+                    duration: 0.8,
+                    ease: "easeInOut",
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    transformOrigin: "top center",
+                  }}
+                >
+                  {unreadNotifications.length > 0 ? (
+                    <BellRing
+                      className="h-6 w-6 text-neutral-600"
+                      strokeWidth={1.5}
+                    />
+                  ) : (
+                    <Bell
+                      className="h-6 w-6 text-neutral-600"
+                      strokeWidth={1.5}
+                    />
+                  )}
+                </motion.span>
+              ) : (
+                <Bell className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
+              )}
               {unreadNotifications.length > 0 && (
                 <span className="flex absolute z-10 right-0 top-[-1px] rounded-full h-4 w-4 bg-error-500 text-[11px] text-white justify-center items-center">
                   {unreadNotifications.length}
@@ -179,7 +209,11 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
         </AnimatePresence>
       </span>
       <span className=" relative inline-flex flex-col">
-        <button ref={triggerProfRef} type="button" onClick={() => setShowPrfilePopOver((prev) => !prev)}>
+        <button
+          ref={triggerProfRef}
+          type="button"
+          onClick={() => setShowPrfilePopOver((prev) => !prev)}
+        >
           <img
             src={
               userProfile?.avatarUrl

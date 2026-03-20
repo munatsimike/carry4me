@@ -28,7 +28,10 @@ export type TripRow = {
   }[];
 };
 
-export function mapTripRowToTrip(row: TripRow): TripListing {
+export function mapTripRowToTrip(
+  row: TripRow,
+  likedTripIds: Set<string> = new Set(),
+): TripListing {
   const publicUrl = fetchPublicUrl(row.traveler.avatar_url);
   const acceptedGoods =
     row.trip_accepted_categories?.map((x) => x.category).filter(Boolean) ?? [];
@@ -61,5 +64,6 @@ export function mapTripRowToTrip(row: TripRow): TripListing {
     arriveDate: row.arrive_date,
     status: row.status,
     items: [],
+    isLiked: likedTripIds?.has(row.id) ?? false,
   };
 }

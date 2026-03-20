@@ -13,10 +13,17 @@ import { dateFormat, type CardMode } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import User from "./User";
 import { format } from "date-fns";
+import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
+import { SupabaseFavouriteRepository } from "@/app/features/my favourites/data/SupabaseFavouriteRepository";
+import { useEffect, useMemo, useState } from "react";
+import { UpadateFavouriteUseCase } from "@/app/features/my favourites/application/UpdateFavouriteUseCase";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 
 interface ListingCardProps<T extends Listing> {
   mode?: CardMode;
   listing: T;
+  toggleLike: (v: string) => void;
   onClick: (d: T) => void;
 }
 
@@ -24,15 +31,49 @@ export function ListingCard<T extends Listing>({
   mode = "display",
   listing,
   onClick,
+  toggleLike,
 }: ListingCardProps<T>) {
   const goodsCategories = listing.goodsCategory.map(
     (x: GoodsCategory) => x.name,
   );
 
+  const favouritesRepo = useMemo(() => new SupabaseFavouriteRepository(), []);
+
+  const updateFavUseCase = useMemo(
+    () => new UpadateFavouriteUseCase(favouritesRepo),
+    [favouritesRepo],
+  );
+  const { user } = useAuth();
+
+  const { showSupabaseError } = useUniversalModal();
   const isDisplayMode = mode === "display";
   const borderClass = isDisplayMode ? "border border-neutral-200" : "";
   const shadowClass = isDisplayMode ? "shadow-md hover:shadow-lg" : "";
   const isTripListing = listing.type === "trip";
+  const [updateFav, setUpdate] = useState(false);
+
+  useEffect(() => {
+    if (!updateFav) return;
+    async function onToggleLike() {
+      if (!user?.id) return;
+      const { result } = await namedCall(
+        "onLIke",
+        updateFavUseCase.execute({
+          userId: user.id,
+          listingId: listing.id,
+          listingType: listing.type,
+        }),
+      );
+
+      if (!result.success) {
+        showSupabaseError(result.error);
+        return;
+      }
+      toggleLike(listing.id);
+      setUpdate(false);
+    }
+    onToggleLike();
+  }, [updateFav]);
 
   return (
     <Card
@@ -57,7 +98,13 @@ export function ListingCard<T extends Listing>({
           </span>
         </span>
 
-        <HeartToggle isActive={isDisplayMode} />
+        <HeartToggle
+          isActive={isDisplayMode}
+          isLiked={listing.isLiked}
+          onToggleLike={() => {
+            setUpdate(true);
+          }}
+        />
       </div>
       <User
         tag={isTripListing ? "Traveler" : "Sender"}

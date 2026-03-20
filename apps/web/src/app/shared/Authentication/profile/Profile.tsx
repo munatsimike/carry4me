@@ -295,7 +295,7 @@ export default function ProfilePage() {
       >
         Profile & Security
       </CustomText>
-      <Card className="mx-auto w-full max-w-2xl" paddingClass="p-8 px-10">
+      <Card className="mx-auto w-full max-w-2xl"  paddingClass="p-8 px-10">
         <CardHeaderSection
           avatar={profile.avatarUrl ?? ""}
           file={file}

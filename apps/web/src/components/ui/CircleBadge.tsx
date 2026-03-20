@@ -1,5 +1,5 @@
 type CircleSize = "sm" | "md" | "lg" | "xl"| "xxl";
-export type CirleBgColor = "success" | "secondary" | "neutral" | "primary" | "onDark"| "transparent";
+export type CirleBgColor = "success" | "secondary" | "neutral" | "primary" | "onDark"| "transparent"|"tonal";
 
 type CirleBadgeProps = {
   size?: CircleSize;
@@ -13,7 +13,7 @@ type CirleBadgeProps = {
 export function CircleBadge({
   children,
   bgColor = "primary",
-  paddingClassName = "p-1.5",
+  paddingClassName = "p-2",
   className = "",
   size = "md",
 }: CirleBadgeProps) {
@@ -31,13 +31,14 @@ export function CircleBadge({
     neutral: "bg-neutral-100",
     primary: "bg-primary-100",
     onDark: "bg-white",
-    transparent: "bg-transparent"
+    transparent: "bg-transparent",
+    tonal:"bg-gray-100"
   };
   return (
     <span
       className={`inline-flex ${
         circleSizes[size]
-      } items-center justify-center rounded-full aspect-square p-2 ${
+      } items-center justify-center rounded-full aspect-square ${
         bgColor && bgColors[bgColor]
       } ${paddingClassName} ${className}`}
     >

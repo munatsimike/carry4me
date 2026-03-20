@@ -11,6 +11,7 @@ export type IconColor =
   | "onDark"
   | "grey"
   | "tonal"
+  |"liked"
   | "dark";
 
 type IconProps = {
@@ -41,6 +42,7 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
     pending: "text-status-pending",
     inactive: "text-status-error",
     dark: "text-ink-primary",
+    liked: "bg-orange-500"
   };
 
   return (

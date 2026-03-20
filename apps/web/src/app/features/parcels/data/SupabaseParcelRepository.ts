@@ -1,14 +1,13 @@
 import { supabase } from "@/app/shared/supabase/client";
 import type { CreateParcel } from "../domain/CreateParcel";
 import type { ParcelListingRepository as ParcelRepository } from "../domain/CreateParcelRepository";
-import {
-  PARCELSTATUSES,
-  type ParcelListing,
-  type ParcelStatuses,
-} from "../domain/Parcel";
+import { PARCELSTATUSES, type ParcelListing } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
-import { deleteById } from "@/app/shared/Authentication/domain/SupabaseHelper";
+import {
+  deleteById,
+  getFavListingIds,
+} from "@/app/shared/Authentication/domain/SupabaseHelper";
 import type { ParcelDto } from "../application/ParcelDto";
 
 export class SupabaseParcelRepository implements ParcelRepository {
@@ -46,11 +45,14 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { data: !!data, error: null, status };
   }
 
-  parcelsById(userId: string): Promise<RepoResponse<ParcelListing[]>> {
+  parcelsById(userId?: string): Promise<RepoResponse<ParcelListing[]>> {
     return this.fetchParcels(userId);
   }
 
-  async fetchParcels(userId?: string): Promise<RepoResponse<ParcelListing[]>> {
+  async fetchParcels(
+    userId?: string,
+    shouldFilter: boolean = false,
+  ): Promise<RepoResponse<ParcelListing[]>> {
     const query = supabase.from("parcels").select(
       `*, sender:profiles(id,full_name,avatar_url), parcel_categories(
       category:goods_categories(
@@ -60,7 +62,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
       ))`,
     );
 
-    if (userId) {
+    if (shouldFilter) {
       query.eq("sender_user_id", userId);
     } else {
       query.eq("status", PARCELSTATUSES.OPEN);
@@ -72,7 +74,11 @@ export class SupabaseParcelRepository implements ParcelRepository {
       return { data: null, error, status };
     }
     if (!data) return { data: [], status: status, error: null };
-    const parcelList = (data ?? []).map(toParcelMapper);
+
+    const favParcelIds = await getFavListingIds(userId ?? "", "parcel_id")
+    const favParcelIdSet = new Set(favParcelIds ?? []);
+    const parcelList = data.map((row) => toParcelMapper(row, favParcelIdSet));
+
     return { data: parcelList, status: status, error: null };
   }
 

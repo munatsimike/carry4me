@@ -25,11 +25,10 @@ type ParcelRow = {
   }[];
 };
 
-export function toParcelMapper(row: ParcelRow): ParcelListing {
+export function toParcelMapper(row: ParcelRow,  likedTripIds: Set<string> = new Set(),): ParcelListing {
   const publicUrl = fetchPublicUrl(row.sender.avatar_url);
   const rows =
     row.parcel_categories.map((x) => x.category).filter(Boolean) ?? [];
-
   return {
     type: "parcel",
     id: row.id,
@@ -60,5 +59,6 @@ export function toParcelMapper(row: ParcelRow): ParcelListing {
       description: x.description,
     })),
     status: row.status,
+    isLiked: likedTripIds?.has(row.id) ?? false
   };
 }

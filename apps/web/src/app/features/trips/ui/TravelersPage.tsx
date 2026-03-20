@@ -27,6 +27,7 @@ import {
 } from "@/app/util/filters";
 import type { CustomRange, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
+import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -38,13 +39,14 @@ export default function TravelersPage() {
   );
   const { showSupabaseError } = useUniversalModal();
   const [tripList, setTripList] = useState<TripListing[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
     let cancel = false;
     async function fetchTravelers() {
       const { result } = await namedCall(
         "travelers",
-        fetchTripsUseCase.execute(),
+        fetchTripsUseCase.execute(user?.id),
       );
 
       if (cancel) return;
@@ -66,7 +68,6 @@ export default function TravelersPage() {
   }, []);
 
   const [selectedTrip, setTrip] = useState<TripListing | null>(null);
-  const { user } = useAuth();
 
   const [parcels, setParcel] = useState<ParcelListing[]>([]);
   const [modalState, setModalState] = useState<boolean>(false);
@@ -192,6 +193,10 @@ export default function TravelersPage() {
     setModalState(true);
   };
 
+  const handleLikeUpdate = (id: string) => {
+    toggleLike(id, setTripList);
+  };
+
   return (
     <>
       <PageSection>
@@ -219,7 +224,11 @@ export default function TravelersPage() {
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {tripList && (
-          <Travelers trips={displayedTrips} onClick={handleRequest} />
+          <Travelers
+            trips={displayedTrips}
+            onClick={handleRequest}
+            onToggleLikd={handleLikeUpdate}
+          />
         )}
 
         {hasFilter && displayedTrips.length === 0 && (

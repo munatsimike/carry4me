@@ -26,6 +26,7 @@ import {
 } from "@/app/util/filters";
 import type { CustomRange, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
+import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -40,7 +41,9 @@ export default function ParcelsPage() {
     [parcelRepo],
   );
   const [parcelsList, setParcelsList] = useState<ParcelListing[]>([]);
+  const { user } = useAuth();
 
+  console.log(parcelsList);
   useEffect(() => {
     let cancel = false;
 
@@ -49,7 +52,7 @@ export default function ParcelsPage() {
     async function fetchParcels() {
       const { result } = await namedCall(
         "parcels",
-        getParcelsUseCase.execute(),
+        getParcelsUseCase.execute(user?.id),
       );
 
       if (!result.success) {
@@ -81,7 +84,6 @@ export default function ParcelsPage() {
   const [searchCountry, setSearchCountry] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [clearSearchResults, setClearResults] = useState<boolean>(false);
-  const { user } = useAuth();
 
   const country = searchCountry.toLowerCase().trim();
   const city = searchCity.toLowerCase().trim();
@@ -105,7 +107,6 @@ export default function ParcelsPage() {
 
     if (isSearchActive) {
       result = filterByCountryCity(searchCity, searchCountry, result);
-      
     }
 
     if (priceRange.max > 0 || priceRange.min > 0) {
@@ -189,12 +190,16 @@ export default function ParcelsPage() {
     setModalState(true);
   };
 
+  const handleLikeUpdate = (id: string) => {
+    toggleLike(id, setParcelsList);
+  };
+
   return (
     <>
       <PageSection>
         <Search
           countries={["UK", "USA"]}
-          cities={["London","Florida"]}
+          cities={["London", "Florida"]}
           setSearchCity={setSearchCity}
           setSearchCountry={setSearchCountry}
           setClearResults={() => setClearResults(false)}
@@ -217,7 +222,11 @@ export default function ParcelsPage() {
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {parcelsList && (
-          <Parcels parcels={displayedParcels} onClick={handleRequest} />
+          <Parcels
+            parcels={displayedParcels}
+            onClick={handleRequest}
+            toggleLike={handleLikeUpdate}
+          />
         )}
         {hasFilter && displayedParcels.length === 0 && (
           <EmptyState

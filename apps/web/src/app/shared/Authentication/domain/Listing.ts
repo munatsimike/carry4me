@@ -30,4 +30,5 @@ export interface Listing {
   pricePerKg: number;
   weightKg: number;
   status: TripStatuses | ParcelStatuses;
+  isLiked: boolean
 }

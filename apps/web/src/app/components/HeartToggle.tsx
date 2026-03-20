@@ -1,22 +1,75 @@
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { useState } from "react";
 import HeartWhite from "@/assets/heartWhite.svg?react";
-import HeartFilled from "@/assets/heartFilled.svg?react";
+import { META_ICONS } from "../icons/MetaIcon";
+import { motion } from "framer-motion";
 
-export default function HeartToggle({ isActive }: { isActive: boolean }) {
-  const [isLiked, setIsLiked] = useState(false);
+type HeartToggleProps = {
+  isLiked: boolean;
+  isActive: boolean;
+  onToggleLike: () => void;
+};
+
+const glowVariants = {
+  notLiked: {
+    boxShadow: "0px 0px 0px rgba(249,115,22,0)",
+  },
+  liked: {
+    boxShadow: "0px 0px 12px rgba(249,115,22,0.4)",
+    transition: { duration: 0.3 },
+  },
+};
+
+const likeVariants = {
+  initial: { scale: 1 },
+  liked: {
+    scale: [1, 1.25, 0.95, 1],
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+};
+
+export default function HeartToggle({
+  isActive,
+  isLiked,
+  onToggleLike,
+}: HeartToggleProps) {
+  if (!isActive) return null;
+
   return (
-    isActive && (
-      <button
-        className={`rounded-full`}
-        type="button"
-        onClick={() => setIsLiked((v) => !v)}
+    <motion.button
+      type="button"
+      onClick={onToggleLike}
+      className="rounded-full"
+      variants={likeVariants}
+      initial="initial"
+      animate={isLiked ? "liked" : "initial"}
+      whileTap={{ scale: 0.9 }}
+     
+    >
+      <motion.div
+        variants={glowVariants}
+        animate={isLiked ? "liked" : "notLiked"}
+        className="rounded-full"
       >
-        <CircleBadge className={"hover:shadow-md"} bgColor="neutral">
-          <SvgIcon size={"lg"} Icon={isLiked ? HeartFilled : HeartWhite} />
+        <CircleBadge
+          bgColor="tonal"
+          size="sm"
+          paddingClassName=""
+          className="hover:shadow-md transition-all hover:bg-orange-200"
+        >
+          <SvgIcon
+            size="sm"
+            Icon={isLiked ? META_ICONS.heartfilled : HeartWhite}
+            className={`
+          transition-colors duration-200
+          ${isLiked ? "text-orange-500" : "text-gray-400"}
+        `}
+          />
         </CircleBadge>
-      </button>
-    )
+      </motion.div>
+    </motion.button>
   );
 }
