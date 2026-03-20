@@ -18,6 +18,15 @@ import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import FavouritesList from "./FavouritesList";
+import { SegmentedTabs, type TabItem,  } from "@/app/shared/Authentication/UI/SegmentedTabs";
+
+export type MyFavTabs = "all" | "trip" | "parcel";
+
+const tabs: TabItem<MyFavTabs>[] = [
+  { id: "all", label: "All" },
+  { id: "trip", label: "Trip" },
+  { id: "parcel", label: "Parcel" },
+];
 
 export function MyFavouritesPage() {
   const favouritesRepo = useMemo(() => new SupabaseFavouriteRepository(), []);
@@ -48,6 +57,7 @@ export function MyFavouritesPage() {
   const [hasFilter, setHasFilter] = useState<boolean>(false);
   const [favListing, setFavListings] = useState<Listing[]>([]);
   const { showSupabaseError } = useUniversalModal();
+  const [selectedTab, setSelectedTab] = useState<MyFavTabs>("all");
 
   useEffect(() => {
     async function fetchFavourites() {
@@ -93,6 +103,10 @@ export function MyFavouritesPage() {
       result = sortTrips(result, sortOption);
     }
 
+    if (selectedTab === "trip" || selectedTab === "parcel") {
+      result = result.filter((item) => item.type === selectedTab);
+    }
+
     return result;
   }, [
     favListing,
@@ -104,6 +118,7 @@ export function MyFavouritesPage() {
     weightRange,
     goodsCategory,
     sortOption,
+    selectedTab,
   ]);
 
   const handleLikeUpdate = (id: string) => {
@@ -111,7 +126,7 @@ export function MyFavouritesPage() {
       setFavListings((prev) => prev.filter((item) => item.id !== id));
     }, 300);
   };
-  
+
   return (
     <>
       <PageSection>
@@ -132,6 +147,7 @@ export function MyFavouritesPage() {
           tag="sender"
           setHasFilter={setHasFilter}
         />
+        <SegmentedTabs tabs={tabs} selectedTab={selectedTab} setTab={setSelectedTab} />
         <SearchResults
           isSearchActive={isSearchActive}
           searchResults={displayedFavourites.length}
@@ -139,7 +155,7 @@ export function MyFavouritesPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {favListing && (
+        {displayedFavourites && (
           <FavouritesList
             listings={displayedFavourites}
             onClick={() => null}
@@ -156,3 +172,4 @@ export function MyFavouritesPage() {
     </>
   );
 }
+

@@ -7,7 +7,6 @@ export interface CarryRequestRepository {
   createCarryRequest(request: CreateCarryRequest): Promise<RepoResponse<string>>;
   fetchCarryRequestsForUser(
     loggedInUserId: string,
-    status: CarryRequestStatus[]
   ): Promise<RepoResponse<CarryRequest[]>>;
 
    updateCarryRequestStatus(

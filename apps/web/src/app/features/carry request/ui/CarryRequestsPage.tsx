@@ -30,7 +30,6 @@ import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActi
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { motion } from "framer-motion";
 import EmptyState from "@/app/components/EmptyState";
 import {
   toEmptyStateForMapper,
@@ -43,12 +42,23 @@ import { dialogIconStyle } from "@/app/lib/cn";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import { useToast } from "@/app/components/Toast";
 import { format } from "date-fns";
+import {
+  SegmentedTabs,
+  type TabItem,
+} from "@/app/shared/Authentication/UI/SegmentedTabs";
 
 export type SelectedTab = "ongoing" | "completed" | "declined" | "cancelled";
-type NavItem = {
-  id: SelectedTab;
-  label: string;
-  count: number;
+
+const statusToTab: Record<CarryRequestStatus, SelectedTab> = {
+  PENDING_ACCEPTANCE: "ongoing",
+  PENDING_PAYMENT: "ongoing",
+  PENDING_HANDOVER: "ongoing",
+  IN_TRANSIT: "ongoing",
+  PENDING_PAYOUT: "ongoing",
+  PAID_OUT: "completed",
+  CANCELLED: "cancelled",
+  EXPIRED: "cancelled",
+  REJECTED: "declined",
 };
 
 export default function CarryRequestsPage() {
@@ -104,6 +114,22 @@ export default function CarryRequestsPage() {
 
   const [searchParams] = useSearchParams();
 
+  const tabCounts = useMemo<Record<SelectedTab, number>>(() => {
+    const counts: Record<SelectedTab, number> = {
+      ongoing: 0,
+      completed: 0,
+      cancelled: 0,
+      declined: 0,
+    };
+
+    for (const request of carryRequestsList) {
+      const tab = statusToTab[request.status as CarryRequestStatus];
+      if (tab) counts[tab]++;
+    }
+
+    return counts;
+  }, [carryRequestsList]);
+
   useEffect(() => {
     const tab = searchParams.get("tab") ?? "ongoing";
     setSelectedTab(tab as SelectedTab);
@@ -116,7 +142,7 @@ export default function CarryRequestsPage() {
 
       const { result } = await namedCall(
         "carryRequest",
-        fetchCarryRequestUseCase.execute(user.id, selectedTab),
+        fetchCarryRequestUseCase.execute(user.id),
       );
 
       if (!result.success) {
@@ -138,6 +164,47 @@ export default function CarryRequestsPage() {
 
     fetchRequest();
   }, [user?.id, selectedTab]);
+
+  const tabs: TabItem<SelectedTab>[] = [
+    { id: "ongoing", label: "Ongoing", count: tabCounts.ongoing },
+    { id: "completed", label: "Completed", count: tabCounts.completed },
+    { id: "cancelled", label: "Cancelled", count: tabCounts.cancelled },
+    { id: "declined", label: "Declined", count: tabCounts.declined },
+  ];
+
+  const displayList = useMemo(() => {
+    let result = carryRequestsList;
+
+    if (selectedTab === statusToTab.IN_TRANSIT) {
+      result = result.filter((item) =>
+        new Set([
+          "PENDING_ACCEPTANCE",
+          "PENDING_PAYMENT",
+          "PENDING_HANDOVER",
+          "IN_TRANSIT",
+          "PENDING_PAYOUT",
+        ]).has(item.status),
+      );
+    }
+    if (selectedTab === statusToTab.PAID_OUT) {
+      result = result.filter(
+        (item) => item.status === CARRY_REQUEST_STATUSES.PAID_OUT,
+      );
+    }
+
+    if (selectedTab === statusToTab.CANCELLED) {
+      result = result.filter(
+        (item) => item.status === CARRY_REQUEST_STATUSES.CANCELLED,
+      );
+    }
+
+    if (selectedTab === "declined") {
+      result = result.filter(
+        (item) => item.status === CARRY_REQUEST_STATUSES.REJECTED,
+      );
+    }
+    return result;
+  }, [carryRequestsList]);
 
   const [inputValue, setValue] = useState<string>("");
   const heightClass = "my-0";
@@ -302,12 +369,15 @@ export default function CarryRequestsPage() {
 
   return (
     <>
-      {selectedTab && (
-        <PageTopSection
-          selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
-        />
-      )}
+      <PageSection>
+        {selectedTab && (
+          <SegmentedTabs
+            tabs={tabs}
+            selectedTab={selectedTab}
+            setTab={setSelectedTab}
+          />
+        )}
+      </PageSection>
 
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         <div className="flex flex-col gap-6">
@@ -331,7 +401,7 @@ export default function CarryRequestsPage() {
             />
           )}
 
-          {carryRequestsList?.map((request) => {
+          {displayList?.map((request) => {
             const viewerRole =
               user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
 
@@ -534,60 +604,6 @@ function InfoBlockDisplay({ actions }: { actions: UIActions }) {
         </CustomText>
       </div>
     </div>
-  );
-}
-
-function PageTopSection({
-  selectedTab,
-  setSelectedTab,
-}: {
-  selectedTab: SelectedTab;
-  setSelectedTab: (v: SelectedTab) => void;
-}) {
-  const tabs: NavItem[] = [
-    { id: "ongoing", label: "Ongoing", count: 1 },
-    { id: "completed", label: "Completed", count: 0 },
-    { id: "cancelled", label: "Cancelled", count: 0 },
-    { id: "declined", label: "Declined", count: 0 },
-  ];
-
-  return (
-    <PageSection>
-      <div className="inline-flex rounded-full bg-neutral-0 px-10">
-        <div className="relative flex gap-6">
-          {tabs.map((item) => {
-            const isActive = item.id === selectedTab;
-
-            return (
-              <motion.span
-                key={item.id}
-                className="relative cursor-pointer pb-2"
-                onClick={() => setSelectedTab(item.id)}
-                whileTap={{ y: 0, scale: 0.95 }}
-                whileHover={{ y: -2 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                animate={{ y: isActive ? -3 : 0 }}
-              >
-                <CustomText
-                  textSize="sm"
-                  textVariant={isActive ? "selected" : "primary"}
-                >
-                  {item.label}
-                </CustomText>
-
-                {isActive && (
-                  <motion.div
-                    layoutId="tab-underline"
-                    className="absolute bottom-0 left-0 h-1 w-full rounded-full bg-primary-500"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-              </motion.span>
-            );
-          })}
-        </div>
-      </div>
-    </PageSection>
   );
 }
 

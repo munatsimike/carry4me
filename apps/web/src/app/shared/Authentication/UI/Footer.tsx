@@ -59,7 +59,7 @@ function Brand({ isAuthed }: { isAuthed: boolean }) {
         to={isAuthed ? "/dashboard" : "/"}
         className="inline-flex items-center"
       >
-        <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
+        <img src="/logo.svg" alt="Carry4Me" className="h-12 w-auto" />
       </Link>
 
       <p className="mt-5 max-w-sm text-[15px] leading-8 text-slate-700">

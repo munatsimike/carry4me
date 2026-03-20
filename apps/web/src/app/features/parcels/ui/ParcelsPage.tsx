@@ -43,7 +43,6 @@ export default function ParcelsPage() {
   const [parcelsList, setParcelsList] = useState<ParcelListing[]>([]);
   const { user } = useAuth();
 
-  console.log(parcelsList);
   useEffect(() => {
     let cancel = false;
 

@@ -43,15 +43,14 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
 
   async fetchCarryRequestsForUser(
     userId: string,
-    requeststatus: CarryRequestStatus[],
   ): Promise<RepoResponse<CarryRequest[]>> {
-    const {error: isExpiredErrors } = await supabase.rpc(
-      "expire_overdue_carry_requests"
+    const { error: isExpiredErrors } = await supabase.rpc(
+      "expire_overdue_carry_requests",
     );
 
     if (isExpiredErrors)
       return { data: null, error: isExpiredErrors, status: null };
-  
+
     const { data, status, error } = await supabase
       .from("carry_requests")
       .select(
@@ -61,7 +60,16 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
         handover_confirmations:carry_request_handover_confirmations(role, confirmed_at)
       `,
       )
-      .in("status", requeststatus)
+      .in("status", [
+        "PENDING_ACCEPTANCE",
+        "PENDING_PAYMENT",
+        "PENDING_HANDOVER",
+        "IN_TRANSIT",
+        "PENDING_PAYOUT",
+        "PAID_OUT",
+        "REJECTED",
+        "CANCELLED",
+      ])
       .or(`sender_user_id.eq.${userId},traveler_user_id.eq.${userId}`)
       .order("created_at", { ascending: false });
 
