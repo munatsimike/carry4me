@@ -92,7 +92,11 @@ export function MyTripsPage() {
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <div>
         <div className="flex items-center justify-between">
-          <CustomText textSize="xl" textVariant="primary" className="pl-4 font-medium">
+          <CustomText
+            textSize="xl"
+            textVariant="primary"
+            className="pl-4 font-medium"
+          >
             My Trips
           </CustomText>
 
@@ -148,6 +152,7 @@ export function MyTripsPage() {
               trip={tripreview}
               onClick={() => null}
               mode="preview"
+              setTrips={() => null}
             />
           </CustomModal>
         )}{" "}

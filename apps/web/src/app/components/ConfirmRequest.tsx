@@ -12,7 +12,7 @@ import type { GoodsCategory } from "../features/goods/domain/GoodsCategory";
 import { useToast } from "./Toast";
 import { namedCall } from "../shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "../shared/Authentication/application/DialogBoxModalProvider";
-import { CircleCheck, Clock } from "lucide-react";
+import { CircleCheck, Clock, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CardLabel from "./card/CardLabel";
 import { format } from "date-fns/format";
@@ -178,15 +178,26 @@ export function ParcelSummary({
     <section className="space-y-4">
       <div className="space-y-2">
         <CardLabel variant="parcel" label={label} />
+        <span className="flex gap-2 items-center">
+          <CustomText
+            as="div"
+            textSize="md"
+            textVariant="primary"
+            className="font-medium"
+          >
+            {parcel.route.originCountry} {parcel.route.destinationCountry}
+          </CustomText>
+          <MoveRight className="text-neutral-600 h-4 w-4" strokeWidth={1.5} />
 
-        <CustomText
-          as="div"
-          textSize="md"
-          textVariant="primary"
-          className="font-medium"
-        >
-          {parcel.route.originCountry} → {parcel.route.destinationCountry}
-        </CustomText>
+          <CustomText
+            as="div"
+            textSize="md"
+            textVariant="primary"
+            className="font-medium"
+          >
+            {parcel.route.originCountry} {parcel.route.destinationCountry}
+          </CustomText>
+        </span>
 
         <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[120px_1fr] sm:items-start">
           <CustomText textVariant={variantSecondary} textSize={textSizeLabel}>
@@ -214,7 +225,7 @@ export function ParcelSummary({
           </CustomText>
         </div>
       </div>
-      <LineDivider/>
+      <LineDivider />
       <div className="space-y-2">
         <div className="grid grid-cols-[1fr_auto] items-center gap-4">
           <CustomText as="span" textVariant="secondary" textSize="sm">
@@ -271,15 +282,23 @@ export function TripSummary({ trip, isSenderRequesting }: TripSummaryProps) {
     <section className="space-y-4 ">
       <div className="space-y-2">
         <CardLabel variant={"trip"} label={label} />
-
-        <CustomText
-          textSize="md"
-          textVariant={variantPrimary}
-          className="font-medium"
-        >
-          {trip.route.originCountry} → {trip.route.destinationCountry}
-        </CustomText>
-
+        <span className="flex gap-2 items-center">
+          <CustomText
+            textSize="md"
+            textVariant={variantPrimary}
+            className="font-medium"
+          >
+            {trip.route.originCountry}
+          </CustomText>
+          <MoveRight className="text-neutral-600 h-4 w-4" strokeWidth={1.5} />
+          <CustomText
+            textSize="md"
+            textVariant={variantPrimary}
+            className="font-medium"
+          >
+            {trip.route.destinationCountry}
+          </CustomText>
+        </span>
         <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[120px_1fr] sm:items-start">
           {trip.user?.fullName && (
             <>

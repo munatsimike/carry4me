@@ -37,7 +37,7 @@ import {
 } from "../application/toEmptyStateForMapper";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { SupabaseTripsRepository } from "../../trips/data/SupabaseTripsRepository";
-import { Package, PackageX } from "lucide-react";
+import { MoveRight, Package, PackageX } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import { useToast } from "@/app/components/Toast";
@@ -649,8 +649,9 @@ function TripDetails({
             textSize="md"
             className="font-medium"
           >
-            {trip.origin.country} →
+            {trip.origin.country}{" "}
           </CustomText>
+          <MoveRight className="text-neutral-500 h-5 w-4" strokeWidth={1.5} />
           <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
           <CustomText
             textVariant="primary"
@@ -703,8 +704,9 @@ function ParcelDetails({
             textSize="md"
             className="font-medium"
           >
-            {parcel.origin.country} →
+            {parcel.origin.country}
           </CustomText>
+           <MoveRight className="text-neutral-600 h-5 w-4" strokeWidth={1.5} />
           <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
           <CustomText
             textVariant="primary"

@@ -3,6 +3,7 @@ import CustomModal from "./CustomModal";
 import { AnimatePresence } from "framer-motion";
 import type { Listing } from "../shared/Authentication/domain/Listing";
 import type { User } from "@supabase/supabase-js";
+import { MoveRight } from "lucide-react";
 
 interface TripSelectionModalProps<T, U extends Listing> {
   listingSelectionOpen: boolean; // decide when to open the selection modal
@@ -57,15 +58,28 @@ export default function ListingSelectionModal<T, U extends Listing>({
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
-                      <CustomText
-                      className="font-medium"
-                        textSize="md"
-                        as="p"
-                        textVariant="primary"
-                      >
-                        {listing.route.originCountry} →{" "}
-                        {listing.route.destinationCountry}
-                      </CustomText>
+                      <span className="flex gap-2 items-center">
+                        <CustomText
+                          className="font-medium"
+                          textSize="md"
+                          as="p"
+                          textVariant="primary"
+                        >
+                          {listing.route.originCountry}
+                        </CustomText>
+                        <MoveRight
+                          className="text-neutral-600 h-4 w-4"
+                          strokeWidth={1.5}
+                        />
+                        <CustomText
+                          className="font-medium"
+                          textSize="md"
+                          as="p"
+                          textVariant="primary"
+                        >
+                          {listing.route.destinationCountry}
+                        </CustomText>
+                      </span>
                       <span className="flex gap-2 items-center">
                         <CustomText as="p" textVariant="label" textSize="xsm">
                           Departure

@@ -1,7 +1,6 @@
 import { cn } from "@/app/lib/cn";
 import { motion } from "framer-motion";
 
-
 export type TabItem<T extends string> = {
   id: T;
   label: string;
@@ -20,8 +19,8 @@ export function SegmentedTabs<T extends string>({
   tabs,
 }: SegmentedTabsProps<T>) {
   return (
-    <div className="inline-flex overflow-hidden rounded-lg border border-neutral-200 bg-white">
-      {tabs.map((item) => {
+    <div className="inline-flex overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+      {tabs.map((item, index) => {
         const isActive = selectedTab === item.id;
 
         return (
@@ -36,13 +35,20 @@ export function SegmentedTabs<T extends string>({
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300",
               isActive
                 ? "text-white"
-                : "bg-white text-neutral-400 hover:text-neutral-700"
+                : "bg-white text-neutral-400 hover:text-neutral-700",
             )}
           >
             {isActive && (
               <motion.span
                 layoutId="active-segment"
-                className="absolute inset-0 bg-primary-500 border"
+                className={cn(
+                  "absolute inset-0 bg-primary-500 border",
+                  index === 0
+                    ? "rounded-l-2xl"
+                    : index === tabs.length - 1
+                      ? "rounded-r-2xl"
+                      : "",
+                )}
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
               />
             )}
@@ -53,7 +59,9 @@ export function SegmentedTabs<T extends string>({
                 <span
                   className={cn(
                     "rounded-full px-1.5 text-[13px]",
-                    isActive ? "bg-white/30 text-white" : "bg-neutral-100 text-neutral-600"
+                    isActive
+                      ? "bg-white/30 text-white"
+                      : "bg-neutral-100 text-neutral-600",
                   )}
                 >
                   {item.count}

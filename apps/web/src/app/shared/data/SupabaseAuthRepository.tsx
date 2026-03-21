@@ -17,6 +17,45 @@ const emptyRepoResult: RepoResponse<string> = {
 };
 
 export class SupabaseAuthRepository implements AuthRepository {
+  async newPassword(newPassword: string): Promise<RepoResponse<string>> {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    return { data: null, error: sessionError, status: null };
+  }
+
+  if (!session) {
+    return {
+      data: null,
+      error: new Error(
+        "No recovery session found. Open the reset link from your email first."
+      ),
+      status: null,
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) return { data: null, error, status: null };
+
+  return { data: "success", error: null, status: null };
+}
+
+async resetPassword(email: string): Promise<RepoResponse<string>> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: "http://localhost:5173/new-password",
+  });
+
+  if (error) return { data: null, error, status: null };
+
+  return { data: "success", error: null, status: null };
+}
+
   async updateAuthDetails(
     updateAuthDto: UpdateAuthDto,
   ): Promise<RepoResponse<string>> {

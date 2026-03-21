@@ -24,6 +24,9 @@ export interface AuthRepository {
     updateProfile: Partial<UpdateProfileDto>,
   ): Promise<RepoResponse<string>>;
 
+  resetPassword(email:string):Promise<RepoResponse<string>>
+  newPassword(password:string):Promise<RepoResponse<string>>
+
   updateAuthDetails(
     updateAuthDto: Partial<UpdateAuthDto>,
   ): Promise<RepoResponse<string>>;

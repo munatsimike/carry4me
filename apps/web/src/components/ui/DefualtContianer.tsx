@@ -14,9 +14,9 @@ export default function DefaultContainer({
   return (
     <motion.section
       layout
-      className={`${outerClassName} py-5 md:py-5 `}
+      className={`${outerClassName} py-5 md:py-5`}
     >
-      <div className={`mx-auto max-w-container px-4  ${className ?? ""}`}>
+      <div className={`mx-auto max-w-container px-4 ${className ?? ""}`}>
         {children}
       </div>
     </motion.section>

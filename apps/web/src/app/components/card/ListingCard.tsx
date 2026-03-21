@@ -48,7 +48,7 @@ export function ListingCard<T extends Listing>({
   const { showSupabaseError } = useUniversalModal();
   const isDisplayMode = mode === "display";
   const borderClass = isDisplayMode ? "border border-neutral-200" : "";
-  const shadowClass = isDisplayMode ? "shadow-md hover:shadow-lg" : "";
+  const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
   const isTripListing = listing.type === "trip";
   const [updateFav, setUpdate] = useState(false);
 

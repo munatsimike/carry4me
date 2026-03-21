@@ -228,7 +228,7 @@ function RecentActivity({
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative max-w-sm overflow-hidden rounded-2xl pt-1 bg-emerald-200"
+      className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-emerald-200"
     >
       <Card paddingClass="p-3" className="h-full">
         <div className="flex flex-col max-w-sm">
@@ -287,7 +287,7 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative max-w-sm overflow-hidden rounded-2xl pt-1 bg-slate-200"
+      className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-slate-200"
     >
       <Card className="h-full">
         <div className="flex flex-col gap-4 sm:pr-6 bg-white">

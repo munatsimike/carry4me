@@ -8,7 +8,6 @@ import { useToast } from "@/app/components/Toast";
 import CustomText from "@/components/ui/CustomText";
 import LineDivider from "@/app/components/LineDivider";
 import FloatingInputField from "@/app/components/CustomInputField";
-import DropDownMenu from "@/app/components/ComboBox";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
 import { motion } from "framer-motion";
@@ -138,7 +137,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <DefaultContainer>
+    <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <div className="mx-auto w-full max-w-2xl">
         <Card paddingClass="sm:px-8 py-5" className="flex flex-col gap-5">
           <motion.form

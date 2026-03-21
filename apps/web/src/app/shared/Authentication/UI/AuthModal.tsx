@@ -18,7 +18,6 @@ import FormModal from "@/app/features/dashboard/components/FormModal";
 import { AnimatePresence } from "framer-motion";
 import z from "zod";
 
-
 const schema = z.object({
   email: z
     .string()
@@ -91,13 +90,12 @@ export function AuthModal() {
             <div className="flex items-center justify-center">
               <ErrorText error={loginError?.toString()}>
                 <span className="inline-flex flex-col gap-2 items-center">
-                
-                    <SvgIcon
-                      size={"xxl"}
-                      Icon={META_ICONS.loginIcon}
-                      color="primary"
-                    />
-                 
+                  <SvgIcon
+                    size={"xxl"}
+                    Icon={META_ICONS.loginIcon}
+                    color="primary"
+                  />
+
                   <CustomText textVariant="primary" textSize="xl">
                     {"Sign in to your account."}
                   </CustomText>
@@ -136,9 +134,12 @@ export function AuthModal() {
               <span className="relative inline-flex flex-col gap-5 items-center">
                 <LoginButton isFormSubmitting={isSubmitting} />
 
-                <CustomText as="p" textVariant="linkText">
-                  {"Forgot password"}
-                </CustomText>
+                <Link to="/update-password" onClick={closeAuthModal}>
+                  <CustomText as="p" textVariant="linkText">
+                    {"Forgot password"}
+                  </CustomText>
+                </Link>
+
                 <span className="inline-flex gap-2">
                   <CustomText textVariant="primary">
                     {"Don’t have an account?"}

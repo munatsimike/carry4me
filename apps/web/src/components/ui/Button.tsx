@@ -26,7 +26,7 @@ export function Button({
   leadingIcon,
   trailingIcon,
   children,
-  cornerRadiusClass = "rounded-lg",
+  cornerRadiusClass = "rounded-xl",
   type = "button",
   isBusy = false,
   ...props

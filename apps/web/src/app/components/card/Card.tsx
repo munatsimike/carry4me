@@ -16,8 +16,8 @@ export function Card({
   hover = true,
   paddingClass = "p-5",
   borderClass = "border border-neutral-200",
-  cornerRadiusClass = "rounded-2xl",
-  shadowClass = "shadow-md",
+  cornerRadiusClass = "rounded-3xl",
+  shadowClass = "shadow-sm",
 }: CardProps) {
   const shouldReduceMotion = useReducedMotion();
   const hoverClass = hover
