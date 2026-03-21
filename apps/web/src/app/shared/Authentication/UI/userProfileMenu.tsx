@@ -116,7 +116,7 @@ function ProfileItem({ profileItem, onClosePopOver }: ProfileItemProps) {
       onClick={() => onClosePopOver(false)}
       to={profileItem.path ? profileItem.path : "/profile"}
     >
-      <span className="group inline-flex gap-2 items-center p-2 hover:bg-neutral-100 w-full rounded-md">
+      <span className="group inline-flex gap-2 items-center p-2 hover:bg-neutral-100 w-full rounded-lg">
         {profileItem.icon}
         <SpaceBetweenRow className="items-center w-full">
           <CustomText

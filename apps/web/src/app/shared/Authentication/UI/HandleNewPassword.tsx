@@ -63,7 +63,7 @@ export default function NewPassword() {
       showSupabaseError(result.error);
     } else {
       reset();
-      navigate("/", {
+      navigate("/?reset=success", {
         replace: true,
       });
     }
