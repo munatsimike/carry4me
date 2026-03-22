@@ -17,6 +17,7 @@ import type { FormValues } from "@/types/Ui";
 import type { ParcelListing } from "./domain/Parcel";
 import EmptyState from "@/app/components/EmptyState";
 import CustomText from "@/components/ui/CustomText";
+import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 
 export function MyParcelsPage() {
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,7 @@ export function MyParcelsPage() {
     [parcelRepo],
   );
 
+  const {showSupabaseError} = useUniversalModal()
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
   const sortedParcels = useMemo(() => {
     return [...myParcels].sort((a, b) =>
@@ -79,12 +81,12 @@ export function MyParcelsPage() {
       );
       if (!result.success) {
         setLoading(false);
+        showSupabaseError(result.error, result.status)
         return;
       }
 
       if (result.data) {
         setLoading(false);
-        result.data;
         setMyParcels(result.data);
       }
     }
@@ -158,6 +160,7 @@ export function MyParcelsPage() {
         {parcelPreview && (
           <CustomModal onClose={() => setParcelPreview(null)} width="md">
             <ParcelCard
+            toggleLike={()=>null}
               parcel={parcelPreview}
               onClick={() => null}
               mode="preview"

@@ -31,6 +31,7 @@ import { UpdateProfileUseCase } from "../application/UpdateProfileUseCase";
 import { UpdateAuthDetailsUseCase } from "../application/UpdateAuthDetailsUseCase";
 import { DeleteAvatarUseCase } from "../application/DeleteAvatarUseCase";
 import ComboBox from "@/app/components/ComboBox";
+import { useUniversalModal } from "../application/DialogBoxModalProvider";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -57,8 +58,8 @@ export default function ProfilePage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const { user, refreshProfile, profile } = useAuth();
-
   const { toast } = useToast();
+  const {showSupabaseError} = useUniversalModal()
 
   const {
     control,
@@ -180,11 +181,12 @@ export default function ProfilePage() {
   const onDeleteAvatar = async () => {
     if (!profile.avatarUrl) return;
 
-    const result = await namedCall(
+    const {result} = await namedCall(
       "delete avatar",
       deleteAvatarUseCase.execute(user.id, profile.avatarUrl),
     );
-    if (!result.result) {
+    if (!result.success) {
+        showSupabaseError(result.error, result.status)
     }
     // delete in storage + db...
     setFile(null);
@@ -224,13 +226,13 @@ export default function ProfilePage() {
       const email = dirtyFields.emailAddress ? values.emailAddress : undefined;
       const password = dirtyFields.password ? values.password : undefined;
 
-      const result = await namedCall(
+      const {result} = await namedCall(
         "security update",
         updateAuthDetails.excute(email, password),
       );
 
-      if (!result.result) {
-        console.log(result.result);
+      if (!result.success) {
+        showSupabaseError(result.error, result.status)
       }
     }
 
@@ -295,7 +297,7 @@ export default function ProfilePage() {
       >
         Profile & Security
       </CustomText>
-      <Card className="mx-auto w-full max-w-2xl"  paddingClass="p-8 px-10">
+      <Card className="mx-auto w-full max-w-2xl" paddingClass="p-8 px-10">
         <CardHeaderSection
           avatar={profile.avatarUrl ?? ""}
           file={file}

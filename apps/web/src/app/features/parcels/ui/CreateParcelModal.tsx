@@ -39,6 +39,7 @@ import { EditParcelUsecase } from "../application/EditParcelUsecase";
 import { toParcelDtoMapper } from "../application/toParcelDtoMapper";
 import { EditGoodsUsecase } from "../../goods/application/EditGoodsUseCase";
 import type { FormValues, GoodsItem } from "@/types/Ui";
+import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
@@ -119,6 +120,7 @@ export default function CreateParcelModal({
     [goodsRepo],
   );
   const { toast } = useToast();
+  const { showSupabaseError } = useUniversalModal();
   const {
     register,
     handleSubmit,
@@ -136,8 +138,6 @@ export default function CreateParcelModal({
   });
 
   const selectedIds = watch("goodsCategoryIds");
-  const countryValue = watch("originCountry");
-  const cityValue = watch("originCity");
   const priceValue = watch("pricePerKg");
   const weightValue = watch("weight");
   const dividerHeight = "my-0";
@@ -186,6 +186,11 @@ export default function CreateParcelModal({
       ),
     );
 
+    if (!result.success) {
+      showSupabaseError(result.error, result.status);
+      return;
+    }
+
     if (dirtyFields.goodsCategoryIds) {
       const { result } = await namedCall(
         "edit goods",
@@ -196,14 +201,11 @@ export default function CreateParcelModal({
         ),
       );
       if (!result.success) {
-        console.log(result.error);
+        showSupabaseError(result.error, result.status);
+        return;
       }
     }
 
-    if (!result.success) {
-      console.log(result.error);
-      return;
-    }
     if (result.success) {
       toast("changes saved successfully", { variant: "success" });
       await refreshProfile();
@@ -229,7 +231,7 @@ export default function CreateParcelModal({
       );
       toast("Parcel saved successfully", { variant: "success" });
     } catch (e) {
-      console.log(e);
+        showSupabaseError(e)
     }
   };
 

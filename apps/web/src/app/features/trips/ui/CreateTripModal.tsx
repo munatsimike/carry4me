@@ -31,6 +31,7 @@ import type { FormMode, FormValues } from "@/types/Ui";
 import { EditGoodsUsecase } from "../../goods/application/EditGoodsUseCase";
 import { toTripDtoMapper } from "../application/toTripDtoMapper";
 import { EditTripUsecase } from "../application/EditTripUsecase";
+import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
@@ -77,7 +78,7 @@ const step2Fields: Array<keyof TripFormFields> = [
 ];
 
 export default function CreateTripModal({
-  mode ="create",
+  mode = "create",
   goodsCategory,
   setModalState,
   initialFormValues,
@@ -103,6 +104,8 @@ export default function CreateTripModal({
 
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
+
+  const { showSupabaseError } = useUniversalModal();
 
   const {
     control,
@@ -155,28 +158,33 @@ export default function CreateTripModal({
     }
 
     if (!initialFormValues?.id) return;
-    const { result } = await namedCall(
+    const { result: tripResult } = await namedCall(
       "edit trip",
       editTripUsecase.execute(
         toTripDtoMapper(initialFormValues?.id, values, dirtyFields),
       ),
     );
 
+    if (!tripResult.success) {
+      showSupabaseError(tripResult.error, tripResult.status);
+      return;
+    }
+
     if (dirtyFields.goodsCategoryIds) {
       const { result } = await namedCall(
         "edit goods",
-        editGoodsUsecase.execute(values.goodsCategoryIds, initialFormValues.id, "trip"),
+        editGoodsUsecase.execute(
+          values.goodsCategoryIds,
+          initialFormValues.id,
+          "trip",
+        ),
       );
       if (!result.success) {
-        console.log(result.error);
+        showSupabaseError(result.error, result.status);
+        return;
       }
     }
-
-    if (!result.success) {
-      console.log(result.error);
-      return;
-    }
-    if (result.success) {
+    if (tripResult.success) {
       toast("changes saved successfully", { variant: "success" });
       await refreshProfile();
     }
@@ -203,7 +211,7 @@ export default function CreateTripModal({
 
       toast("Trip saved successfully", { variant: "success" });
     } catch (e) {
-      console.log(e); // replace later with modal/toast
+      showSupabaseError(e);
     }
   };
 
@@ -238,9 +246,7 @@ export default function CreateTripModal({
         {step === 1 ? (
           <div className="flex flex-col gap-5">
             <LineDivider heightClass={dividerHeight} />
-            <RouteFieldRow
-             control={control}
-            />
+            <RouteFieldRow control={control} />
 
             <LineDivider heightClass={dividerHeight} />
 
