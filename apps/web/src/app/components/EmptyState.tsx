@@ -21,7 +21,7 @@ export default function EmptyState({
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="flex max-w-md flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm"
+        className="flex max-w-md flex-col gap-2 rounded-3xl bg-white p-6 shadow-sm"
       >
         {icon && (
           <motion.div
@@ -38,7 +38,7 @@ export default function EmptyState({
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.25 }}
-          className="text-lg font-semibold text-neutral-800"
+          className="text-lg font-medium text-neutral-800"
         >
           {title}
         </motion.h3>

@@ -176,7 +176,7 @@ export function FilterOptionsRow({
       const { result } = await namedCall("goods", getGoodsUseCase.execute());
       if (!result.success) {
         showSupabaseError(result.error, result.status, {
-          onRetry: fetchGoods,
+          onClose: fetchGoods,
         });
         return;
       }

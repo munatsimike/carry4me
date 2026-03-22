@@ -15,7 +15,7 @@ import CreateTripModal from "../trips/ui/CreateTripModal";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
 import type { GoodsCategory } from "../goods/domain/GoodsCategory";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";
@@ -31,6 +31,26 @@ import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
+
+/**
+ * Dashboard Page
+ *
+ * Purpose:
+ * - Displays user overview (trips, parcels, activity)
+ *
+ * Data Flow:
+ * - Fetches data from Supabase (trips, requests, parcels)
+ * - Uses local state to control modal visibility
+ *
+ * Key Features:
+ * - Post trips or parcels
+ * - Browse trips and parcels
+ * - View statuses of posted trips and parcels
+ * - View recent activity (request statuses)
+ *
+ * Notes:
+ * - Acts as the main user hub after authentication
+ */
 
 export default function DashboardPage() {
   //Create get goods use case
@@ -73,22 +93,19 @@ export default function DashboardPage() {
   // fetch goods category
   const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
 
-  const onLoad = async () => {
-    console.log("what are you looking at?");
-  };
-
+  // redirect is user is not logged in
   useEffect(() => {
     if (!user && !loading) {
       navigate("/", { replace: true });
     }
   }, [user, navigate]);
 
-  // fetch dashboard data
   useEffect(() => {
     if (!user) return;
 
     if (profile) setFullName(profile.fullName);
 
+    // fetch dashboard data, recent activies deliveries, posted parcels and trips etc
     const fetchDashboardData = async () => {
       const [dashboardData, notifications] = await Promise.all([
         namedCall("dashboard", getDashboardDataUseCase.execute(user.id)),
@@ -106,7 +123,6 @@ export default function DashboardPage() {
         showSupabaseError(
           dashboardData.result.error,
           dashboardData.result.status,
-          { onRetry: onLoad },
         );
         return;
       }
@@ -116,9 +132,6 @@ export default function DashboardPage() {
         showSupabaseError(
           notifications.result.error,
           notifications.result.status,
-          {
-            onRetry: onLoad,
-          },
         );
         return;
       }
@@ -127,20 +140,17 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [user?.id, profile]);
 
+  // fetch goods categories
   useEffect(() => {
     if (!showTripModal && !showParcelModal) return;
-
     async function fetchGoods() {
       const { result } = await namedCall("goods", getGoodsUseCase.execute());
       if (!result.success) {
-        showSupabaseError(result.error, result.status, {
-          onRetry: fetchGoods,
-        });
+        showSupabaseError(result.error, result.status);
         return;
       }
       setCategory(result.data);
     }
-
     fetchGoods();
   }, [showParcelModal, showTripModal]);
 
@@ -234,8 +244,8 @@ function RecentActivity({
         <div className="flex flex-col max-w-sm">
           <span className="flex flex-col gap-3">
             <span className="inline-flex gap-3 items-center">
-              <CircleBadge size="md" bgColor="neutral">
-                <Clock className="text-neutral-600" strokeWidth={1.5} />
+              <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
+                <Clock className="text-neutral-600 h-5 w-5" strokeWidth={1} />
               </CircleBadge>
               <CustomText textVariant="primary" textSize="md">
                 {"Recent activity"}
@@ -292,8 +302,8 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       <Card className="h-full">
         <div className="flex flex-col gap-4 sm:pr-6 bg-white">
           <span className="inline-flex items-center gap-3">
-            <CircleBadge size="md" bgColor="neutral">
-              <Truck className="text-neutral-600" strokeWidth={1.5} />
+            <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
+              <Truck className="text-neutral-600 h-5 w-5" strokeWidth={1} />
             </CircleBadge>
             <CustomText textVariant="primary" textSize="md">
               Delivery Summary

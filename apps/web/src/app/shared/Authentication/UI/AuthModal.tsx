@@ -63,9 +63,7 @@ export function AuthModal() {
 
   const handleSignIn = async (value: FormValues) => {
     const { email, password } = value;
-
     const result = await useCase.execute(email, password);
-
     if (!result.success) {
       setError(result.error);
       return;

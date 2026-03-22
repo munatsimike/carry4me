@@ -1,7 +1,14 @@
 import type { User } from "@supabase/supabase-js";
 import type { UserProfile } from "../Authentication/domain/authTypes";
 import { SupabaseAuthRepository } from "../data/SupabaseAuthRepository";
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { supabase } from "./client";
 
 type AuthContextValue = {
@@ -18,7 +25,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function toErrorMessage(err: unknown) {
   if (!err) return "Unknown error";
   if (typeof err === "string") return err;
-  if (typeof err === "object" && "message" in (err as any)) return String((err as any).message);
+  if (typeof err === "object" && "message" in (err as any))
+    return String((err as any).message);
   return String(err);
 }
 
@@ -35,7 +43,10 @@ async function withTimeout<T>(promise: Promise<T>, ms = 10_000): Promise<T> {
   let timeoutId: number | undefined;
 
   const timeout = new Promise<never>((_, reject) => {
-    timeoutId = window.setTimeout(() => reject(new Error("Request timed out")), ms);
+    timeoutId = window.setTimeout(
+      () => reject(new Error("Request timed out")),
+      ms,
+    );
   });
 
   try {
@@ -62,8 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // Timeout protects against "loading forever"
-      const { data, error } = await withTimeout(authRepository.fetchUserProfile(userId), 10_000);
-
+      const { data, error } = await withTimeout(
+        authRepository.fetchUserProfile(userId),
+        10_000,
+      );
       // Ignore stale results / unmounted
       if (!mountedRef.current || myRequestId !== requestIdRef.current) return;
 
@@ -164,7 +177,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user?.id, fetchProfile]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, profile, refreshProfile }}>
+    <AuthContext.Provider
+      value={{ user, loading, error, profile, refreshProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -15,7 +15,8 @@ import { UniversalModalHost } from "../UI/UniversalModalHost";
 type ErrorModalPayload = NormalizedError & {
   type: "error";
   icon?: React.ReactNode;
-  onRetry?: () => void;
+  label?: string;
+  onClose?: () => void;
   onLogin?: () => void;
 };
 
@@ -36,7 +37,7 @@ type InfoModalPayload = {
   title: string;
   message: string;
   label: string;
-  secondaryLabel?:string,
+  secondaryLabel?: string;
   icon?: React.ReactNode;
   buttonText?: string;
   onClick?: () => void;
@@ -64,7 +65,8 @@ type UniversalModalContextValue = {
   showSupabaseError: (
     err: unknown,
     status?: number | null,
-    opts?: { onRetry?: () => void; onLogin?: () => void },
+    label?: string,
+    opts?: { onClose?: () => void; onLogin?: () => void },
   ) => void;
 
   // Promise-based confirm (super nice for delete/payment flows)
@@ -115,14 +117,16 @@ export function UniversalModalProvider({
     const showSupabaseError: UniversalModalContextValue["showSupabaseError"] = (
       err,
       status,
+      label,
       opts,
     ) => {
       const normalized = normalizeSupabaseError(err, status);
       setModal({
         type: "error",
         ...normalized,
-        onRetry: opts?.onRetry,
+        onClose: opts?.onClose,
         onLogin: opts?.onLogin,
+        label: label,
       });
     };
 

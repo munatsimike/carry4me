@@ -16,7 +16,6 @@ export function UniversalModalHost({
   modal: UniversalModalState;
   onRequestClose: () => void;
 }) {
-  const isInfo = modal?.type === "info";
   // ESC close (host stays mounted so exit works)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -29,7 +28,10 @@ export function UniversalModalHost({
   const action = (() => {
     switch (modal?.type) {
       case "error":
-        return { label: "Retry", onClick: modal.onRetry ?? onRequestClose };
+        return {
+          label: modal.label ?? "Close",
+          onClick: modal.onClose ?? onRequestClose,
+        };
       case "confirm":
         return { label: "Confirm", onClick: modal.onConfirm ?? modal.onCancel };
       case "info":
@@ -88,12 +90,7 @@ export function UniversalModalHost({
                 )}
                 <Button
                   className="min-w-[100px]"
-                  onClick={() => {
-                    if (action.onclick) {
-                      action.onclick();
-                      onRequestClose();
-                    }
-                  }}
+                  onClick={action.onClick}
                   variant={"primary"}
                   size={"sm"}
                 >

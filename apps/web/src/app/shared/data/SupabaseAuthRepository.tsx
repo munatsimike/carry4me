@@ -65,6 +65,7 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
   }
 
   async signUp(appUser: AppUser): Promise<RepoResponse<string>> {
+ 
     const { data, error } = await supabase.auth.signUp({
       email: appUser.auth.email,
       password: appUser.auth.password,
@@ -192,7 +193,7 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
 
     // Map Supabase user -> your domain user (keep it minimal)
     return {
-      success: true,
+      success:true
     };
   }
 

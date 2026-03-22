@@ -28,6 +28,9 @@ import {
 import type { CustomRange, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
 import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
+import { Button } from "@/components/ui/Button";
+import CustomText from "@/components/ui/CustomText";
+import CreateTripModal from "./CreateTripModal";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -40,7 +43,7 @@ export default function TravelersPage() {
   const { showSupabaseError } = useUniversalModal();
   const [tripList, setTripList] = useState<TripListing[]>([]);
   const { user } = useAuth();
-
+  const [dataloaded, setDataLoaded] = useState<boolean>(false);
   useEffect(() => {
     let cancel = false;
     async function fetchTravelers() {
@@ -52,12 +55,13 @@ export default function TravelersPage() {
       if (cancel) return;
 
       if (!result.success) {
-        showSupabaseError(result.error, result.status, {
-          onRetry: fetchTravelers,
-        });
+        showSupabaseError(result.error, result.status);
         return;
       }
-      if (result.success) setTripList(result.data);
+      if (result.success) {
+        setDataLoaded(true);
+        setTripList(result.data);
+      }
     }
 
     fetchTravelers();
@@ -76,9 +80,7 @@ export default function TravelersPage() {
   );
   const [parcelSelectionOpen, setParcelSelectionOpen] =
     useState<boolean>(false);
-
   const { toast } = useToast();
-
   const [searchCountry, setSearchCountry] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const country = searchCountry.toLowerCase().trim();
@@ -99,6 +101,7 @@ export default function TravelersPage() {
   });
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
+  const [tripModalState, setTripModalState] = useState<boolean>(false);
 
   const displayedTrips = useMemo(() => {
     let result = tripList;
@@ -161,10 +164,7 @@ export default function TravelersPage() {
       );
 
       if (!result.success) {
-        showSupabaseError(result.error, result.status, {
-          onRetry: () => handleRequest(trip),
-        });
-
+        showSupabaseError(result.error, result.status);
         return;
       }
 
@@ -223,6 +223,34 @@ export default function TravelersPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
+        <AnimatePresence>
+          {tripModalState && (
+            <CreateTripModal
+              goodsCategory={[]}
+              setModalState={() => setTripModalState(false)}
+            />
+          )}
+        </AnimatePresence>
+        {tripList.length === 0 && dataloaded && (
+          <EmptyState
+            title="No trips available"
+            description="No trips found. Post your trip to start receiving parcel requests from senders."
+            action={
+              <Button
+                onClick={() => setTripModalState(true)}
+                type="button"
+                variant="primary"
+                size="md"
+                className="w-full mt-1"
+              >
+                <CustomText textVariant="onDark" textSize="md">
+                  {"Post trip"}
+                </CustomText>
+              </Button>
+            }
+          />
+        )}
+
         {tripList && (
           <Travelers
             trips={displayedTrips}

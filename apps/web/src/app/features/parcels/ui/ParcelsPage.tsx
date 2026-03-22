@@ -27,6 +27,9 @@ import {
 import type { CustomRange, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
 import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
+import CustomText from "@/components/ui/CustomText";
+import { Button } from "@/components/ui/Button";
+import CreateParcelModal from "./CreateParcelModal";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -42,7 +45,7 @@ export default function ParcelsPage() {
   );
   const [parcelsList, setParcelsList] = useState<ParcelListing[]>([]);
   const { user } = useAuth();
-
+  const [dataloaded, setDataLoaded] = useState<boolean>(false);
   useEffect(() => {
     let cancel = false;
 
@@ -55,13 +58,14 @@ export default function ParcelsPage() {
       );
 
       if (!result.success) {
-        showSupabaseError(result.error, result.status, {
-          onRetry: fetchParcels,
-        });
+        showSupabaseError(result.error, result.status);
         return;
       }
 
-      if (result.success) setParcelsList(result.data);
+      if (result.success) {
+        setParcelsList(result.data);
+        setDataLoaded(true);
+      }
     }
 
     fetchParcels();
@@ -100,6 +104,7 @@ export default function ParcelsPage() {
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
   const [hasFilter, setHasFilter] = useState<boolean>(false);
+  const [parcelModalState, setParcelModalState] = useState<boolean>(false);
 
   const displayedParcels = useMemo(() => {
     let result = parcelsList;
@@ -158,9 +163,7 @@ export default function ParcelsPage() {
         getTripUseCase.execute(user.id),
       );
       if (!result.success) {
-        showSupabaseError(result.error, result.status, {
-          onRetry: () => handleRequest(parcel),
-        });
+        showSupabaseError(result.error, result.status);
         return;
       }
 
@@ -220,13 +223,42 @@ export default function ParcelsPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {parcelsList && (
+        <AnimatePresence>
+          {parcelModalState && (
+            <CreateParcelModal
+              goodsCategory={[]}
+              setModalState={() => setParcelModalState(false)}
+            />
+          )}
+        </AnimatePresence>
+        {parcelsList.length > 0 && (
           <Parcels
             parcels={displayedParcels}
             onClick={handleRequest}
             toggleLike={handleLikeUpdate}
           />
         )}
+
+        {displayedParcels.length === 0 && dataloaded && (
+          <EmptyState
+            title="No parcels available"
+            description="No parcels found. Post your parcels to start receiving trip requests from travelers."
+            action={
+              <Button
+                onClick={() => setParcelModalState(true)}
+                type={"button"}
+                variant="primary"
+                size="md"
+                className="w-full mt-1"
+              >
+                <CustomText textVariant="onDark" textSize="md">
+                  {"Post parcel"}
+                </CustomText>
+              </Button>
+            }
+          />
+        )}
+
         {hasFilter && displayedParcels.length === 0 && (
           <EmptyState
             title="No matching parcels"

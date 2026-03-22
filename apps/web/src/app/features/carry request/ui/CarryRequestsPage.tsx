@@ -203,6 +203,9 @@ export default function CarryRequestsPage() {
         (item) => item.status === CARRY_REQUEST_STATUSES.REJECTED,
       );
     }
+    if (result.length === 0 && selectedTab) {
+      setEmptyState(toEmptyStateForMapper(selectedTab));
+    }
     return result;
   }, [carryRequestsList]);
 
@@ -706,7 +709,7 @@ function ParcelDetails({
           >
             {parcel.origin.country}
           </CustomText>
-           <MoveRight className="text-neutral-600 h-5 w-4" strokeWidth={1.5} />
+          <MoveRight className="text-neutral-600 h-5 w-4" strokeWidth={1.5} />
           <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
           <CustomText
             textVariant="primary"

@@ -1,5 +1,6 @@
 import LineDivider from "@/app/components/LineDivider";
 import type { CarryRequestNotification } from "@/app/features/carry request/carry request events/domain/CarryRequestNotification";
+import { formatRelativeTime } from "@/app/features/dashboard/application/formatRelativeTime";
 import { cn } from "@/app/lib/cn";
 import CustomText from "@/components/ui/CustomText";
 import { motion } from "framer-motion";
@@ -72,9 +73,9 @@ export default function NotificationPopover({
     >
       <div className="pl-1">
         <CustomText
-          textSize="md"
+          textSize="lg"
           textVariant="primary"
-          className="font-semibold"
+          className="font-medium"
         >
           Notifications
         </CustomText>
@@ -94,6 +95,9 @@ export default function NotificationPopover({
               <CustomText textSize="xsm" textVariant="secondary">
                 {item.body}
               </CustomText>
+              <p className="text-[12px] text-neutral-400 mt-0.5 text-right font-extralight">
+                {formatRelativeTime(item.createdAt)}
+              </p>
             </div>
             {index !== visibleNotifications.length - 1 && (
               <LineDivider heightClass="my-0" />
