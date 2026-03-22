@@ -1,6 +1,6 @@
 import { supabase } from "@/app/shared/supabase/client";
 import type { CreateParcel } from "../domain/CreateParcel";
-import type { ParcelListingRepository as ParcelRepository } from "../domain/CreateParcelRepository";
+import type { ParcelRepository as ParcelRepository } from "../domain/ParcelRepository";
 import { PARCELSTATUSES, type ParcelListing } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
@@ -45,8 +45,10 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { data: !!data, error: null, status };
   }
 
-  parcelsById(userId?: string): Promise<RepoResponse<ParcelListing[]>> {
-    return this.fetchParcels(userId);
+  parcelsById(
+    userId: string,
+  ): Promise<RepoResponse<ParcelListing[]>> {
+    return this.fetchParcels(userId, true);
   }
 
   async fetchParcels(
@@ -62,11 +64,10 @@ export class SupabaseParcelRepository implements ParcelRepository {
       ))`,
     );
 
-    if (shouldFilter) {
+    if (shouldFilter && userId) {
       query.eq("sender_user_id", userId);
-    } else {
-      query.eq("status", PARCELSTATUSES.OPEN);
     }
+    query.eq("status", PARCELSTATUSES.OPEN);
 
     const { data, error, status } = await query;
 
@@ -75,7 +76,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     }
     if (!data) return { data: [], status: status, error: null };
 
-    const favParcelIds = await getFavListingIds(userId ?? "", "parcel_id")
+    const favParcelIds = await getFavListingIds(userId ?? "", "parcel_id");
     const favParcelIdSet = new Set(favParcelIds ?? []);
     const parcelList = data.map((row) => toParcelMapper(row, favParcelIdSet));
 

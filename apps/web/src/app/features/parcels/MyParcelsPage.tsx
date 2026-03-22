@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { SupabaseParcelRepository } from "./data/SupabaseParcelRepository";
-import { MyParcelsIdUseCase } from "./application/MyParcelsUseCase";
 import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
 import { useToast } from "@/app/components/Toast";
 import { AnimatePresence } from "framer-motion";
@@ -18,6 +17,7 @@ import type { ParcelListing } from "./domain/Parcel";
 import EmptyState from "@/app/components/EmptyState";
 import CustomText from "@/components/ui/CustomText";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { GetParcelsByIdUseCase } from "./application/GetParcelsByIdUseCase";
 
 export function MyParcelsPage() {
   const [loading, setLoading] = useState(true);
@@ -29,8 +29,8 @@ export function MyParcelsPage() {
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
-  const myParcelsUsecase = useMemo(
-    () => new MyParcelsIdUseCase(parcelRepo),
+  const getParcelByIdUseCase = useMemo(
+    () => new GetParcelsByIdUseCase(parcelRepo),
     [parcelRepo],
   );
   const deleteParcelUseCase = useMemo(
@@ -57,7 +57,7 @@ export function MyParcelsPage() {
     }
 
     await refreshProfile();
-    toast("Parcel deleted successfully", { variant: "success" });
+    toast("Parcel deleted successfully", { variant: "success"});
   };
 
   const {
@@ -77,7 +77,7 @@ export function MyParcelsPage() {
       setLoading(true);
       const { result } = await namedCall(
         "myParcels",
-        myParcelsUsecase.execute(user?.id),
+        getParcelByIdUseCase.execute(user?.id),
       );
       if (!result.success) {
         setLoading(false);

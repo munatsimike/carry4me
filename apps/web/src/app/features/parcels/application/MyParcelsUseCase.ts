@@ -1,11 +1,11 @@
 import type { Result } from "@/app/shared/Authentication/domain/Result";
-import type { ParcelListingRepository } from "../domain/CreateParcelRepository";
+import type { ParcelRepository } from "../domain/ParcelRepository";
 import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
 import type { ParcelListing } from "../domain/Parcel";
 
 export class MyParcelsIdUseCase {
-  repo: ParcelListingRepository;
-  constructor(repo: ParcelListingRepository) {
+  repo: ParcelRepository;
+  constructor(repo: ParcelRepository) {
     this.repo = repo;
   }
 

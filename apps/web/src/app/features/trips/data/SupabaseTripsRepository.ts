@@ -27,8 +27,10 @@ export class SupabaseTripsRepository implements TripsRepository {
   async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
     return deleteById(parcelId, "trips");
   }
-  async tripsById(userId: string): Promise<RepoResponse<TripListing[]>> {
-    return this.listTrips(userId);
+  async tripsById(
+    userId: string,
+  ): Promise<RepoResponse<TripListing[]>> {
+    return this.listTrips(userId, true);
   }
 
   async reserveWeight(
@@ -81,7 +83,10 @@ export class SupabaseTripsRepository implements TripsRepository {
     return { data, status, error: null };
   }
 
-  async listTrips(userId?: string, shouldFilter: boolean =false): Promise<RepoResponse<TripListing[]>> {
+  async listTrips(
+    userId?: string,
+    shouldFilter: boolean = false,
+  ): Promise<RepoResponse<TripListing[]>> {
     let query = supabase.from("trips").select(`
       *,
       traveler:profiles(id, full_name, avatar_url),
@@ -94,18 +99,16 @@ export class SupabaseTripsRepository implements TripsRepository {
       )
     `);
 
-    // Only filter if userId is provided
-    if (shouldFilter) {
-      query = query.eq("traveler_user_id", userId);
-    } else {
-      query.eq("status", TRIPSTATUSES.ACTIVE);
+    if (shouldFilter && userId) {
+      query.eq("traveler_user_id", userId);
     }
+    query.eq("status", TRIPSTATUSES.ACTIVE);
 
     const { data, error, status } = await query;
 
     if (error) return { data: null, status, error };
     const favTripIds = await getFavListingIds(userId ?? "", "trip_id");
-   
+
     const favTripIdSet = new Set(favTripIds ?? []);
     const result = data.map((row) => mapTripRowToTrip(row, favTripIdSet));
     return { data: result, error: null, status };

@@ -52,9 +52,10 @@ export default function ParcelsPage() {
     if (cancel) return;
 
     async function fetchParcels() {
+    
       const { result } = await namedCall(
         "parcels",
-        getParcelsUseCase.execute(user?.id),
+        getParcelsUseCase.execute(),
       );
 
       if (!result.success) {
