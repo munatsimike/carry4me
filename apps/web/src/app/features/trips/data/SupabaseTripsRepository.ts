@@ -139,8 +139,8 @@ export class SupabaseTripsRepository implements TripsRepository {
           status: status,
         },
       };
+      
     const favTripIds = await getFavListingIds(userId ?? "", "trip_id");
-
     const favTripIdSet = new Set(favTripIds ?? []);
     const result = data.map((row) => mapTripRowToTrip(row, favTripIdSet));
     return { data: result, error: null };

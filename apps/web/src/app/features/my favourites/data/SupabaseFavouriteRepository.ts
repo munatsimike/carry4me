@@ -15,29 +15,34 @@ export class SupabaseFavouriteRepository implements FavouriteRepository {
   async fetchFavourites(userId: string): Promise<RepoResponse<Listing[]>> {
     const tripIds = await getFavListingIds(userId, "trip_id");
     const parcelIds = await getFavListingIds(userId, "parcel_id");
-  
+
     if (!tripIds || !parcelIds) {
-      return { data: null, error: "unable to fetch favourites", status: null };
+      return {
+        data: null,
+        error: { message: "unable to fetch favourites", code: "" },
+      };
     }
 
-    const { data: tripsResult, error: tripsError } =
-      await getTripsByIds(tripIds, new Set(tripIds));
+    const { data: tripsResult, error: tripsError } = await getTripsByIds(
+      tripIds,
+      new Set(tripIds),
+    );
 
-    const { data: parcelsResult, error: parcelsError } =
-      await getParcelsByIds(parcelIds, new Set(parcelIds));
+    const { data: parcelsResult, error: parcelsError } = await getParcelsByIds(
+      parcelIds,
+      new Set(parcelIds),
+    );
 
     if (tripsError || parcelsError || !tripsResult || !parcelsResult) {
       return {
         data: null,
-        error: "failed to fetch listings",
-        status: null,
+        error: { message: "failed to fetch listings", code: "" },
       };
     }
 
     return {
       data: [...tripsResult, ...parcelsResult],
       error: null,
-      status: null,
     };
   }
 
@@ -60,15 +65,13 @@ export class SupabaseFavouriteRepository implements FavouriteRepository {
     if (error) {
       return {
         data: null,
-        error: error.message,
-        status: status,
+        error: { message: error.message, status: status, code: error.code },
       };
     }
 
     return {
       data: data.id,
       error: null,
-      status: status,
     };
   }
 
@@ -90,15 +93,13 @@ export class SupabaseFavouriteRepository implements FavouriteRepository {
     if (error) {
       return {
         data: null,
-        error: error.message,
-        status: status,
+        error: { message: error.message, status: status, code: error.code },
       };
     }
 
     return {
       data: data.id,
       error: null,
-      status: status,
     };
   }
 
@@ -122,47 +123,58 @@ export class SupabaseFavouriteRepository implements FavouriteRepository {
     if (fetchError) {
       return {
         data: null,
-        error: fetchError.message,
-        status: status,
+        error: {
+          message: fetchError.message,
+          status: status,
+          code: fetchError.code,
+        },
       };
     }
 
     if (existing) {
-      const removeResult = await this.removeFavourite(
+      const { error: removeResult } = await this.removeFavourite(
         userId,
         listingId,
         listingType,
       );
 
-      if (removeResult.error) {
+      if (removeResult) {
         return {
           data: null,
-          error: removeResult.error,
-          status: status,
+          error: {
+            message: removeResult.message,
+            code: removeResult.code,
+            status: removeResult.status,
+          },
         };
       }
 
       return {
         data: false,
         error: null,
-        status: status,
       };
     }
 
-    const addResult = await this.addFavourite(userId, listingId, listingType);
+    const { error: addResult } = await this.addFavourite(
+      userId,
+      listingId,
+      listingType,
+    );
 
-    if (addResult.error) {
+    if (addResult) {
       return {
         data: null,
-        error: addResult.error,
-        status: status,
+        error: {
+          message: addResult.message,
+          status: addResult.status,
+          code: addResult.code,
+        },
       };
     }
 
     return {
       data: true,
       error: null,
-      status: status,
     };
   }
 }

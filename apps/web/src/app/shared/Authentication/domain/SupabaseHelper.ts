@@ -20,23 +20,24 @@ export async function deleteById(
   if (error) {
     return {
       data: null,
-      error: error.message,
-      status,
+      error: {
+        code: error.code,
+        message: error.message,
+        status: status,
+      },
     };
   }
 
   if (!data || data.length === 0) {
     return {
       data: null,
-      error: "Parcel not found or not authorized.",
-      status,
+      error: { code: "", message: "Parcel not found or not authorized." },
     };
   }
 
   return {
     data: listingId,
     error: null,
-    status,
   };
 }
 
@@ -52,10 +53,17 @@ export async function getFavItem(
     .order("created_at", { ascending: false });
 
   if (error) {
-    return { data: null, status, error };
+    return {
+      data: null,
+      error: {
+        code: error.code,
+        message: error.message,
+        status: status,
+      },
+    };
   }
 
-  return { data, status, error: null };
+  return { data, error: null };
 }
 
 export async function getTripsByIds(
@@ -63,7 +71,7 @@ export async function getTripsByIds(
   likedTripIds?: Set<string>,
 ): Promise<RepoResponse<TripListing[]>> {
   if (!tripIds.length) {
-    return { data: [], status: 200, error: null };
+    return { data: [], error: null };
   }
 
   const { data, error, status } = await supabase
@@ -84,12 +92,19 @@ export async function getTripsByIds(
     .in("id", tripIds);
 
   if (error) {
-    return { data: null, status, error };
+    return {
+      data: null,
+      error: {
+        code: error.code,
+        message: error.message,
+        status: status,
+      },
+    };
   }
 
   const result = data.map((row) => mapTripRowToTrip(row, likedTripIds));
 
-  return { data: result, status, error: null };
+  return { data: result, error: null };
 }
 
 export async function getParcelsByIds(
@@ -97,7 +112,7 @@ export async function getParcelsByIds(
   likedTripIds?: Set<string>,
 ): Promise<RepoResponse<ParcelListing[]>> {
   if (!parcelIds.length) {
-    return { data: [], status: 200, error: null };
+    return { data: [], error: null };
   }
 
   const { data, error, status } = await supabase
@@ -113,12 +128,18 @@ export async function getParcelsByIds(
     .in("id", parcelIds);
 
   if (error) {
-    return { data: null, status, error };
+    return {
+      data: null,
+      error: {
+        code: error.code,
+        message: error.message,
+        status: status,
+      },
+    };
   }
 
   return {
     data: data.map((row) => toParcelMapper(row, likedTripIds)) ?? [],
-    status,
     error: null,
   };
 }
@@ -127,8 +148,8 @@ export async function getFavListingIds(
   userId: string,
   column: "trip_id" | "parcel_id",
 ): Promise<string[]> {
+  if (!userId) return [];
   const { data, error } = await getFavItem(userId, column);
-
   if (error) return [];
   return (
     data

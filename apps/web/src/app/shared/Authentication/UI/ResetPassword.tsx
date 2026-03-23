@@ -12,6 +12,8 @@ import FloatingInputField from "@/app/components/CustomInputField";
 import { motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { useAuthModal } from "../AuthModalContext";
+import { useUniversalModal } from "../application/DialogBoxModalProvider";
+import { useNavigate } from "react-router-dom";
 
 const emailSchema = z.object({
   emailAddress: z
@@ -45,6 +47,8 @@ export default function ResetPassword() {
     [repo],
   );
   const { openAuthModal } = useAuthModal();
+  const { showSupabaseError } = useUniversalModal();
+  const navigate = useNavigate();
 
   const handleReset = async (values: EmailField) => {
     const { result } = await namedCall(
@@ -53,10 +57,10 @@ export default function ResetPassword() {
     );
 
     if (!result.success) {
-      alert(result.error);
+      showSupabaseError(result.error);
     } else {
       resetField("emailAddress");
-      alert("Check your email address for the reset link.");
+      navigate("/?reset-sent=sucess");
     }
   };
 
@@ -65,7 +69,11 @@ export default function ResetPassword() {
       <Card>
         <motion.div className="w-full max-w-md p-6">
           <div className="mb-6 space-y-2 text-center">
-            <CustomText textVariant="primary" textSize="xl">
+            <CustomText
+              textVariant="primary"
+              textSize="lg"
+              className="font-medium"
+            >
               Reset password
             </CustomText>
             <CustomText textVariant="secondary" textSize="sm">

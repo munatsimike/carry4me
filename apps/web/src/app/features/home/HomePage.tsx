@@ -20,6 +20,20 @@ export default function HomePage() {
   const { openAuthModal } = useAuthModal();
   const isPassReset = searchParams.get("reset") === "success";
   const isSignup = searchParams.get("signup") === "success";
+  const isResetLink = searchParams.get("reset-sent") === "success";
+
+  useEffect(() => {
+
+      const timer = setTimeout(() => {
+        toast("Password reset link sent. Check your email.", {
+          variant: "success",
+        });
+      }, 700);
+
+     handleClose("reset-sent")
+      return () => clearTimeout(timer);
+    
+  }, [isResetLink]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("redirectToast");
@@ -34,7 +48,7 @@ export default function HomePage() {
 
     const timer = setTimeout(() => {
       toast(data.message, { variant: data.variant });
-    }, 1000); // 300–800ms feels natural
+    }, 700); // 300–800ms feels natural
 
     return () => clearTimeout(timer);
   }, [toast]);

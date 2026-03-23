@@ -10,8 +10,8 @@ export class GetParcelsUseCase {
     this.repo = repo;
   }
 
-  async execute(): Promise<Result<ParcelListing[]>> {
-    const result = await this.repo.fetchParcels();
+  async execute(userId?: string): Promise<Result<ParcelListing[]>> {
+    const result = await this.repo.fetchParcels(userId);
     return toResult(result);
   }
 }

@@ -55,7 +55,7 @@ export default function ParcelsPage() {
     
       const { result } = await namedCall(
         "parcels",
-        getParcelsUseCase.execute(),
+        getParcelsUseCase.execute(user?.id),
       );
 
       if (!result.success) {

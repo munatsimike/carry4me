@@ -91,7 +91,6 @@ export class SupabaseParcelRepository implements ParcelRepository {
         },
       };
     if (!data) return { data: [], error: null };
-
     const favParcelIds = await getFavListingIds(userId ?? "", "parcel_id");
     const favParcelIdSet = new Set(favParcelIds ?? []);
     const parcelList = data.map((row) => toParcelMapper(row, favParcelIdSet));
