@@ -4,7 +4,6 @@ import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SignUpUseCase } from "../application/SignUpUseCase";
 import type { AppUser } from "../domain/authTypes";
 import { namedCall } from "../application/NamedCall";
-import { useToast } from "@/app/components/Toast";
 import CustomText from "@/components/ui/CustomText";
 import LineDivider from "@/app/components/LineDivider";
 import FloatingInputField from "@/app/components/CustomInputField";
@@ -20,6 +19,7 @@ import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { useAuthModal } from "../AuthModalContext";
 import ComboBox from "@/app/components/ComboBox";
+import { useUniversalModal } from "../application/DialogBoxModalProvider";
 
 export const UserDetailsScema = z
   .object({
@@ -38,7 +38,7 @@ export const UserDetailsScema = z
     message: "Passwords do not match",
     path: ["confirmPassword"], //  attaches error to confirmPassword
   });
-let submitCount = 0;
+
 export type UserDetailsFields = z.infer<typeof UserDetailsScema>;
 
 const container = {
@@ -67,7 +67,14 @@ export default function SignUpPage() {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isSubmitting, dirtyFields, touchedFields, isValid },
+    formState: {
+      errors,
+      isSubmitting,
+      dirtyFields,
+      touchedFields,
+      isValid,
+      submitCount,
+    },
   } = useForm<UserDetailsFields>({
     resolver: zodResolver(UserDetailsScema),
     defaultValues: {
@@ -78,20 +85,18 @@ export default function SignUpPage() {
       country: "",
       city: "",
       password: "",
+      confirmPassword: "",
     },
-    mode: "onBlur",
-    reValidateMode: "onBlur",
+    mode: "onTouched",
   });
 
   const firstName = watch("firstName");
   const lastName = watch("lastName");
-
   const emailAddress = watch("emailAddress");
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
   const phoneNumber = watch("phoneNumber");
-
-  const { toast } = useToast();
+  const { showSupabaseError } = useUniversalModal();
 
   const onSignUp = async (values: UserDetailsFields) => {
     const newUser: AppUser = {
@@ -116,24 +121,23 @@ export default function SignUpPage() {
     );
 
     if (!result.success) {
-      if (typeof result.error === "string")
-        toast(result.error, { variant: "error" });
+      if (result.error.code === "user_already_exists") {
+        showSupabaseError(result.error, "Signin", {
+          onLogin: () =>
+            openAuthModal({
+              mode: "signin",
+            }),
+        });
+      } else {
+        showSupabaseError(result.error);
+      }
+
       return;
     }
 
-    sessionStorage.setItem(
-      "redirectToast",
-      JSON.stringify({
-        message: "Account created you can signIn",
-        variant: "success",
-      }),
-    );
-
-    navigate("/", {
+    navigate("/?signup=success", {
       replace: true,
     });
-
-    toast("Signup success", { variant: "success" });
   };
 
   return (
@@ -313,7 +317,6 @@ export default function SignUpPage() {
                       />
                     )}
                   ></Controller>
-            
                 </span>
               </span>
 

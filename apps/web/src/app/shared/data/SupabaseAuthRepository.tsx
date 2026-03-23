@@ -12,60 +12,58 @@ import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto"
 
 const emptyRepoResult: RepoResponse<string> = {
   data: null,
-  status: null,
+
   error: null,
 };
 
 export class SupabaseAuthRepository implements AuthRepository {
   async newPassword(newPassword: string): Promise<RepoResponse<string>> {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-  if (sessionError) {
-    return { data: null, error: sessionError, status: null };
+    if (sessionError) {
+      return { data: null, error: sessionError };
+    }
+
+    if (!session) {
+      return {
+        data: null,
+        error: new Error(
+          "No recovery session found. Open the reset link from your email first.",
+        ),
+      };
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) return { data: null, error };
+
+    return { data: "success", error: null };
   }
 
-  if (!session) {
-    return {
-      data: null,
-      error: new Error(
-        "No recovery session found. Open the reset link from your email first."
-      ),
-      status: null,
-    };
+  async resetPassword(email: string): Promise<RepoResponse<string>> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "http://localhost:5173/new-password",
+    });
+
+    if (error) return { data: null, error };
+
+    return { data: "success", error: null };
   }
-
-  const { error } = await supabase.auth.updateUser({
-    password: newPassword,
-  });
-
-  if (error) return { data: null, error, status: null };
-
-  return { data: "success", error: null, status: null };
-}
-
-async resetPassword(email: string): Promise<RepoResponse<string>> {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "http://localhost:5173/new-password",
-  });
-
-  if (error) return { data: null, error, status: null };
-
-  return { data: "success", error: null, status: null };
-}
 
   async updateAuthDetails(
     updateAuthDto: UpdateAuthDto,
   ): Promise<RepoResponse<string>> {
     const { data, error } = await supabase.auth.updateUser(updateAuthDto);
     if (error) return emptyRepoResult;
-    return { data: data.user.id, error: null, status: null };
+    return { data: data.user.id, error: null };
   }
 
   async signUp(appUser: AppUser): Promise<RepoResponse<string>> {
- 
     const { data, error } = await supabase.auth.signUp({
       email: appUser.auth.email,
       password: appUser.auth.password,
@@ -81,8 +79,15 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
     });
 
     if (error || !data.user?.id)
-      return { data: null, error: error?.message, status: null };
-    return { data: data.user?.id, error: null, status: null };
+      return {
+        data: null,
+        error: {
+          code: error?.code,
+          message: error?.message ?? "",
+          status: null,
+        },
+      };
+    return { data: data.user?.id, error: null };
   }
 
   async uploadAvatar(
@@ -101,16 +106,30 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
       });
 
     if (uploadError) {
-      return { data: null, error: uploadError.message, status: null };
+      return {
+        data: null,
+        error: {
+          code: uploadError.statusCode,
+          message: uploadError.message,
+          status: uploadError.status,
+        },
+      };
     }
 
-    const updateResult = await this.updateAvataPath(userId, filePath);
+    const { error } = await this.updateAvataPath(userId, filePath);
 
-    if (updateResult.error) {
-      return { data: null, error: updateResult.error, status: null };
+    if (error) {
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: error.status,
+        },
+      };
     }
 
-    return { data: filePath, error: null, status: null };
+    return { data: filePath, error: null };
   }
 
   async updateAvataPath(
@@ -123,10 +142,16 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
       .eq("id", userId);
 
     if (error) {
-      return { data: null, error, status: null };
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      };
     }
 
-    return { data: null, error: null, status: null };
+    return { data: null, error: null };
   }
 
   async fetchUserProfile(userId: string): Promise<RepoResponse<UserProfile>> {
@@ -136,7 +161,15 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
       .eq("id", userId)
       .single();
 
-    if (error) return { data: null, status, error };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
     const publicUrl = fetchPublicUrl(data.avatar_url);
     return {
       data: {
@@ -147,8 +180,7 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
         city: data.city,
         phoneNumber: data.phone_number,
       },
-      status: status,
-      error: error,
+      error: null,
     };
   }
 
@@ -161,8 +193,16 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
       .update(updateProfile)
       .eq("id", userId);
 
-    if (error) return { data: null, status, error };
-    return { data: data, error: null, status: null };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    return { data: data, error: null };
   }
 
   async logout(): Promise<LogoutResult> {
@@ -193,7 +233,7 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
 
     // Map Supabase user -> your domain user (keep it minimal)
     return {
-      success:true
+      success: true,
     };
   }
 
@@ -206,9 +246,17 @@ async resetPassword(email: string): Promise<RepoResponse<string>> {
     if (!path) return emptyRepoResult;
     const { error } = await supabase.storage.from("avatars").remove([path]);
 
-    if (error) return { data: null, error: error, status: null };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.statusCode,
+          message: error.message,
+          status: error.status,
+        },
+      };
     this.updateProfile(userId, { avatar_url: null });
-    return { data: "success", error: null, status: null };
+    return { data: "success", error: null };
   }
 
   extractStoragePath(url: string, bucket: string) {

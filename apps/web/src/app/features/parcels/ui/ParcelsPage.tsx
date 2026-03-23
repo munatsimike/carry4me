@@ -59,7 +59,7 @@ export default function ParcelsPage() {
       );
 
       if (!result.success) {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
         return;
       }
 
@@ -164,7 +164,7 @@ export default function ParcelsPage() {
         getTripUseCase.execute(user.id),
       );
       if (!result.success) {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
         return;
       }
 

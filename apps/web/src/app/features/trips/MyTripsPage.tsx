@@ -44,7 +44,7 @@ export function MyTripsPage() {
   }, [mypTrips]);
 
   const { goodsCategories, ensureGoodsLoaded } = useGoods();
-  const {showSupabaseError} = useUniversalModal()
+  const { showSupabaseError } = useUniversalModal();
 
   useEffect(() => {
     if (!showCreateTripModal) return;
@@ -74,7 +74,7 @@ export function MyTripsPage() {
       );
       if (!result.success) {
         setLoading(false);
-        showSupabaseError(result.error, result.status)
+        showSupabaseError(result.error);
         return;
       }
 

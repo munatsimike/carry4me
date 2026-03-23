@@ -55,7 +55,7 @@ export default function TravelersPage() {
       if (cancel) return;
 
       if (!result.success) {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
         return;
       }
       if (result.success) {
@@ -164,7 +164,7 @@ export default function TravelersPage() {
       );
 
       if (!result.success) {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
         return;
       }
 

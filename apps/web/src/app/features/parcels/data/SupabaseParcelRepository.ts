@@ -18,16 +18,22 @@ export class SupabaseParcelRepository implements ParcelRepository {
   async editParcel(
     editParcel: Partial<ParcelDto>,
   ): Promise<RepoResponse<string>> {
-    const { data, error } = await supabase
+    const { data, error, status } = await supabase
       .from("parcels")
       .update(editParcel)
       .eq("id", editParcel.id)
       .select("id")
       .single();
-    if (error) {
-      return { data: null, error: error, status: null };
-    }
-    return { data: data.id, error: null, status: null };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    return { data: data.id, error: null };
   }
 
   async isParcelOpen(parcelId: string): Promise<RepoResponse<boolean>> {
@@ -38,16 +44,20 @@ export class SupabaseParcelRepository implements ParcelRepository {
       .eq("status", PARCELSTATUSES.OPEN)
       .maybeSingle();
 
-    if (error) {
-      return { data: null, error, status };
-    }
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
 
-    return { data: !!data, error: null, status };
+    return { data: !!data, error: null };
   }
 
-  parcelsById(
-    userId: string,
-  ): Promise<RepoResponse<ParcelListing[]>> {
+  parcelsById(userId: string): Promise<RepoResponse<ParcelListing[]>> {
     return this.fetchParcels(userId, true);
   }
 
@@ -71,16 +81,22 @@ export class SupabaseParcelRepository implements ParcelRepository {
 
     const { data, error, status } = await query;
 
-    if (error) {
-      return { data: null, error, status };
-    }
-    if (!data) return { data: [], status: status, error: null };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    if (!data) return { data: [], error: null };
 
     const favParcelIds = await getFavListingIds(userId ?? "", "parcel_id");
     const favParcelIdSet = new Set(favParcelIds ?? []);
     const parcelList = data.map((row) => toParcelMapper(row, favParcelIdSet));
 
-    return { data: parcelList, status: status, error: null };
+    return { data: parcelList, error: null };
   }
 
   async createParcel(parcel: CreateParcel): Promise<RepoResponse<string>> {
@@ -100,9 +116,15 @@ export class SupabaseParcelRepository implements ParcelRepository {
       .select("id")
       .single();
 
-    if (error) {
-      return { data: null, error, status };
-    }
-    return { data: data.id, error: null, status: status };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    return { data: data.id, error: null };
   }
 }

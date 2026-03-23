@@ -11,6 +11,7 @@ import {
   type NormalizedError,
 } from "./normalizeSupabaseError";
 import { UniversalModalHost } from "../UI/UniversalModalHost";
+import type { AppError } from "../../domain/RepoResponse";
 
 type ErrorModalPayload = NormalizedError & {
   type: "error";
@@ -40,7 +41,7 @@ type InfoModalPayload = {
   secondaryLabel?: string;
   icon?: React.ReactNode;
   buttonText?: string;
-  onClick?: () => void;
+  onClick: () => void;
   secondaryAction?: () => void;
 };
 
@@ -63,8 +64,7 @@ type UniversalModalContextValue = {
 
   // ergonomic helpers
   showSupabaseError: (
-    err: unknown,
-    status?: number | null,
+    err: AppError,
     label?: string,
     opts?: { onClose?: () => void; onLogin?: () => void },
   ) => void;
@@ -116,11 +116,10 @@ export function UniversalModalProvider({
 
     const showSupabaseError: UniversalModalContextValue["showSupabaseError"] = (
       err,
-      status,
       label,
       opts,
     ) => {
-      const normalized = normalizeSupabaseError(err, status);
+      const normalized = normalizeSupabaseError(err);
       setModal({
         type: "error",
         ...normalized,

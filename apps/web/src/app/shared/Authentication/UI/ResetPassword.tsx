@@ -35,8 +35,7 @@ export default function ResetPassword() {
     defaultValues: {
       emailAddress: "",
     },
-    mode: "onChange",
-    reValidateMode: "onChange",
+    mode: "onTouched",
   });
 
   const emailAddress = watch("emailAddress");

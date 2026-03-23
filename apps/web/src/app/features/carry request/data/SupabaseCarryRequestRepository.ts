@@ -22,23 +22,42 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       .eq("id", carryRequestId)
       .select("id")
       .single();
-    if (error) return { data: null, status, error };
-    return { data: data.id, error: null, status: null };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    return { data: data.id, error: null };
   }
 
   async isExpired(requestId: string): Promise<RepoResponse<boolean>> {
-    const { data, error } = await supabase.rpc("perform_carry_request_action", {
-      request_id: requestId,
-      action_key: "PAY",
-    });
+    const { data, error, status } = await supabase.rpc(
+      "perform_carry_request_action",
+      {
+        request_id: requestId,
+        action_key: "PAY",
+      },
+    );
 
-    if (error) return { data: null, error: error, status: null };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
 
     if (!data.ok && data.reason === "PAYMENT_EXPIRED") {
-      return { data: false, error: error, status: null };
+      return { data: false, error: error };
     }
 
-    return { data: true, error: error, status: null };
+    return { data: true, error: error };
   }
 
   async fetchCarryRequestsForUser(
@@ -48,8 +67,7 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       "expire_overdue_carry_requests",
     );
 
-    if (isExpiredErrors)
-      return { data: null, error: isExpiredErrors, status: null };
+    if (isExpiredErrors) return { data: null, error: isExpiredErrors };
 
     const { data, status, error } = await supabase
       .from("carry_requests")
@@ -73,10 +91,18 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       .or(`sender_user_id.eq.${userId},traveler_user_id.eq.${userId}`)
       .order("created_at", { ascending: false });
 
-    if (error) return { data: null, status, error };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
     const result = (data ?? []).map(toCarryRequestMapper);
 
-    return { data: result, error: null, status: null };
+    return { data: result, error: null };
   }
 
   async createCarryRequest(
@@ -96,7 +122,15 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       })
       .select("id")
       .single();
-    if (error) return { data: null, status, error };
-    return { data: data.id, error: null, status: null };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    return { data: data.id, error: null };
   }
 }

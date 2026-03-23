@@ -1,3 +1,5 @@
+import type { AppError } from "../../domain/RepoResponse";
+
 // src/application/errors/types.ts
 export type ErrorCategory =
   | "NETWORK"
@@ -10,7 +12,7 @@ export type ErrorCategory =
   | "SERVER"
   | "UNKNOWN";
 
-export type ModalAction = "retry" | "login" | "close";
+export type ModalAction = "retry" | "login" | "close" |"signin";
 
 export interface NormalizedError {
   category: ErrorCategory;
@@ -36,20 +38,21 @@ function getErrorMessage(error: unknown): string | undefined {
 }
 
 function getErrorCode(error: unknown): string | undefined {
+  // direct code
+  if (typeof error === "string") {
+    return error;
+  }
+
   if (!isRecord(error)) return undefined;
 
   const code = error["code"];
   return typeof code === "string" ? code : undefined;
 }
 
-export function normalizeSupabaseError(
-  error: unknown,
-  status?: number | null,
-): NormalizedError {
-  const message = getErrorMessage(error);
-  const code = getErrorCode(error);
+export function normalizeSupabaseError(error: AppError): NormalizedError {
+  const message = getErrorMessage(error.message);
+  const code = getErrorCode(error.code);
 
-  // Network-ish
   if (!error || (message && message.includes("Failed to fetch"))) {
     return {
       category: "NETWORK",
@@ -61,7 +64,7 @@ export function normalizeSupabaseError(
   }
 
   // HTTP first
-  switch (status ?? undefined) {
+  switch (error.status ?? undefined) {
     case 401:
       return {
         category: "AUTH",
@@ -249,6 +252,14 @@ export function normalizeSupabaseError(
         title: "Too many attempts",
         message: "Please wait a moment before trying again.",
         action: "close",
+      };
+
+    case "user_already_exists":
+      return {
+        category: "VALIDATION",
+        title: "User already exists",
+        message: "This email is already registered. Please sign in instead.",
+        action: "signin",
       };
 
     default:

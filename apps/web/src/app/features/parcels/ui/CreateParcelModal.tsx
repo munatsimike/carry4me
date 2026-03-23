@@ -133,8 +133,7 @@ export default function CreateParcelModal({
   } = useForm<ParcelFormFields>({
     resolver: zodResolver(parcelSchema),
     defaultValues: initialFormValues ?? emptyDefaultsValues,
-    mode: "onChange",
-    reValidateMode: "onChange",
+    mode: "onTouched",
   });
 
   const selectedIds = watch("goodsCategoryIds");
@@ -187,7 +186,7 @@ export default function CreateParcelModal({
     );
 
     if (!result.success) {
-      showSupabaseError(result.error, result.status);
+      showSupabaseError(result.error);
       return;
     }
 
@@ -201,7 +200,7 @@ export default function CreateParcelModal({
         ),
       );
       if (!result.success) {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
         return;
       }
     }
@@ -231,7 +230,7 @@ export default function CreateParcelModal({
       );
       toast("Parcel saved successfully", { variant: "success" });
     } catch (e) {
-        showSupabaseError(e)
+      showSupabaseError({ code: "error", message: "" });
     }
   };
 

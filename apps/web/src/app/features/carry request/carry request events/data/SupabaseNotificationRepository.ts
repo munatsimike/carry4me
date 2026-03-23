@@ -4,7 +4,6 @@ import type { CarryRequestNotification } from "../domain/CarryRequestNotificatio
 import { toCarryRequestNotificationsMapper } from "../domain/toCarryRequestNotifications";
 import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
-
 export class SupabaseNotificationRepository implements NotificationRepository {
   async fetchNotifications(
     userId: string,
@@ -17,11 +16,19 @@ export class SupabaseNotificationRepository implements NotificationRepository {
       .order("created_at", { ascending: false })
       .limit(limit);
 
-    if (error) return { data: null, error, status };
+    if (error) {
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    }
     const result = (data ?? []).map(toCarryRequestNotificationsMapper);
     return {
       data: result,
-      status: null,
       error: null,
     };
   }
@@ -30,16 +37,22 @@ export class SupabaseNotificationRepository implements NotificationRepository {
       .from("notifications")
       .update({ read_at: new Date().toISOString() })
       .eq("user_id", userId)
-      .is("read_at", null)
+      .is("read_at", null);
 
     if (error) {
-      return { data: null, error, status };
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
     }
 
     return {
       data: "Notifications marked as read",
       error: null,
-      status,
     };
   }
 }

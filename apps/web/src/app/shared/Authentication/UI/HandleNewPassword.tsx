@@ -39,8 +39,7 @@ export default function NewPassword() {
       password: "",
       confirmPassword: "",
     },
-    mode: "onChange",
-    reValidateMode: "onChange",
+    mode: "onTouched",
   });
 
   const password = watch("password");

@@ -17,6 +17,7 @@ export class SignUpUseCase {
 
   async uploadAvatar(userId: string, file: File): Promise<Result<string>> {
     const result = await this.repo.uploadAvatar(file, userId);
+    
     return toResult(result);
   }
 }

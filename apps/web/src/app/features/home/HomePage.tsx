@@ -11,6 +11,7 @@ import CustomModal from "@/app/components/CustomModal";
 import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import CustomText from "@/components/ui/CustomText";
 
 export default function HomePage() {
   const { toast } = useToast();
@@ -18,6 +19,7 @@ export default function HomePage() {
 
   const { openAuthModal } = useAuthModal();
   const isPassReset = searchParams.get("reset") === "success";
+  const isSignup = searchParams.get("signup") === "success";
 
   useEffect(() => {
     const raw = sessionStorage.getItem("redirectToast");
@@ -29,12 +31,17 @@ export default function HomePage() {
       message: string;
       variant: "success" | "info" | "warning" | "error";
     };
-    toast(data.message, { variant: data.variant });
+
+    const timer = setTimeout(() => {
+      toast(data.message, { variant: data.variant });
+    }, 1000); // 300–800ms feels natural
+
+    return () => clearTimeout(timer);
   }, [toast]);
 
-  const handleClose = () => {
+  const handleClose = (param: string) => {
     const next = new URLSearchParams(searchParams);
-    next.delete("reset"); // THIS is what matters
+    next.delete(param); // THIS is what matters
     setSearchParams(next);
   };
   return (
@@ -47,7 +54,14 @@ export default function HomePage() {
       <AnimatePresence>
         {isPassReset && (
           <Modal
-            onClose={handleClose}
+            onClose={() => handleClose("reset")}
+            onSignIn={() => openAuthModal({ mode: "signin" })}
+          />
+        )}
+
+        {isSignup && (
+          <Modal
+            onClose={() => handleClose("signup")}
             onSignIn={() => openAuthModal({ mode: "signin" })}
           />
         )}
@@ -56,20 +70,34 @@ export default function HomePage() {
   );
 }
 
+type Param = "reset" | "signup";
 type ModalProps = {
   onSignIn: () => void;
   onClose: () => void;
+  param?: Param;
 };
 
-function Modal({ onSignIn, onClose }: ModalProps) {
+function Modal({ onSignIn, onClose, param = "signup" }: ModalProps) {
   return (
-    <CustomModal onClose={onClose} width="md">
-      <div className="p-4 text-center">
-        <h2 className="text-xl font-medium mb-4">Please sign in</h2>
+    <CustomModal onClose={onClose} width="lg">
+      <div className="flex flex-col gap-3 p-4">
+        <CustomText
+          as="h2"
+          textSize="lg"
+          className="font-medium"
+          textVariant="primary"
+        >
+          {param === "signup"
+            ? "Account created successfully"
+            : "Password updated successfully"}
+        </CustomText>
 
-        <p className="text-sm text-gray-500 mb-6">
-          Your password was reset successfully. Sign in to continue.
-        </p>
+        <CustomText as="p" className="mb-3" textVariant="secondary">
+          {param === "signup"
+            ? "Your account was created successfully"
+            : "Your password was reset successfully"}
+          .Sign in to continue.
+        </CustomText>
 
         <div className="flex justify-end gap-4">
           <Button onClick={onClose} variant="outline" size="md">

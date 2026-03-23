@@ -12,24 +12,29 @@ import type { TripDto } from "../application/TripDto";
 
 export class SupabaseTripsRepository implements TripsRepository {
   async editTrip(editTrip: Partial<TripDto>): Promise<RepoResponse<string>> {
-    const { data, error } = await supabase
+    const { data, error, status } = await supabase
       .from("trips")
       .update(editTrip)
       .eq("id", editTrip.id)
       .select("id")
       .single();
-    if (error) {
-      return { data: null, error: error, status: null };
-    }
-    return { data: data.id, error: null, status: null };
+
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    return { data: data.id, error: null };
   }
 
   async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
     return deleteById(parcelId, "trips");
   }
-  async tripsById(
-    userId: string,
-  ): Promise<RepoResponse<TripListing[]>> {
+  async tripsById(userId: string): Promise<RepoResponse<TripListing[]>> {
     return this.listTrips(userId, true);
   }
 
@@ -47,9 +52,15 @@ export class SupabaseTripsRepository implements TripsRepository {
       .eq("id", tripId)
       .single();
 
-    if (fetchError) {
-      return { data: null, error: fetchError, status: fetchStatus };
-    }
+    if (fetchError)
+      return {
+        data: null,
+        error: {
+          code: fetchError.code,
+          message: fetchError.message,
+          status: fetchStatus,
+        },
+      };
 
     const currentReservedWeight = trip.reserved_weight_kg ?? 0;
     const newReservedWeight = currentReservedWeight + parcelWeight;
@@ -61,11 +72,17 @@ export class SupabaseTripsRepository implements TripsRepository {
       .select("id")
       .single();
 
-    if (error) {
-      return { data: null, error, status };
-    }
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
 
-    return { data: data.id, error: null, status };
+    return { data: data.id, error: null };
   }
 
   async availableSpace(
@@ -79,8 +96,16 @@ export class SupabaseTripsRepository implements TripsRepository {
         p_required_weight: parcelWeight,
       },
     );
-    if (error) return { data: null, status, error };
-    return { data, status, error: null };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    return { data, error: null };
   }
 
   async listTrips(
@@ -106,12 +131,19 @@ export class SupabaseTripsRepository implements TripsRepository {
 
     const { data, error, status } = await query;
 
-    if (error) return { data: null, status, error };
+     if(error)  return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
     const favTripIds = await getFavListingIds(userId ?? "", "trip_id");
 
     const favTripIdSet = new Set(favTripIds ?? []);
     const result = data.map((row) => mapTripRowToTrip(row, favTripIdSet));
-    return { data: result, error: null, status };
+    return { data: result, error: null };
   }
 
   async createTrip(
@@ -135,7 +167,14 @@ export class SupabaseTripsRepository implements TripsRepository {
       .select("id")
       .single();
 
-    if (error) return { data: null, status, error };
-    return { data: data.id, status, error: null };
+    if(error)  return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
+      };
+    return { data: data.id, error: null };
   }
 }

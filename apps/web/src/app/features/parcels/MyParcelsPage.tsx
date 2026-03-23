@@ -38,7 +38,7 @@ export function MyParcelsPage() {
     [parcelRepo],
   );
 
-  const {showSupabaseError} = useUniversalModal()
+  const { showSupabaseError } = useUniversalModal();
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
   const sortedParcels = useMemo(() => {
     return [...myParcels].sort((a, b) =>
@@ -57,7 +57,7 @@ export function MyParcelsPage() {
     }
 
     await refreshProfile();
-    toast("Parcel deleted successfully", { variant: "success"});
+    toast("Parcel deleted successfully", { variant: "success" });
   };
 
   const {
@@ -81,7 +81,7 @@ export function MyParcelsPage() {
       );
       if (!result.success) {
         setLoading(false);
-        showSupabaseError(result.error, result.status)
+        showSupabaseError(result.error);
         return;
       }
 
@@ -160,7 +160,7 @@ export function MyParcelsPage() {
         {parcelPreview && (
           <CustomModal onClose={() => setParcelPreview(null)} width="md">
             <ParcelCard
-            toggleLike={()=>null}
+              toggleLike={() => null}
               parcel={parcelPreview}
               onClick={() => null}
               mode="preview"

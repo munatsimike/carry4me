@@ -11,8 +11,16 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     const { data, status, error } = await supabase
       .from("goods_categories")
       .select("id, slug, name");
-    if (error) return { data: null, status, error };
-    return { error: null, status: null, data };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          status: status,
+          message: error.message,
+        },
+      };
+    return { error: null, data };
   }
 
   getBySlug(slug: string): Promise<GoodsCategory | null> {
@@ -32,8 +40,16 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     }));
 
     const { data, status, error } = await supabase.from(table).insert(rows);
-    if (error) return { data: null, status, error };
-    return { error: null, status: null, data };
+    if (error)
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          status: status,
+          message: error.message,
+        },
+      };
+    return { error: null, data };
   }
 
   async editListingGoods(
@@ -43,8 +59,10 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     if (editGoods.length === 0) {
       return {
         data: null,
-        error: "No goods categories provided",
-        status: 400,
+        error: {
+          message: "No goods categories provided",
+          status: 400,
+        },
       };
     }
 
@@ -57,21 +75,22 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     if (!listingId) {
       return {
         data: null,
-        error: "No goods categories provided",
-        status: 400,
+        error: {
+          message: "No goods categories provided",
+          status: 400,
+        },
       };
     }
-    const deleteResult = await this.deleteListingGoods(
+    const { error: deleteResult } = await this.deleteListingGoods(
       table,
       idColumnName,
       listingId,
     );
 
-    if (deleteResult?.error) {
+    if (deleteResult) {
       return {
         data: null,
-        error: deleteResult.error,
-        status: deleteResult.status,
+        error: deleteResult,
       };
     }
 
@@ -90,15 +109,17 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     if (error) {
       return {
         data: null,
-        error: error.message,
-        status,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
       };
     }
 
     return {
       data: listingId,
       error: null,
-      status,
     };
   }
 
@@ -115,15 +136,17 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     if (error) {
       return {
         data: null,
-        error: error.message,
-        status,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: status,
+        },
       };
     }
 
     return {
       data: null,
       error: null,
-      status,
     };
   }
 }

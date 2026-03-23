@@ -119,8 +119,7 @@ export default function CreateTripModal({
   } = useForm<TripFormFields>({
     resolver: zodResolver(tripSchema),
     defaultValues: initialFormValues ?? emptyDefaultsValues,
-    mode: "onChange",
-    reValidateMode: "onChange",
+    mode: "onTouched",
   });
 
   const selectedIds = watch("goodsCategoryIds");
@@ -166,7 +165,7 @@ export default function CreateTripModal({
     );
 
     if (!tripResult.success) {
-      showSupabaseError(tripResult.error, tripResult.status);
+      showSupabaseError(tripResult.error);
       return;
     }
 
@@ -180,7 +179,7 @@ export default function CreateTripModal({
         ),
       );
       if (!result.success) {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
         return;
       }
     }
@@ -211,7 +210,7 @@ export default function CreateTripModal({
 
       toast("Trip saved successfully", { variant: "success" });
     } catch (e) {
-      showSupabaseError(e);
+      showSupabaseError({ code: "error", message: "" });
     }
   };
 

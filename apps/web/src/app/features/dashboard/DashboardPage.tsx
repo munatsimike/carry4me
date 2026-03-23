@@ -22,7 +22,7 @@ import type { StatsItem } from "./domain/stats.types";
 import { GetDashboardDataUseCase } from "./application/GetDashboardData";
 import type { DashboardData } from "./domain/DashboardData";
 import { SubabaseDashboardRepository } from "./data/SupabaseDashboardRepository";
-import { Clock, Truck } from "lucide-react";
+import { Clock, ClockIcon, Truck } from "lucide-react";
 import { GetNotificationUseCase } from "../carry request/carry request events/application/CreateNotificationUseCase";
 import { SupabaseNotificationRepository } from "../carry request/carry request events/data/SupabaseNotificationRepository";
 import type { CarryRequestNotification } from "../carry request/carry request events/domain/CarryRequestNotification";
@@ -120,19 +120,13 @@ export default function DashboardPage() {
 
       // show fetch dashboard data error
       if (!dashboardData.result.success) {
-        showSupabaseError(
-          dashboardData.result.error,
-          dashboardData.result.status,
-        );
+        showSupabaseError(dashboardData.result.error);
         return;
       }
 
       // show fetch notification errors
       if (!notifications.result.success) {
-        showSupabaseError(
-          notifications.result.error,
-          notifications.result.status,
-        );
+        showSupabaseError(notifications.result.error);
         return;
       }
     };
@@ -146,7 +140,7 @@ export default function DashboardPage() {
     async function fetchGoods() {
       const { result } = await namedCall("goods", getGoodsUseCase.execute());
       if (!result.success) {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
         return;
       }
       setCategory(result.data);
@@ -254,7 +248,7 @@ function RecentActivity({
             <LineDivider heightClass="my-1" />
           </span>
 
-          {recentActivities &&
+          {recentActivities.length > 0 &&
             recentActivities.map((activity, index) => (
               <div
                 key={activity.id}
@@ -284,6 +278,18 @@ function RecentActivity({
                 )}
               </div>
             ))}
+
+          {recentActivities.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center gap-2 text-neutral-400 p-2">
+              <p className="text-sm font-medium text-ink-secondary sm:mt-6">
+                No activity yet
+              </p>
+
+              <p className="text-xs max-w-sm">
+                Post a parcel or find a traveler to get started.
+              </p>
+            </div>
+          )}
         </div>
       </Card>
     </motion.div>
@@ -360,7 +366,7 @@ function StatsSection({ statsList }: StatsProps) {
                 className="flex flex-col items-center gap-3 hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
               >
                 <CustomText>{item.itemName}</CustomText>
-                <CustomText textVariant="primary" textSize={"md"}>
+                <CustomText textVariant="primary" textSize={"lg"}  className="font-medium">
                   {item.count}
                 </CustomText>
               </Card>

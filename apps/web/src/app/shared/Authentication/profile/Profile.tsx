@@ -1,6 +1,5 @@
 import { Card } from "@/app/components/card/Card";
 import FloatingInputField from "@/app/components/CustomInputField";
-import DropDownMenu from "@/app/components/ComboBox";
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { SignUpUseCase } from "@/app/shared/Authentication/application/SignUpUseCase";
@@ -80,8 +79,7 @@ export default function ProfilePage() {
       city: "",
       password: "",
     },
-    mode: "onBlur",
-    reValidateMode: "onBlur",
+    mode: "onTouched",
   });
 
   useEffect(() => {
@@ -186,7 +184,7 @@ export default function ProfilePage() {
       deleteAvatarUseCase.execute(user.id, profile.avatarUrl),
     );
     if (!result.success) {
-        showSupabaseError(result.error, result.status)
+        showSupabaseError(result.error)
     }
     // delete in storage + db...
     setFile(null);
@@ -232,7 +230,7 @@ export default function ProfilePage() {
       );
 
       if (!result.success) {
-        showSupabaseError(result.error, result.status)
+        showSupabaseError(result.error)
       }
     }
 
