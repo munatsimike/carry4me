@@ -146,7 +146,7 @@ export default function CarryRequestsPage() {
       );
 
       if (!result.success) {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
         setLoading(false);
         return;
       }
@@ -158,7 +158,6 @@ export default function CarryRequestsPage() {
         setEmptyState(null);
         setCarryRequestList(result.data);
       }
-
       setLoading(false);
     }
 
@@ -222,7 +221,7 @@ export default function CarryRequestsPage() {
     );
 
     if (!result.success) {
-      showSupabaseError(result.error, result.status);
+      showSupabaseError(result.error);
       return false;
     }
 
@@ -390,7 +389,7 @@ export default function CarryRequestsPage() {
               description={emptyStateMessage.body}
               action={
                 emptyStateMessage.actions && (
-                  <div className="flex items-center justify-around gap-3">
+                  <div className="flex flex-wrap items-center justify-around gap-3">
                     {emptyStateMessage.actions.map((action) => (
                       <Link key={action.href} to={action.href}>
                         <Button variant={action.variant} size="md">

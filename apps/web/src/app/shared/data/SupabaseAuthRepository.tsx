@@ -3,12 +3,12 @@ import type { RepoResponse } from "../domain/RepoResponse";
 import type {
   AppUser,
   LoginResult,
-  LogoutResult,
   UserProfile,
 } from "../Authentication/domain/authTypes";
 import { supabase } from "@/app/shared/supabase/client";
 import type { UpdateProfileDto } from "../Authentication/application/updateProfileDTO";
 import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
+import type { User } from "@supabase/supabase-js";
 
 const emptyRepoResult: RepoResponse<string> = {
   data: null,
@@ -205,35 +205,40 @@ export class SupabaseAuthRepository implements AuthRepository {
     return { data: data, error: null };
   }
 
-  async logout(): Promise<LogoutResult> {
+  async logout(): Promise<RepoResponse<boolean>> {
     const { error } = await supabase.auth.signOut();
     if (error) throw Error;
     if (error) {
-      // return { success: false, error: error.message };
+      return { error: error, data: null };
     }
 
-    return { success: true };
+    return { data: true, error: null };
   }
 
-  async login(email: string, password: string): Promise<LoginResult> {
+  async login(email: string, password: string): Promise<RepoResponse<User>> {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      return { success: false, error: error.message };
+      return { data: null, error };
     }
 
     const user = data.user;
 
     if (!user) {
-      return { success: false, error: "Login succeeded but no user returned." };
+      return {
+        data: null,
+        error: {
+          code: "",
+          message: "Login succeeded but no user returned.",
+        },
+      };
     }
-
-    // Map Supabase user -> your domain user (keep it minimal)
     return {
-      success: true,
+      data: user,
+      error: null,
     };
   }
 

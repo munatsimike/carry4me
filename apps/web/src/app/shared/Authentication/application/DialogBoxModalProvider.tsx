@@ -41,7 +41,7 @@ type InfoModalPayload = {
   secondaryLabel?: string;
   icon?: React.ReactNode;
   buttonText?: string;
-  onClick: () => void;
+  onClick?: () => void;
   secondaryAction?: () => void;
 };
 

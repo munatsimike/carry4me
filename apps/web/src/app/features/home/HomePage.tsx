@@ -12,35 +12,17 @@ import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
-
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-
   const { openAuthModal } = useAuthModal();
   const isPassReset = searchParams.get("reset") === "success";
   const isSignup = searchParams.get("signup") === "success";
-  const isResetLink = searchParams.get("reset-sent") === "success";
-
-  useEffect(() => {
-
-      const timer = setTimeout(() => {
-        toast("Password reset link sent. Check your email.", {
-          variant: "success",
-        });
-      }, 700);
-
-     handleClose("reset-sent")
-      return () => clearTimeout(timer);
-    
-  }, [isResetLink]);
+  const isResetLink = searchParams.get("reset-sent")?.trim() === "success";
 
   useEffect(() => {
     const raw = sessionStorage.getItem("redirectToast");
     if (!raw) return;
-
-    sessionStorage.removeItem("redirectToast");
-
     const data = JSON.parse(raw) as {
       message: string;
       variant: "success" | "info" | "warning" | "error";
@@ -48,10 +30,22 @@ export default function HomePage() {
 
     const timer = setTimeout(() => {
       toast(data.message, { variant: data.variant });
+      sessionStorage.removeItem("redirectToast");
     }, 700); // 300–800ms feels natural
 
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (!isResetLink) return;
+    const timer = setTimeout(() => {
+      toast("Password reset link sent. Check your email.", {
+        variant: "success",
+      });
+      handleClose("reset-sent");
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [isResetLink]);
 
   const handleClose = (param: string) => {
     const next = new URLSearchParams(searchParams);

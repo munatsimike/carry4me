@@ -1,5 +1,7 @@
+
 import type { AuthRepository } from "../domain/AuthRepository";
-import type { LogoutResult } from "../domain/authTypes";
+import type { Result } from "../domain/Result";
+import { toResult } from "./toResultMapper";
 
 export class LogoutUseCase {
   private repo: AuthRepository;
@@ -8,7 +10,8 @@ export class LogoutUseCase {
     this.repo = repo;
   }
 
-  async execute(): Promise<LogoutResult> {
-    return this.repo.logout();
+  async execute(): Promise<Result<boolean>> {
+    const result = await this.repo.logout();
+    return toResult(result)
   }
 }

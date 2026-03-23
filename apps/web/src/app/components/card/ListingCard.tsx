@@ -19,6 +19,7 @@ import { SupabaseFavouriteRepository } from "@/app/features/my favourites/data/S
 import { useEffect, useMemo, useState } from "react";
 import { UpadateFavouriteUseCase } from "@/app/features/my favourites/application/UpdateFavouriteUseCase";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { useToast } from "../Toast";
 
 interface ListingCardProps<T extends Listing> {
   mode?: CardMode;
@@ -51,11 +52,15 @@ export function ListingCard<T extends Listing>({
   const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
   const isTripListing = listing.type === "trip";
   const [updateFav, setUpdate] = useState(false);
+  const {toast}= useToast()
 
   useEffect(() => {
     if (!updateFav) return;
     async function onToggleLike() {
-      if (!user?.id) return;
+      if (!user?.id) {
+        toast("You need to login to like parcels or trips", {variant:"warning"})
+        return;
+      }
       const { result } = await namedCall(
         "onLIke",
         updateFavUseCase.execute({

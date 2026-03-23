@@ -100,7 +100,7 @@ export default function ConfirmRequest({
           onClick: () => navigate("/requests"),
         });
       } else {
-        showSupabaseError(result.error, result.status);
+        showSupabaseError(result.error);
       }
     }
 
@@ -185,7 +185,7 @@ export function ParcelSummary({
             textVariant="primary"
             className="font-medium"
           >
-            {parcel.route.originCountry} {parcel.route.destinationCountry}
+            {parcel.route.originCountry}
           </CustomText>
           <MoveRight className="text-neutral-600 h-4 w-4" strokeWidth={1.5} />
 
@@ -195,7 +195,7 @@ export function ParcelSummary({
             textVariant="primary"
             className="font-medium"
           >
-            {parcel.route.originCountry} {parcel.route.destinationCountry}
+            {parcel.route.destinationCountry}
           </CustomText>
         </span>
 

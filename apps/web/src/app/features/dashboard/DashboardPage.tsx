@@ -22,7 +22,7 @@ import type { StatsItem } from "./domain/stats.types";
 import { GetDashboardDataUseCase } from "./application/GetDashboardData";
 import type { DashboardData } from "./domain/DashboardData";
 import { SubabaseDashboardRepository } from "./data/SupabaseDashboardRepository";
-import { Clock, ClockIcon, Truck } from "lucide-react";
+import { Clock, Truck } from "lucide-react";
 import { GetNotificationUseCase } from "../carry request/carry request events/application/CreateNotificationUseCase";
 import { SupabaseNotificationRepository } from "../carry request/carry request events/data/SupabaseNotificationRepository";
 import type { CarryRequestNotification } from "../carry request/carry request events/domain/CarryRequestNotification";
@@ -232,7 +232,7 @@ function RecentActivity({
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-emerald-200"
+      className="relative max-w-sm overflow-hidden rounded-3xl pt-1.5 bg-emerald-200"
     >
       <Card paddingClass="p-3" className="h-full">
         <div className="flex flex-col max-w-sm">
@@ -303,7 +303,7 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-slate-200"
+      className="relative max-w-sm overflow-hidden rounded-3xl pt-1.5 bg-slate-200"
     >
       <Card className="h-full">
         <div className="flex flex-col gap-4 sm:pr-6 bg-white">
@@ -366,7 +366,11 @@ function StatsSection({ statsList }: StatsProps) {
                 className="flex flex-col items-center gap-3 hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
               >
                 <CustomText>{item.itemName}</CustomText>
-                <CustomText textVariant="primary" textSize={"lg"}  className="font-medium">
+                <CustomText
+                  textVariant="primary"
+                  textSize={"lg"}
+                  className="font-medium"
+                >
                   {item.count}
                 </CustomText>
               </Card>

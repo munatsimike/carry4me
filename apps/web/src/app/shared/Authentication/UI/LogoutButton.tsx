@@ -5,9 +5,10 @@ import CustomText from "@/components/ui/CustomText";
 import { LogOut } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUniversalModal } from "../application/DialogBoxModalProvider";
 
 export default function LogoutButton({
- onClosePopOver,
+  onClosePopOver,
 }: {
   onClosePopOver: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
@@ -16,6 +17,7 @@ export default function LogoutButton({
   const cls = "group-hover:text-ink-error";
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { showSupabaseError } = useUniversalModal();
 
   const logout = async () => {
     setLoading(true);
@@ -25,7 +27,7 @@ export default function LogoutButton({
       sessionStorage.setItem(
         "redirectToast",
         JSON.stringify({
-          message: "Signed out successfully.",
+          message: "You’re now signed out. See you next time.",
           variant: "success",
         }),
       );
@@ -34,13 +36,10 @@ export default function LogoutButton({
       });
     }
     if (!result.success) {
-      if (isNetworkError(result.error))
-        console.log("network error:", result.error);
-      else console.log(result.error);
-
-      setLoading(false);
-      onClosePopOver(false);
+      showSupabaseError(result.error);
     }
+    setLoading(false);
+    onClosePopOver(false);
   };
 
   return (

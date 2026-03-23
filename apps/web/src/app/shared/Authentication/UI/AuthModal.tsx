@@ -17,6 +17,8 @@ import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import FormModal from "@/app/features/dashboard/components/FormModal";
 import { AnimatePresence } from "framer-motion";
 import z from "zod";
+import { namedCall } from "../application/NamedCall";
+import { useUniversalModal } from "../application/DialogBoxModalProvider";
 
 const schema = z.object({
   email: z
@@ -49,6 +51,7 @@ export function AuthModal() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const repo = useMemo(() => new SupabaseAuthRepository(), []);
   const useCase = useMemo(() => new LoginUseCase(repo), [repo]);
+  const {showSupabaseError} = useUniversalModal()
 
   useEffect(() => {
     if (!state.isOpen) {
@@ -63,9 +66,10 @@ export function AuthModal() {
 
   const handleSignIn = async (value: FormValues) => {
     const { email, password } = value;
-    const result = await useCase.execute(email, password);
+    const {result} =  await namedCall("login", useCase.execute(email, password))
+
     if (!result.success) {
-      setError(result.error);
+      showSupabaseError(result.error);
       return;
     }
     if (result.success) {

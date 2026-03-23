@@ -39,7 +39,7 @@ export default function FloatingInputField({
         ${className ?? ""}`)}
       >
         {leadingIcon && (
-          <div className=" pr-1 text-neutral-400 flex items-center">
+          <div className={cn(" pr-1 text-neutral-400 flex items-center")}>
             {leadingIcon}
           </div>
         )}
@@ -47,8 +47,9 @@ export default function FloatingInputField({
           <input
             {...props}
             placeholder=" "
-            className="peer w-full bg-transparent px-1 py-1 text-md text-neutral-700
-            focus:outline-none"
+            className={cn(
+              "peer w-full bg-transparent px-1 py-1 text-md text-neutral-700 focus:outline-none",
+            )}
           />
 
           <label

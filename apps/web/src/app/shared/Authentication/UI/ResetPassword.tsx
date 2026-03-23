@@ -60,7 +60,7 @@ export default function ResetPassword() {
       showSupabaseError(result.error);
     } else {
       resetField("emailAddress");
-      navigate("/?reset-sent=sucess");
+      navigate("/?reset-sent=success");
     }
   };
 
