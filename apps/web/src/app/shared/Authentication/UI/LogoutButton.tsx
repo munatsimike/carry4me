@@ -1,6 +1,5 @@
 import { LogoutUseCase } from "@/app/shared/Authentication/application/LogoutUseCase";
 import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
-import { isNetworkError } from "@/app/util/isNetworkError";
 import CustomText from "@/components/ui/CustomText";
 import { LogOut } from "lucide-react";
 import { useMemo, useState } from "react";

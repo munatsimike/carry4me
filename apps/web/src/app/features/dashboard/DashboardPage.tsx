@@ -234,7 +234,7 @@ function RecentActivity({
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className="relative max-w-sm overflow-hidden rounded-3xl pt-1.5 bg-emerald-200"
     >
-      <Card paddingClass="p-3" className="h-full">
+      <Card   enableHover={false} paddingClass="p-3" className="h-full">
         <div className="flex flex-col max-w-sm">
           <span className="flex flex-col gap-3">
             <span className="inline-flex gap-3 items-center">
@@ -305,7 +305,7 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className="relative max-w-sm overflow-hidden rounded-3xl pt-1.5 bg-slate-200"
     >
-      <Card className="h-full">
+      <Card   enableHover={false} className="h-full">
         <div className="flex flex-col gap-4 sm:pr-6 bg-white">
           <span className="inline-flex items-center gap-3">
             <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
@@ -361,7 +361,7 @@ function StatsSection({ statsList }: StatsProps) {
           {statsList.map((item) => (
             <Link key={item.itemName} to={item.link ?? ""}>
               <Card
-                hover={false}
+                enableHover={false}
                 key={item.itemName}
                 className="flex flex-col items-center gap-3 hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
               >

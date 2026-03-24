@@ -1,4 +1,5 @@
 import CustomText from "@/components/ui/CustomText";
+import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
 
@@ -36,19 +37,19 @@ export default function ScrollChipRow({
             className="flex gap-2 min-w-0 overflow-x-auto whitespace-nowrap scroll-smooth scrollbar-hide pr-10"
           >
             {items.map((t) => (
-              <span
+              <motion.span
                 key={t}
-                className="inline-flex shrink-0 bg-neutral-100 rounded-full px-2 py-[2px] border border-neutral-200"
+                className="inline-flex shrink-0 bg-emerald-50 rounded-full px-2 py-[2px] border border-emerald-100 cursor-default hover:bg-emerald-100"
               >
                 <CustomText
                   as="span"
-                  textVariant="primary"
+                  textVariant="tonal"
                   textSize="xsm"
-                  className="leading-tight"
+                  className="leading-tight font-light"
                 >
                   {t}
                 </CustomText>
-              </span>
+              </motion.span>
             ))}
           </div>
 

@@ -58,7 +58,7 @@ export function ListingCard<T extends Listing>({
     if (!updateFav) return;
     async function onToggleLike() {
       if (!user?.id) {
-        toast("You need to login to like parcels or trips", {variant:"warning"})
+        toast("You need to login to like parcels or trips.", {variant:"warning"})
         return;
       }
       const { result } = await namedCall(
@@ -82,7 +82,7 @@ export function ListingCard<T extends Listing>({
 
   return (
     <Card
-      hover={isDisplayMode}
+      enableHover={isDisplayMode}
       borderClass={borderClass}
       shadowClass={shadowClass}
     >
