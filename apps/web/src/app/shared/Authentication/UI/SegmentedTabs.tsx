@@ -35,7 +35,7 @@ export function SegmentedTabs<T extends string>({
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300",
               isActive
                 ? "text-white"
-                : "bg-white text-neutral-400 hover:text-neutral-700",
+                : "bg-white text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100",
             )}
           >
             {isActive && (

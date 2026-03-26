@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { CloseBackBtn } from "./CloseBtn";
+import { useEffect, useState } from "react";
+import { useMediaQuery } from "../shared/Authentication/UI/useMediaQuery";
 
 type Width = "sm" | "md" | "lg" | "xl" | "2xl";
 
@@ -22,9 +24,25 @@ export default function CustomModal({
   onClose,
   width = "2xl",
 }: Props) {
+  const isMobile = useMediaQuery();
+
+  const modalAnimation = isMobile
+    ? {
+        initial: { opacity: 0, y: -100 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -80 },
+        transition: { duration: 0.28, ease: "easeOut" as const },
+      }
+    : {
+        initial: { opacity: 0, scale: 0.96, y: 24 },
+        animate: { opacity: 1, scale: 1, y: 0 },
+        exit: { opacity: 0, scale: 0.94, y: 32 },
+        transition: { duration: 0.24, ease: "easeOut" as const },
+      };
+
   return (
     <motion.div
-      className="fixed inset-0 z-40 flex items-center justify-center px-4"
+      className="fixed inset-0 z-40 flex items-start sm:items-center justify-center px-4 bg-white-500"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -39,11 +57,11 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-50 w-full ${sizes[width]} rounded-2xl bg-white shadow-xl p-3 border border-neutral-300`}
-        initial={{ opacity: 0, scale: 0.96, y: 24 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.94, y: 32 }}
-        transition={{ duration: 0.24, ease: "easeOut" }}
+        className={`relative z-50 w-full ${sizes[width]} rounded-2xl bg-white shadow-xl p-3 border border-neutral-300 mt-4 sm:mt-0`}
+        initial={modalAnimation.initial}
+        animate={modalAnimation.animate}
+        exit={modalAnimation.exit}
+        transition={modalAnimation.transition}
       >
         <CloseBackBtn onClose={onClose} />
         {children}

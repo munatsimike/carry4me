@@ -39,7 +39,7 @@ export default function ScrollChipRow({
             {items.map((t) => (
               <motion.span
                 key={t}
-                className="inline-flex shrink-0 bg-emerald-50 rounded-full px-2 py-[2px] border border-emerald-100 cursor-default hover:bg-emerald-100"
+                className="inline-flex shrink-0 bg-emerald-50 rounded-full px-2 py-[2px] border border-emerald-100"
               >
                 <CustomText
                   as="span"

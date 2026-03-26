@@ -56,7 +56,7 @@ export default function ActionButtons() {
                 <SvgIcon size="xl" Icon={ParcelIcon} color="onDark" />
               </CircleBadge>
             }
-            trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} />}
+            trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} color="grey" />}
           >
             <CustomText as="span" textSize={titleSize} textVariant="onDark">
               Browse Parcels
@@ -85,7 +85,7 @@ export default function ActionButtons() {
                 <SvgIcon size="xl" Icon={TravelerIcon} color="primary" />
               </CircleBadge>
             }
-            trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} />}
+            trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} color="neutral"/>}
           >
             <CustomText as="span" textSize={titleSize} textVariant="primary">
               Browse Trips

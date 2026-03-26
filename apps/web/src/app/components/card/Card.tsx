@@ -1,11 +1,11 @@
-import { motion, scale, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 type CardProps = {
   children: React.ReactNode;
   className?: string;
   cornerRadiusClass?: string;
   borderClass?: string;
-   enableHover?:boolean,
+  enableHover?: boolean;
   paddingClass?: string;
   shadowClass?: string;
 };
@@ -13,19 +13,21 @@ type CardProps = {
 export function Card({
   children,
   className,
-   enableHover = true,
+  enableHover = true,
   paddingClass = "p-5",
   borderClass = "border border-neutral-200",
   cornerRadiusClass = "rounded-3xl",
   shadowClass = "shadow-sm",
 }: CardProps) {
-   const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = useReducedMotion();
   return (
     <motion.div
       initial={shouldReduceMotion ? false : { scale: 0.97, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileHover={
-        enableHover && !shouldReduceMotion ? { scale: 1.02, y: -0.2 } : undefined
+        enableHover && !shouldReduceMotion
+          ? { scale:1.01, y:-3}
+          : undefined
       }
       transition={{ duration: 0.18, ease: "easeOut" }}
       className={[

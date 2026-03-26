@@ -21,7 +21,7 @@ export default function Greeting({ user }: { user: string | null}) {
 
   return (
     <h1 >
-      {greeting} {","} {`${user?.substring(0,user.indexOf(" "))}${"!"}`}
+      {greeting} {`${user?.substring(0,user.indexOf(" "))}${"!"}`}
     </h1>
   );
 }

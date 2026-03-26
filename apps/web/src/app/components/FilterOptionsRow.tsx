@@ -69,7 +69,7 @@ function FilterChip({
       >
         {icon}
       </span>
-      <CustomText className="font-semi-medium" textVariant="primary">
+      <CustomText className="font-semi-medium whitespace-nowrap" textVariant="primary">
         {label}
       </CustomText>
       <ChevronDown
@@ -175,9 +175,7 @@ export function FilterOptionsRow({
     async function fetchGoods() {
       const { result } = await namedCall("goods", getGoodsUseCase.execute());
       if (!result.success) {
-        showSupabaseError(result.error, result.status, {
-          onClose: fetchGoods,
-        });
+        showSupabaseError(result.error);
         return;
       }
       setCategory(result.data.filter((item) => item.name !== "Other"));
@@ -258,8 +256,8 @@ export function FilterOptionsRow({
   const isTraveler = tag === "traveler";
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <span className="text-md text-neutral-500">Filter by</span>
+    <div className="hidden flex md:flex sm:flex-row gap-3">
+      <span className="text-md text-neutral-500 whitespace-nowrap">Filter by</span>
 
       {isTraveler && (
         <FilterByDate
@@ -335,7 +333,7 @@ export function FilterOptionsRow({
           disabled={!hasAnyFilter}
           onClick={clearFilters}
           className={cn(
-            "ml-1 text-sm ",
+            "ml-1 text-sm whitespace-nowrap",
             hasAnyFilter
               ? "text-primary-500 hover:underline"
               : "text-neutral-500",

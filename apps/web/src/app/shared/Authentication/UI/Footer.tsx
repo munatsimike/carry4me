@@ -8,7 +8,7 @@ type FooterProps = {
 
 export default function Footer({ isAuthed }: FooterProps) {
   return (
-    <footer className="border-t border-slate-300 bg-[#EAF2FF] text-slate-600">
+    <footer className="border-t border-slate-100 bg-[#EAF2FF] text-slate-600">
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-[1.1fr_0.75fr_0.75fr_0.95fr_0.95fr]">
           <Brand isAuthed={isAuthed} />

@@ -60,9 +60,8 @@ export default function ComboBox({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   const baseClasses = cn(
-    `${heightClass} w-full sm:w-[210px] bg-white pl-3 pr-10`,
+    `${heightClass} w-full min-w-0 bg-white pl-3 pr-10 text-sm`,
     "text-ellipsis whitespace-nowrap border outline-none",
     className,
     textVariant,
@@ -71,7 +70,7 @@ export default function ComboBox({
 
   if (!searchable) {
     return (
-      <div className="relative sm:min-w-[150px]">
+      <div className="relative w-full min-w-0">
         <select
           disabled={disabled}
           value={value}
@@ -81,7 +80,7 @@ export default function ComboBox({
             onValueChange?.(e.target.value);
             setIsOpen(false);
           }}
-          className={cn(baseClasses, "appearance-none")}
+          className={cn(baseClasses, "appearance-none rounded-xl")}
         >
           <option value="" disabled>
             {placeholder}
@@ -102,7 +101,7 @@ export default function ComboBox({
   }
 
   return (
-    <div ref={wrapperRef} className="relative sm:min-w-[150px]">
+    <div ref={wrapperRef} className="relative w-full min-w-0">
       <input
         type="text"
         disabled={disabled}
@@ -116,7 +115,7 @@ export default function ComboBox({
           setQuery(e.target.value);
           setIsOpen(true);
         }}
-        className={baseClasses}
+        className={cn(baseClasses, "rounded-xl")}
       />
 
       <button
@@ -150,7 +149,7 @@ export default function ComboBox({
                   }}
                   className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
                 >
-                  <span>{item}</span>
+                  <span className="truncate">{item}</span>
                   {isSelected && <Check className="h-4 w-4 text-slate-500" />}
                 </button>
               );

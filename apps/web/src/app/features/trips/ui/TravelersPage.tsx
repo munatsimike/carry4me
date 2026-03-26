@@ -31,6 +31,7 @@ import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import CreateTripModal from "./CreateTripModal";
+import { useMediaQuery } from "@/app/shared/Authentication/UI/useMediaQuery";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -196,18 +197,21 @@ export default function TravelersPage() {
   const handleLikeUpdate = (id: string) => {
     toggleLike(id, setTripList);
   };
+  const isMobile = useMediaQuery();
 
   return (
     <>
-      <PageSection>
-        <Search
-          countries={["UK", "USA", "Ireland"]}
-          cities={["London", "Birmingham"]}
-          setSearchCountry={setSearchCountry}
-          setSearchCity={setSearchCity}
-          setClearResults={() => setClearResults(false)}
-          clearResults={clearSearchResults}
-        />
+      <PageSection align={isMobile ? "left" : "center"}>
+        {!isMobile && (
+          <Search
+            countries={["UK", "USA", "Ireland"]}
+            cities={["London", "Birmingham"]}
+            setSearchCountry={setSearchCountry}
+            setSearchCity={setSearchCity}
+            setClearResults={() => setClearResults(false)}
+            clearResults={clearSearchResults}
+          />
+        )}
         <FilterOptionsRow
           setSelectedDate={setFilterByDate}
           setPriceRange={setPriceRange}

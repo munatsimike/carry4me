@@ -30,6 +30,7 @@ import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import CreateParcelModal from "./CreateParcelModal";
+import { useMediaQuery } from "@/app/shared/Authentication/UI/useMediaQuery";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -52,7 +53,6 @@ export default function ParcelsPage() {
     if (cancel) return;
 
     async function fetchParcels() {
-    
       const { result } = await namedCall(
         "parcels",
         getParcelsUseCase.execute(user?.id),
@@ -196,18 +196,22 @@ export default function ParcelsPage() {
   const handleLikeUpdate = (id: string) => {
     toggleLike(id, setParcelsList);
   };
+  const isMobile = useMediaQuery();
 
   return (
     <>
-      <PageSection>
-        <Search
-          countries={["UK", "USA"]}
-          cities={["London", "Florida"]}
-          setSearchCity={setSearchCity}
-          setSearchCountry={setSearchCountry}
-          setClearResults={() => setClearResults(false)}
-          clearResults={clearSearchResults}
-        />
+      <PageSection  align={isMobile ? "left" : "center"}>
+       
+        {!isMobile && (
+          <Search
+            countries={["UK", "USA"]}
+            cities={["London", "Florida"]}
+            setSearchCity={setSearchCity}
+            setSearchCountry={setSearchCountry}
+            setClearResults={() => setClearResults(false)}
+            clearResults={clearSearchResults}
+          />
+        )}
         <FilterOptionsRow
           setSelectedDate={setFilterByDate}
           setPriceRange={setPriceRange}

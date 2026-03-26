@@ -149,7 +149,7 @@ export default function DashboardPage() {
   }, [showParcelModal, showTripModal]);
 
   return (
-    <DefaultContainer>
+    <DefaultContainer outerClassName="min-h-screen">
       <PageSection align="left">
         <CustomText
           as="span"
@@ -161,7 +161,7 @@ export default function DashboardPage() {
         </CustomText>
       </PageSection>
 
-      <div className="flex flex-col gap-12 pt-4">
+      <div className="flex flex-col gap-12 pt-2 sm:pt-4">
         <ActionButtonRow
           setTripModalState={setTripModalState}
           setParcelModalState={setParcelModalState}
@@ -232,9 +232,9 @@ function RecentActivity({
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative max-w-sm overflow-hidden rounded-3xl pt-1.5 bg-emerald-200"
+      className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-emerald-200"
     >
-      <Card   enableHover={false} paddingClass="p-3" className="h-full">
+      <Card enableHover={false} paddingClass="p-3" className="h-full">
         <div className="flex flex-col max-w-sm">
           <span className="flex flex-col gap-3">
             <span className="inline-flex gap-3 items-center">
@@ -303,9 +303,9 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative max-w-sm overflow-hidden rounded-3xl pt-1.5 bg-slate-200"
+      className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-slate-200"
     >
-      <Card   enableHover={false} className="h-full">
+      <Card enableHover={false} className="h-full">
         <div className="flex flex-col gap-4 sm:pr-6 bg-white">
           <span className="inline-flex items-center gap-3">
             <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
@@ -361,6 +361,7 @@ function StatsSection({ statsList }: StatsProps) {
           {statsList.map((item) => (
             <Link key={item.itemName} to={item.link ?? ""}>
               <Card
+
                 enableHover={false}
                 key={item.itemName}
                 className="flex flex-col items-center gap-3 hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
@@ -410,7 +411,7 @@ function ActionButtonRow({
 
   return (
     <motion.div
-      className="flex flex-wrap justify-center items-center gap-4 transition-all duration-200 ease-out"
+      className="flex flex-wrap justify-center items-stretch gap-4 gap-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"

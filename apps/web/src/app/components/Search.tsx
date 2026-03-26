@@ -6,8 +6,9 @@ import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect} from "react";
 import ComboBox from "./ComboBox";
+import { cn } from "../lib/cn";
 
 const searchScema = z.object({
   country: z.string().min(1, "Select country"),
@@ -54,7 +55,7 @@ export default function Search({
 
   const countryValue = watch("country");
   const cityValue = watch("city");
-
+  
   const handleSearch = () => {
     if (!countryValue || !cityValue) return;
     setSearchCity(cityValue);
@@ -64,16 +65,17 @@ export default function Search({
   return (
     <form
       onSubmit={handleSubmit(handleSearch)}
-      className="flex flex-wrap items-center gap-4 rounded-2xl border border-neutral-100 bg-neutral-50 px-4 py-2 shadow-sm md:flex-nowrap"
+      className={cn("flex w-full sm:max-w-3xl flex-col gap-3 rounded-3xl border border-primary-50 bg-primary-50 p-3 sm:p-2 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
+      )}
     >
-      <span className="flex flex-wrap gap-4">
-        <div className="min-w-[150px] flex-1">
+      <span className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">
+        <div className="w-full sm:min-w-[180px] sm:flex-1">
           <Controller
             name="country"
             control={control}
             render={({ field, fieldState }) => (
               <ComboBox
-                className="rounded-xl"
+                className="w-full rounded-xl"
                 placeholder="Select Country"
                 menuItems={countries}
                 value={field.value}
@@ -86,13 +88,14 @@ export default function Search({
             )}
           />
         </div>
-        <div className="min-w-[150px] flex-1">
+
+        <div className="w-full sm:min-w-[180px] sm:flex-1">
           <Controller
             name="city"
             control={control}
             render={({ field, fieldState }) => (
               <ComboBox
-                className="rounded-xl"
+                className="w-full rounded-xl"
                 placeholder="Select city"
                 menuItems={cities}
                 value={field.value}
@@ -107,35 +110,37 @@ export default function Search({
         </div>
       </span>
 
-      <CustomText
-        as="span"
-        textSize="xsm"
-        className="text-neutral-500 whitespace-nowrap"
-      >
-        to
-      </CustomText>
-
-      <div className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-white px-3 py-2 shadow-sm border">
-        <SvgIcon size="md" Icon={META_ICONS.zimFlag} />
-        <CustomText as="span" textSize="xsm" className="text-neutral-700">
-          Zimbabwe
+      <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center lg:w-auto">
+        <CustomText
+          as="span"
+          textSize="xsm"
+          className="text-center text-neutral-500 sm:text-left whitespace-nowrap"
+        >
+          to
         </CustomText>
+
+        <div className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl border bg-white px-3 py-2 shadow-sm sm:min-w-[150px]">
+          <SvgIcon size="md" Icon={META_ICONS.zimFlag} />
+          <CustomText as="span" textSize="xsm" className="text-neutral-700">
+            Zimbabwe
+          </CustomText>
+        </div>
+
+        <Button
+          type="submit"
+          cornerRadiusClass="rounded-full"
+          variant="primary"
+          size="sm"
+          className="flex w-full items-center justify-center gap-2 sm:w-auto"
+          leadingIcon={
+            <SvgIcon color="onDark" size="sm" Icon={META_ICONS.searchIcon} />
+          }
+        >
+          <CustomText textSize="sm" textVariant="onDark">
+            Search
+          </CustomText>
+        </Button>
       </div>
-
-      <Button
-        type="submit"
-        cornerRadiusClass="rounded-xl"
-        variant="primary"
-        size="sm"
-        className="flex items-center gap-2 md:w-auto"
-        leadingIcon={
-          <SvgIcon color="onDark" size="sm" Icon={META_ICONS.searchIcon} />
-        }
-      >
-        <CustomText textSize="sm" textVariant="onDark">
-          Search
-        </CustomText>
-      </Button>
     </form>
   );
 }

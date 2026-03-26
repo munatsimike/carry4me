@@ -7,7 +7,8 @@ import { Link } from "react-router-dom";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import SvgIcon from "@/components/ui/SvgIcon";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 type ProfileItem = {
   name: string;
@@ -88,10 +89,10 @@ export function UserProfileMenu({
       borderClass="border border-neutral-200"
       shadowClass="shadow-md"
       paddingClass="p-3"
-      hover={false}
+      enableHover={false}
       className="absolute top-full mt-2 right-0 z-10 w-56"
     >
-      <div ref={ref} className="flex flex-col">
+      <motion.div ref={ref} className="flex flex-col ">
         {profileItems.map((item) => (
           <ProfileItem
             key={item.name}
@@ -101,7 +102,7 @@ export function UserProfileMenu({
         ))}
 
         <LogoutButton onClosePopOver={onClosePopOver} />
-      </div>
+      </motion.div>
     </Card>
   );
 }
@@ -111,12 +112,17 @@ type ProfileItemProps = {
 };
 
 function ProfileItem({ profileItem, onClosePopOver }: ProfileItemProps) {
+  const [hover, setHover] = useState<boolean>(false);
+  const handleHover = () => setHover((v: boolean) => !v);
+
   return (
     <Link
+      onMouseEnter={handleHover}
+      onMouseLeave={handleHover}
       onClick={() => onClosePopOver(false)}
       to={profileItem.path ? profileItem.path : "/profile"}
     >
-      <span className="group inline-flex gap-2 items-center p-2 hover:bg-neutral-100 w-full rounded-lg">
+      <motion.span className="group inline-flex gap-2 items-center p-2 hover:bg-neutral-100 w-full rounded-lg">
         {profileItem.icon}
         <SpaceBetweenRow className="items-center w-full">
           <CustomText
@@ -126,9 +132,13 @@ function ProfileItem({ profileItem, onClosePopOver }: ProfileItemProps) {
           >
             {profileItem.name}
           </CustomText>
-          <SvgIcon size={"xs"} Icon={META_ICONS.arrowSmall} color="primary" />
+          <SvgIcon
+            size={"xs"}
+            Icon={META_ICONS.arrowSmall}
+            color={hover ? "tonal" : "neutral"}
+          />
         </SpaceBetweenRow>
-      </span>
+      </motion.span>
 
       <LineDivider heightClass="my-1" />
     </Link>

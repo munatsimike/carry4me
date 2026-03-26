@@ -15,7 +15,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   trailingIcon?: React.ReactNode;
   subtitle?: React.ReactNode;
   isBusy?: boolean;
-  cornerRadiusClass?:string
+  cornerRadiusClass?: string;
 };
 
 export function Button({
@@ -26,7 +26,7 @@ export function Button({
   leadingIcon,
   trailingIcon,
   children,
-  cornerRadiusClass = "rounded-xl",
+  cornerRadiusClass = "rounded-full",
   type = "button",
   isBusy = false,
   ...props
@@ -46,7 +46,7 @@ export function Button({
     md: "h-10 px-4 " + cornerRadiusClass,
     lg: "h-14 px-4 " + cornerRadiusClass,
     xl: "h-[85px] max-w-sm px-3 rounded-xl",
-    xxl: "h-[110px] min-w-[200px] px-3 rounded-xl motion-safe:animate-scale-in",
+    xxl: "w-full min-h-[90px] sm:h-[100px] sm:min-w-[200px] px-3 rounded-2xl",
   };
 
   const variants: Record<ButtonVariant, string> = {
@@ -57,7 +57,8 @@ export function Button({
       "bg-secondary-200 hover:bg-primary-500 text-primary border border-secondary-400 hover:text-white",
     neutral: "hover:bg-neutral-50 text-ink-secondary",
     outline: "hover:bg-neutral-200 border bg-neutral-100 text-ink-secondary",
-    error: "hover:bg-error-100 hover:text-ink-error text-ink-primary border bg-neutral-100",
+    error:
+      "hover:bg-error-100 hover:text-ink-error text-ink-primary border bg-neutral-100",
   };
 
   // gap should only be between leading and text, NOT including trailing
