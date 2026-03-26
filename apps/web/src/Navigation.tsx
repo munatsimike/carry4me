@@ -3,7 +3,6 @@ import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
 import {
   Bell,
   BellRing,
-  Filter,
   Handshake,
   HomeIcon,
   LayoutDashboard,
@@ -28,6 +27,7 @@ import CustomText from "./components/ui/CustomText";
 
 import SearchComponent from "./app/components/Search";
 import CustomModal from "./app/components/CustomModal";
+import { CloseBackBtn } from "./app/components/CloseBtn";
 
 const iconStyle = "h-5 w-5 text-neutral-500 md:hidden";
 const strokeWidth = 1.5;
@@ -324,29 +324,25 @@ export function MobileNavigationMenu({
   profile: UserProfile | null;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [search, setSearch] = useState<boolean>(false);
+  const location = useLocation();
   const style =
-    "flex flex-col items-center justify-center gap-0.5 text-[12px] flex-1 py-1";
+    "flex flex-col text-ink-primary items-center justify-center gap-0.5 text-[12px] flex-1 py-1";
   const iconColor = "text-neutral-500";
 
   return (
     <>
-      <div className="flex md:hidden items-center justify-between w-full bg-white px-4 py-1">
+      <div className="relative flex md:hidden items-center justify-between w-full px- py-1 h-12">
         <CustomText
           as="h1"
           textSize="md"
           textVariant="primary"
           className="font-medium"
         >
-          Parcels
+          {toHeading(location.pathname)}
         </CustomText>
 
         <div className="flex items-center gap-6">
-          <button
-            onClick={() => setSearch(true)}
-            type="button"
-            className={style}
-          >
+          <button onClick={() => null} type="button" className={style}>
             <Search size={20} strokeWidth={strokeWidth} className={iconColor} />
             Search
           </button>
@@ -363,14 +359,8 @@ export function MobileNavigationMenu({
       </div>
 
       <AnimatePresence>
-        {(isOpen || search) && (
+        {isOpen && (
           <>
-            {search && (
-              <SearchMenuItems
-                isMobile={!search}
-                onClose={() => setSearch(false)}
-              />
-            )}
             {isOpen && (
               <MobileNavigationMenuItems
                 isAuthed={isAuthed}
@@ -382,26 +372,6 @@ export function MobileNavigationMenu({
         )}
       </AnimatePresence>
     </>
-  );
-}
-
-function SearchMenuItems({
-  onClose,
-}: {
-  isMobile: boolean;
-  onClose: () => void;
-}) {
-  return (
-    <CustomModal onClose={onClose}>
-      <SearchComponent
-        countries={["Michael"]}
-        cities={["Munatsi"]}
-        setSearchCountry={() => null}
-        setSearchCity={() => null}
-        setClearResults={() => null}
-        clearResults={false}
-      />
-    </CustomModal>
   );
 }
 
@@ -428,9 +398,9 @@ function MobileNavigationMenuItems({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="fixed top-0 right-0 z-50 h-full w-60 bg-white shadow-lg rounded-tl-2xl"
+        className="fixed top-0 right-0 z-50 h-full w-60 bg-white shadow-lg "
       >
-        <div className="flex items-center justify-between border-b border-neutral-200 pl-6 pr-3 py-2">
+        <div className="flex items-center justify-between border-b border-neutral-200 pl-6 pr-3 py-2" >
           <CustomText
             textSize="lg"
             textVariant="primary"
@@ -438,10 +408,7 @@ function MobileNavigationMenuItems({
           >
             Menu
           </CustomText>
-
-          <button onClick={setIsOpen} className="text-2xl leading-none">
-            ×
-          </button>
+          <CloseBackBtn onClose={setIsOpen} />
         </div>
 
         <div className="px-4 py-4">
@@ -454,6 +421,22 @@ function MobileNavigationMenuItems({
       </motion.div>
     </motion.div>
   );
+}
+
+function toHeading(path: string) {
+  switch (path) {
+    case "/travelers":
+      return "Browse travelers";
+
+    case "/parcels":
+      return "Browse parcels";
+
+    case "/":
+      return "Home";
+
+    case "/requests":
+      return "Your requests";
+  }
 }
 
 {

@@ -8,7 +8,7 @@ import Search, { SearchResults } from "@/app/components/Search";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
 import { GetTripsUseCase } from "../application/GetTripsUseCase";
 import type { TripListing } from "../domain/Trip";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { GetParcelUseCase } from "../../parcels/application/GetParcelUseCase";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
@@ -31,7 +31,9 @@ import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import CreateTripModal from "./CreateTripModal";
-import { useMediaQuery } from "@/app/shared/Authentication/UI/useMediaQuery";
+import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
+import MobileFilterOptions from "@/app/components/MobileFilterOptions";
+import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -197,11 +199,43 @@ export default function TravelersPage() {
   const handleLikeUpdate = (id: string) => {
     toggleLike(id, setTripList);
   };
+  const [mobileFilter, setMobileFilter] = useState<boolean>(false);
   const isMobile = useMediaQuery();
+
+  const scrollDirection = useScrollDirection();
+  const filterContent = (
+    <FilterOptionsRow
+      setSelectedDate={setFilterByDate}
+      setPriceRange={setPriceRange}
+      setWeightRange={setWeightRange}
+      setGoodsCategory={setGoodsCategory}
+      setSortOption={setSortOption}
+      setHasFilter={setHasFilter}
+    />
+  );
 
   return (
     <>
-      <PageSection align={isMobile ? "left" : "center"}>
+      <div className="sticky top-[72px] z-50 bg-white border-b border-neutral-200 px-4">
+        <AnimatePresence initial={false}>
+          {isMobile && scrollDirection === "up" && (
+            <motion.div
+              key="mobile-filters"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="py-2"
+            >
+              <MobileFilterOptions
+                hasActiveFilters={hasFilter}
+                onFilter={() => setMobileFilter(true)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <PageSection>
         {!isMobile && (
           <Search
             countries={["UK", "USA", "Ireland"]}
@@ -212,14 +246,14 @@ export default function TravelersPage() {
             clearResults={clearSearchResults}
           />
         )}
-        <FilterOptionsRow
-          setSelectedDate={setFilterByDate}
-          setPriceRange={setPriceRange}
-          setWeightRange={setWeightRange}
-          setGoodsCategory={setGoodsCategory}
-          setSortOption={setSortOption}
-          setHasFilter={setHasFilter}
-        />
+        {isMobile && mobileFilter && (
+          <CustomModal onClose={() => setMobileFilter(false)}>
+            {filterContent}
+          </CustomModal>
+        )}
+
+        {!isMobile && filterContent}
+
         <SearchResults
           isSearchActive={isSearchActive}
           searchResults={displayedTrips.length}

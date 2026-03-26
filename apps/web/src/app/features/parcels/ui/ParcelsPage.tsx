@@ -13,7 +13,7 @@ import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTrips
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import PageSection from "@/app/components/PageSection";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow, sortTrips } from "@/app/components/FilterOptionsRow";
@@ -30,7 +30,9 @@ import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import CreateParcelModal from "./CreateParcelModal";
-import { useMediaQuery } from "@/app/shared/Authentication/UI/useMediaQuery";
+import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
+import MobileFilterOptions from "@/app/components/MobileFilterOptions";
+import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -197,11 +199,43 @@ export default function ParcelsPage() {
     toggleLike(id, setParcelsList);
   };
   const isMobile = useMediaQuery();
+  const [mobileFilter, setMobileFilter] = useState<boolean>(false);
+  const scrollDirection = useScrollDirection();
+
+  const filterContent = (
+    <FilterOptionsRow
+      setSelectedDate={setFilterByDate}
+      setPriceRange={setPriceRange}
+      setWeightRange={setWeightRange}
+      setGoodsCategory={setGoodsCategory}
+      setSortOption={setSortOption}
+      tag="sender"
+      setHasFilter={setHasFilter}
+    />
+  );
 
   return (
     <>
-      <PageSection  align={isMobile ? "left" : "center"}>
-       
+      <div className="sticky top-[72px] z-50 bg-white border-b border-neutral-200 px-4">
+        <AnimatePresence initial={false}>
+          {isMobile && scrollDirection === "up" && (
+            <motion.div
+              key="mobile-filters"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="py-2"
+            >
+              <MobileFilterOptions
+                hasActiveFilters={hasFilter}
+                onFilter={() => setMobileFilter(true)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <PageSection align={isMobile ? "left" : "center"}>
         {!isMobile && (
           <Search
             countries={["UK", "USA"]}
@@ -212,15 +246,15 @@ export default function ParcelsPage() {
             clearResults={clearSearchResults}
           />
         )}
-        <FilterOptionsRow
-          setSelectedDate={setFilterByDate}
-          setPriceRange={setPriceRange}
-          setWeightRange={setWeightRange}
-          setGoodsCategory={setGoodsCategory}
-          setSortOption={setSortOption}
-          tag="sender"
-          setHasFilter={setHasFilter}
-        />
+        <AnimatePresence>
+          {isMobile && mobileFilter && (
+            <CustomModal onClose={() => setMobileFilter(false)}>
+              {filterContent}
+            </CustomModal>
+          )}
+        </AnimatePresence>
+        {!isMobile && filterContent}
+
         <SearchResults
           isSearchActive={isSearchActive}
           searchResults={displayedParcels.length}

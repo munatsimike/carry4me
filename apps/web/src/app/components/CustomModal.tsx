@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { CloseBackBtn } from "./CloseBtn";
-import { useEffect, useState } from "react";
-import { useMediaQuery } from "../shared/Authentication/UI/useMediaQuery";
+import { useMediaQuery } from "../shared/Authentication/UI/hooks/useMediaQuery";
 
 type Width = "sm" | "md" | "lg" | "xl" | "2xl";
 
@@ -18,7 +17,6 @@ const sizes: Record<Width, string> = {
   xl: "max-w-xl",
   "2xl": "max-w-2xl",
 };
-
 export default function CustomModal({
   children,
   onClose,
@@ -42,13 +40,13 @@ export default function CustomModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-40 flex items-start sm:items-center justify-center px-4 bg-white-500"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center px-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 z-[100] bg-black/40 backdrop-blur-[1px]"
         onClick={onClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -57,7 +55,7 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-50 w-full ${sizes[width]} rounded-2xl bg-white shadow-xl p-3 border border-neutral-300 mt-4 sm:mt-0`}
+        className={`relative z-[110] w-full ${sizes[width]} rounded-2xl bg-white shadow-xl p-3 border border-neutral-300 mt-4 sm:mt-0`}
         initial={modalAnimation.initial}
         animate={modalAnimation.animate}
         exit={modalAnimation.exit}

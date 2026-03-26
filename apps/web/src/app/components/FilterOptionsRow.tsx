@@ -256,7 +256,7 @@ export function FilterOptionsRow({
   const isTraveler = tag === "traveler";
 
   return (
-    <div className="hidden flex md:flex sm:flex-row gap-3">
+    <div className="flex flex-col md:flex-row gap-3">
       <span className="text-md text-neutral-500 whitespace-nowrap">Filter by</span>
 
       {isTraveler && (
