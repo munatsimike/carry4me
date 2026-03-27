@@ -24,7 +24,7 @@ import {
   filterByPriceRange,
   filterByWeightRange,
 } from "@/app/util/filters";
-import type { CustomRange, SortOption } from "@/types/Ui";
+import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
 import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 import CustomText from "@/components/ui/CustomText";
@@ -33,6 +33,8 @@ import CreateParcelModal from "./CreateParcelModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import MobileFilterOptions from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
+import { useOutletContext } from "react-router-dom";
+import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -106,7 +108,6 @@ export default function ParcelsPage() {
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
-  const [hasFilter, setHasFilter] = useState<boolean>(false);
   const [parcelModalState, setParcelModalState] = useState<boolean>(false);
 
   const displayedParcels = useMemo(() => {
@@ -201,22 +202,40 @@ export default function ParcelsPage() {
   const isMobile = useMediaQuery();
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
   const scrollDirection = useScrollDirection();
+  const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
+
+  const filterForm = useFiltersForm({
+    setSelectedDate: setFilterByDate,
+    setPriceRange,
+    setWeightRange,
+    setGoodsCategory,
+    setSortOption,
+  });
+
+  const { clearFilters, hasFilter } = filterForm;
 
   const filterContent = (
     <FilterOptionsRow
-      setSelectedDate={setFilterByDate}
-      setPriceRange={setPriceRange}
-      setWeightRange={setWeightRange}
-      setGoodsCategory={setGoodsCategory}
-      setSortOption={setSortOption}
+      filterForm={filterForm}
       tag="sender"
-      setHasFilter={setHasFilter}
+      setMobileFilter={() => setMobileFilter(false)}
+    />
+  );
+
+  const searchContent = (
+    <Search
+      countries={["UK", "USA"]}
+      cities={["London", "Florida"]}
+      setSearchCity={setSearchCity}
+      setSearchCountry={setSearchCountry}
+      setClearResults={() => setClearResults(false)}
+      clearResults={clearSearchResults}
     />
   );
 
   return (
     <>
-      <div className="sticky top-[72px] z-50 bg-white border-b border-neutral-200 px-4">
+      <div className="sticky top-[72px] z-40 bg-white border-neutral-200 px-4">
         <AnimatePresence initial={false}>
           {isMobile && scrollDirection === "up" && (
             <motion.div
@@ -230,23 +249,21 @@ export default function ParcelsPage() {
               <MobileFilterOptions
                 hasActiveFilters={hasFilter}
                 onFilter={() => setMobileFilter(true)}
+                onClear={clearFilters}
               />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
       <PageSection align={isMobile ? "left" : "center"}>
-        {!isMobile && (
-          <Search
-            countries={["UK", "USA"]}
-            cities={["London", "Florida"]}
-            setSearchCity={setSearchCity}
-            setSearchCountry={setSearchCountry}
-            setClearResults={() => setClearResults(false)}
-            clearResults={clearSearchResults}
-          />
-        )}
+        {!isMobile && searchContent}
         <AnimatePresence>
+          {isMobile && isSearchOpen && (
+            <CustomModal onClose={() => setIsSearchOpen(false)}>
+              {searchContent}
+            </CustomModal>
+          )}
+
           {isMobile && mobileFilter && (
             <CustomModal onClose={() => setMobileFilter(false)}>
               {filterContent}

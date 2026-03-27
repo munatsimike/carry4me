@@ -319,9 +319,11 @@ function NavItem({ to, children, end = false }: NavItemProps) {
 export function MobileNavigationMenu({
   isAuthed,
   profile,
+  setIsSearchOpen
 }: {
   isAuthed: boolean;
   profile: UserProfile | null;
+  setIsSearchOpen:()=>void
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const location = useLocation();
@@ -342,7 +344,7 @@ export function MobileNavigationMenu({
         </CustomText>
 
         <div className="flex items-center gap-6">
-          <button onClick={() => null} type="button" className={style}>
+          <button onClick={setIsSearchOpen} type="button" className={style}>
             <Search size={20} strokeWidth={strokeWidth} className={iconColor} />
             Search
           </button>
@@ -437,11 +439,4 @@ function toHeading(path: string) {
     case "/requests":
       return "Your requests";
   }
-}
-
-{
-  /**<button onClick={() => setSearch(true)} className={style}>
-          <Filter size={20} strokeWidth={strokeWidth} className={iconColor} />
-          filter
-        </button> */
 }

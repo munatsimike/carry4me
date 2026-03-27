@@ -88,3 +88,8 @@ export type CustomRange = {
 export const dateFormat = "d MMM yyy";
 
 export type SortOption = "date-asc" | "price-asc" | "price-desc" | "weight-desc";
+
+export type LayoutContext = {
+  isSearchOpen: boolean;
+  setIsSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};

@@ -1,43 +1,46 @@
-import { ArrowUpDown, Funnel } from "lucide-react";
-
+import { Funnel } from "lucide-react";
+import { cn } from "../lib/cn";
 
 type MobileFilterOptionsProps = {
   hasActiveFilters: boolean;
   onFilter: () => void;
-  onSort?: () => void;
-  onClear?: () => void;
+  onClear: () => void;
 };
 
 export default function MobileFilterOptions({
   hasActiveFilters,
   onFilter,
-  onSort,
   onClear,
 }: MobileFilterOptionsProps) {
-  const buttonStyle =
-    "px-3 py-1 rounded-full border border-neutral-300 text-sm text-ink-primary flex items-center gap-1 bg-white";
-
+  const buttonStyle = `px-3 py-1 rounded-full text-sm  flex items-center gap-1 text-ink-primary`;
   return (
     <div className="flex items-center gap-3 w-full bg-white">
-      <button type="button" onClick={onFilter} className={buttonStyle}>
+      <button
+        type="button"
+        onClick={onFilter}
+        className={cn(
+          "border bg-white",
+          hasActiveFilters ? "border-primary-500" : "border-neutral-300",
+          buttonStyle,
+        )}
+      >
         <Funnel size={15} className="text-neutral-500" />
-        Filter
+        Filters
       </button>
-
-      <button type="button" onClick={onSort} className={buttonStyle}>
-        <ArrowUpDown size={15} className="text-neutral-500" />
-        Sort
-      </button>
-
-      {hasActiveFilters && (
+      {
         <button
           type="button"
           onClick={onClear}
-          className="text-sm font-medium text-blue-600"
+          className={cn(
+            hasActiveFilters
+              ? "border bg-primary-100 border-primary-100 shadow-sm hover:bg-primary-300"
+              : "border text-ink-primary border-neutral-300",
+            buttonStyle,
+          )}
         >
           Clear
         </button>
-      )}
+      }
     </div>
   );
 }

@@ -65,7 +65,7 @@ export default function Search({
   return (
     <form
       onSubmit={handleSubmit(handleSearch)}
-      className={cn("flex w-full sm:max-w-3xl flex-col gap-3 rounded-3xl border border-primary-50 bg-primary-50 p-3 sm:p-2 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
+      className={cn("flex w-full sm:max-w-3xl flex-col gap-3 rounded-3xl sm:bg-primary-50 pt-10 pb-3 px-3 sm:p-2 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
       )}
     >
       <span className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">

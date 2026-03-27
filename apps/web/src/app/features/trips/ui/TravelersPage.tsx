@@ -25,7 +25,7 @@ import {
   filterByPriceRange,
   filterByWeightRange,
 } from "@/app/util/filters";
-import type { CustomRange, SortOption } from "@/types/Ui";
+import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
 import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +34,8 @@ import CreateTripModal from "./CreateTripModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import MobileFilterOptions from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
+import { useOutletContext } from "react-router-dom";
+import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -91,7 +93,7 @@ export default function TravelersPage() {
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
-  const [hasFilter, setHasFilter] = useState<boolean>(false);
+
   //store filter date
   const [priceRange, setPriceRange] = useState<CustomRange>({
     min: 0,
@@ -200,23 +202,42 @@ export default function TravelersPage() {
     toggleLike(id, setTripList);
   };
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
-  const isMobile = useMediaQuery();
 
+  const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
+  const isMobile = useMediaQuery();
   const scrollDirection = useScrollDirection();
+
+  const filterForm = useFiltersForm({
+    setSelectedDate: setFilterByDate,
+    setPriceRange,
+    setWeightRange,
+    setGoodsCategory,
+    setSortOption,
+  });
+
+  const { clearFilters, hasFilter } = filterForm;
+
   const filterContent = (
     <FilterOptionsRow
-      setSelectedDate={setFilterByDate}
-      setPriceRange={setPriceRange}
-      setWeightRange={setWeightRange}
-      setGoodsCategory={setGoodsCategory}
-      setSortOption={setSortOption}
-      setHasFilter={setHasFilter}
+      filterForm={filterForm}
+      setMobileFilter={() => setMobileFilter(false)}
+    />
+  );
+
+  const searchContent = (
+    <Search
+      countries={["UK", "USA", "Ireland"]}
+      cities={["London", "Birmingham"]}
+      setSearchCountry={setSearchCountry}
+      setSearchCity={setSearchCity}
+      setClearResults={() => setClearResults(false)}
+      clearResults={clearSearchResults}
     />
   );
 
   return (
     <>
-      <div className="sticky top-[72px] z-50 bg-white border-b border-neutral-200 px-4">
+      <div className="sticky top-[72px] z-40 bg-white border-neutral-200 px-4">
         <AnimatePresence initial={false}>
           {isMobile && scrollDirection === "up" && (
             <motion.div
@@ -230,30 +251,29 @@ export default function TravelersPage() {
               <MobileFilterOptions
                 hasActiveFilters={hasFilter}
                 onFilter={() => setMobileFilter(true)}
+                onClear={clearFilters}
               />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
       <PageSection>
-        {!isMobile && (
-          <Search
-            countries={["UK", "USA", "Ireland"]}
-            cities={["London", "Birmingham"]}
-            setSearchCountry={setSearchCountry}
-            setSearchCity={setSearchCity}
-            setClearResults={() => setClearResults(false)}
-            clearResults={clearSearchResults}
-          />
-        )}
-        {isMobile && mobileFilter && (
-          <CustomModal onClose={() => setMobileFilter(false)}>
-            {filterContent}
-          </CustomModal>
-        )}
+        {!isMobile && searchContent}
+        <AnimatePresence>
+          {isMobile && mobileFilter && (
+            <CustomModal onClose={() => setMobileFilter(false)}>
+              {filterContent}
+            </CustomModal>
+          )}
 
-        {!isMobile && filterContent}
+          {!isMobile && filterContent}
 
+          {isMobile && isSearchOpen && (
+            <CustomModal onClose={() => setIsSearchOpen(false)}>
+              {searchContent}
+            </CustomModal>
+          )}
+        </AnimatePresence>
         <SearchResults
           isSearchActive={isSearchActive}
           searchResults={displayedTrips.length}

@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-  useForm,
   Controller,
   type UseFormSetValue,
   type Control,
@@ -15,28 +14,18 @@ import {
   PoundSterling,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
-import type { CustomRange, SortOption, Tag } from "@/types/Ui";
+
+import type { SortOption, Tag } from "@/types/Ui";
 import type { GoodsCategory } from "../features/goods/domain/GoodsCategory";
-import { SupabaseGoodsRepository } from "../features/goods/data/SupabaseGoodsRepository";
-import { GetGoodsUseCase } from "../features/goods/application/GetGoodsUseCase";
-import { namedCall } from "../shared/Authentication/application/NamedCall";
-import { useUniversalModal } from "../shared/Authentication/application/DialogBoxModalProvider";
 import { checkBox, checkBoxSvg, cn } from "../lib/cn";
 import type { Listing } from "../shared/Authentication/domain/Listing";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import { DateField } from "../features/dashboard/components/DateField";
-
-type FiltersFormValues = {
-  date: string;
-  minPrice: string;
-  maxPrice: string;
-  minSpace: string;
-  maxSpace: string;
-  categories: string[];
-  sort: SortOption | undefined;
-};
+import {
+  useFiltersForm,
+  type FiltersFormValues,
+} from "../shared/Authentication/UI/hooks/useFiltersForm";
 
 type FilterChipProps = {
   label: string;
@@ -69,7 +58,10 @@ function FilterChip({
       >
         {icon}
       </span>
-      <CustomText className="font-semi-medium whitespace-nowrap" textVariant="primary">
+      <CustomText
+        className="font-semi-medium whitespace-nowrap"
+        textVariant="primary"
+      >
         {label}
       </CustomText>
       <ChevronDown
@@ -105,14 +97,9 @@ function FilterMenuWrapper({ children }: FilterMenuWrapperProps) {
 }
 
 type FilterOptionsRowProps = {
-  onApply?: (values: FiltersFormValues) => void;
-  setSelectedDate: (s: string) => void;
-  setPriceRange: (v: CustomRange) => void;
-  setWeightRange: (v: CustomRange) => void;
-  setGoodsCategory: (s: string[]) => void;
-  setSortOption: (v: SortOption | undefined) => void;
+  filterForm: ReturnType<typeof useFiltersForm>;
+  setMobileFilter: () => void;
   tag?: Tag;
-  setHasFilter: (b: boolean) => void;
 };
 
 const basSortOptions: { label: string; value: SortOption }[] = [
@@ -131,133 +118,36 @@ const parcelSortOptions: { label: string; value: SortOption }[] = [
   { label: "Max weight", value: "weight-desc" },
 ];
 
-type FilterState = {
-  date: string;
-  minPrice: string;
-  maxPrice: string;
-  minSpace: string;
-  maxSpace: string;
-  categories: string[];
-  sort?: SortOption;
-};
-const filterDefaults: FilterState = {
-  date: "",
-  minPrice: "0",
-  maxPrice: "",
-  minSpace: "1",
-  maxSpace: "",
-  categories: [],
-  sort: undefined,
-};
-
 export function FilterOptionsRow({
-  setSelectedDate,
-  setPriceRange,
-  setWeightRange,
-  setGoodsCategory,
-  setSortOption,
+  filterForm,
+  setMobileFilter,
   tag = "traveler",
-  setHasFilter,
 }: FilterOptionsRowProps) {
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
-  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
-  const getGoodsUseCase = useMemo(
-    () => new GetGoodsUseCase(goodsRepo),
-    [goodsRepo],
-  );
-
-  const { showSupabaseError } = useUniversalModal();
-
-  useEffect(() => {
-    if (goodsCategory.length > 1) return;
-
-    async function fetchGoods() {
-      const { result } = await namedCall("goods", getGoodsUseCase.execute());
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
-      }
-      setCategory(result.data.filter((item) => item.name !== "Other"));
-    }
-
-    fetchGoods();
-  });
-
   const {
     register,
     control,
-    handleSubmit,
-    watch,
-    reset,
     setValue,
-    formState: { dirtyFields },
-  } = useForm<FiltersFormValues>({
-    defaultValues: filterDefaults,
-  });
-
-  const values = watch();
-  const hasDate = !!values.date;
-  const hasPrice = !!values.maxPrice;
-  const hasSpace = !!values.maxSpace;
-  const hasCategory = values.categories.length > 0;
-  const hasSort = !!values.sort;
-  const hasAnyFilter =
-    hasDate || hasPrice || hasSpace || hasCategory || hasSort;
-  const toggleMenu = (menuName: string) => {
-    setOpenMenu((prev) => (prev === menuName ? null : menuName));
-  };
-
-  useEffect(() => {
-    setHasFilter(hasAnyFilter);
-  }, [hasAnyFilter]);
-
-  const closeMenu = () => setOpenMenu(null);
-  const submitFilters = handleSubmit((formValues) => {
-    if (!!dirtyFields.date && setSelectedDate) {
-      setSelectedDate(formValues.date);
-    }
-
-    if (!!dirtyFields.maxPrice) {
-      setPriceRange({
-        min: Number(formValues.minPrice),
-        max: Number(formValues.maxPrice),
-      });
-    }
-
-    if (!!dirtyFields.maxSpace) {
-      setWeightRange({
-        min: Number(formValues.minSpace),
-        max: Number(formValues.maxSpace),
-      });
-    }
-
-    if (!!dirtyFields.categories) {
-      setGoodsCategory(formValues.categories);
-    }
-
-    if (!!dirtyFields.sort) {
-      setSortOption(formValues.sort);
-    }
-    //onApply?.(formValues);
-    closeMenu();
-  });
-
-  const clearFilters = () => {
-    setSelectedDate("");
-    setPriceRange({ min: 0, max: 0 });
-    setWeightRange({ min: 0, max: 0 });
-    setGoodsCategory([]);
-    setSortOption(undefined);
-    reset();
-    closeMenu();
-  };
+    openMenu,
+    toggleMenu,
+    closeMenu,
+    submitFilters,
+    clearFilters,
+    goodsCategory,
+    hasDate,
+    hasPrice,
+    hasSpace,
+    hasCategory,
+    hasSort,
+    hasFilter,
+  } = filterForm;
 
   const isTraveler = tag === "traveler";
 
   return (
-    <div className="flex flex-col md:flex-row gap-3">
-      <span className="text-md text-neutral-500 whitespace-nowrap">Filter by</span>
+    <div className="flex flex-col md:flex-row gap-3 pb-2 items-start md:items-center">
+      <span className="text-md text-neutral-500 whitespace-nowrap">
+        Filter by
+      </span>
 
       {isTraveler && (
         <FilterByDate
@@ -323,25 +213,38 @@ export function FilterOptionsRow({
           setValue: setValue,
         }}
       />
-      <AnimatePresence>
-        <motion.button
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          trinsition={{ duration: 0.5, ease: "easeInOut" }}
-          exit={{ opacity: 0, y: -8 }}
+
+      <div className="flex justify-between w-full">
+        <AnimatePresence>
+          <motion.button
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            trinsition={{ duration: 0.5, ease: "easeInOut" }}
+            exit={{ opacity: 0, y: -8 }}
+            type="button"
+            disabled={!hasFilter}
+            onClick={clearFilters}
+            className={cn(
+              "ml-1 text-sm whitespace-nowrap",
+              hasFilter
+                ? "text-primary-500 hover:underline"
+                : "text-neutral-500",
+            )}
+          >
+            Clear filters
+          </motion.button>
+        </AnimatePresence>
+        <button
           type="button"
-          disabled={!hasAnyFilter}
-          onClick={clearFilters}
-          className={cn(
-            "ml-1 text-sm whitespace-nowrap",
-            hasAnyFilter
-              ? "text-primary-500 hover:underline"
-              : "text-neutral-500",
-          )}
+          onClick={() => {
+            setMobileFilter();
+            closeMenu();
+          }}
+          className="md:hidden rounded-full bg-primary-500 px-4 py-1 text-sm text-white"
         >
-          Clear filters
-        </motion.button>
-      </AnimatePresence>
+          Done
+        </button>
+      </div>
     </div>
   );
 }

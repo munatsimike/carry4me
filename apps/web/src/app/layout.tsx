@@ -5,9 +5,11 @@ import { useAuth } from "./shared/supabase/AuthProvider";
 import Footer from "./shared/Authentication/UI/Footer";
 import type { UserProfile } from "./shared/Authentication/domain/authTypes";
 import { useMediaQuery } from "./shared/Authentication/UI/hooks/useMediaQuery";
+import { useState } from "react";
 
 export default function AppLayout() {
   const { loading, user, profile } = useAuth();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const isAuthed = !!user;
   if (loading) {
@@ -27,9 +29,13 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header isAuthed={isAuthed} profile={profile} />
+      <Header
+        isAuthed={isAuthed}
+        profile={profile}
+        setIsSearchOpen={() => setIsSearchOpen(true)}
+      />
       <main className="min-h-screen flex flex-col">
-        <Outlet />
+        <Outlet context={{ isSearchOpen, setIsSearchOpen }} />
       </main>
 
       <AuthModal />
@@ -42,9 +48,11 @@ export default function AppLayout() {
 function Header({
   isAuthed,
   profile,
+  setIsSearchOpen,
 }: {
   isAuthed: boolean;
   profile: UserProfile | null;
+  setIsSearchOpen: () => void;
 }) {
   const isMobile = useMediaQuery();
   return (
@@ -62,7 +70,11 @@ function Header({
             userProfile={profile} // can be null sometimes, that's ok
           />
         </div>
-        <MobileNavigationMenu isAuthed={isAuthed} profile={profile} />
+        <MobileNavigationMenu
+          isAuthed={isAuthed}
+          profile={profile}
+          setIsSearchOpen={setIsSearchOpen}
+        />
       </div>
     </header>
   );
