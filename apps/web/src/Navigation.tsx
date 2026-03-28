@@ -24,13 +24,12 @@ import { UserProfileMenu } from "./app/shared/Authentication/UI/userProfileMenu"
 import NotificationPopover from "./app/shared/Authentication/UI/NotificationPopOver";
 
 import CustomText from "./components/ui/CustomText";
-
-import SearchComponent from "./app/components/Search";
-import CustomModal from "./app/components/CustomModal";
 import { CloseBackBtn } from "./app/components/CloseBtn";
+import { cn } from "./app/lib/cn";
 
-const iconStyle = "h-5 w-5 text-neutral-500 md:hidden";
+const iconStyle = "h-5 w-5 text-neutral-500  sm:hidden";
 const strokeWidth = 1.5;
+const bellClass = "h-5 w-5 text-neutral-500 md:h-6 w-6 text-neutral-600";
 
 type ProfileProps = {
   userProfile: UserProfile | null;
@@ -70,6 +69,7 @@ function GuestNavigation() {
   return (
     <NavLinks>
       <Home />
+
       <NavItem to="/travelers">
         {" "}
         <Plane className={iconStyle} strokeWidth={strokeWidth} />
@@ -175,34 +175,38 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
   }, [userProfile?.id]);
 
   return (
-    <NavLinks>
-      <NavItem to="/dashboard">
-        {" "}
-        <LayoutDashboard className={iconStyle} strokeWidth={strokeWidth} />
-        Dashboard
-      </NavItem>
-      <NavItem to="/travelers">
-        {" "}
-        <Plane className={iconStyle} strokeWidth={strokeWidth} />
-        Trips
-      </NavItem>
-      <NavItem to="/parcels">
-        {" "}
-        <Package className={iconStyle} strokeWidth={strokeWidth} />
-        Parcels
-      </NavItem>
-      <NavItem to="/requests">
-        {" "}
-        <Handshake className={iconStyle} strokeWidth={strokeWidth} />
-        Requests
-      </NavItem>
+    <>
+      <NavLinks>
+        <NavItem to="/dashboard">
+          {" "}
+          <LayoutDashboard className={iconStyle} strokeWidth={strokeWidth} />
+          Dashboard
+        </NavItem>
+        <NavItem to="/travelers">
+          {" "}
+          <Plane className={iconStyle} strokeWidth={strokeWidth} />
+          Trips
+        </NavItem>
+        <NavItem to="/parcels">
+          {" "}
+          <Package className={iconStyle} strokeWidth={strokeWidth} />
+          Parcels
+        </NavItem>
+        <NavItem to="/requests">
+          {" "}
+          <Handshake className={iconStyle} strokeWidth={strokeWidth} />
+          Requests
+        </NavItem>
+      </NavLinks>
+       <span className="relative flex flex-col sm:flex-row gap-4 md:items-center mt-4 sm:mt-0">
       <button
         ref={triggerNotRef}
         type="button"
         onClick={() => setShowNotification((prev) => !prev)}
+        className="flex justify-start"
       >
-        <span className=" group inline-flex gap-1 items-center hover:text-primary-600">
-          <span className="relative flex rounded-full p-1 group-hover:bg-neutral-200">
+        <span className="group inline-flex gap-1">
+          <span className="relative flex rounded-full p-1 md:group-hover:bg-neutral-200 gap-2">
             {unreadNotifications.length > 0 ? (
               <motion.span
                 animate={
@@ -221,24 +225,24 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
               >
                 {unreadNotifications.length > 0 ? (
                   <BellRing
-                    className="h-6 w-6 text-neutral-600"
-                    strokeWidth={1.5}
+                    className={cn(bellClass)}
+                    strokeWidth={strokeWidth}
                   />
                 ) : (
-                  <Bell
-                    className="h-6 w-6 text-neutral-600"
-                    strokeWidth={1.5}
-                  />
+                  <Bell className={cn(bellClass)} strokeWidth={strokeWidth} />
                 )}
               </motion.span>
             ) : (
-              <Bell className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
+              <Bell className={cn(bellClass)} strokeWidth={strokeWidth} />
             )}
             {unreadNotifications.length > 0 && (
               <span className="flex absolute z-10 right-0 top-[-1px] rounded-full h-4 w-4 bg-error-500 text-[11px] text-white justify-center items-center">
                 {unreadNotifications.length}
               </span>
             )}
+            <span className="sm:hidden items-center text-neutral-800 hover:text-primary-600">
+              Notifications
+            </span>
           </span>
         </span>
       </button>
@@ -252,7 +256,7 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
         )}
       </AnimatePresence>
 
-      <span className="relative inline-flex flex-col">
+     
         <button
           ref={triggerProfRef}
           type="button"
@@ -277,7 +281,7 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
           )}
         </AnimatePresence>
       </span>
-    </NavLinks>
+    </>
   );
 }
 
@@ -323,7 +327,7 @@ export function MobileNavigationMenu({
 }: {
   isAuthed: boolean;
   profile: UserProfile | null;
-  setIsSearchOpen:()=>void
+  setIsSearchOpen: () => void;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const location = useLocation();
@@ -333,12 +337,12 @@ export function MobileNavigationMenu({
 
   return (
     <>
-      <div className="relative flex md:hidden items-center justify-between w-full px- py-1 h-12">
+      <div className="relative flex block sm:hidden items-center justify-between w-full px- py-1 h-12">
         <CustomText
           as="h1"
           textSize="md"
           textVariant="primary"
-          className="font-medium"
+          className="font-medium whitespace-nowrap"
         >
           {toHeading(location.pathname)}
         </CustomText>
@@ -402,7 +406,7 @@ function MobileNavigationMenuItems({
         transition={{ duration: 0.3, ease: "easeOut" }}
         className="fixed top-0 right-0 z-50 h-full w-60 bg-white shadow-lg "
       >
-        <div className="flex items-center justify-between border-b border-neutral-200 pl-6 pr-3 py-2" >
+        <div className="flex items-center justify-between border-b border-neutral-200 pl-6 pr-3 py-2">
           <CustomText
             textSize="lg"
             textVariant="primary"
@@ -432,7 +436,10 @@ function toHeading(path: string) {
 
     case "/parcels":
       return "Browse parcels";
-
+    case "/signup":
+      return "Signup";
+    case "/dashboard":
+      return "Dashboard";
     case "/":
       return "Home";
 

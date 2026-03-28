@@ -20,7 +20,7 @@ export default function Footer({ isAuthed }: FooterProps) {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-slate-300">
+      <div className="border-t border-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6 py-5 text-xs text-slate-500 md:flex-row md:items-center md:justify-between lg:px-8">
           <span>
             © {new Date().getFullYear()} Carry4Me. All rights reserved.

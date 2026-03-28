@@ -18,7 +18,7 @@ export default function PageSection({
     center: "items-center",
   };
 
-  const base = `flex flex-col sm:py-4 gap-4 px-4 sm:px-5 lg:px-6 bg-white ${alignment[position]}`;
+  const base = `flex flex-col pb-2 sm:py-2 gap-4 px-2 sm:px-5 lg:px-6 bg-white ${alignment[position]}`;
 
   return <div className={base}>{children}</div>;
 }

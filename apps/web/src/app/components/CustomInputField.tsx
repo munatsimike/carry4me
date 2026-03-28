@@ -35,7 +35,7 @@ export default function FloatingInputField({
   return (
     <ErrorText error={error}>
       <div
-        className={cn(`${inputStructural} flex items-center rounded-lg ${error ? inputError : showSuccess ? inputSuccess : inputNeutral}
+        className={cn(`${inputStructural} w-full max-w-sm  flex items-center rounded-lg ${error ? inputError : showSuccess ? inputSuccess : inputNeutral}
         ${className ?? ""}`)}
       >
         {leadingIcon && (

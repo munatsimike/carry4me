@@ -25,7 +25,7 @@ export function HeroSection() {
   return (
     <DefualtContianer className=" flex flex-col items-center mt-16">
       <motion.div variants={container} initial="hidden" animate="show">
-        <Heading textSize="display" textVariant="primary">
+        <Heading textSize="display" textVariant="primary" className="leading-tight">
           {String(heading)
             .split(" ")
             .map((w, i) => (

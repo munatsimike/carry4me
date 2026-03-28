@@ -8,12 +8,14 @@ type CardProps = {
   enableHover?: boolean;
   paddingClass?: string;
   shadowClass?: string;
+  sizeClass?:string
 };
 
 export function Card({
   children,
   className,
   enableHover = true,
+  sizeClass = "max-w-md",
   paddingClass = "p-5",
   borderClass = "border border-neutral-200",
   cornerRadiusClass = "rounded-3xl",
@@ -35,6 +37,7 @@ export function Card({
         shadowClass,
         paddingClass,
         cornerRadiusClass,
+        sizeClass,
         borderClass,
         className ?? "",
       ].join(" ")}

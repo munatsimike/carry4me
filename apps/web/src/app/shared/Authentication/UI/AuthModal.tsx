@@ -51,7 +51,7 @@ export function AuthModal() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const repo = useMemo(() => new SupabaseAuthRepository(), []);
   const useCase = useMemo(() => new LoginUseCase(repo), [repo]);
-  const {showSupabaseError} = useUniversalModal()
+  const { showSupabaseError } = useUniversalModal();
 
   useEffect(() => {
     if (!state.isOpen) {
@@ -66,7 +66,10 @@ export function AuthModal() {
 
   const handleSignIn = async (value: FormValues) => {
     const { email, password } = value;
-    const {result} =  await namedCall("login", useCase.execute(email, password))
+    const { result } = await namedCall(
+      "login",
+      useCase.execute(email, password),
+    );
 
     if (!result.success) {
       showSupabaseError(result.error);
@@ -88,7 +91,7 @@ export function AuthModal() {
           onSubmit={handleSubmit(handleSignIn)}
           onClose={closeAuthModal}
         >
-          <div className="flex flex-col min-w-[500px] shrink-0 items-center gap-8">
+          <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-5 px-4 sm:px-0 ">
             <div className="flex items-center justify-center">
               <ErrorText error={loginError?.toString()}>
                 <span className="inline-flex flex-col gap-2 items-center">
@@ -98,14 +101,19 @@ export function AuthModal() {
                     color="primary"
                   />
 
-                  <CustomText textVariant="primary" textSize="xl">
+                  <CustomText
+                    as="span"
+                    textVariant="primary"
+                    textSize="xl"
+                    className="whitespace-nowrap leading-tight"
+                  >
                     {"Sign in to your account."}
                   </CustomText>
                 </span>
               </ErrorText>
             </div>
 
-            <span className="inline-flex flex-col gap-5">
+            <div className="flex w-full max-w-sm flex-col gap-5 ">
               <FloatingInputField
                 hasValue={!!emailAddress}
                 isDirty={!!dirtyFields.email}
@@ -130,37 +138,50 @@ export function AuthModal() {
                 label={"Enter password"}
                 error={errors.password?.message}
               />
-            </span>
+            </div>
 
-            <span className="flex flex-col gap-3 pb-2">
-              <span className="relative inline-flex flex-col gap-5 items-center">
+            <span className="flex flex-col gap-2 w-full max-w-sm">
+              <span className="relative inline-flex flex-col gap-3 items-center">
                 <LoginButton isFormSubmitting={isSubmitting} />
-
                 <Link to="/update-password" onClick={closeAuthModal}>
-                  <CustomText as="p" textVariant="linkText">
+                  <CustomText
+                    as="p"
+                    textVariant="linkText"
+                    className="whitespace-nowrap"
+                  >
                     {"Forgot password"}
                   </CustomText>
                 </Link>
+              </span>
 
-                <span className="inline-flex gap-2">
-                  <CustomText textVariant="primary">
+              <span className="inline-flex flex-col gap-1 items-center">
+                <span className="flex gap-1 items-center">
+                  <CustomText
+                    as="p"
+                    textVariant="primary"
+                    textSize="sm"
+                    className="whitespace-nowrap"
+                  >
                     {"Don’t have an account?"}
                   </CustomText>
                   <Link to="/signup">
                     <button onClick={closeAuthModal} type="button">
-                      <CustomText as="span" textVariant="linkText">
+                      <CustomText
+                        as="span"
+                        textVariant="linkText"
+                        className="whitespace-nowrap"
+                      >
                         {"Sign up"}
                       </CustomText>
                     </button>
                   </Link>
                 </span>
-              </span>
-
-              <span className="inline-flex flex-col gap-2 items-center">
                 <CustomText as="p" textSize="xsm">
                   {"or"}
                 </CustomText>
-                <CustomText as="p">{"Continue with"}</CustomText>
+                <CustomText as="p" textSize="xsm" className="whitespace-nowrap">
+                  {"Continue with"}
+                </CustomText>
               </span>
               <OtherWaysToSignIn />
             </span>
@@ -173,7 +194,8 @@ export function AuthModal() {
 
 function OtherWaysToSignIn() {
   const iconTextGap = "2";
-  const iconSize = "md";
+  const iconSize = "sm";
+  const lableSize = "xsm";
   const { state } = useAuthModal();
 
   const redirectTo = state.redirectTo ?? window.location.origin;
@@ -193,18 +215,24 @@ function OtherWaysToSignIn() {
     if (error) console.error(error.message);
   };
   return (
-    <div className="flex items-center gap-8">
+    <div className="flex w-full max-w-sm items-center justify-center gap-4 sm:gap-6 pt-1">
       <InlineRow gap={iconTextGap} onClick={onFacebook}>
         <SvgIcon size={iconSize} Icon={META_ICONS.facebookIcon} />
-        <CustomText textVariant="primary">{"Facebook"}</CustomText>
+        <CustomText textSize={lableSize} textVariant="primary">
+          {"Facebook"}
+        </CustomText>
       </InlineRow>
       <InlineRow gap={iconTextGap} onClick={onGoogle}>
         <SvgIcon size={iconSize} Icon={META_ICONS.googleIcon} />
-        <CustomText textVariant="primary">{"Google"}</CustomText>
+        <CustomText textSize={lableSize} textVariant="primary">
+          {"Google"}
+        </CustomText>
       </InlineRow>
       <InlineRow gap={iconTextGap} onClick={onTwitter}>
         <SvgIcon size={iconSize} Icon={META_ICONS.twitterIcon} />
-        <CustomText textVariant="primary">{"Twitter"}</CustomText>
+        <CustomText textSize={lableSize} textVariant="primary">
+          {"Twitter"}
+        </CustomText>
       </InlineRow>
     </div>
   );
@@ -213,7 +241,7 @@ function OtherWaysToSignIn() {
 function LoginButton({ isFormSubmitting }: { isFormSubmitting: boolean }) {
   return (
     <Button
-      className=" w-full sm:max-w-[250px]"
+      className="w-full"
       disabled={isFormSubmitting}
       type="submit"
       aria-busy={isFormSubmitting}

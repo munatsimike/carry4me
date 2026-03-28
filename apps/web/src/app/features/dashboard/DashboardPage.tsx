@@ -5,12 +5,12 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
 import CustomText, { type TextVariant } from "@/components/ui/CustomText";
-import { CircleBadge, type CirleBgColor } from "@/components/ui/CircleBadge";
+import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import type { SvgIconComponent } from "@/types/Ui";
 import CreatParcelModal from "../parcels/ui/CreateParcelModal";
-import Greeting from "@/app/components/Greeting";
+
 import CreateTripModal from "../trips/ui/CreateTripModal";
 import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
 import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
@@ -31,6 +31,7 @@ import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
+import Greeting from "@/app/components/Greeting";
 
 /**
  * Dashboard Page
@@ -150,16 +151,7 @@ export default function DashboardPage() {
 
   return (
     <DefaultContainer outerClassName="min-h-screen">
-      <PageSection align="left">
-        <CustomText
-          as="span"
-          textVariant="primary"
-          textSize="xxl"
-          className="font-medium"
-        >
-          {<Greeting user={fullName} />}
-        </CustomText>
-      </PageSection>
+      <PageSection align="left">{<Greeting user={fullName} />}</PageSection>
 
       <div className="flex flex-col gap-12 pt-2 sm:pt-4">
         <ActionButtonRow
@@ -167,7 +159,7 @@ export default function DashboardPage() {
           setParcelModalState={setParcelModalState}
         />
 
-        <div className="flex flex-wrap gap-6">
+        <div className="flex flex-col sm:justify-center md:flex-row gap-6">
           <StatsSection statsList={dashboardData ? dashboardData.stats : []} />
           <YourActivitySection
             recentActivityList={notifications}
@@ -214,7 +206,7 @@ function YourActivitySection({
       <CustomText textVariant="primary" textSize="lg" className="font-medium">
         {"Your activities"}
       </CustomText>
-      <div className="flex flex-wrap gap-6">
+      <div className="flex sm:flex-row flex-col gap-6">
         <DeliverySummary activityList={activityList} />
         <RecentActivity recentActivities={recentActivityList} />
       </div>
@@ -234,8 +226,8 @@ function RecentActivity({
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-emerald-200"
     >
-      <Card enableHover={false} paddingClass="p-3" className="h-full">
-        <div className="flex flex-col max-w-sm">
+      <Card enableHover={false} paddingClass="p-3" className="h-full flex-1">
+        <div className="flex flex-col px-2 mx-auto">
           <span className="flex flex-col gap-3">
             <span className="inline-flex gap-3 items-center">
               <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
@@ -252,7 +244,7 @@ function RecentActivity({
             recentActivities.map((activity, index) => (
               <div
                 key={activity.id}
-                className="flex flex-col w-full sm:min-w-[350px] max-w-sm"
+                className="flex flex-col w-full md:min-w-[350px]"
               >
                 <div className="flex gap-3 hover:bg-neutral-100 p-2 rounded-lg">
                   <span className="inline-flex pt-1">
@@ -261,13 +253,16 @@ function RecentActivity({
 
                   <div
                     key={activity.id}
-                    className="flex flex-col bg-neutral w-full sm:min-w-[250px] max-w-sm"
+                    className="flex flex-col w-full max-w-sm"
                   >
-                    <div className="flex justify-between">
-                      <CustomText textVariant="secondary">
+                    <div className="flex flex-col md:flex-row justify-between md:items-center items-stretch">
+                      <CustomText
+                        textVariant="secondary"
+                        className="whitespace-nowrap"
+                      >
                         {activity.title}
                       </CustomText>
-                      <p className="text-[12px] text-neutral-500">
+                      <p className="text-[12px] text-neutral-500 whitespace-nowrap">
                         {formatRelativeTime(activity.createdAt)}
                       </p>
                     </div>
@@ -305,13 +300,17 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-slate-200"
     >
-      <Card enableHover={false} className="h-full">
+      <Card enableHover={false} className="h-full flex-1">
         <div className="flex flex-col gap-4 sm:pr-6 bg-white">
           <span className="inline-flex items-center gap-3">
             <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
               <Truck className="text-neutral-600 h-5 w-5" strokeWidth={1} />
             </CircleBadge>
-            <CustomText textVariant="primary" textSize="md">
+            <CustomText
+              textVariant="primary"
+              textSize="md"
+              className="whitespace-nowrap"
+            >
               Delivery Summary
             </CustomText>
           </span>
@@ -327,7 +326,10 @@ function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
   return (
     <span className="flex flex-col gap-3">
       {activityList.map((item) => (
-        <span key={item.itemName} className="inline-flex gap-3 items-center">
+        <span
+          key={item.itemName}
+          className="inline-flex gap-3 items-center whitespace-nowrap"
+        >
           <span
             className={`w-2 h-2 rounded-full ${item.status && toColorMapper[item.status]}`}
           />
@@ -352,21 +354,22 @@ function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
 }
 function StatsSection({ statsList }: StatsProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="px-2 max-w-sm flex flex-col gap-3">
       <CustomText textVariant="primary" textSize="lg" className="font-medium">
         {"Your Stats"}
       </CustomText>
-      <div className="w-fit">
+      <div className="min-h-[85px] min-w-[200px] mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {statsList.map((item) => (
             <Link key={item.itemName} to={item.link ?? ""}>
               <Card
-
                 enableHover={false}
                 key={item.itemName}
                 className="flex flex-col items-center gap-3 hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
               >
-                <CustomText>{item.itemName}</CustomText>
+                <CustomText className="whitespace-nowrap">
+                  {item.itemName}
+                </CustomText>
                 <CustomText
                   textVariant="primary"
                   textSize={"lg"}
@@ -408,15 +411,16 @@ function ActionButtonRow({
     hidden: { opacity: 0, y: 12 },
     show: { opacity: 1, y: 0 },
   };
+  const btnContainer = "max-w-xs sm:w-fit";
 
   return (
     <motion.div
-      className="flex flex-wrap justify-center items-stretch gap-4 gap-4"
+      className="flex flex-col sm:flex-row justify-center gap-4 px-5 mx-auto"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className={btnContainer}>
         <ActionButton
           onClick={setTripModalState}
           btnText="Post a trip"
@@ -425,7 +429,7 @@ function ActionButtonRow({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className={btnContainer}>
         <ActionButton
           onClick={setParcelModalState}
           btnText="Post a parcel"
@@ -434,7 +438,7 @@ function ActionButtonRow({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className={btnContainer}>
         <Link to={"/travelers"}>
           <ActionButton
             btnText="Browse trips"
@@ -447,7 +451,7 @@ function ActionButtonRow({
         </Link>
       </motion.div>
 
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className={btnContainer}>
         <Link to={"/parcels"}>
           <ActionButton
             showArrow
@@ -467,7 +471,6 @@ type ActionButtonsProps = {
   btnVariant?: ButtonVariant;
   textVariant?: TextVariant;
   iconColor?: IconColor;
-  badgeColor?: CirleBgColor;
   btnText: string;
   icon?: SvgIconComponent;
   onClick?: (v: boolean) => void;
@@ -479,7 +482,6 @@ function ActionButton({
   btnVariant = "primary",
   textVariant = "onDark",
   iconColor = "primary",
-  badgeColor = "transparent",
   btnText,
   showModal,
   icon = META_ICONS.parcelBox,
@@ -496,11 +498,14 @@ function ActionButton({
         )
       }
     >
-      <span className="flex flex-col gap-2 items-center">
-        <CircleBadge size="xl" bgColor={badgeColor}>
-          <SvgIcon color={iconColor} size={"xl"} Icon={icon} />
-        </CircleBadge>
-        <CustomText as="span" textVariant={textVariant} textSize="lg">
+      <span className="flex flex-col gap-1.5 items-center">
+        <SvgIcon color={iconColor} size={"xl"} Icon={icon} />
+        <CustomText
+          as="span"
+          textVariant={textVariant}
+          textSize="lg"
+          className="whitespace-nowrap"
+        >
           {btnText}
         </CustomText>
       </span>

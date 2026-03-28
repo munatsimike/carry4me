@@ -69,7 +69,7 @@ export default function NotificationPopover({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       exit={{ opacity: 0, y: 7 }}
-      className="absolute -left-20 top-full z-20 mt-2 w-full rounded-xl border border-neutral-200 bg-white pl-4 pt-4 shadow-lg sm:w-[420px]"
+      className="absolute right-12 top-full z-20 mt-2 w-full rounded-xl border border-neutral-200 bg-white pl-4 pt-4 shadow-lg sm:w-[420px]"
     >
       <div className="pl-1">
         <CustomText

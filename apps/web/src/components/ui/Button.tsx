@@ -46,7 +46,7 @@ export function Button({
     md: "h-10 px-4 " + cornerRadiusClass,
     lg: "h-14 px-4 " + cornerRadiusClass,
     xl: "h-[85px] max-w-sm px-3 rounded-xl",
-    xxl: "w-full min-h-[90px] sm:h-[100px] sm:min-w-[200px] px-3 rounded-2xl",
+    xxl: "w-full min-h-[85px] sm:h-[90px] min-w-[200px] px-3 rounded-2xl",
   };
 
   const variants: Record<ButtonVariant, string> = {
@@ -92,13 +92,14 @@ export function Button({
           </span>
         </span>
 
+      
+      </span>
         {/* Right slot */}
         {trailingIcon && (
           <span className="inline-flex justify-end">
             {trailingIcon ?? null}
           </span>
         )}
-      </span>
     </button>
   );
 }

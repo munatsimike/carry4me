@@ -141,205 +141,201 @@ export default function SignUpPage() {
   };
 
   return (
-    <DefaultContainer outerClassName="bg-canvas min-h-screen">
-      <div className="mx-auto w-full max-w-2xl">
-        <Card paddingClass="sm:px-8 py-5" className="flex flex-col gap-5">
-          <motion.form
-            onSubmit={handleSubmit(onSignUp)}
-            variants={container}
-            initial="hidden"
-            animate="show"
-          >
-            <span className="flex flex-col items-center gap-1 pb-4">
-              <CircleBadge size="lg">
-                <SvgIcon
-                  size={"lg"}
-                  Icon={META_ICONS.addAccount}
-                  color="primary"
-                />
-              </CircleBadge>
-              <CustomText as="h1" textVariant="primary" textSize="xl">
-                Join Carry4me
+    <DefaultContainer center={true} outerClassName="bg-canvas min-h-screen">
+      <Card
+        paddingClass="sm:px-8 py-5 px-5"
+        sizeClass="max-w-2xl"
+        className="flex flex-col gap-5"
+        enableHover={false}
+      >
+        <motion.form
+          onSubmit={handleSubmit(onSignUp)}
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          <span className="flex flex-col items-center gap-1 pb-4">
+            <CircleBadge size="lg">
+              <SvgIcon
+                size={"lg"}
+                Icon={META_ICONS.addAccount}
+                color="primary"
+              />
+            </CircleBadge>
+            <CustomText as="h1" textVariant="primary" textSize="xl">
+              Join Carry4me
+            </CustomText>
+            <CustomText as="p" textVariant="label" textSize="sm">
+              Join a community that helps people send parcels home with ease.
+            </CustomText>
+            <span className="inline-flex items-center gap-1">
+              <CustomText as="p" className="text-sm text-neutral-400">
+                Already have an account?
               </CustomText>
-              <CustomText as="p" textVariant="label" textSize="sm">
-                Join a community that helps people send parcels home with ease.
-              </CustomText>
-              <span className="inline-flex items-center gap-1">
-                <CustomText as="p" className="text-sm text-neutral-400">
-                  Already have an account?
-                </CustomText>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    openAuthModal({
-                      mode: "signin",
-                      redirectTo: "/signup",
-                    });
-                  }}
-                >
-                  <CustomText as="span" textVariant="linkText">
-                    Sign in
-                  </CustomText>
-                </button>
+              <button
+                type="button"
+                onClick={() => {
+                  openAuthModal({
+                    mode: "signin",
+                    redirectTo: "/signup",
+                  });
+                }}
+              >
+                <CustomText as="span" textVariant="linkText">
+                  Sign in
+                </CustomText>
+              </button>
+            </span>
+          </span>
+          <LineDivider heightClass="my-0" />
+          {/* Personal details */}
+          <motion.div variants={item} className={contentClass}>
+            <span className={headerContent}>
+              <CustomText textVariant="primary" textSize="lg">
+                Personal details
+              </CustomText>
+              <span className={contentClass}>
+                <div className="flex w-full flex-col sm:flex-row gap-5 sm:gap-7">
+                  <FloatingInputField
+                    hasValue={!!firstName}
+                    label="First name"
+                    error={errors.firstName?.message}
+                    isDirty={!!dirtyFields.firstName}
+                    isTouched={!!touchedFields.firstName}
+                    {...register("firstName")}
+                  />
+                  <FloatingInputField
+                    hasValue={!!lastName}
+                    label="Last name"
+                    error={errors.lastName?.message}
+                    isDirty={!!dirtyFields.lastName}
+                    isTouched={!!touchedFields.lastName}
+                    {...register("lastName")}
+                  />
+                </div>
+
+                <FloatingInputField
+                  hasValue={!!emailAddress}
+                  className="max-w-sm"
+                  label="Email"
+                  type="email"
+                  error={errors.emailAddress?.message}
+                  isDirty={!!dirtyFields.emailAddress}
+                  isTouched={!!touchedFields.emailAddress}
+                  {...register("emailAddress")}
+                />
+
+                <FloatingInputField
+                  className="max-w-sm"
+                  hasValue={!!phoneNumber}
+                  label="Phone number"
+                  type="tel"
+                  error={errors.phoneNumber?.message}
+                  isDirty={!!dirtyFields.phoneNumber}
+                  isTouched={!!touchedFields.phoneNumber}
+                  {...register("phoneNumber")}
+                />
               </span>
             </span>
             <LineDivider heightClass="my-0" />
-            {/* Personal details */}
-            <motion.div variants={item} className={contentClass}>
-              <span className={headerContent}>
-                <CustomText textVariant="primary" textSize="lg">
-                  Personal details
-                </CustomText>
-                <span className={contentClass}>
-                  <div className="flex w-full flex-wrap gap-7">
-                    <FloatingInputField
-                      hasValue={!!firstName}
-                      label="First name"
-                      error={errors.firstName?.message}
-                      isDirty={!!dirtyFields.firstName}
-                      isTouched={!!touchedFields.firstName}
-                      {...register("firstName")}
-                    />
-                    <FloatingInputField
-                      hasValue={!!lastName}
-                      label="Last name"
-                      error={errors.lastName?.message}
-                      isDirty={!!dirtyFields.lastName}
-                      isTouched={!!touchedFields.lastName}
-                      {...register("lastName")}
-                    />
-                  </div>
+          </motion.div>
 
-                  <FloatingInputField
-                    hasValue={!!emailAddress}
-                    className="w-full sm:max-w-[350px]"
-                    label="Email"
-                    type="email"
-                    error={errors.emailAddress?.message}
-                    isDirty={!!dirtyFields.emailAddress}
-                    isTouched={!!touchedFields.emailAddress}
-                    {...register("emailAddress")}
-                  />
+          {/* Security */}
+          <motion.div variants={item} className={contentClass}>
+            <span className={headerContent}>
+              <CustomText textVariant="primary" textSize="lg">
+                Security
+              </CustomText>
 
-                  <span className="flex">
-                    <FloatingInputField
-                      hasValue={!!phoneNumber}
-                      label="Phone number"
-                      type="tel"
-                      error={errors.phoneNumber?.message}
-                      isDirty={!!dirtyFields.phoneNumber}
-                      isTouched={!!touchedFields.phoneNumber}
-                      {...register("phoneNumber")}
-                    />
-                  </span>
-                </span>
-              </span>
-              <LineDivider heightClass="my-0" />
-            </motion.div>
+              <FloatingInputField
+                hasValue={!!password}
+                label="Password"
+                type="password"
+                error={errors.password?.message}
+                isDirty={!!dirtyFields.password}
+                isTouched={!!touchedFields.password}
+                {...register("password")}
+              />
 
-            {/* Security */}
-            <motion.div variants={item} className={contentClass}>
-              <span className={headerContent}>
-                <CustomText textVariant="primary" textSize="lg">
-                  Security
-                </CustomText>
-                <span className={contentClass}>
-                  <span className="flex">
-                    <FloatingInputField
-                      hasValue={!!password}
-                      label="Password"
-                      type="password"
-                      error={errors.password?.message}
-                      isDirty={!!dirtyFields.password}
-                      isTouched={!!touchedFields.password}
-                      {...register("password")}
-                    />
-                  </span>
-                  <span className="flex">
-                    <FloatingInputField
-                      hasValue={!!confirmPassword}
-                      label="Confirm password"
-                      type="password"
-                      error={errors.confirmPassword?.message}
-                      isDirty={!!dirtyFields.confirmPassword}
-                      isTouched={!!touchedFields.confirmPassword}
-                      {...register("confirmPassword")}
-                    />
-                  </span>
-                </span>
-              </span>
-              <LineDivider heightClass="my-0" />
-            </motion.div>
+              <FloatingInputField
+                className="my-3"
+                hasValue={!!confirmPassword}
+                label="Confirm password"
+                type="password"
+                error={errors.confirmPassword?.message}
+                isDirty={!!dirtyFields.confirmPassword}
+                isTouched={!!touchedFields.confirmPassword}
+                {...register("confirmPassword")}
+              />
 
-            {/* Location */}
-            <motion.div variants={item} className={contentClass}>
-              <span className={headerContent}>
-                <CustomText textVariant="primary" textSize="lg">
-                  Your location
-                </CustomText>
-
-                {/* If your DropDownMenu supports register, keep this.
-                  If it *doesn't* (custom onChange), use Controller instead. */}
-                <span className="flex flex-wrap gap-7">
-                  <Controller
-                    control={control}
-                    name="country"
-                    render={({ field, fieldState }) => (
-                      <ComboBox
-                        className="rounded-lg"
-                        placeholder="Selected country"
-                        menuItems={["UK"]}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        error={fieldState.error?.message}
-                        isDirty={fieldState.isDirty}
-                        isTouched={fieldState.isTouched}
-                        searchable
-                      />
-                    )}
-                  ></Controller>
-
-                  <Controller
-                    control={control}
-                    name="city"
-                    render={({ field, fieldState }) => (
-                      <ComboBox
-                        className="rounded-lg"
-                        placeholder="Selected city"
-                        menuItems={["London"]}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        error={fieldState.error?.message}
-                        isDirty={fieldState.isDirty}
-                        isTouched={fieldState.isTouched}
-                        searchable
-                      />
-                    )}
-                  ></Controller>
-                </span>
-              </span>
-
-              <LineDivider heightClass="my-0" />
-            </motion.div>
-
-            {/* Submit */}
-            <span className="flex flex-col gap-5 mt-5">
-              <Button
-                type="submit"
-                variant="primary"
-                size="md"
-                className="w-full"
-                disabled={isSubmitting || (submitCount > 0 && !isValid)}
-              >
-                <CustomText textVariant="onDark" textSize="md">
-                  {isSubmitting ? "processing..." : "Join Carry4me"}
-                </CustomText>
-              </Button>
+              <LineDivider heightClass="m-0" />
             </span>
-          </motion.form>
-        </Card>
-      </div>
+          </motion.div>
+
+          {/* Location */}
+          <motion.div variants={item} className={contentClass}>
+            <span className={headerContent}>
+              <CustomText textVariant="primary" textSize="lg">
+                Your location
+              </CustomText>
+
+              <Controller
+                control={control}
+                name="country"
+                render={({ field, fieldState }) => (
+                  <ComboBox
+                    className="rounded-lg"
+                    placeholder="Selected country"
+                    menuItems={["UK"]}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    error={fieldState.error?.message}
+                    isDirty={fieldState.isDirty}
+                    isTouched={fieldState.isTouched}
+                    searchable
+                  />
+                )}
+              ></Controller>
+
+              <Controller
+                control={control}
+                name="city"
+                render={({ field, fieldState }) => (
+                  <ComboBox
+                    className="rounded-lg mt-3"
+                    placeholder="Selected city"
+                    menuItems={["London"]}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    error={fieldState.error?.message}
+                    isDirty={fieldState.isDirty}
+                    isTouched={fieldState.isTouched}
+                    searchable
+                  />
+                )}
+              ></Controller>
+            </span>
+
+            <LineDivider heightClass="my-0" />
+          </motion.div>
+
+          {/* Submit */}
+          <span className="flex flex-col gap-5 mt-5">
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              className="w-full"
+              disabled={isSubmitting || (submitCount > 0 && !isValid)}
+            >
+              <CustomText textVariant="onDark" textSize="md">
+                {isSubmitting ? "processing..." : "Join Carry4me"}
+              </CustomText>
+            </Button>
+          </span>
+        </motion.form>
+      </Card>
     </DefaultContainer>
   );
 }

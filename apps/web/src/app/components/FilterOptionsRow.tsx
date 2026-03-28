@@ -132,6 +132,7 @@ export function FilterOptionsRow({
     closeMenu,
     submitFilters,
     clearFilters,
+    handleClearAndClose,
     goodsCategory,
     hasDate,
     hasPrice,
@@ -144,7 +145,7 @@ export function FilterOptionsRow({
   const isTraveler = tag === "traveler";
 
   return (
-    <div className="flex flex-col md:flex-row gap-3 pb-2 items-start md:items-center">
+    <div className="flex flex-col sm:flex-row gap-3 pb-2 items-start md:items-center">
       <span className="text-md text-neutral-500 whitespace-nowrap">
         Filter by
       </span>
@@ -159,6 +160,7 @@ export function FilterOptionsRow({
             submitFilters: submitFilters,
             control: control,
             setValue: setValue,
+            clearFilters: handleClearAndClose,
           }}
         />
       )}
@@ -173,6 +175,7 @@ export function FilterOptionsRow({
           submitFilters: submitFilters,
           control: control,
           setValue: setValue,
+          clearFilters: handleClearAndClose,
         }}
       />
 
@@ -186,6 +189,7 @@ export function FilterOptionsRow({
           submitFilters: submitFilters,
           control: control,
           setValue: setValue,
+          clearFilters: handleClearAndClose,
         }}
       />
 
@@ -199,6 +203,7 @@ export function FilterOptionsRow({
           submitFilters: submitFilters,
           control: control,
           setValue: setValue,
+          clearFilters: handleClearAndClose,
         }}
       />
       <SortMenu
@@ -211,6 +216,7 @@ export function FilterOptionsRow({
           submitFilters: submitFilters,
           control: control,
           setValue: setValue,
+          clearFilters: handleClearAndClose,
         }}
       />
 
@@ -255,14 +261,15 @@ type BaseProps = {
   control: Control<FiltersFormValues>;
   setValue: UseFormSetValue<FiltersFormValues>;
   register: UseFormRegister<FiltersFormValues>;
+  clearFilters: () => void;
 };
 
 type ActionButtonProps = {
   setValue: UseFormSetValue<FiltersFormValues>;
-  submitFilters: () => void;
+  onClear: () => void;
 };
 
-function ActionButton({ setValue, submitFilters }: ActionButtonProps) {
+function ActionButton({ setValue, onClear }: ActionButtonProps) {
   return (
     <div className="flex items-center justify-end gap-2">
       <Button
@@ -272,7 +279,7 @@ function ActionButton({ setValue, submitFilters }: ActionButtonProps) {
         onClick={() => {
           setValue("minPrice", "0");
           setValue("maxPrice", "");
-          submitFilters();
+          if (onClear) onClear();
         }}
       >
         Clear
@@ -294,7 +301,14 @@ type FilterByDateProps = {
   hasDate: boolean;
 };
 function FilterByDate({ hasDate, baseProps }: FilterByDateProps) {
-  const { openMenu, toggleMenu, submitFilters, setValue, control } = baseProps;
+  const {
+    openMenu,
+    toggleMenu,
+    clearFilters,
+    submitFilters,
+    setValue,
+    control,
+  } = baseProps;
   return (
     <FilterMenuWrapper>
       <FilterChip
@@ -322,7 +336,7 @@ function FilterByDate({ hasDate, baseProps }: FilterByDateProps) {
             />
           </div>
 
-          <ActionButton setValue={setValue} submitFilters={submitFilters} />
+          <ActionButton setValue={setValue} onClear={clearFilters} />
         </form>
       </Popover>
     </FilterMenuWrapper>
@@ -339,7 +353,14 @@ function FilterByPriceMenu({
   isTraveler,
   hasPrice,
 }: FilterByPriceProps) {
-  const { openMenu, toggleMenu, submitFilters, setValue, register } = baseProps;
+  const {
+    openMenu,
+    toggleMenu,
+    submitFilters,
+    setValue,
+    register,
+    clearFilters,
+  } = baseProps;
   return (
     <FilterMenuWrapper>
       <FilterChip
@@ -376,7 +397,7 @@ function FilterByPriceMenu({
               />
             </div>
           </div>
-          <ActionButton setValue={setValue} submitFilters={submitFilters} />
+          <ActionButton setValue={setValue} onClear={clearFilters} />
         </form>
       </Popover>
     </FilterMenuWrapper>
@@ -394,7 +415,14 @@ function FilterByWeightMenu({
   hasSpace,
   isTraveler,
 }: WeightMenuProps) {
-  const { openMenu, toggleMenu, submitFilters, setValue, register } = baseProps;
+  const {
+    openMenu,
+    toggleMenu,
+    submitFilters,
+    setValue,
+    register,
+    clearFilters,
+  } = baseProps;
   return (
     <FilterMenuWrapper>
       <FilterChip
@@ -432,7 +460,7 @@ function FilterByWeightMenu({
             </div>
           </div>
 
-          <ActionButton setValue={setValue} submitFilters={submitFilters} />
+          <ActionButton setValue={setValue} onClear={clearFilters} />
         </form>
       </Popover>
     </FilterMenuWrapper>
@@ -446,7 +474,14 @@ type SortMenuProps = {
 };
 
 function SortMenu({ isTraveler, hasSort, baseProps }: SortMenuProps) {
-  const { openMenu, toggleMenu, submitFilters, control, setValue } = baseProps;
+  const {
+    openMenu,
+    toggleMenu,
+    submitFilters,
+    control,
+    clearFilters,
+    setValue,
+  } = baseProps;
   const sortOptions = isTraveler ? tripSortOptions : parcelSortOptions;
   return (
     <FilterMenuWrapper>
@@ -494,7 +529,7 @@ function SortMenu({ isTraveler, hasSort, baseProps }: SortMenuProps) {
               )}
             />
           </div>
-          <ActionButton setValue={setValue} submitFilters={submitFilters} />
+          <ActionButton setValue={setValue} onClear={clearFilters} />
         </form>
       </Popover>
     </FilterMenuWrapper>
@@ -512,7 +547,14 @@ function FilterByGoodsMenu({
   baseProps,
   goodsCategory,
 }: FilterByGoodsMenuProps) {
-  const { openMenu, toggleMenu, submitFilters, control, setValue } = baseProps;
+  const {
+    openMenu,
+    toggleMenu,
+    submitFilters,
+    control,
+    setValue,
+    clearFilters,
+  } = baseProps;
   return (
     <FilterMenuWrapper>
       <FilterChip
@@ -586,7 +628,7 @@ function FilterByGoodsMenu({
             />
           </div>
 
-          <ActionButton setValue={setValue} submitFilters={submitFilters} />
+          <ActionButton setValue={setValue} onClear={clearFilters} />
         </form>
       </Popover>
     </FilterMenuWrapper>

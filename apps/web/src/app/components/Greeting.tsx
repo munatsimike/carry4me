@@ -1,27 +1,14 @@
-import { useEffect, useState } from "react";
+import CustomText from "@/components/ui/CustomText";
+import useGreeting from "../shared/Authentication/UI/hooks/useGreeting";
 
-function getGreeting() {
-  const hour = new Date().getHours();
+export default function Greeting({ user }: { user: string | null }) {
+  const greeting = useGreeting();
 
-  if (hour >= 5 && hour < 12) return `Good morning ☀️`;
-  if (hour >= 12 && hour < 18) return `Good afternoon 🌤️`;
-  return `Good evening 🌙`;
-}
-
-export default function Greeting({ user }: { user: string | null}) {
-  const [greeting, setGreeting] = useState(getGreeting());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setGreeting(getGreeting());
-    }, 60_000); // update every minute
-
-    return () => clearInterval(interval);
-  }, []);
+  const firstName = user ? user.split(" ")[0] : "";
 
   return (
-    <h1 >
-      {greeting} {`${user?.substring(0,user.indexOf(" "))}${"!"}`}
-    </h1>
+    <CustomText as="h1" textVariant="primary" textSize="xxl" className="font-medium leading-tight">
+      {greeting} {firstName && `${firstName}!`}
+    </CustomText>
   );
 }

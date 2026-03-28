@@ -15,13 +15,15 @@ type ComboBoxProps = {
   heightClass?: string;
   textSize?: string;
   searchable?: boolean;
+  roundedClass?:string
 };
 
 export default function ComboBox({
   menuItems,
   placeholder,
   disabled = false,
-  className = "rounded-lg",
+  className,
+  roundedClass="xl",
   value = "",
   onValueChange,
   isDirty,
@@ -70,7 +72,7 @@ export default function ComboBox({
 
   if (!searchable) {
     return (
-      <div className="relative w-full min-w-0">
+      <div className="relative max-w-sm w-full min-w-0">
         <select
           disabled={disabled}
           value={value}
@@ -80,7 +82,7 @@ export default function ComboBox({
             onValueChange?.(e.target.value);
             setIsOpen(false);
           }}
-          className={cn(baseClasses, "appearance-none rounded-xl")}
+          className={cn(baseClasses, roundedClass,"appearance-none")}
         >
           <option value="" disabled>
             {placeholder}
@@ -101,7 +103,7 @@ export default function ComboBox({
   }
 
   return (
-    <div ref={wrapperRef} className="relative w-full min-w-0">
+    <div ref={wrapperRef} className="relative max-w-sm w-full min-w-0">
       <input
         type="text"
         disabled={disabled}
@@ -115,7 +117,7 @@ export default function ComboBox({
           setQuery(e.target.value);
           setIsOpen(true);
         }}
-        className={cn(baseClasses, "rounded-xl")}
+        className={cn(baseClasses, roundedClass)}
       />
 
       <button

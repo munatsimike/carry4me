@@ -31,18 +31,19 @@ export default function ActionButtons() {
   const subtitleSize = "xsm";
   return (
     <motion.section
-      className="flex flex-wrap gap-10 m-24"
+      className="flex flex-col items-center md:flex-row gap-8 m-24"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {/* Browse Parcels */}
-      <motion.div variants={itemVariants}>
+      <motion.div className="w-full" variants={itemVariants}>
         <Link to={"/parcels"}>
           <Button
             subtitle={
               <CustomText
                 textVariant="onDark"
+                className="whitespace-nowrap"
                 as="span"
                 textSize={subtitleSize}
               >
@@ -58,7 +59,12 @@ export default function ActionButtons() {
             }
             trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} color="grey" />}
           >
-            <CustomText as="span" textSize={titleSize} textVariant="onDark">
+            <CustomText
+              as="span"
+              textSize={titleSize}
+              textVariant="onDark"
+              className="whitespace-nowrap"
+            >
               Browse Parcels
             </CustomText>
           </Button>
@@ -71,6 +77,7 @@ export default function ActionButtons() {
           <Button
             subtitle={
               <CustomText
+                className="whitespace-nowrap"
                 textVariant="secondary"
                 as="span"
                 textSize={subtitleSize}
@@ -85,9 +92,16 @@ export default function ActionButtons() {
                 <SvgIcon size="xl" Icon={TravelerIcon} color="primary" />
               </CircleBadge>
             }
-            trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} color="neutral"/>}
+            trailingIcon={
+              <SvgIcon size="sm" Icon={ArrowIcon} color="neutral" />
+            }
           >
-            <CustomText as="span" textSize={titleSize} textVariant="primary">
+            <CustomText
+              as="span"
+              textSize={titleSize}
+              textVariant="primary"
+              className="whitespace-nowrap"
+            >
               Browse Trips
             </CustomText>
           </Button>

@@ -33,7 +33,7 @@ export default function MobileFilterOptions({
           onClick={onClear}
           className={cn(
             hasActiveFilters
-              ? "border bg-primary-100 border-primary-100 shadow-sm hover:bg-primary-300"
+              ? "border bg-primary-50 border-primary-100 shadow-sm hover:bg-primary-300"
               : "border text-ink-primary border-neutral-300",
             buttonStyle,
           )}

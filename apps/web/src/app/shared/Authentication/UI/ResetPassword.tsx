@@ -65,14 +65,14 @@ export default function ResetPassword() {
   };
 
   return (
-    <DefaultContainer outerClassName="flex bg-canvas min-h-screen justify-center">
+    <DefaultContainer outerClassName="bg-canvas min-h-screen" center={true}>
       <Card>
-        <motion.div className="w-full max-w-md p-6">
-          <div className="mb-6 space-y-2 text-center">
+        <motion.div className="py-2">
+          <div className="mb-5 space-y-2">
             <CustomText
               textVariant="primary"
               textSize="lg"
-              className="font-medium"
+              className="font-medium text-center"
             >
               Reset password
             </CustomText>
@@ -82,7 +82,7 @@ export default function ResetPassword() {
             </CustomText>
           </div>
 
-          <form onSubmit={handleSubmit(handleReset)} className="space-y-6">
+          <form onSubmit={handleSubmit(handleReset)} className="space-y-5">
             <FloatingInputField
               hasValue={!!emailAddress}
               className="w-full"
@@ -105,7 +105,7 @@ export default function ResetPassword() {
           </form>
 
           <div className="mt-2 text-center">
-            <CustomText textVariant="secondary" textSize="sm">
+            <CustomText textVariant="secondary" textSize="xsm">
               Remembered your password?{" "}
               <button
                 onClick={() =>
