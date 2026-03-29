@@ -12,14 +12,14 @@ export default function MobileFilterOptions({
   onFilter,
   onClear,
 }: MobileFilterOptionsProps) {
-  const buttonStyle = `px-3 py-1 rounded-full text-sm  flex items-center gap-1 text-ink-primary`;
+  const buttonStyle = `px-3 py-1 rounded-full text-sm  flex items-center gap-1`;
   return (
     <div className="flex items-center gap-3 w-full bg-white">
       <button
         type="button"
         onClick={onFilter}
         className={cn(
-          "border bg-white",
+          "border bg-white text-ink-primary",
           hasActiveFilters ? "border-primary-500" : "border-neutral-300",
           buttonStyle,
         )}
@@ -34,7 +34,7 @@ export default function MobileFilterOptions({
           className={cn(
             hasActiveFilters
               ? "border bg-primary-50 border-primary-100 shadow-sm hover:bg-primary-300"
-              : "border text-ink-primary border-neutral-300",
+              : "border text-neutral-500 border-neutral-300",
             buttonStyle,
           )}
         >

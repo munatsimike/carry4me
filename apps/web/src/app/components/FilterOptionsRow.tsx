@@ -82,7 +82,7 @@ function Popover({ open, children }: PopoverProps) {
   if (!open) return null;
 
   return (
-    <div className="absolute left-0 top-full z-20 mt-2 min-w-[280px] rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
+   <div className="absolute left-0 bottom-full mb-2 sm:bottom-auto sm:top-full sm:mt-2 sm:mb-0 z-20 min-w-[280px] rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
       {children}
     </div>
   );

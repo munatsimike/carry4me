@@ -25,10 +25,10 @@ export function StepHeader({
       : parcelSteps[currentStep - 1];
 
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex sm:justify-between items-center overflow-x-auto">
       {/* Left: Step text */}
       <div className="flex items-center gap-1 min-w-0">
-        <span className="inline-flex text-md h-6 items-center justify-center text-neutral-600">
+        <span className="inline-flex text-sm  sm:text-base h-6 items-center justify-center text-neutral-600 whitespace-nowrap">
           Step {currentStep} of {tripSteps.length}
         </span>
         <Minus className="text-neutral-400" />
@@ -40,7 +40,7 @@ export function StepHeader({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="text-lg text-ink-primary flex justify-center items-center font-semimedium"
+              className="text-md sm:text-lg text-ink-primary flex justify-center items-center font-medium whitespace-nowrap"
               title={step.title}
             >
               {step.title}
@@ -51,7 +51,7 @@ export function StepHeader({
       {/* Right: optional little “2 dots” indicator */}
 
       
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="hidden sm:flex sm:flex-row items-center gap-2 shrink-0">
         {[1, 2].map((n) => (
           <motion.span
             animate={{

@@ -72,7 +72,7 @@ export default function ComboBox({
 
   if (!searchable) {
     return (
-      <div className="relative max-w-sm w-full min-w-0">
+      <div className="relative max-w-xs w-full min-w-0">
         <select
           disabled={disabled}
           value={value}
@@ -103,7 +103,7 @@ export default function ComboBox({
   }
 
   return (
-    <div ref={wrapperRef} className="relative max-w-sm w-full min-w-0">
+    <div ref={wrapperRef} className="relative max-w-xs w-full min-w-0">
       <input
         type="text"
         disabled={disabled}

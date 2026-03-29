@@ -39,31 +39,32 @@ export function DateField<T extends FieldValues>({
   disabledMatchers.push({ before: new Date() });
 
   return (
-    <div className={`flex flex-col gap-3 ${className}`}>
-      {label && (
-        <CustomText textSize="sm" textVariant="label">
-          {label}
-        </CustomText>
-      )}
+  <div className={`flex flex-col gap-2 ${className}`}>
+    {label && (
+      <CustomText textSize="sm" textVariant="label">
+        {label}
+      </CustomText>
+    )}
 
-      <Controller
-        control={control}
-        name={name}
-        render={({ field, fieldState }) => {
-          const showSuccess =
-            (fieldState.isDirty || fieldState.isTouched) && !fieldState.error;
-          const raw = field.value as unknown as string | undefined;
-          const parsed = raw ? parseISO(raw) : null;
-          const selectedDate = parsed && isValid(parsed) ? parsed : undefined;
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => {
+        const showSuccess =
+          (fieldState.isDirty || fieldState.isTouched) && !fieldState.error;
+        const raw = field.value as string | undefined;
+        const parsed = raw ? parseISO(raw) : null;
+        const selectedDate = parsed && isValid(parsed) ? parsed : undefined;
 
-          return (
-            <ErrorText error={error}>
+        return (
+          <ErrorText error={error}>
+            <div className="relative inline-block">
               <button
                 type="button"
                 disabled={disabled}
                 onClick={() => setOpen((v) => !v)}
                 className={[
-                  "w-full sm:w-[150px] h-10 px-3 rounded-lg border border-slate-300 text-left flex items-center justify-between gap-2",
+                  "w-[180px] h-10 px-3 rounded-lg border border-slate-300 text-left flex items-center justify-between gap-2",
                   "focus:outline-none focus:border-primary-500",
                   error
                     ? inputError
@@ -87,7 +88,7 @@ export function DateField<T extends FieldValues>({
                     : placeholder}
                 </span>
 
-                <CalendarIcon className={`h-4 w-4 text-neutral-400`} />
+                <CalendarIcon className="h-4 w-4 text-neutral-400" />
               </button>
 
               {open && !disabled && (
@@ -97,7 +98,7 @@ export function DateField<T extends FieldValues>({
                     onClick={() => setOpen(false)}
                   />
 
-                  <div className="absolute z-50 mt-2 w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg px-1">
+                  <div className="absolute -left-8 md:left-0 bottom-full md:bottom-auto md:top-full z-50  w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg p-2">
                     <DayPicker
                       mode="single"
                       selected={selectedDate}
@@ -113,26 +114,18 @@ export function DateField<T extends FieldValues>({
                       }}
                       style={
                         {
-                          // overrides the default blue theme
-                          "--rdp-accent-color": "#5689f8", // text/icon accent
-                          "--rdp-accent-background-color": "#E5E7EB", // selected background
+                          "--rdp-accent-color": "#5689f8",
+                          "--rdp-accent-background-color": "#E5E7EB",
                         } as React.CSSProperties
                       }
                       classNames={{
                         caption_label: "hidden",
                         months: "flex flex-col",
                         month: "space-y-4",
-
-                        // dropdowns first
                         dropdowns: "flex items-center gap-2 order-1",
                         dropdown:
                           "rounded-md border border-neutral-200 bg-white px-2 py-1 text-sm text-neutral-700",
-
-                        // nav right after dropdowns
-
-                        // IMPORTANT: target the icon directly (this is what often stays blue)
                         nav_icon: "text-neutral-700",
-
                         table: "w-full border-collapse",
                         head_row: "flex",
                         head_cell:
@@ -142,7 +135,6 @@ export function DateField<T extends FieldValues>({
                         day: "p-1",
                         day_button:
                           "w-8 h-8 rounded-full text-xs text-neutral-600 flex items-center justify-center hover:bg-neutral-200",
-
                         day_selected:
                           "bg-neutral-200 text-neutral-900 hover:bg-neutral-300",
                         day_today: "ring-1 ring-neutral-700 rounded-md",
@@ -153,10 +145,13 @@ export function DateField<T extends FieldValues>({
                   </div>
                 </>
               )}
-            </ErrorText>
-          );
-        }}
-      />
-    </div>
-  );
+            </div>
+          </ErrorText>
+        );
+      }}
+    />
+  </div>
+);
+
+         
 }

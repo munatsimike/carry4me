@@ -198,65 +198,64 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
           Requests
         </NavItem>
       </NavLinks>
-       <span className="relative flex flex-col sm:flex-row gap-4 md:items-center mt-4 sm:mt-0">
-      <button
-        ref={triggerNotRef}
-        type="button"
-        onClick={() => setShowNotification((prev) => !prev)}
-        className="flex justify-start"
-      >
-        <span className="group inline-flex gap-1">
-          <span className="relative flex rounded-full p-1 md:group-hover:bg-neutral-200 gap-2">
-            {unreadNotifications.length > 0 ? (
-              <motion.span
-                animate={
-                  unreadNotifications.length > 0
-                    ? { rotate: [0, -8, 8, -6, 6, 0] }
-                    : { rotate: 0 }
-                }
-                transition={{
-                  duration: 0.8,
-                  ease: "easeInOut",
-                }}
-                style={{
-                  display: "inline-flex",
-                  transformOrigin: "top center",
-                }}
-              >
-                {unreadNotifications.length > 0 ? (
-                  <BellRing
-                    className={cn(bellClass)}
-                    strokeWidth={strokeWidth}
-                  />
-                ) : (
-                  <Bell className={cn(bellClass)} strokeWidth={strokeWidth} />
-                )}
-              </motion.span>
-            ) : (
-              <Bell className={cn(bellClass)} strokeWidth={strokeWidth} />
-            )}
-            {unreadNotifications.length > 0 && (
-              <span className="flex absolute z-10 right-0 top-[-1px] rounded-full h-4 w-4 bg-error-500 text-[11px] text-white justify-center items-center">
-                {unreadNotifications.length}
+      <span className="relative flex flex-col sm:flex-row gap-4 md:items-center mt-4 sm:mt-0">
+        <button
+          ref={triggerNotRef}
+          type="button"
+          onClick={() => setShowNotification((prev) => !prev)}
+          className="flex justify-start"
+        >
+          <span className="group inline-flex gap-1">
+            <span className="relative flex rounded-full p-1 md:group-hover:bg-neutral-200 gap-2">
+              {unreadNotifications.length > 0 ? (
+                <motion.span
+                  animate={
+                    unreadNotifications.length > 0
+                      ? { rotate: [0, -8, 8, -6, 6, 0] }
+                      : { rotate: 0 }
+                  }
+                  transition={{
+                    duration: 0.8,
+                    ease: "easeInOut",
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    transformOrigin: "top center",
+                  }}
+                >
+                  {unreadNotifications.length > 0 ? (
+                    <BellRing
+                      className={cn(bellClass)}
+                      strokeWidth={strokeWidth}
+                    />
+                  ) : (
+                    <Bell className={cn(bellClass)} strokeWidth={strokeWidth} />
+                  )}
+                </motion.span>
+              ) : (
+                <Bell className={cn(bellClass)} strokeWidth={strokeWidth} />
+              )}
+              {unreadNotifications.length > 0 && (
+                <span className="flex absolute z-10 right-0 top-[-1px] rounded-full h-4 w-4 bg-error-500 text-[11px] text-white justify-center items-center">
+                  {unreadNotifications.length}
+                </span>
+              )}
+              <span className="sm:hidden items-center text-neutral-800 hover:text-primary-600">
+                Notifications
               </span>
-            )}
-            <span className="sm:hidden items-center text-neutral-800 hover:text-primary-600">
-              Notifications
             </span>
           </span>
-        </span>
-      </button>
-      <AnimatePresence>
-        {showNotificationPopOver && (
-          <NotificationPopover
-            notifications={notifications}
-            onClosePopOver={setShowNotification}
-            triggerRef={triggerNotRef}
-          />
-        )}
-      </AnimatePresence>
+        </button>
+        <AnimatePresence>
+          {showNotificationPopOver && (
+            <NotificationPopover
+              notifications={notifications}
+              onClosePopOver={setShowNotification}
+              triggerRef={triggerNotRef}
+            />
+          )}
+        </AnimatePresence>
 
-     
         <button
           ref={triggerProfRef}
           type="button"
@@ -323,7 +322,7 @@ function NavItem({ to, children, end = false }: NavItemProps) {
 export function MobileNavigationMenu({
   isAuthed,
   profile,
-  setIsSearchOpen
+  setIsSearchOpen,
 }: {
   isAuthed: boolean;
   profile: UserProfile | null;
@@ -396,7 +395,7 @@ function MobileNavigationMenuItems({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-40 bg-black/40 justify-center"
+      className="fixed inset-0 z-40 bg-slate-600/40 justify-center"
       onClick={setIsOpen}
     >
       <motion.div
@@ -404,7 +403,7 @@ function MobileNavigationMenuItems({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="fixed top-0 right-0 z-50 h-full w-60 bg-white shadow-lg "
+        className="fixed top-0 right-0 z-50 h-full  w-[70vw] bg-white shadow-lg "
       >
         <div className="flex items-center justify-between border-b border-neutral-200 pl-6 pr-3 py-2">
           <CustomText

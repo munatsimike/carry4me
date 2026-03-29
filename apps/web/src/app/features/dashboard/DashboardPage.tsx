@@ -411,16 +411,16 @@ function ActionButtonRow({
     hidden: { opacity: 0, y: 12 },
     show: { opacity: 1, y: 0 },
   };
-  const btnContainer = "max-w-xs sm:w-fit";
+ 
 
   return (
     <motion.div
-      className="flex flex-col sm:flex-row justify-center gap-4 px-5 mx-auto"
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 items-stretch gap-4 px-5 mx-auto"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className={btnContainer}>
+      <motion.div variants={itemVariants}>
         <ActionButton
           onClick={setTripModalState}
           btnText="Post a trip"
@@ -429,7 +429,7 @@ function ActionButtonRow({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className={btnContainer}>
+      <motion.div variants={itemVariants}>
         <ActionButton
           onClick={setParcelModalState}
           btnText="Post a parcel"
@@ -438,7 +438,7 @@ function ActionButtonRow({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className={btnContainer}>
+      <motion.div variants={itemVariants}>
         <Link to={"/travelers"}>
           <ActionButton
             btnText="Browse trips"
@@ -451,7 +451,7 @@ function ActionButtonRow({
         </Link>
       </motion.div>
 
-      <motion.div variants={itemVariants} className={btnContainer}>
+      <motion.div variants={itemVariants}>
         <Link to={"/parcels"}>
           <ActionButton
             showArrow
@@ -504,7 +504,7 @@ function ActionButton({
           as="span"
           textVariant={textVariant}
           textSize="lg"
-          className="whitespace-nowrap"
+          className="whitespace-nowrap pr-3"
         >
           {btnText}
         </CustomText>

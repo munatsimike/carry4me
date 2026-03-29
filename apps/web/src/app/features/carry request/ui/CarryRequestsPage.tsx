@@ -418,9 +418,10 @@ export default function CarryRequestsPage() {
 
             return (
               <Card
+                sizeClass="max-w-5xl"
                 key={request.carryRequestId}
                 cornerRadiusClass="rounded-2xl"
-                className="mx-auto w-full max-w-[1000px] px-6"
+                className="mx-auto w-full px-6"
               >
                 <div className="mx-2 flex flex-col gap-4">
                   <Header
@@ -887,7 +888,7 @@ function Step({
   return (
     <span className="inline-flex items-center gap-2">
       <SvgIcon color={iconColor} size="md" Icon={META_ICONS.checkedIcon} />
-      <CustomText textSize="xsm" textVariant={textColor}>
+      <CustomText textSize="xsm" textVariant={textColor} className="whitespace-nowrap">
         {stage}
       </CustomText>
     </span>

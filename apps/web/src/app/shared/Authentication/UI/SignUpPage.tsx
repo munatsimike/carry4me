@@ -227,7 +227,7 @@ export default function SignUpPage() {
                 />
 
                 <FloatingInputField
-                  className="max-w-sm"
+                  className="max-w-[230px]"
                   hasValue={!!phoneNumber}
                   label="Phone number"
                   type="tel"

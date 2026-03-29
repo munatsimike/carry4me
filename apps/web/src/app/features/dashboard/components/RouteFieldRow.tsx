@@ -10,18 +10,19 @@ export default function RouteFieldRow<T extends FieldValues>({
   control,
 }: RouteRowProps<T>) {
   return (
-    <div className="flex flex-col gap-4 ">
+    <div className="flex flex-col gap-5 ">
       <div className="flex">
-        <span className="grid grid-cols-[96px_1fr] items-center gap-4 ">
-          <CustomText className="text-right" textSize="sm" textVariant="label">
+        <span className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-2 sm:gap-4 ">
+          <CustomText className="text-left sm:text-right" textSize="sm" textVariant="label">
             {"Origin"}
           </CustomText>
-          <span className="inline-flex gap-7  ">
+          <span className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <Controller
               name={"originCountry" as Path<T>}
               control={control}
               render={({ field, fieldState }) => (
                 <ComboBox
+                 className="rounded-lg"
                   placeholder="Select Country"
                   menuItems={["UK", "USA", "Ireland"]}
                   value={field.value}
@@ -39,6 +40,7 @@ export default function RouteFieldRow<T extends FieldValues>({
               control={control}
               render={({ field, fieldState }) => (
                 <ComboBox
+                 className="rounded-lg"
                   placeholder="Select City"
                   menuItems={["London", "Birmingham", "Manchester"]}
                   value={field.value}

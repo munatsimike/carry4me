@@ -23,7 +23,7 @@ export default function FormHeader({
         <CustomText  textSize="lg" textVariant="primary" className="font-medium">
           {heading}
         </CustomText>
-        <CustomText textSize="sm" as="h2" className="leading-none">
+        <CustomText textSize="sm" as="h2" className="sm:leading-none">
           {subHeading}
         </CustomText>
       </span>

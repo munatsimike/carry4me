@@ -18,7 +18,11 @@ import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import FavouritesList from "./FavouritesList";
-import { SegmentedTabs, type TabItem,  } from "@/app/shared/Authentication/UI/SegmentedTabs";
+import {
+  SegmentedTabs,
+  type TabItem,
+} from "@/app/shared/Authentication/UI/SegmentedTabs";
+import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 
 export type MyFavTabs = "all" | "trip" | "parcel";
 
@@ -58,6 +62,14 @@ export function MyFavouritesPage() {
   const [favListing, setFavListings] = useState<Listing[]>([]);
   const { showSupabaseError } = useUniversalModal();
   const [selectedTab, setSelectedTab] = useState<MyFavTabs>("all");
+  const [mobileFilter, setMobileFilter] = useState<boolean>(false);
+  const filterForm = useFiltersForm({
+    setSelectedDate: setFilterByDate,
+    setPriceRange,
+    setWeightRange,
+    setGoodsCategory,
+    setSortOption,
+  });
 
   useEffect(() => {
     async function fetchFavourites() {
@@ -127,6 +139,13 @@ export function MyFavouritesPage() {
     }, 300);
   };
 
+  const filterContent = (
+    <FilterOptionsRow
+      filterForm={filterForm}
+      setMobileFilter={() => setMobileFilter(false)}
+    />
+  );
+
   return (
     <>
       <PageSection>
@@ -138,16 +157,12 @@ export function MyFavouritesPage() {
           setClearResults={() => setClearResults(false)}
           clearResults={clearSearchResults}
         />
-        <FilterOptionsRow
-          setSelectedDate={setFilterByDate}
-          setPriceRange={setPriceRange}
-          setWeightRange={setWeightRange}
-          setGoodsCategory={setGoodsCategory}
-          setSortOption={setSortOption}
-          tag="sender"
-          setHasFilter={setHasFilter}
+        {filterContent}
+        <SegmentedTabs
+          tabs={tabs}
+          selectedTab={selectedTab}
+          setTab={setSelectedTab}
         />
-        <SegmentedTabs tabs={tabs} selectedTab={selectedTab} setTab={setSelectedTab} />
         <SearchResults
           isSearchActive={isSearchActive}
           searchResults={displayedFavourites.length}
@@ -172,4 +187,3 @@ export function MyFavouritesPage() {
     </>
   );
 }
-

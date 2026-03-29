@@ -40,13 +40,13 @@ export default function CustomModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center px-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:px-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="absolute inset-0 z-[100] bg-black/40 backdrop-blur-[1px]"
+        className="absolute inset-0 z-[100] bg-slate-600/40 backdrop-blur-[1px]"
         onClick={onClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -55,14 +55,14 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-[110] w-full ${sizes[width]} rounded-2xl bg-white shadow-xl p-3 border border-neutral-300 mt-4 sm:mt-0`}
+        className={`relative z-[110] w-[97vw] sm:w-full ${sizes[width]} max-h-[90vh] rounded-t-2xl sm:rounded-2xl bg-white shadow-xl p-2 border border-neutral-300`}
         initial={modalAnimation.initial}
         animate={modalAnimation.animate}
         exit={modalAnimation.exit}
         transition={modalAnimation.transition}
       >
         <CloseBackBtn onClose={onClose} />
-        {children}
+     {children}
       </motion.div>
     </motion.div>
   );
