@@ -91,7 +91,7 @@ export function AuthModal() {
           onSubmit={handleSubmit(handleSignIn)}
           onClose={closeAuthModal}
         >
-          <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-5 px-4 sm:px-0 ">
+          <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-5 px-4 sm:px-0">
             <div className="flex items-center justify-center">
               <ErrorText error={loginError?.toString()}>
                 <span className="inline-flex flex-col gap-2 items-center">
@@ -113,8 +113,9 @@ export function AuthModal() {
               </ErrorText>
             </div>
 
-            <div className="flex w-full max-w-sm flex-col gap-5 ">
+            <div className="flex w-full max-w-xs flex-col gap-5">
               <FloatingInputField
+              className="max-w-sm"
                 hasValue={!!emailAddress}
                 isDirty={!!dirtyFields.email}
                 isTouched={!!touchedFields.email}
@@ -128,6 +129,7 @@ export function AuthModal() {
               />
 
               <FloatingInputField
+               className="max-w-sm"
                 hasValue={!!password}
                 isDirty={!!dirtyFields.password}
                 isTouched={!!touchedFields.password}
@@ -140,7 +142,7 @@ export function AuthModal() {
               />
             </div>
 
-            <span className="flex flex-col gap-2 w-full max-w-sm">
+            <span className="flex flex-col gap-2 w-full max-w-xs">
               <span className="relative inline-flex flex-col gap-3 items-center">
                 <LoginButton isFormSubmitting={isSubmitting} />
                 <Link to="/update-password" onClick={closeAuthModal}>

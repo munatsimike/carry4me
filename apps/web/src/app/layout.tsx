@@ -1,15 +1,24 @@
-import DesktopNavigationMenu, { MobileNavigationMenu } from "@/Navigation";
-import { Link, Outlet } from "react-router-dom";
+import DesktopNavigationMenu, {
+  TripsToolbar,
+  MobileNavigationMenu,
+} from "@/Navigation";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import { useAuth } from "./shared/supabase/AuthProvider";
 import Footer from "./shared/Authentication/UI/Footer";
 import type { UserProfile } from "./shared/Authentication/domain/authTypes";
 import { useMediaQuery } from "./shared/Authentication/UI/hooks/useMediaQuery";
 import { useState } from "react";
+import { cn } from "./lib/cn";
+import { AnimatePresence, motion } from "framer-motion";
+const PATHS = ["/travelers", "/parcels", "/favourites"];
+const HIDE_BOTTOM_NAV = ["/create-trip", "/create-parcel"];
 
 export default function AppLayout() {
   const { loading, user, profile } = useAuth();
+  const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const showBottomNav = !HIDE_BOTTOM_NAV.includes(location.pathname);
 
   const isAuthed = !!user;
   if (loading) {
@@ -30,6 +39,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header
+        pathname={location.pathname}
         isAuthed={isAuthed}
         profile={profile}
         setIsSearchOpen={() => setIsSearchOpen(true)}
@@ -39,7 +49,19 @@ export default function AppLayout() {
       </main>
 
       <AuthModal />
-
+      <AnimatePresence>
+        {showBottomNav && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="fixed bottom-0 left-0 right-0 border-t bg-white z-50 block sm:hidden py-2 shadow-sm backdrop-blur-md"
+          >
+            <TripsToolbar />
+          </motion.div>
+        )}
+      </AnimatePresence>
       <Footer isAuthed={isAuthed} />
     </div>
   );
@@ -49,15 +71,23 @@ function Header({
   isAuthed,
   profile,
   setIsSearchOpen,
+  pathname,
 }: {
+  pathname: string;
   isAuthed: boolean;
   profile: UserProfile | null;
   setIsSearchOpen: () => void;
 }) {
+  const showSearchBar = PATHS.includes(pathname);
   const isMobile = useMediaQuery();
   return (
     <header className="sticky top-0 z-50 bg-white">
-      <div className="relative shadow-sm sm:shadow-none mx-auto max-w-container rounded-lg px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between border-b border-r border-l border-neutral-100">
+      <div
+        className={cn(
+          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-primary-50 sm:bg-white  sm:px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between border-b border-r border-l border-neutral-100",
+          pathname === "/" ? "pl-3 pr-4" : "pr-4",
+        )}
+      >
         <Link to={isAuthed ? "/dashboard" : "/"} className="font-semibold">
           {!isMobile && (
             <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
@@ -71,6 +101,7 @@ function Header({
           />
         </div>
         <MobileNavigationMenu
+          showSearchBar={showSearchBar}
           isAuthed={isAuthed}
           profile={profile}
           setIsSearchOpen={setIsSearchOpen}

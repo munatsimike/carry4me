@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import CreateTripModal from "./CreateTripModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
-import MobileFilterOptions from "@/app/components/MobileFilterOptions";
+import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 import { useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
@@ -237,7 +237,7 @@ export default function TravelersPage() {
 
   return (
     <>
-      <div className="sticky top-[72px] z-40 bg-white border-neutral-200 px-4">
+      <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4 py-1">
         <AnimatePresence initial={false}>
           {isMobile && scrollDirection === "up" && (
             <motion.div
@@ -245,10 +245,9 @@ export default function TravelersPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="py-2"
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             >
-              <MobileFilterOptions
+              <Toolbar
                 hasActiveFilters={hasFilter}
                 onFilter={() => setMobileFilter(true)}
                 onClear={clearFilters}
@@ -283,10 +282,7 @@ export default function TravelersPage() {
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         <AnimatePresence>
           {tripModalState && (
-            <CreateTripModal
-              goodsCategory={[]}
-              setModalState={() => setTripModalState(false)}
-            />
+            <CreateTripModal setModalState={() => setTripModalState(false)} />
           )}
         </AnimatePresence>
         {tripList.length === 0 && dataloaded && (

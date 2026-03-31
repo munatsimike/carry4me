@@ -9,8 +9,8 @@ export class MyTripsUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string): Promise<Result<TripListing[]>> {
-    const result = await this.repo.tripsById(userId);
+  async execute(userId: string, tripId?:string): Promise<Result<TripListing[]>> {
+    const result = await this.repo.tripsById(userId, tripId);
     return toResult(result);
   }
 }

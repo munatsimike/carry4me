@@ -15,9 +15,10 @@ import { AnimatePresence } from "framer-motion";
 import CreateTripModal from "./ui/CreateTripModal";
 import CustomModal from "@/app/components/CustomModal";
 import TravelerCard from "./ui/TravelerCard";
-import { useGoods } from "@/app/shared/Authentication/UI/GoodsProvider";
+
 import EmptyState from "@/app/components/EmptyState";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+
 
 export function MyTripsPage() {
   const [loading, setLoading] = useState(true);
@@ -43,13 +44,7 @@ export function MyTripsPage() {
     return [...mypTrips].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
   }, [mypTrips]);
 
-  const { goodsCategories, ensureGoodsLoaded } = useGoods();
   const { showSupabaseError } = useUniversalModal();
-
-  useEffect(() => {
-    if (!showCreateTripModal) return;
-    ensureGoodsLoaded();
-  }, [showCreateTripModal, ensureGoodsLoaded]);
 
   const deleteTrip = async (parcelId: string) => {
     const { result } = await namedCall(
@@ -139,8 +134,7 @@ export function MyTripsPage() {
           <CreateTripModal
             mode={editTrip ? "edit" : undefined}
             initialFormValues={editTrip ? editTrip : undefined}
-            goodsCategory={goodsCategories}
-            setModalState={setCreatTripModalState}
+            setModalState={() => setCreatTripModalState(false)}
           />
         )}
         {/*show preview moda */}

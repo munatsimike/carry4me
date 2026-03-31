@@ -135,7 +135,7 @@ function ProfileItem({ profileItem, onClosePopOver }: ProfileItemProps) {
           <SvgIcon
             size={"xs"}
             Icon={META_ICONS.arrowSmall}
-            color={hover ? "tonal" : "neutral"}
+            color={hover ? "primary" : "neutral"}
           />
         </SpaceBetweenRow>
       </motion.span>

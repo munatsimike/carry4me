@@ -10,11 +10,7 @@ import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import type { SvgIconComponent } from "@/types/Ui";
 import CreatParcelModal from "../parcels/ui/CreateParcelModal";
-
 import CreateTripModal from "../trips/ui/CreateTripModal";
-import { SupabaseGoodsRepository } from "../goods/data/SupabaseGoodsRepository";
-import { GetGoodsUseCase } from "../goods/application/GetGoodsUseCase";
-import type { GoodsCategory } from "../goods/domain/GoodsCategory";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
@@ -32,6 +28,7 @@ import { iconForActivity } from "./application/iconForActivity";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import Greeting from "@/app/components/Greeting";
+import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 
 /**
  * Dashboard Page
@@ -55,11 +52,6 @@ import Greeting from "@/app/components/Greeting";
 
 export default function DashboardPage() {
   //Create get goods use case
-  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
-  const getGoodsUseCase = useMemo(
-    () => new GetGoodsUseCase(goodsRepo),
-    [goodsRepo],
-  );
 
   const dashboardDataRepository = useMemo(
     () => new SubabaseDashboardRepository(),
@@ -81,7 +73,7 @@ export default function DashboardPage() {
   );
   const [fullName, setFullName] = useState<string | null>(null);
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
-  const [showTripModal, setTripModalState] = useState<boolean>(false);
+  const [createTrip, setTripModalState] = useState<boolean>(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
@@ -89,11 +81,10 @@ export default function DashboardPage() {
     [],
   );
   const navigate = useNavigate();
+  const isMobile = useMediaQuery();
   const { user, profile, loading } = useAuth();
   const { showSupabaseError } = useUniversalModal();
   // fetch goods category
-  const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
-
   // redirect is user is not logged in
   useEffect(() => {
     if (!user && !loading) {
@@ -135,19 +126,11 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [user?.id, profile]);
 
-  // fetch goods categories
   useEffect(() => {
-    if (!showTripModal && !showParcelModal) return;
-    async function fetchGoods() {
-      const { result } = await namedCall("goods", getGoodsUseCase.execute());
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
-      }
-      setCategory(result.data);
-    }
-    fetchGoods();
-  }, [showParcelModal, showTripModal]);
+    if (!createTrip || !isMobile) return;
+
+    navigate("/create-trip?mode=create");
+  }, [createTrip, isMobile, navigate]);
 
   return (
     <DefaultContainer outerClassName="min-h-screen">
@@ -169,19 +152,13 @@ export default function DashboardPage() {
       </div>
 
       <AnimatePresence>
-        {showTripModal && (
-          <CreateTripModal
-            goodsCategory={goodsCategory}
-            setModalState={setTripModalState}
-          />
+        {createTrip && !isMobile && (
+          <CreateTripModal setModalState={() => setTripModalState(false)} />
         )}
 
         {/* hide and show post parcel modal */}
         {showParcelModal && (
-          <CreatParcelModal
-            goodsCategory={goodsCategory}
-            setModalState={setParcelModalState}
-          />
+          <CreatParcelModal setModalState={setParcelModalState} />
         )}
       </AnimatePresence>
     </DefaultContainer>
@@ -411,7 +388,6 @@ function ActionButtonRow({
     hidden: { opacity: 0, y: 12 },
     show: { opacity: 1, y: 0 },
   };
- 
 
   return (
     <motion.div

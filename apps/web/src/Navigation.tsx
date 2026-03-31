@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
 import {
   Bell,
@@ -6,11 +6,11 @@ import {
   Handshake,
   HomeIcon,
   LayoutDashboard,
-  Menu,
   Package,
   Search,
   Plane,
   UserPlus,
+  ArrowLeft,
 } from "lucide-react";
 import type { UserProfile } from "./app/shared/Authentication/domain/authTypes";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,7 +27,7 @@ import CustomText from "./components/ui/CustomText";
 import { CloseBackBtn } from "./app/components/CloseBtn";
 import { cn } from "./app/lib/cn";
 
-const iconStyle = "h-5 w-5 text-neutral-500  sm:hidden";
+const iconStyle = "h-5 w-5 stroke-current  sm:hidden";
 const strokeWidth = 1.5;
 const bellClass = "h-5 w-5 text-neutral-500 md:h-6 w-6 text-neutral-600";
 
@@ -56,7 +56,7 @@ export default function DesktopNavigationMenu({
 
 function NavLinks({ children }: { children: React.ReactNode }) {
   return (
-    <nav className="relative flex flex-col sm:items-center  px-2 sm:px-5 sm:py-1 sm:flex-row gap-5 text-sm sm:justify-center">
+    <nav className="relative flex sm:items-center  px-2 sm:px-5 sm:py-1 sm:flex-row gap-5 text-sm sm:justify-center">
       {children}
     </nav>
   );
@@ -256,21 +256,14 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
           )}
         </AnimatePresence>
 
-        <button
-          ref={triggerProfRef}
-          type="button"
-          onClick={() => setShowPrfilePopOver((prev) => !prev)}
-        >
-          <img
-            src={
-              userProfile?.avatarUrl
-                ? userProfile.avatarUrl
-                : "/user-profile-icon.svg"
-            }
-            alt="User profile"
-            className="rounded-full h-9 w-9 border border-neutral-300"
+        <div className="hidden sm:block">
+          <Avatar
+            userProfile={userProfile}
+            setShowPrfilePopOver={() => setShowPrfilePopOver((v) => !v)}
+            triggerProfRef={triggerProfRef}
           />
-        </button>
+        </div>
+
         <AnimatePresence>
           {showPopOver && (
             <UserProfileMenu
@@ -281,6 +274,32 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
         </AnimatePresence>
       </span>
     </>
+  );
+}
+
+type AvatarProps = {
+  userProfile: UserProfile | null;
+  setShowPrfilePopOver: () => void;
+  triggerProfRef: React.Ref<HTMLButtonElement> | undefined;
+};
+
+function Avatar({
+  userProfile,
+  triggerProfRef,
+  setShowPrfilePopOver,
+}: AvatarProps) {
+  return (
+    <button ref={triggerProfRef} type="button" onClick={setShowPrfilePopOver}>
+      <img
+        src={
+          userProfile?.avatarUrl
+            ? userProfile.avatarUrl
+            : "/user-profile-icon.svg"
+        }
+        alt="User profile"
+        className="rounded-full h-8 w-8 sm:h-9 sm:w-9 border border-neutral-300"
+      />
+    </button>
   );
 }
 
@@ -307,12 +326,12 @@ function NavItem({ to, children, end = false }: NavItemProps) {
         `relative w-full whitespace-nowrap ${
           isActive
             ? "text-primary-600 font-medium"
-            : "text-neutral-800 hover:text-primary-600"
+            : "text-neutral-700 hover:text-primary-600"
         }`
       }
       end={end}
     >
-      <span className="inline-flex items-center gap-2 whitespace-nowrap">
+      <span className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 whitespace-nowrap">
         {children}
       </span>
     </NavLink>
@@ -323,51 +342,72 @@ export function MobileNavigationMenu({
   isAuthed,
   profile,
   setIsSearchOpen,
+  showSearchBar,
 }: {
+  showSearchBar: boolean;
   isAuthed: boolean;
   profile: UserProfile | null;
   setIsSearchOpen: () => void;
 }) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const location = useLocation();
   const style =
-    "flex flex-col text-ink-primary items-center justify-center gap-0.5 text-[12px] flex-1 py-1";
-  const iconColor = "text-neutral-500";
-
+    "flex flex-col text-neutral-700 items-center justify-center gap-0.5 text-[12px] flex-1 py-1";
+  const iconColor = "text-neutral-700";
+  const HIDE_BACK_ROUTES = ["/", "/dashboard"];
+  const showBackButton = !HIDE_BACK_ROUTES.includes(location.pathname);
+  const triggerProfRef = useRef<HTMLButtonElement | null>(null);
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
   return (
     <>
-      <div className="relative flex block sm:hidden items-center justify-between w-full px- py-1 h-12">
+      <div className="relative flex block sm:hidden items-center justify-between w-full py-1 h-8">
+        {showBackButton && (
+          <button
+            onClick={() => handleBack()}
+            className="rounded-full bg-white p-1 text-neutral-600 border border-primary-100"
+          >
+            <ArrowLeft size={18} />
+          </button>
+        )}
         <CustomText
           as="h1"
-          textSize="md"
+          textSize="sm"
           textVariant="primary"
           className="font-medium whitespace-nowrap"
         >
           {toHeading(location.pathname)}
         </CustomText>
+        <div className="flex items-center gap-5">
+          {showSearchBar && (
+            <button onClick={setIsSearchOpen} type="button" className={style}>
+              <Search
+                size={16}
+                strokeWidth={strokeWidth}
+                className={iconColor}
+              />
+              Search
+            </button>
+          )}
 
-        <div className="flex items-center gap-6">
-          <button onClick={setIsSearchOpen} type="button" className={style}>
-            <Search size={20} strokeWidth={strokeWidth} className={iconColor} />
-            Search
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className={style}
-          >
-            <Menu size={20} strokeWidth={strokeWidth} className={iconColor} />
-            Menu
-          </button>
+          <Avatar
+            triggerProfRef={triggerProfRef}
+            userProfile={profile}
+            setShowPrfilePopOver={() => null}
+          />
         </div>
       </div>
-
       <AnimatePresence>
         {isOpen && (
           <>
             {isOpen && (
-              <MobileNavigationMenuItems
+              <MobileTopNavigationBar
                 isAuthed={isAuthed}
                 setIsOpen={() => setIsOpen(false)}
                 profile={profile}
@@ -380,7 +420,7 @@ export function MobileNavigationMenu({
   );
 }
 
-function MobileNavigationMenuItems({
+function MobileTopNavigationBar({
   isAuthed,
   setIsOpen,
   profile,
@@ -403,7 +443,7 @@ function MobileNavigationMenuItems({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="fixed top-0 right-0 z-50 h-full  w-[70vw] bg-white shadow-lg "
+        className="fixed top-0 right-0 z-50 h-full  w-[70vw] bg-white shadow-lg"
       >
         <div className="flex items-center justify-between border-b border-neutral-200 pl-6 pr-3 py-2">
           <CustomText
@@ -428,17 +468,45 @@ function MobileNavigationMenuItems({
   );
 }
 
+export function TripsToolbar() {
+  return (
+    <NavLinks>
+      <NavItem to="/dashboard">
+        {" "}
+        <LayoutDashboard className={iconStyle} strokeWidth={strokeWidth} />
+        Dashboard
+      </NavItem>
+      <NavItem to="/travelers">
+        {" "}
+        <Plane className={iconStyle} strokeWidth={strokeWidth} />
+        Trips
+      </NavItem>
+      <NavItem to="/parcels">
+        {" "}
+        <Package className={iconStyle} strokeWidth={strokeWidth} />
+        Parcels
+      </NavItem>
+      <NavItem to="/requests">
+        {" "}
+        <Handshake className={iconStyle} strokeWidth={strokeWidth} />
+        Requests
+      </NavItem>
+    </NavLinks>
+  );
+}
+
 function toHeading(path: string) {
   switch (path) {
     case "/travelers":
-      return "Browse travelers";
+      return "Travelers";
 
     case "/parcels":
-      return "Browse parcels";
+      return "Parcels";
     case "/signup":
       return "Signup";
     case "/dashboard":
       return "Dashboard";
+
     case "/":
       return "Home";
 

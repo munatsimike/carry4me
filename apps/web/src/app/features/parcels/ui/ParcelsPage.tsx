@@ -31,7 +31,7 @@ import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import CreateParcelModal from "./CreateParcelModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
-import MobileFilterOptions from "@/app/components/MobileFilterOptions";
+import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 import { useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
@@ -235,7 +235,7 @@ export default function ParcelsPage() {
 
   return (
     <>
-      <div className="sticky top-[72px] z-40 bg-white border-neutral-200 px-4">
+      <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4">
         <AnimatePresence initial={false}>
           {isMobile && scrollDirection === "up" && (
             <motion.div
@@ -246,7 +246,7 @@ export default function ParcelsPage() {
               transition={{ duration: 0.2, ease: "easeOut" }}
               className="py-2"
             >
-              <MobileFilterOptions
+              <Toolbar
                 hasActiveFilters={hasFilter}
                 onFilter={() => setMobileFilter(true)}
                 onClear={clearFilters}
@@ -282,7 +282,6 @@ export default function ParcelsPage() {
         <AnimatePresence>
           {parcelModalState && (
             <CreateParcelModal
-              goodsCategory={[]}
               setModalState={() => setParcelModalState(false)}
             />
           )}

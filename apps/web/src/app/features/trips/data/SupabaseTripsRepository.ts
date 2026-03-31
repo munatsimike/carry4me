@@ -34,8 +34,8 @@ export class SupabaseTripsRepository implements TripsRepository {
   async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
     return deleteById(parcelId, "trips");
   }
-  async tripsById(userId: string): Promise<RepoResponse<TripListing[]>> {
-    return this.listTrips(userId, true);
+  async tripsById(userId: string, tripId:string): Promise<RepoResponse<TripListing[]>> {
+    return this.listTrips(userId, tripId,true);
   }
 
   async reserveWeight(
@@ -110,6 +110,7 @@ export class SupabaseTripsRepository implements TripsRepository {
 
   async listTrips(
     userId?: string,
+    tripId?:string,
     shouldFilter: boolean = false,
   ): Promise<RepoResponse<TripListing[]>> {
     let query = supabase.from("trips").select(`
@@ -123,6 +124,10 @@ export class SupabaseTripsRepository implements TripsRepository {
         )
       )
     `);
+
+    if(tripId){
+      query.eq("id", tripId)
+    }
 
     if (shouldFilter && userId) {
       query.eq("traveler_user_id", userId);

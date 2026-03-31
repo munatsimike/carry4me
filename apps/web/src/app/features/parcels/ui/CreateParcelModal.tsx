@@ -2,7 +2,7 @@ import FloatingInputField from "@/app/components/CustomInputField";
 import LineDivider from "@/app/components/LineDivider";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
-import FormModal from "../../dashboard/components/FormModal";
+
 import {
   useFieldArray,
   useForm,
@@ -17,7 +17,7 @@ import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
 import AgreeToTermsRow from "../../dashboard/components/AgreeToTermsRow";
 import SvgIcon from "@/components/ui/SvgIcon";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
-import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
+
 import z from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { StepHeader } from "@/app/components/forms/formStepper";
@@ -40,6 +40,7 @@ import { toParcelDtoMapper } from "../application/toParcelDtoMapper";
 import { EditGoodsUsecase } from "../../goods/application/EditGoodsUseCase";
 import type { FormValues, GoodsItem } from "@/types/Ui";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import useGoods from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
 
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
@@ -95,18 +96,17 @@ const emptyDefaultsValues = {
 };
 
 export default function CreateParcelModal({
-  goodsCategory,
   setModalState,
   initialFormValues,
   mode = "create",
 }: {
   initialFormValues?: FormValues;
-  goodsCategory: GoodsCategory[];
+
   mode?: ParcelFormMode;
   setModalState: (v: boolean) => void;
 }) {
   const [step, setStep] = useState<Step>(1);
-
+  const { goodsCategory } = useGoods();
   const repo = useMemo(() => new SupabaseParcelRepository(), []);
   const useCase = useMemo(() => new CreateParcelUseCase(repo), [repo]);
   const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
@@ -246,182 +246,172 @@ export default function CreateParcelModal({
   };
 
   return (
-    <FormModal
-      onSubmit={handleSubmit(onValid, onInvalid)}
-      onClose={() => setModalState(false)}
-    >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-5">
-          <FormHeader
-            heading={`${mode === "edit" ? "Edit parcel" : "Post parcel"}`}
-            subHeading={
-              "Share your parcel details to get matched with travelers."
-            }
-            icon={META_ICONS.parcelBox}
-          />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
+        <FormHeader
+          heading={`${mode === "edit" ? "Edit parcel" : "Post parcel"}`}
+          subHeading={
+            "Share your parcel details to get matched with travelers."
+          }
+          icon={META_ICONS.parcelBox}
+        />
 
-          <div className="flex flex-col gap-3">
-            <StepHeader currentStep={step} formType="parcel" />
-          </div>
-          {step === 2 && (
-            <motion.span
-              className="inline-flex absolute left-5 top-4"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <Button
-                type="button"
-                variant="neutral"
-                onClick={goBack}
-                size="sm"
-              >
-                <span className="inline-flex gap-1 items-center text-black">
-                  <ArrowLeft className="w-4" /> Back
-                </span>
-              </Button>
-            </motion.span>
-          )}
+        <div className="flex flex-col gap-3">
+          <StepHeader currentStep={step} formType="parcel" />
         </div>
-        {step === 1 ? (
-          <div className="flex flex-col gap-5">
-            <LineDivider heightClass={dividerHeight} />
-            <RouteFieldRow control={control} />
-
-            <LineDivider heightClass={dividerHeight} />
-
-            <GoodsCategoryGrid
-              label="What items are you sending?"
-              error={errors.goodsCategoryIds?.message}
-              goods={goodsCategory}
-              selectedIds={selectedIds}
-              onChange={(next) =>
-                setValue("goodsCategoryIds", next, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                  shouldTouch: true,
-                })
-              }
-            />
-
-            <LineDivider heightClass={dividerHeight} />
-
-            {/* Step actions */}
-            <div className="flex justify-end gap-4">
-              <Button
-                className="w-full"
-                type="button"
-                variant="primary"
-                onClick={goNext}
-                size={"md"}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <LineDivider heightClass={dividerHeight} />
-            <DescriptionQuantityRow
-              errors={errors}
-              fields={fields}
-              onRemove={removeField}
-              register={register}
-              dirty={dirtyFields}
-              touched={touchedFields}
-              hasValueQty={false}
-              hasValueDescription={false}
-            />
-
-            <AddItemButton onClick={addField} />
-
-            <LineDivider heightClass={dividerHeight} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-[20px]">
-              {/* Weight Field */}
-              <WeightField<ParcelFormFields>
-                register={register("weight", { valueAsNumber: true })}
-                id="weight"
-                error={errors.weight?.message}
-                isTouched={!!touchedFields.weight}
-                isDirty={!!dirtyFields.weight}
-                setValue={setValue}
-                value={weightValue}
-                name={"weight"}
-              />
-
-              {/* Price Field */}
-              <PriceField<ParcelFormFields>
-                id="price"
-                error={errors.pricePerKg?.message}
-                register={register("pricePerKg", { valueAsNumber: true })}
-                isTouched={!!touchedFields.pricePerKg}
-                isDirty={!!dirtyFields.pricePerKg}
-                value={priceValue}
-                setValue={setValue}
-                name={"pricePerKg"}
-              />
-
-              {/* Empty left column (keeps alignment clean) */}
-              <div />
-
-              {/* You'll Pay aligned under Price */}
-              <div className="flex">
-                <span className="inline-flex items-center gap-3 bg-primary-50 px-4 py-2 rounded-lg shadow-sm w-fit border border-primary-100">
-                  <CustomText as="span" textSize="xsm" textVariant="label">
-                    You’ll pay
-                  </CustomText>
-
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={priceValue * weightValue}
-                      initial={{ scale: 0.95, opacity: 0.8 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="inline-flex"
-                    >
-                      <CustomText
-                        as="span"
-                        textSize="sm"
-                        textVariant="primary"
-                        className={
-                          priceValue * weightValue > 0
-                            ? "text-primary-600 font-semibold"
-                            : ""
-                        }
-                      >
-                        ${(priceValue * weightValue).toFixed(2)}
-                      </CustomText>
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
-              </div>
-            </div>
-            <LineDivider heightClass={dividerHeight} />
-
-            <AgreeToTermsRow
-              register={register("agreeToRules")}
-              id={"terms"}
-              error={errors.agreeToRules?.message}
-            />
-
-            <LineDivider heightClass={dividerHeight} />
-
-            {/* Step actions */}
-            <div className="flex items-center justify-between gap-4">
-              <Button
-                className="w-full"
-                type="submit"
-                variant="primary"
-                disabled={isSubmitting}
-                size={"md"}
-              >
-                {`${mode === "edit" ? "Save changes" : "Post parcel"}`}
-              </Button>
-            </div>
-          </div>
+        {step === 2 && (
+          <motion.span
+            className="inline-flex absolute left-5 top-4"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Button type="button" variant="neutral" onClick={goBack} size="sm">
+              <span className="inline-flex gap-1 items-center text-black">
+                <ArrowLeft className="w-4" /> Back
+              </span>
+            </Button>
+          </motion.span>
         )}
       </div>
-    </FormModal>
+      {step === 1 ? (
+        <div className="flex flex-col gap-5">
+          <LineDivider heightClass={dividerHeight} />
+          <RouteFieldRow control={control} />
+
+          <LineDivider heightClass={dividerHeight} />
+
+          <GoodsCategoryGrid
+            label="What items are you sending?"
+            error={errors.goodsCategoryIds?.message}
+            goods={goodsCategory}
+            selectedIds={selectedIds}
+            onChange={(next) =>
+              setValue("goodsCategoryIds", next, {
+                shouldDirty: true,
+                shouldValidate: true,
+                shouldTouch: true,
+              })
+            }
+          />
+
+          <LineDivider heightClass={dividerHeight} />
+
+          {/* Step actions */}
+          <div className="flex justify-end gap-4">
+            <Button
+              className="w-full"
+              type="button"
+              variant="primary"
+              onClick={goNext}
+              size={"md"}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <LineDivider heightClass={dividerHeight} />
+          <DescriptionQuantityRow
+            errors={errors}
+            fields={fields}
+            onRemove={removeField}
+            register={register}
+            dirty={dirtyFields}
+            touched={touchedFields}
+            hasValueQty={false}
+            hasValueDescription={false}
+          />
+
+          <AddItemButton onClick={addField} />
+
+          <LineDivider heightClass={dividerHeight} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-[20px]">
+            {/* Weight Field */}
+            <WeightField<ParcelFormFields>
+              register={register("weight", { valueAsNumber: true })}
+              id="weight"
+              error={errors.weight?.message}
+              isTouched={!!touchedFields.weight}
+              isDirty={!!dirtyFields.weight}
+              setValue={setValue}
+              value={weightValue}
+              name={"weight"}
+            />
+
+            {/* Price Field */}
+            <PriceField<ParcelFormFields>
+              id="price"
+              error={errors.pricePerKg?.message}
+              register={register("pricePerKg", { valueAsNumber: true })}
+              isTouched={!!touchedFields.pricePerKg}
+              isDirty={!!dirtyFields.pricePerKg}
+              value={priceValue}
+              setValue={setValue}
+              name={"pricePerKg"}
+            />
+
+            {/* Empty left column (keeps alignment clean) */}
+            <div />
+
+            {/* You'll Pay aligned under Price */}
+            <div className="flex">
+              <span className="inline-flex items-center gap-3 bg-primary-50 px-4 py-2 rounded-lg shadow-sm w-fit border border-primary-100">
+                <CustomText as="span" textSize="xsm" textVariant="label">
+                  You’ll pay
+                </CustomText>
+
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={priceValue * weightValue}
+                    initial={{ scale: 0.95, opacity: 0.8 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="inline-flex"
+                  >
+                    <CustomText
+                      as="span"
+                      textSize="sm"
+                      textVariant="primary"
+                      className={
+                        priceValue * weightValue > 0
+                          ? "text-primary-600 font-semibold"
+                          : ""
+                      }
+                    >
+                      ${(priceValue * weightValue).toFixed(2)}
+                    </CustomText>
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </div>
+          </div>
+          <LineDivider heightClass={dividerHeight} />
+
+          <AgreeToTermsRow
+            register={register("agreeToRules")}
+            id={"terms"}
+            error={errors.agreeToRules?.message}
+          />
+
+          <LineDivider heightClass={dividerHeight} />
+
+          {/* Step actions */}
+          <div className="flex items-center justify-between gap-4">
+            <Button
+              className="w-full"
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting}
+              size={"md"}
+            >
+              {`${mode === "edit" ? "Save changes" : "Post parcel"}`}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

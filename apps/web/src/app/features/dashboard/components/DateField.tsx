@@ -98,7 +98,7 @@ export function DateField<T extends FieldValues>({
                     onClick={() => setOpen(false)}
                   />
 
-                  <div className="absolute -left-8 md:left-0 bottom-full md:bottom-auto md:top-full z-50  w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg p-2">
+                  <div className="absolute -left-2 md:left-0 bottom-full md:bottom-auto md:top-full z-50  w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg p-2">
                     <DayPicker
                       mode="single"
                       selected={selectedDate}

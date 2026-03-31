@@ -8,7 +8,7 @@ import { SupabaseParcelRepository } from "./data/SupabaseParcelRepository";
 import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
 import { useToast } from "@/app/components/Toast";
 import { AnimatePresence } from "framer-motion";
-import { useGoods } from "@/app/shared/Authentication/UI/GoodsProvider";
+
 import CreateParcelModal from "./ui/CreateParcelModal";
 import ParcelCard from "./ui/ParcelCard";
 import CustomModal from "@/app/components/CustomModal";
@@ -60,16 +60,8 @@ export function MyParcelsPage() {
     toast("Parcel deleted successfully", { variant: "success" });
   };
 
-  const {
-    goodsCategories,
-    ensureGoodsLoaded,
-    loading: goodsLoading,
-  } = useGoods();
 
-  useEffect(() => {
-    if (!showParcelModal) return;
-    ensureGoodsLoaded();
-  }, [showParcelModal, ensureGoodsLoaded]);
+
 
   useEffect(() => {
     async function loadTrips() {
@@ -116,7 +108,7 @@ export function MyParcelsPage() {
           )}
         </div>
 
-        {loading || goodsLoading ? (
+        {loading  ? (
           <p>Loading…</p>
         ) : sortedParcels.length === 0 ? (
           <EmptyState
@@ -152,7 +144,7 @@ export function MyParcelsPage() {
           <CreateParcelModal
             mode={editParcel ? "edit" : undefined}
             initialFormValues={editParcel ? editParcel : undefined}
-            goodsCategory={goodsCategories}
+      
             setModalState={setParcelModalState}
           />
         )}

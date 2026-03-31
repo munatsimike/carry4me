@@ -11,12 +11,12 @@ export default function RouteFieldRow<T extends FieldValues>({
 }: RouteRowProps<T>) {
   return (
     <div className="flex flex-col gap-5 ">
-      <div className="flex">
-        <span className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-2 sm:gap-4 ">
+      <div>
+        <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-2 sm:gap-4 ">
           <CustomText className="text-left sm:text-right" textSize="sm" textVariant="label">
             {"Origin"}
           </CustomText>
-          <span className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 ">
             <Controller
               name={"originCountry" as Path<T>}
               control={control}
@@ -52,8 +52,8 @@ export default function RouteFieldRow<T extends FieldValues>({
                 />
               )}
             />
-          </span>
-        </span>
+          </div>
+        </div>
       </div>
       <span className="grid grid-cols-[96px_1fr] items-center gap-3">
         <CustomText className="text-right" textSize="sm" textVariant="label">
