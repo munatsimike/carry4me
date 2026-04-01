@@ -72,8 +72,8 @@ export default function DashboardPage() {
     [supabaseNotificationRepo],
   );
   const [fullName, setFullName] = useState<string | null>(null);
-  const [showParcelModal, setParcelModalState] = useState<boolean>(false);
-  const [createTrip, setTripModalState] = useState<boolean>(false);
+  const [createParcel, setCreateParcel] = useState<boolean>(false);
+  const [createTrip, setCreateTrip] = useState<boolean>(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
@@ -132,14 +132,20 @@ export default function DashboardPage() {
     navigate("/create-trip?mode=create");
   }, [createTrip, isMobile, navigate]);
 
+  useEffect(() => {
+    if (!createParcel || !isMobile) return;
+
+    navigate("/create-parcel?mode=create");
+  }, [createParcel, isMobile, navigate]);
+
   return (
     <DefaultContainer outerClassName="min-h-screen">
       <PageSection align="left">{<Greeting user={fullName} />}</PageSection>
 
       <div className="flex flex-col gap-12 pt-2 sm:pt-4">
         <ActionButtonRow
-          setTripModalState={setTripModalState}
-          setParcelModalState={setParcelModalState}
+          setTripModalState={setCreateTrip}
+          setParcelModalState={setCreateParcel}
         />
 
         <div className="flex flex-col sm:justify-center md:flex-row gap-6">
@@ -153,12 +159,12 @@ export default function DashboardPage() {
 
       <AnimatePresence>
         {createTrip && !isMobile && (
-          <CreateTripModal setModalState={() => setTripModalState(false)} />
+          <CreateTripModal setModalState={() => setCreateTrip(false)} />
         )}
 
         {/* hide and show post parcel modal */}
-        {showParcelModal && (
-          <CreatParcelModal setModalState={setParcelModalState} />
+        {createParcel && !isMobile && (
+          <CreatParcelModal setModalState={() => setCreateParcel(false)} />
         )}
       </AnimatePresence>
     </DefaultContainer>

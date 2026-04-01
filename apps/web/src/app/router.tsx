@@ -17,6 +17,7 @@ import { MyTripsPage } from "./features/trips/MyTripsPage";
 import ResetPassword from "./shared/Authentication/UI/ResetPassword";
 import NewPassword from "./shared/Authentication/UI/HandleNewPassword";
 import MobileTripShell from "./features/trips/ui/MobileTripShell";
+import MobileParcelShaell from "./features/parcels/ui/MobileParcelShell";
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: "update-password", element: <ResetPassword /> },
       { path: "new-password", element: <NewPassword /> },
       { path: "create-trip", element: <MobileTripShell /> },
+      { path: "create-parcel", element: <MobileParcelShaell /> },
     ],
   },
 ]);

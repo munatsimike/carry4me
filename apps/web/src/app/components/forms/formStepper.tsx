@@ -50,7 +50,6 @@ export function StepHeader({
       </div>
       {/* Right: optional little “2 dots” indicator */}
 
-      
       <div className="hidden sm:flex sm:flex-row items-center gap-2 shrink-0">
         {[1, 2].map((n) => (
           <motion.span

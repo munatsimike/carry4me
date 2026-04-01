@@ -55,22 +55,21 @@ export default function RouteFieldRow<T extends FieldValues>({
           </div>
         </div>
       </div>
-      <span className="grid grid-cols-[96px_1fr] items-center gap-3">
+      <div className="grid grid-cols-[96px_1fr] items-center gap-4">
         <CustomText className="text-right" textSize="sm" textVariant="label">
           {"Destination"}
         </CustomText>
 
-        <span className="pl-1">
           <CustomText
             as="span"
             textSize="sm"
             textVariant="primary"
-            className="inline-flex rounded-lg bg-neutral-50 border border-slate-300 w-fit px-3 h-10 justify-center items-center "
+            className="inline-flex rounded-lg bg-neutral-50 border border-slate-300 px-3 h-9 justify-center items-center max-w-[200px]"
           >
             {"Zimbabwe"}
           </CustomText>
-        </span>
-      </span>
+  
+      </div>
     </div>
   );
 }

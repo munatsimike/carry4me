@@ -4,7 +4,7 @@ import AgreeToTermsRow from "../../dashboard/components/AgreeToTermsRow";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { PriceField } from "../../dashboard/components/PriceField";
-import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useListingForm";
+import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { WeightField } from "../../dashboard/components/WeightField";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
 import { DateField } from "../../dashboard/components/DateField";
@@ -24,7 +24,7 @@ import type {
 
 import type { FormMode } from "@/types/Ui";
 import { useState } from "react";
-import useGoods from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
+import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
 
 export const step1Fields: Array<keyof TripFormFields> = [
   "originCountry",
@@ -59,11 +59,7 @@ type ContentProps = {
   mode: FormMode;
 };
 
-export function CreateTripFormContent({
-  mode,
-  formProps,
-  selectedIds,
-}: ContentProps) {
+export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
   const {
     control,
     watch,
@@ -85,21 +81,23 @@ export function CreateTripFormContent({
   };
 
   const goBack = () => setStep(1);
-  const { goodsCategory } = useGoods();
+  const { goodsCategory } = useGoodsCategory();
   const weightValue = watch("weight");
   const priceValue = watch("pricePerKg");
 
   const dividerHeight = "";
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <div className="relative flex flex-col gap-5">
         <FormHeader
           heading={mode === "edit" ? "Edit trip" : "Post your trip"}
           subHeading={"Share your trip details to get matched with senders."}
         />
+      
+          <StepHeader currentStep={step} />
+   
 
-        <StepHeader currentStep={step} />
         {step === 2 && (
           <span className="hidden sm:block inline-flex absolute left-0 top-0">
             <Button
@@ -120,7 +118,7 @@ export function CreateTripFormContent({
         <div className="flex flex-col gap-5">
           <LineDivider heightClass={dividerHeight} />
           <RouteFieldRow control={control} />
-          
+
           <LineDivider heightClass={dividerHeight} />
 
           <DateField<TripFormFields>
@@ -146,7 +144,7 @@ export function CreateTripFormContent({
           </div>
         </div>
       ) : (
-        <>
+        <div className="flex flex-col gap-5">
           <LineDivider heightClass={dividerHeight} />
           <GoodsCategoryGrid
             label="What items do you prefer to carry?"
@@ -249,8 +247,8 @@ export function CreateTripFormContent({
                   : "Save changes"}
             </Button>
           </div>
-        </>
+        </div>
       )}
-    </>
+    </div>
   );
 }

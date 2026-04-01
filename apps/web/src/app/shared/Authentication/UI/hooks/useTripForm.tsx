@@ -17,7 +17,7 @@ import { useUniversalModal } from "../../application/DialogBoxModalProvider";
 import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
 import toCreateTrip from "@/app/features/goods/domain/toCreateTripMapper";
-import { step2Fields } from "@/app/features/trips/ui/TripForm";
+import { step2Fields } from "@/app/features/trips/ui/CreateTripForm";
 import { useNavigate } from "react-router-dom";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---

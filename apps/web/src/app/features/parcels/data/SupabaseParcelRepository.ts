@@ -57,12 +57,16 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return { data: !!data, error: null };
   }
 
-  parcelsById(userId: string): Promise<RepoResponse<ParcelListing[]>> {
-    return this.fetchParcels(userId, true);
+  parcelsById(
+    userId: string,
+    parcelId?: string,
+  ): Promise<RepoResponse<ParcelListing[]>> {
+    return this.fetchParcels(userId, parcelId, true);
   }
 
   async fetchParcels(
     userId?: string,
+    parcelId?: string,
     shouldFilter: boolean = false,
   ): Promise<RepoResponse<ParcelListing[]>> {
     const query = supabase.from("parcels").select(
@@ -73,6 +77,10 @@ export class SupabaseParcelRepository implements ParcelRepository {
       name
       ))`,
     );
+
+    if (parcelId) {
+      query.eq("id", parcelId);
+    }
 
     if (shouldFilter && userId) {
       query.eq("sender_user_id", userId);

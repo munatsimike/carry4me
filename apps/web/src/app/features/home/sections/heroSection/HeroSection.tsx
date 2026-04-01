@@ -9,17 +9,27 @@ export function HeroSection() {
   const subHeading =
     "Share your parcel or trip and match with a traveler or sender. Travelers earn, senders save.";
 
+
   const container = {
-    hidden: { opacity: 0 },
+    hidden: {},
     show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
+      },
     },
   };
 
   const word = {
     hidden: { opacity: 0, y: 18 },
-    show: { opacity: 1, y: 0 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.45,
+        ease: "easeOut",
+      },
+    },
   };
 
   return (

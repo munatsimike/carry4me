@@ -1,8 +1,7 @@
-
 import FormModal from "../../dashboard/components/FormModal";
 import type { FormMode, FormValues } from "@/types/Ui";
-import { useTripForm } from "@/app/shared/Authentication/UI/hooks/useListingForm";
-import { CreateTripFormContent } from "./TripForm";
+import { useTripForm } from "@/app/shared/Authentication/UI/hooks/useTripForm";
+import { CreateTripForm } from "./CreateTripForm";
 
 export default function CreateTripModal({
   mode = "create",
@@ -10,7 +9,6 @@ export default function CreateTripModal({
   setModalState,
   initialFormValues,
 }: {
-
   setModalState: () => void;
   initialFormValues?: FormValues;
   mode?: FormMode;
@@ -30,9 +28,8 @@ export default function CreateTripModal({
     handleSubmit,
   } = useTripForm({ initialFormValues, mode, setModalState });
 
-
   const content = (
-    <CreateTripFormContent
+    <CreateTripForm
       mode={mode}
       selectedIds={selectedIds}
       formProps={{

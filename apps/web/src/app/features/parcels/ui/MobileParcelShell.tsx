@@ -1,36 +1,38 @@
-import { useTripForm } from "@/app/shared/Authentication/UI/hooks/useTripForm";
-import { CreateTripForm } from "./CreateTripForm";
+import useParcelForm from "@/app/shared/Authentication/UI/hooks/useParcelForm";
+import CreateParcelForm from "./CreateParcelForm";
+import MobileForm from "../../dashboard/components/MobileForm";
+import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
+import { useEffect, useMemo, useState } from "react";
 import type { FormValues } from "@/types/Ui";
 import { useSearchParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
-import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
-import { MyTripsUseCase } from "../application/MyTripsUseCase";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
+import { SupabaseParcelRepository } from "../data/SupabaseParcelRepository";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import MobileForm from "../../dashboard/components/MobileForm";
+import { MyParcelsIdUseCase } from "../application/MyParcelsUseCase";
 
-export default function MobileTripShell() {
-  const [searchParams] = useSearchParams();
-  const tripRepo = useMemo(() => new SupabaseTripsRepository(), []);
+ 
+ 
+ export default function MobileParcelShaell(){
+ 
+ const [searchParams] = useSearchParams();
+  const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
   const { showSupabaseError } = useUniversalModal();
-  const tripByIdUseCase = useMemo(
-    () => new MyTripsUseCase(tripRepo),
-    [tripRepo],
+  const parcelByIdUseCase = useMemo(
+    () => new MyParcelsIdUseCase(parcelRepo),
+    [parcelRepo],
   );
 
   const mode = searchParams.get("mode") === "edit" ? "edit" : "create";
   const id = searchParams.get("id");
 
   const [initialFormValues, setInitialFormValues] = useState<
-    FormValues | undefined
-  >(undefined);
+    FormValues | undefined>(undefined);
 
   useEffect(() => {
     if (mode === "edit" && id) {
-      async function fetchTrip() {
+      async function fetchParcel() {
         const { result } = await namedCall(
-          "fetch trip by id mobile",
-          tripByIdUseCase.execute(id!),
+          "fetch parcel by id mobile",
+          parcelByIdUseCase.execute(id!),
         );
         if (!result.success) {
           showSupabaseError(result.error);
@@ -55,7 +57,7 @@ export default function MobileTripShell() {
         }
       }
 
-      fetchTrip();
+      fetchParcel();
     }
   }, [mode, id]);
 
@@ -72,10 +74,10 @@ export default function MobileTripShell() {
     touchedFields,
     onSubmit,
     handleSubmit,
-  } = useTripForm({ initialFormValues, mode });
+  } = useParcelForm({ initialFormValues, mode });
 
   const content = (
-    <CreateTripForm
+    <CreateParcelForm
       mode={mode}
       selectedIds={selectedIds}
       formProps={{
