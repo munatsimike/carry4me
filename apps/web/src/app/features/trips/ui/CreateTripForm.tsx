@@ -107,7 +107,7 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
               size={"sm"}
             >
               <span className="inline-flex gap-1 items-center text-black">
-                <ArrowLeft className="w-4" /> {"Back"}
+                <ArrowLeft className="w-4" /> {"Step 1"}
               </span>
             </Button>
           </span>

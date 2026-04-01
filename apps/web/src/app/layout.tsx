@@ -1,6 +1,6 @@
 import DesktopNavigationMenu, {
-  TripsToolbar,
-  MobileNavigationMenu,
+  BottomNavBar,
+  MobileToolBar,
 } from "@/Navigation";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { AuthModal } from "./shared/Authentication/UI/AuthModal";
@@ -58,7 +58,7 @@ export default function AppLayout() {
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="fixed bottom-0 left-0 right-0 border-t bg-white z-50 block sm:hidden py-2 shadow-sm backdrop-blur-md"
           >
-            <TripsToolbar />
+            <BottomNavBar isAuthed={isAuthed} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -100,7 +100,7 @@ function Header({
             userProfile={profile} // can be null sometimes, that's ok
           />
         </div>
-        <MobileNavigationMenu
+        <MobileToolBar
           showSearchBar={showSearchBar}
           isAuthed={isAuthed}
           profile={profile}

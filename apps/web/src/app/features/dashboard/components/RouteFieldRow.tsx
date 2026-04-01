@@ -1,6 +1,13 @@
 import ComboBox from "@/app/components/ComboBox";
+import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
-import { Controller, type Control, type FieldValues, type Path } from "react-hook-form";
+import SvgIcon from "@/components/ui/SvgIcon";
+import {
+  Controller,
+  type Control,
+  type FieldValues,
+  type Path,
+} from "react-hook-form";
 
 type RouteRowProps<T extends FieldValues> = {
   control: Control<T>;
@@ -13,7 +20,11 @@ export default function RouteFieldRow<T extends FieldValues>({
     <div className="flex flex-col gap-5 ">
       <div>
         <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-2 sm:gap-4 ">
-          <CustomText className="text-left sm:text-right" textSize="sm" textVariant="label">
+          <CustomText
+            className="text-left sm:text-right"
+            textSize="sm"
+            textVariant="label"
+          >
             {"Origin"}
           </CustomText>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 ">
@@ -22,7 +33,7 @@ export default function RouteFieldRow<T extends FieldValues>({
               control={control}
               render={({ field, fieldState }) => (
                 <ComboBox
-                 className="rounded-lg"
+                  className="rounded-lg"
                   placeholder="Select Country"
                   menuItems={["UK", "USA", "Ireland"]}
                   value={field.value}
@@ -40,7 +51,7 @@ export default function RouteFieldRow<T extends FieldValues>({
               control={control}
               render={({ field, fieldState }) => (
                 <ComboBox
-                 className="rounded-lg"
+                  className="rounded-lg"
                   placeholder="Select City"
                   menuItems={["London", "Birmingham", "Manchester"]}
                   value={field.value}
@@ -60,15 +71,15 @@ export default function RouteFieldRow<T extends FieldValues>({
           {"Destination"}
         </CustomText>
 
-          <CustomText
-            as="span"
-            textSize="sm"
-            textVariant="primary"
-            className="inline-flex rounded-lg bg-neutral-50 border border-slate-300 px-3 h-9 justify-center items-center max-w-[200px]"
-          >
-            {"Zimbabwe"}
-          </CustomText>
-  
+        <CustomText
+          as="span"
+          textSize="sm"
+          textVariant="primary"
+          className="inline-flex rounded-lg bg-neutral-100 border border-slate-300 px-3 h-9 justify-center items-center max-w-[200px] gap-2"
+        >
+          <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
+          {"Zimbabwe"}
+        </CustomText>
       </div>
     </div>
   );

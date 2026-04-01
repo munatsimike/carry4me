@@ -11,6 +11,7 @@ import {
   Plane,
   UserPlus,
   ArrowLeft,
+  HouseIcon,
 } from "lucide-react";
 import type { UserProfile } from "./app/shared/Authentication/domain/authTypes";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -24,7 +25,7 @@ import { UserProfileMenu } from "./app/shared/Authentication/UI/userProfileMenu"
 import NotificationPopover from "./app/shared/Authentication/UI/NotificationPopOver";
 
 import CustomText from "./components/ui/CustomText";
-import { CloseBackBtn } from "./app/components/CloseBtn";
+
 import { cn } from "./app/lib/cn";
 
 const iconStyle = "h-5 w-5 stroke-current  sm:hidden";
@@ -63,13 +64,9 @@ function NavLinks({ children }: { children: React.ReactNode }) {
 }
 
 function GuestNavigation() {
-  const { openAuthModal } = useAuthModal();
-  const location = useLocation();
-
   return (
     <NavLinks>
       <Home />
-
       <NavItem to="/travelers">
         {" "}
         <Plane className={iconStyle} strokeWidth={strokeWidth} />
@@ -80,12 +77,18 @@ function GuestNavigation() {
         <Package className={iconStyle} strokeWidth={strokeWidth} />
         Parcels
       </NavItem>
-      <NavItem to="signup">
-        <UserPlus className={iconStyle} strokeWidth={strokeWidth} />
-        <button className="text-sm font-medium text-gray-700 hover:text-blue-600">
-          Sign up
-        </button>
-      </NavItem>
+      <SignInBtn />
+    </NavLinks>
+  );
+}
+
+function SignInBtn() {
+  const { openAuthModal } = useAuthModal();
+  const location = useLocation();
+
+  return (
+    <div className="flex items-center gap-2">
+      {/* SECONDARY ACTION */}
       <button
         onClick={() =>
           openAuthModal({
@@ -93,11 +96,37 @@ function GuestNavigation() {
             redirectTo: location.pathname,
           })
         }
-        className="rounded-full whitespace-nowrap bg-blue-500 px-4 py-1.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:bg-blue-600"
+        className="
+          whitespace-nowrap
+          text-sm font-medium text-gray-700
+          px-2 py-1
+          rounded-full
+          transition-colors duration-200
+          hover:text-blue-600
+        "
       >
         Sign in
       </button>
-    </NavLinks>
+      {/* PRIMARY ACTION */}
+      <NavItem to="signup">
+        <button
+          className="
+          whitespace-nowrap
+            flex items-center gap-1
+            rounded-full bg-blue-500 text-white
+            px-3 sm:px-4 py-1.5 sm:py-1.5
+            text-sm font-medium
+            transition-all duration-200
+            font-heading
+            hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-md
+            active:scale-95
+          "
+        >
+          <UserPlus className={iconStyle} strokeWidth={strokeWidth} />
+          Sign up
+        </button>
+      </NavItem>
+    </div>
   );
 }
 
@@ -267,6 +296,7 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
         <AnimatePresence>
           {showPopOver && (
             <UserProfileMenu
+              mode="desktop"
               onClosePopOver={setShowPrfilePopOver}
               triggerRef={triggerProfRef}
             />
@@ -322,6 +352,7 @@ function NavItem({ to, children, end = false }: NavItemProps) {
   return (
     <NavLink
       to={to}
+      end={end}
       className={({ isActive }) =>
         `relative w-full whitespace-nowrap ${
           isActive
@@ -329,16 +360,24 @@ function NavItem({ to, children, end = false }: NavItemProps) {
             : "text-neutral-700 hover:text-primary-600"
         }`
       }
-      end={end}
     >
-      <span className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 whitespace-nowrap">
-        {children}
-      </span>
+      {({ isActive }) => (
+        <span className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 whitespace-nowrap">
+          <span
+            className={`
+          flex flex-col items-center py-1 px-2 rounded-md
+          ${isActive ? "bg-primary-50 sm:bg-transparent" : ""}
+        `}
+          >
+            {children}
+          </span>
+        </span>
+      )}
     </NavLink>
   );
 }
 
-export function MobileNavigationMenu({
+export function MobileToolBar({
   isAuthed,
   profile,
   setIsSearchOpen,
@@ -353,8 +392,8 @@ export function MobileNavigationMenu({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const location = useLocation();
   const style =
-    "flex flex-col text-neutral-700 items-center justify-center gap-0.5 text-[12px] flex-1 py-1";
-  const iconColor = "text-neutral-700";
+    "flex flex-col text-neutral-800 items-center justify-center gap-0.5 text-[12px] flex-1 py-1 text-sm";
+  const iconColor = "text-neutral-800";
   const HIDE_BACK_ROUTES = ["/", "/dashboard"];
   const showBackButton = !HIDE_BACK_ROUTES.includes(location.pathname);
   const triggerProfRef = useRef<HTMLButtonElement | null>(null);
@@ -388,94 +427,77 @@ export function MobileNavigationMenu({
           {showSearchBar && (
             <button onClick={setIsSearchOpen} type="button" className={style}>
               <Search
-                size={16}
+                size={17}
                 strokeWidth={strokeWidth}
                 className={iconColor}
               />
               Search
             </button>
           )}
-
-          <Avatar
-            triggerProfRef={triggerProfRef}
-            userProfile={profile}
-            setShowPrfilePopOver={() => null}
-          />
+          <div className="flex gap-5 sm:hidden items-center">
+            <AnimatePresence mode="wait">
+              {isAuthed ? (
+                <motion.div
+                  key="avatar"
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <Avatar
+                    triggerProfRef={triggerProfRef}
+                    userProfile={profile}
+                    setShowPrfilePopOver={() => setIsOpen(true)}
+                  />
+                </motion.div>
+              ) : (
+                !showBackButton && (
+                  <motion.div
+                    key="auth-buttons"
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="flex gap-2 items-center"
+                  >
+                    <SignInBtn />
+                  </motion.div>
+                )
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {isOpen && (
-              <MobileTopNavigationBar
-                isAuthed={isAuthed}
-                setIsOpen={() => setIsOpen(false)}
-                profile={profile}
-              />
-            )}
-          </>
-        )}
-      </AnimatePresence>
+
+      {isOpen && (
+        <UserProfileMenu
+          mode="mobile"
+          onClosePopOver={() => setIsOpen(false)}
+          triggerRef={triggerProfRef}
+        />
+      )}
     </>
   );
 }
 
-function MobileTopNavigationBar({
-  isAuthed,
-  setIsOpen,
-  profile,
-}: {
-  isAuthed: boolean;
-  setIsOpen: () => void;
-  profile: UserProfile | null;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-40 bg-slate-600/40 justify-center"
-      onClick={setIsOpen}
-    >
-      <motion.div
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="fixed top-0 right-0 z-50 h-full  w-[70vw] bg-white shadow-lg"
-      >
-        <div className="flex items-center justify-between border-b border-neutral-200 pl-6 pr-3 py-2">
-          <CustomText
-            textSize="lg"
-            textVariant="primary"
-            className="font-medium"
-          >
-            Menu
-          </CustomText>
-          <CloseBackBtn onClose={setIsOpen} />
-        </div>
-
-        <div className="px-4 py-4">
-          {isAuthed ? (
-            <AuthenticatedNavigation userProfile={profile} />
-          ) : (
-            <GuestNavigation />
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-export function TripsToolbar() {
+// mobile bottom navigation menu
+export function BottomNavBar({ isAuthed }: { isAuthed: boolean }) {
   return (
     <NavLinks>
-      <NavItem to="/dashboard">
-        {" "}
-        <LayoutDashboard className={iconStyle} strokeWidth={strokeWidth} />
-        Dashboard
-      </NavItem>
+      {isAuthed ? (
+        <NavItem to="/dashboard">
+          {" "}
+          <LayoutDashboard className={iconStyle} strokeWidth={strokeWidth} />
+          Dashboard
+        </NavItem>
+      ) : (
+        <NavItem to="/">
+          {" "}
+          <HouseIcon className={iconStyle} strokeWidth={strokeWidth} />
+          Home
+        </NavItem>
+      )}
+
       <NavItem to="/travelers">
         {" "}
         <Plane className={iconStyle} strokeWidth={strokeWidth} />
@@ -486,11 +508,13 @@ export function TripsToolbar() {
         <Package className={iconStyle} strokeWidth={strokeWidth} />
         Parcels
       </NavItem>
-      <NavItem to="/requests">
-        {" "}
-        <Handshake className={iconStyle} strokeWidth={strokeWidth} />
-        Requests
-      </NavItem>
+      {isAuthed && (
+        <NavItem to="/requests">
+          {" "}
+          <Handshake className={iconStyle} strokeWidth={strokeWidth} />
+          Requests
+        </NavItem>
+      )}
     </NavLinks>
   );
 }
@@ -506,9 +530,6 @@ function toHeading(path: string) {
       return "Signup";
     case "/dashboard":
       return "Dashboard";
-
-    case "/":
-      return "Home";
 
     case "/requests":
       return "Your requests";

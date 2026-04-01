@@ -129,7 +129,7 @@ export default function CreateParcelForm({
           >
             <Button type="button" variant="neutral" onClick={goBack} size="sm">
               <span className="inline-flex gap-1 items-center text-black">
-                <ArrowLeft className="w-4" /> Back
+                <ArrowLeft className="w-4" /> Step 1
               </span>
             </Button>
           </motion.span>
