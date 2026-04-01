@@ -84,7 +84,7 @@ function Header({
     <header className="sticky top-0 z-50 bg-white">
       <div
         className={cn(
-          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-primary-50 sm:bg-white  sm:px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between border-b border-r border-l border-neutral-100",
+          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-white border-b border-white/20 sm:bg-white  sm:px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between border-b border-r border-l border-neutral-100",
           pathname === "/" ? "pl-3 pr-4" : "pr-4",
         )}
       >

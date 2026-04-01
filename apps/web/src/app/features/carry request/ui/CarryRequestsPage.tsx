@@ -43,7 +43,7 @@ import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepos
 import { useToast } from "@/app/components/Toast";
 import { format } from "date-fns";
 import {
-  SegmentedTabs,
+  HorizontalMenu,
   type TabItem,
 } from "@/app/shared/Authentication/UI/SegmentedTabs";
 
@@ -373,7 +373,7 @@ export default function CarryRequestsPage() {
     <>
       <PageSection>
         {selectedTab && (
-          <SegmentedTabs
+          <HorizontalMenu
             tabs={tabs}
             selectedTab={selectedTab}
             setTab={setSelectedTab}
@@ -888,7 +888,11 @@ function Step({
   return (
     <span className="inline-flex items-center gap-2">
       <SvgIcon color={iconColor} size="md" Icon={META_ICONS.checkedIcon} />
-      <CustomText textSize="xsm" textVariant={textColor} className="whitespace-nowrap">
+      <CustomText
+        textSize="xsm"
+        textVariant={textColor}
+        className="whitespace-nowrap"
+      >
         {stage}
       </CustomText>
     </span>

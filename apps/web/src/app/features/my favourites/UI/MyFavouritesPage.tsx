@@ -19,7 +19,7 @@ import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import FavouritesList from "./FavouritesList";
 import {
-  SegmentedTabs,
+  HorizontalMenu,
   type TabItem,
 } from "@/app/shared/Authentication/UI/SegmentedTabs";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
@@ -158,7 +158,7 @@ export function MyFavouritesPage() {
           clearResults={clearSearchResults}
         />
         {filterContent}
-        <SegmentedTabs
+        <HorizontalMenu
           tabs={tabs}
           selectedTab={selectedTab}
           setTab={setSelectedTab}

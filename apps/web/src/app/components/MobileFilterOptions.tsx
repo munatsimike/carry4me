@@ -49,7 +49,7 @@ export default function Toolbar({
         to="/create-trip?mode=create"
         className="fixed bottom-20 right-4 sm:hidden z-50"
       >
-        <button className="w-10 h-10 flex items-center justify-center bg-primary-500 text-white rounded-full shadow-lg active:scale-95 transition">
+        <button className="w-10 h-10 flex items-center justify-center bg-primary-500 text-white rounded-full shadow-lg active:scale-95 transition ring-2 ring-2-indigo-200">
           <Plus />
         </button>
       </Link>

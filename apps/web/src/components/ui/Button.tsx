@@ -50,8 +50,10 @@ export function Button({
   };
 
   const variants: Record<ButtonVariant, string> = {
-    primary: "bg-primary-500 hover:bg-primary-600 text-white font-heading",
-    secondary: "bg-secondary-100 hover:bg-secondary-2-00",
+    primary:
+      "bg-primary-500 hover:bg-primary-600 text-white font-heading  hover:ring-2 hover:ring-indigo-200  focus:ring-2 focus:ring-blue-400 focus:ring-offset-2",
+    secondary:
+      "bg-secondary-100 hover:bg-secondary-200  hover:ring-2 hover:ring-indigo-200  focus:ring-2 focus:ring-blue-400 focus:ring-offset-2",
     ghost: "bg-transparent hover:bg-tertiary-50",
     tonal:
       "bg-secondary-200 hover:bg-primary-500 text-primary border border-secondary-400 hover:text-white",
@@ -91,15 +93,11 @@ export function Button({
             ) : null}
           </span>
         </span>
-
-      
       </span>
-        {/* Right slot */}
-        {trailingIcon && (
-          <span className="inline-flex justify-end">
-            {trailingIcon ?? null}
-          </span>
-        )}
+      {/* Right slot */}
+      {trailingIcon && (
+        <span className="inline-flex justify-end">{trailingIcon ?? null}</span>
+      )}
     </button>
   );
 }

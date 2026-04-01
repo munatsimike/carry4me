@@ -410,7 +410,7 @@ export function MobileToolBar({
         {showBackButton && (
           <button
             onClick={() => handleBack()}
-            className="rounded-full bg-white p-1 text-neutral-600 border border-primary-100"
+            className="rounded-full bg-white p-1 text-neutral-600 border border-neutral-200"
           >
             <ArrowLeft size={18} />
           </button>
@@ -427,11 +427,10 @@ export function MobileToolBar({
           {showSearchBar && (
             <button onClick={setIsSearchOpen} type="button" className={style}>
               <Search
-                size={17}
+                size={21}
                 strokeWidth={strokeWidth}
                 className={iconColor}
               />
-              Search
             </button>
           )}
           <div className="flex gap-5 sm:hidden items-center">
