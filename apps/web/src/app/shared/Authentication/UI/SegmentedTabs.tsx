@@ -19,7 +19,7 @@ export function HorizontalMenu<T extends string>({
   tabs,
 }: SegmentedTabsProps<T>) {
   return (
-    <div className="flex sm:justify-center w-full">
+    <div className="flex justify-center w-full">
       <div className="sm:hidden overflow-x-auto scrollbar-hide">
         <div className="flex w-max gap-2 px-1 py-1">
           {tabs.map((item) => {
@@ -31,7 +31,7 @@ export function HorizontalMenu<T extends string>({
                 type="button"
                 onClick={() => setTab(item.id)}
                 className={cn(
-                  "relative whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-200",
+                  "relative whitespace-nowrap rounded-full border px-4 py-0.5 sm:py-2 text-sm font-medium transition-colors duration-200",
                   "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300",
                   isActive
                     ? "border-primary-500 bg-primary-500 text-white"

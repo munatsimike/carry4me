@@ -1,7 +1,5 @@
 import { Funnel, Plus } from "lucide-react";
 import { cn } from "../lib/cn";
-import { Link } from "react-router-dom";
-import FAB from "./FAB";
 
 type MobileFilterOptionsProps = {
   hasActiveFilters: boolean;
@@ -14,10 +12,10 @@ export default function Toolbar({
   onFilter,
   onClear,
 }: MobileFilterOptionsProps) {
-  const buttonStyle = `px-3 py-1 rounded-full text-sm  flex items-center gap-1`;
+  const buttonStyle = `px-3 py-0.5 rounded-full text-sm  flex items-center gap-1`;
   return (
     <>
-      <div className="flex items-center gap-3 w-full bg-white pt-1">
+      <div className="flex items-center gap-3 w-full bg-white pt-1 justify-end">
         <button
           type="button"
           onClick={onFilter}

@@ -533,6 +533,8 @@ function toHeading(path: string) {
       return "My trips";
     case "/my/parcels":
       return "My Parcels";
+       case "/favourites":
+      return "My Favourites";
     case "/requests":
       return "Your requests";
   }

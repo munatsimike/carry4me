@@ -9,7 +9,7 @@ import {
   filterByWeightRange,
 } from "@/app/util/filters";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import type { CustomRange, SortOption } from "@/types/Ui";
+import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
 import { useEffect, useMemo, useState } from "react";
 import EmptyState from "@/app/components/EmptyState";
 import { GetFavouritesUseCase } from "../application/GetFavouritesUseCase";
@@ -23,6 +23,12 @@ import {
   type TabItem,
 } from "@/app/shared/Authentication/UI/SegmentedTabs";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
+import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
+import { AnimatePresence, motion } from "framer-motion";
+import CustomModal from "@/app/components/CustomModal";
+import { useOutletContext } from "react-router-dom";
+import Toolbar from "@/app/components/MobileFilterOptions";
+import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 
 export type MyFavTabs = "all" | "trip" | "parcel";
 
@@ -58,11 +64,12 @@ export function MyFavouritesPage() {
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
-  const [hasFilter, setHasFilter] = useState<boolean>(false);
   const [favListing, setFavListings] = useState<Listing[]>([]);
   const { showSupabaseError } = useUniversalModal();
   const [selectedTab, setSelectedTab] = useState<MyFavTabs>("all");
+  const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
+  const isMobile = useMediaQuery();
   const filterForm = useFiltersForm({
     setSelectedDate: setFilterByDate,
     setPriceRange,
@@ -146,30 +153,73 @@ export function MyFavouritesPage() {
     />
   );
 
+  const { clearFilters, hasFilter } = filterForm;
+  const scrollDirection = useScrollDirection();
+  const searchContent = (
+    <Search
+      countries={["UK", "USA"]}
+      cities={["London", "Florida"]}
+      setSearchCity={setSearchCity}
+      setSearchCountry={setSearchCountry}
+      setClearResults={() => setClearResults(false)}
+      clearResults={clearSearchResults}
+    />
+  );
   return (
     <>
+      <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4">
+        <AnimatePresence initial={false}>
+          {isMobile && scrollDirection === "up" && (
+            <motion.div
+              key="mobile-filters"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="py-2"
+            >
+              <Toolbar
+                hasActiveFilters={hasFilter}
+                onFilter={() => setMobileFilter(true)}
+                onClear={clearFilters}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       <PageSection>
-        <Search
-          countries={["UK", "USA"]}
-          cities={["London", "Florida"]}
-          setSearchCity={setSearchCity}
-          setSearchCountry={setSearchCountry}
-          setClearResults={() => setClearResults(false)}
-          clearResults={clearSearchResults}
-        />
-        {filterContent}
-        <HorizontalMenu
-          tabs={tabs}
-          selectedTab={selectedTab}
-          setTab={setSelectedTab}
-        />
         <SearchResults
           isSearchActive={isSearchActive}
           searchResults={displayedFavourites.length}
           onClick={() => setClearResults(true)}
         />
+
+        {!isMobile && searchContent}
+        <AnimatePresence>
+          {isMobile && mobileFilter && (
+            <CustomModal onClose={() => setMobileFilter(false)}>
+              {filterContent}
+            </CustomModal>
+          )}
+
+          {!isMobile && filterContent}
+
+          {isMobile && isSearchOpen && (
+            <CustomModal onClose={() => setIsSearchOpen(false)}>
+              {searchContent}
+            </CustomModal>
+          )}
+        </AnimatePresence>
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
+        <div className=" flex pb-2 ">
+          <HorizontalMenu
+            tabs={tabs}
+            selectedTab={selectedTab}
+            setTab={setSelectedTab}
+          />
+        </div>
+
         {displayedFavourites && (
           <FavouritesList
             listings={displayedFavourites}

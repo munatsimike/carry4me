@@ -20,7 +20,7 @@ import EmptyState from "@/app/components/EmptyState";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
-import PageSection from "@/app/components/PageSection";
+
 import FAB from "@/app/components/FAB";
 
 export function MyTripsPage() {
