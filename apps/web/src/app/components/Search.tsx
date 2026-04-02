@@ -65,10 +65,10 @@ export default function Search({
   return (
     <form
       onSubmit={handleSubmit(handleSearch)}
-      className={cn("flex w-full sm:max-w-3xl flex-col gap-3 rounded-3xl sm:bg-primary-50 pt-10 pb-3 px-3 sm:p-2 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
+      className={cn("flex w-full sm:max-w-2xl lg:max-w-3xl flex-col gap-3 rounded-3xl sm:bg-primary-50 sm:border border-primary-100 pt-10 pb-3 px-3 sm:p-2 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
       )}
     >
-      <span className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">
         <div className="w-full sm:min-w-[180px] sm:flex-1">
           <Controller
             name="country"
@@ -108,15 +108,15 @@ export default function Search({
             )}
           />
         </div>
-      </span>
+      </div>
 
-      <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center lg:w-auto">
+      <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:w-auto">
         <CustomText
           as="span"
           textSize="xsm"
           className="text-center text-neutral-500 sm:text-left whitespace-nowrap"
         >
-          to
+          Destination
         </CustomText>
 
         <div className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl border bg-white px-3 py-2 shadow-sm sm:min-w-[150px]">
@@ -131,7 +131,7 @@ export default function Search({
           cornerRadiusClass="rounded-full"
           variant="primary"
           size="sm"
-          className="flex w-full items-center justify-center gap-2 sm:w-auto"
+          className="flex w-full items-center justify-center gap-2 sm:max-w-[200px]"
           leadingIcon={
             <SvgIcon color="onDark" size="sm" Icon={META_ICONS.searchIcon} />
           }

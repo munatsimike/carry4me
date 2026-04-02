@@ -34,8 +34,9 @@ import CreateTripModal from "./CreateTripModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
+import FAB from "@/app/components/FAB";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -235,6 +236,7 @@ export default function TravelersPage() {
     />
   );
 
+
   return (
     <>
       <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4 py-1">
@@ -319,6 +321,11 @@ export default function TravelersPage() {
             description="Try adjusting your search or changing filters. Clear filters or search to see all travelers."
           />
         )}
+   
+          <Link to="/create-trip?mode=create">
+            <FAB />
+          </Link>
+      
       </DefaultContainer>
 
       <ListingSelectionModal

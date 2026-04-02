@@ -33,8 +33,9 @@ import CreateParcelModal from "./CreateParcelModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
+import FAB from "@/app/components/FAB";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -293,7 +294,6 @@ export default function ParcelsPage() {
             toggleLike={handleLikeUpdate}
           />
         )}
-
         {displayedParcels.length === 0 && dataloaded && (
           <EmptyState
             title="No parcels available"
@@ -313,13 +313,15 @@ export default function ParcelsPage() {
             }
           />
         )}
-
         {hasFilter && displayedParcels.length === 0 && (
           <EmptyState
             title="No matching parcels"
             description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
           />
         )}
+        <Link to="/create-parcel?mode=create">
+          <FAB />
+        </Link>{" "}
       </DefaultContainer>
 
       <ListingSelectionModal

@@ -529,7 +529,10 @@ function toHeading(path: string) {
       return "Signup";
     case "/dashboard":
       return "Dashboard";
-
+    case "/my/trips":
+      return "My trips";
+    case "/my/parcels":
+      return "My Parcels";
     case "/requests":
       return "Your requests";
   }

@@ -34,7 +34,7 @@ const rowVariants = {
   },
 };
 
-interface ListingTableProps<T extends Listing> {
+export interface ListingTableProps<T extends Listing> {
   data: T[];
   onEdit: (v: FormValues) => void;
   onDelete: (s: string) => void;

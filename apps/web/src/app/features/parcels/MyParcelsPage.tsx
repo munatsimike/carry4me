@@ -18,6 +18,10 @@ import EmptyState from "@/app/components/EmptyState";
 import CustomText from "@/components/ui/CustomText";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { GetParcelsByIdUseCase } from "./application/GetParcelsByIdUseCase";
+import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
+import { MobileListingCard } from "../dashboard/components/MobileListingCard";
+import PageSection from "@/app/components/PageSection";
+import FAB from "@/app/components/FAB";
 
 export function MyParcelsPage() {
   const [loading, setLoading] = useState(true);
@@ -38,6 +42,7 @@ export function MyParcelsPage() {
     [parcelRepo],
   );
 
+  const isMobile = useMediaQuery();
   const { showSupabaseError } = useUniversalModal();
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
   const sortedParcels = useMemo(() => {
@@ -59,9 +64,6 @@ export function MyParcelsPage() {
     await refreshProfile();
     toast("Parcel deleted successfully", { variant: "success" });
   };
-
-
-
 
   useEffect(() => {
     async function loadTrips() {
@@ -86,29 +88,12 @@ export function MyParcelsPage() {
   }, [user?.id]);
 
   return (
-    <DefaultContainer outerClassName="bg-canvas min-h-screen">
-      <div>
-        <div className="flex items-center justify-between">
-          <CustomText
-            textSize="xl"
-            textVariant="primary"
-            className="pl-4 font-medium"
-          >
-            My Parcels
-          </CustomText>
-
-          {sortedParcels.length > 0 && (
-            <Button
-              onClick={() => setParcelModalState(true)}
-              variant={"primary"}
-              size={"xsm"}
-            >
-              + Post a parcel
-            </Button>
-          )}
-        </div>
-
-        {loading  ? (
+    <>
+      <PageSection>
+        <div className="flex items-center justify-center"></div>
+      </PageSection>
+      <DefaultContainer outerClassName="bg-canvas min-h-screen">
+        {loading ? (
           <p>Loading…</p>
         ) : sortedParcels.length === 0 ? (
           <EmptyState
@@ -127,6 +112,14 @@ export function MyParcelsPage() {
               </Button>
             }
           />
+        ) : isMobile ? (
+          <MobileListingCard
+            setListingPreview={setParcelPreview}
+            data={myParcels}
+            onEdit={setFormValues} // set edit
+            onDelete={deleteParcel}
+            setModalState={setParcelModalState}
+          />
         ) : (
           <ListingTable
             setListingPreview={setParcelPreview}
@@ -136,30 +129,32 @@ export function MyParcelsPage() {
             setModalState={setParcelModalState}
           />
         )}
-      </div>
 
-      <AnimatePresence>
-        {/* edit parcel */}
-        {showParcelModal && (
-          <CreateParcelModal
-            mode={editParcel ? "edit" : undefined}
-            initialFormValues={editParcel ? editParcel : undefined}
-      
-            setModalState={setParcelModalState}
-          />
-        )}
-        {/*show preview moda */}
-        {parcelPreview && (
-          <CustomModal onClose={() => setParcelPreview(null)} width="md">
-            <ParcelCard
-              toggleLike={() => null}
-              parcel={parcelPreview}
-              onClick={() => null}
-              mode="preview"
+        <AnimatePresence>
+          {/* edit parcel */}
+          {showParcelModal && (
+            <CreateParcelModal
+              mode={editParcel ? "edit" : undefined}
+              initialFormValues={editParcel ? editParcel : undefined}
+              setModalState={() => setParcelModalState(false)}
             />
-          </CustomModal>
-        )}{" "}
-      </AnimatePresence>
-    </DefaultContainer>
+          )}
+          {/*show preview moda */}
+          {parcelPreview && (
+            <CustomModal onClose={() => setParcelPreview(null)} width="md">
+              <ParcelCard
+                toggleLike={() => null}
+                parcel={parcelPreview}
+                onClick={() => null}
+                mode="preview"
+              />
+            </CustomModal>
+          )}{" "}
+        </AnimatePresence>
+        {sortedParcels.length > 0 && !showParcelModal && (
+          <FAB onClick={() => setParcelModalState(true)} />
+        )}
+      </DefaultContainer>
+    </>
   );
 }

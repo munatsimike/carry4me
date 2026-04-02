@@ -7,7 +7,7 @@ import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { DeleteTripUseCase } from "./application/DeleteTripUseCase";
 import { useToast } from "@/app/components/Toast";
-import CustomText from "@/components/ui/CustomText";
+
 import { MyTripsUseCase } from "./application/MyTripsUseCase";
 import type { TripListing } from "./domain/Trip";
 import type { FormValues } from "@/types/Ui";
@@ -18,12 +18,15 @@ import TravelerCard from "./ui/TravelerCard";
 
 import EmptyState from "@/app/components/EmptyState";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-
+import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
+import { MobileListingCard } from "../dashboard/components/MobileListingCard";
+import PageSection from "@/app/components/PageSection";
+import FAB from "@/app/components/FAB";
 
 export function MyTripsPage() {
   const [loading, setLoading] = useState(true);
   const [mypTrips, setMyTrips] = useState<TripListing[]>([]);
-
+  const isMobile = useMediaQuery();
   const { user, refreshProfile } = useAuth();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
   const [showCreateTripModal, setCreatTripModalState] =
@@ -83,51 +86,38 @@ export function MyTripsPage() {
 
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
-      <div>
-        <div className="flex items-center justify-between">
-          <CustomText
-            textSize="xl"
-            textVariant="primary"
-            className="pl-4 font-medium"
-          >
-            My Trips
-          </CustomText>
-
-          {sortedTrips.length > 0 && (
-            <Button
-              onClick={() => setCreatTripModalState(true)}
-              variant={"primary"}
-              size={"xsm"}
-            >
+      {loading ? (
+        <p>Loading…</p>
+      ) : sortedTrips.length === 0 ? (
+        <EmptyState
+          title={"No Trips"}
+          description={
+            "You haven’t posted any trips yet. Start by creating a new trips to let others send trips with you."
+          }
+          action={
+            <Button className="w-full" variant={"primary"} size={"sm"}>
               + Post a trip
             </Button>
-          )}
-        </div>
+          }
+        />
+      ) : isMobile ? (
+        <MobileListingCard
+          data={mypTrips}
+          onEdit={setEditTrip}
+          onDelete={deleteTrip}
+          setListingPreview={setTripPreview}
+          setModalState={setCreatTripModalState}
+        />
+      ) : (
+        <ListingTable
+          data={mypTrips}
+          onEdit={setEditTrip}
+          onDelete={deleteTrip}
+          setListingPreview={setTripPreview}
+          setModalState={setCreatTripModalState}
+        />
+      )}
 
-        {loading ? (
-          <p>Loading…</p>
-        ) : sortedTrips.length === 0 ? (
-          <EmptyState
-            title={"No Trips"}
-            description={
-              "You haven’t posted any trips yet. Start by creating a new trips to let others send trips with you."
-            }
-            action={
-              <Button className="w-full" variant={"primary"} size={"sm"}>
-                + Post a trip
-              </Button>
-            }
-          />
-        ) : (
-          <ListingTable
-            data={mypTrips}
-            onEdit={setEditTrip}
-            onDelete={deleteTrip}
-            setListingPreview={setTripPreview}
-            setModalState={setCreatTripModalState}
-          />
-        )}
-      </div>
       <AnimatePresence>
         {/* edit parcel */}
         {showCreateTripModal && (
@@ -149,6 +139,9 @@ export function MyTripsPage() {
           </CustomModal>
         )}{" "}
       </AnimatePresence>
+      {sortedTrips.length > 0 && !showCreateTripModal && (
+        <FAB onClick={() => setCreatTripModalState(true)} />
+      )}
     </DefaultContainer>
   );
 }
