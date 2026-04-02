@@ -320,7 +320,7 @@ export default function ParcelsPage() {
           />
         )}
         <Link to="/create-parcel?mode=create">
-          <FAB />
+          <FAB isAuthed={!!user?.id} />
         </Link>{" "}
       </DefaultContainer>
 

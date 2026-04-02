@@ -152,7 +152,7 @@ export function MyParcelsPage() {
           )}{" "}
         </AnimatePresence>
         {sortedParcels.length > 0 && !showParcelModal && (
-          <FAB onClick={() => setParcelModalState(true)} />
+          <FAB onClick={() => setParcelModalState(true)} isAuthed={!!user?.id} />
         )}
       </DefaultContainer>
     </>
