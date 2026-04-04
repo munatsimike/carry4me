@@ -17,16 +17,16 @@ interface RawParcelSnapshot {
   items: CarryRequest["parcelSnapshot"]["items"];
   weight_kg: number;
   price_per_kg: number;
-  origin: RawLocation | null;
-  destination: RawLocation | null;
+  origin: RawLocation;
+  destination: RawLocation;
   goods_category: CarryRequest["parcelSnapshot"]["goods_category"];
 }
 
 interface RawTripSnapshot {
   traveler_name: string;
   departure_date: string;
-  origin: RawLocation | null;
-  destination: RawLocation | null;
+  origin: RawLocation;
+  destination: RawLocation;
 }
 
 interface RawEvent {
@@ -44,10 +44,10 @@ export interface RawCarryRequestRow {
   traveler_user_id: string;
   initiator_role: CarryRequest["initiatorRole"];
   status: CarryRequest["status"];
-  handover_confirmations: RawConfirmation[] | null;
-  parcel_snapshot: RawParcelSnapshot | null;
-  trip_snapshot: RawTripSnapshot | null;
-  events: RawEvent | null;
+  handover_confirmations: RawConfirmation[];
+  parcel_snapshot: RawParcelSnapshot;
+  trip_snapshot: RawTripSnapshot;
+  events: RawEvent;
 }
 
 export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
@@ -73,6 +73,7 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
   ) {
     throw new Error("Invalid carry request row (missing origin/destination)");
   }
+ 
 
   return {
     carryRequestId: row.id,
@@ -89,6 +90,18 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
       bothConfirmed: senderConfirmed && travelerConfirmed,
     },
 
+    tripSnapshot: {
+      traveler_name: row.trip_snapshot.traveler_name,
+      departure_date: row.trip_snapshot.departure_date,
+      origin: {
+        country: row.trip_snapshot.origin.country,
+        city: row.trip_snapshot.origin.city,
+      },
+      destination: {
+        country: row.trip_snapshot.destination.country,
+        city: row.trip_snapshot.destination.city,
+      },
+    },
     parcelSnapshot: {
       sender_name: row.parcel_snapshot.sender_name,
       items: row.parcel_snapshot.items,
@@ -103,19 +116,6 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
         city: row.parcel_snapshot.destination.city,
       },
       goods_category: row.parcel_snapshot.goods_category,
-    },
-
-    tripSnapshot: {
-      travelerName: row.trip_snapshot.traveler_name,
-      departureDate: row.trip_snapshot.departure_date,
-      origin: {
-        country: row.trip_snapshot.origin.country,
-        city: row.trip_snapshot.origin.city,
-      },
-      destination: {
-        country: row.trip_snapshot.destination.country,
-        city: row.trip_snapshot.destination.city,
-      },
     },
 
     events: {

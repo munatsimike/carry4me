@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { CloseBackBtn } from "./CloseBtn";
 import { useMediaQuery } from "../shared/Authentication/UI/hooks/useMediaQuery";
+import { useUI } from "../shared/Authentication/UI/hooks/useUI";
+import { useEffect } from "react";
 
 type Width = "sm" | "md" | "lg" | "xl" | "2xl";
 
@@ -23,6 +25,18 @@ export default function CustomModal({
   width = "2xl",
 }: Props) {
   const isMobile = useMediaQuery();
+
+  const { incrementOverlayCount, decrementOverlayCount } = useUI();
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    incrementOverlayCount();
+
+    return () => {
+      decrementOverlayCount();
+    };
+  }, [isMobile, incrementOverlayCount, decrementOverlayCount]);
 
   const modalAnimation = isMobile
     ? {
@@ -55,14 +69,14 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-[110] w-[97vw] sm:w-full ${sizes[width]} max-h-[90vh] rounded-t-2xl sm:rounded-2xl bg-white shadow-xl p-2 border border-neutral-300`}
+        className={`relative z-[110] w-[97vw] sm:w-full ${sizes[width]} max-h-[90vh] rounded-t-2xl p-3 sm:rounded-2xl bg-white shadow-xl sm:px-5 pt-5 pb-10 border border-neutral-300 `}
         initial={modalAnimation.initial}
         animate={modalAnimation.animate}
         exit={modalAnimation.exit}
         transition={modalAnimation.transition}
       >
         <CloseBackBtn onClose={onClose} />
-     {children}
+        {children}
       </motion.div>
     </motion.div>
   );

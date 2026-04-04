@@ -1,4 +1,4 @@
-type TextSize = "xxxl" | "xxl" | "xl" | "lg" | "md" | "sm" | "xsm" | "display";
+type TextSize = "xxxl" | "xxl" | "xl" | "lg" | "md" | "sm" | "xs" | "display";
 export type TextVariant =
   | "primary"
   | "secondary"
@@ -45,7 +45,7 @@ export default function Text({
     placeholcer: "text-netural-300",
   };
   const sizes: Record<TextSize, string> = {
-    xsm: "text-sm", // 14px
+    xs: "text-sm", // 14px
     sm: "text-base", // 16px
     md: "text-lg", // 18px
     lg: "text-xl", // 20px

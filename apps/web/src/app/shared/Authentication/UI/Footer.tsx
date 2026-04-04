@@ -121,7 +121,7 @@ function OurLocation() {
       <ul className="mt-5 space-y-5">
         <li>
           <span className="inline-flex items-center gap-1">
-            <SvgIcon size={"md"} Icon={META_ICONS.ukFlag} />
+            <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
             <p className="text-[15px] font-semibold text-slate-900">
               United Kingdom
             </p>
@@ -134,7 +134,7 @@ function OurLocation() {
 
         <li>
           <span className="inline-flex items-center gap-1">
-            <SvgIcon size={"md"} Icon={META_ICONS.uSFlagIcon} />
+            <SvgIcon size={"sm"} Icon={META_ICONS.uSFlagIcon} />
             <p className="text-[15px] font-semibold text-slate-900">
               United States
             </p>
@@ -148,7 +148,7 @@ function OurLocation() {
         </li>
         <li>
           <span className="inline-flex items-center gap-1">
-            <SvgIcon size={"md"} Icon={META_ICONS.zimFlag} />
+            <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
             <p className="text-[15px] font-semibold text-slate-900">Zimbabwe</p>
           </span>
           <p className="mt-1 text-sm leading-6 text-slate-500">

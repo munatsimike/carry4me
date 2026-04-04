@@ -22,9 +22,9 @@ import { useNavigate } from "react-router-dom";
 
 // --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
-  originCountry: z.string().min(3, "Country is required"),
+  originCountry: z.string().min(2, "Country is required"),
   originCity: z.string().min(1, "City is required"),
-  destinationCountry: z.string().min(3, "Minimum of three letters is required"),
+  destinationCountry: z.string().min(2, "Minimum of three letters is required"),
   destinationCity: z.string().min(1, "Destination city is required"),
   departureDate: z.string().min(1, "Departure date is required"),
   weight: z.number().min(1, "Must be at least 1kg").max(200, "Too large"),

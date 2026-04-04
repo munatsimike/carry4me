@@ -295,7 +295,7 @@ export default function ProfilePage() {
       >
         Profile & Security
       </CustomText>
-      <Card enableHover={false} className="mx-auto w-full max-w-2xl" paddingClass="p-8 px-10">
+      <Card enableHover={false} className="mx-auto w-full sm:max-w-2xl" paddingClass="p-8 px-10">
         <CardHeaderSection
           avatar={profile.avatarUrl ?? ""}
           file={file}
@@ -870,7 +870,7 @@ function CardHeaderSection({
         />
       </span>
 
-      <span className="flex flex-col gap-4 pl-4">
+      <span className="flex flex-col gap-4 pl-5">
         <span className="inline-flex flex-col">
           <CustomText
             textSize="lg"
@@ -879,7 +879,7 @@ function CardHeaderSection({
           >
             {fullName}
           </CustomText>
-          <CustomText textSize="xsm" textVariant="secondary">
+          <CustomText textSize="xs" textVariant="secondary">
             {email}
           </CustomText>
         </span>

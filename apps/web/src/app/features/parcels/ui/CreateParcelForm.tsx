@@ -219,7 +219,7 @@ export default function CreateParcelForm({
             {/* You'll Pay aligned under Price */}
             <div className="flex">
               <span className="inline-flex items-center gap-3 bg-primary-50 px-4 py-2 rounded-lg shadow-sm w-fit border border-primary-100">
-                <CustomText as="span" textSize="xsm" textVariant="label">
+                <CustomText as="span" textSize="xs" textVariant="label">
                   You’ll pay
                 </CustomText>
 

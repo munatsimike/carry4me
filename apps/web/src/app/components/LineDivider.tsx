@@ -1,6 +1,6 @@
 export default function LineDivider({
   heightClass = "my-4",
-  bgColorClass = "bg-neutral-100",
+  bgColorClass = "bg-slate-100",
 }: {
   heightClass?: string;
   bgColorClass?: string;

@@ -57,7 +57,7 @@ export function Button({
     tonal:
       "bg-secondary-200 hover:bg-primary-500 text-primary border border-secondary-400 hover:text-white",
     neutral: "hover:bg-neutral-50 text-ink-secondary",
-    outline: "hover:bg-neutral-200 border bg-neutral-100 text-ink-secondary",
+    outline: "hover:bg-neutral-200 border bg-neutral-50 text-ink-secondary",
     error:
       "hover:bg-error-100 hover:text-ink-error text-ink-primary border bg-neutral-100",
   };

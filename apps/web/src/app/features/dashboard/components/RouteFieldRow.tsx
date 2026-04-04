@@ -35,7 +35,7 @@ export default function RouteFieldRow<T extends FieldValues>({
                 <ComboBox
                   className="rounded-lg"
                   placeholder="Select Country"
-                  menuItems={["UK", "USA", "Ireland"]}
+                  menuItems={["USA","Ireland","UK"]}
                   value={field.value}
                   onValueChange={field.onChange}
                   isDirty={fieldState.isDirty}
@@ -77,7 +77,7 @@ export default function RouteFieldRow<T extends FieldValues>({
           textVariant="primary"
           className="inline-flex rounded-lg bg-neutral-100 border border-slate-300 px-3 h-9 justify-center items-center max-w-[200px] gap-2"
         >
-          <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
+          <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
           {"Zimbabwe"}
         </CustomText>
       </div>

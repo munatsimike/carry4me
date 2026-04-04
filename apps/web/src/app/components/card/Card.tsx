@@ -17,7 +17,7 @@ export function Card({
   enableHover = true,
   sizeClass = "max-w-md",
   paddingClass = "p-5",
-  borderClass = "border border-neutral-200",
+  borderClass = "border border-slate-200",
   cornerRadiusClass = "rounded-3xl",
   shadowClass = "shadow-sm",
 }: CardProps) {

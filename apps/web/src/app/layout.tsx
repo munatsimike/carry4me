@@ -11,6 +11,7 @@ import { useMediaQuery } from "./shared/Authentication/UI/hooks/useMediaQuery";
 import { useState } from "react";
 import { cn } from "./lib/cn";
 import { AnimatePresence, motion } from "framer-motion";
+import { useUI } from "./shared/Authentication/UI/hooks/useUI";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
 const HIDE_BOTTOM_NAV = ["/create-trip", "/create-parcel"];
 
@@ -19,7 +20,7 @@ export default function AppLayout() {
   const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const showBottomNav = !HIDE_BOTTOM_NAV.includes(location.pathname);
-
+  const { showBottomNavBar } = useUI();
   const isAuthed = !!user;
   if (loading) {
     return (
@@ -50,7 +51,7 @@ export default function AppLayout() {
 
       <AuthModal />
       <AnimatePresence>
-        {showBottomNav && (
+        {(showBottomNav || showBottomNavBar) && (
           <motion.div
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -58,7 +59,7 @@ export default function AppLayout() {
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="fixed bottom-0 left-0 right-0 border-t bg-white z-50 block sm:hidden py-2 shadow-sm backdrop-blur-md"
           >
-            <BottomNavBar isAuthed={isAuthed} />
+            {<BottomNavBar isAuthed={isAuthed} />}
           </motion.div>
         )}
       </AnimatePresence>
@@ -80,6 +81,7 @@ function Header({
 }) {
   const showSearchBar = PATHS.includes(pathname);
   const isMobile = useMediaQuery();
+
   return (
     <header className="sticky top-0 z-50 bg-white">
       <div
@@ -100,6 +102,7 @@ function Header({
             userProfile={profile} // can be null sometimes, that's ok
           />
         </div>
+
         <MobileToolBar
           showSearchBar={showSearchBar}
           isAuthed={isAuthed}

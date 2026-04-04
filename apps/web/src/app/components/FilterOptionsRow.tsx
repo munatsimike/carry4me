@@ -237,7 +237,7 @@ export function FilterOptionsRow({
                 : "text-neutral-500",
             )}
           >
-            Clear filters
+            Clear
           </motion.button>
         </AnimatePresence>
         <button

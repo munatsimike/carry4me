@@ -118,9 +118,7 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
         <div className="flex flex-col gap-5">
           <LineDivider heightClass={dividerHeight} />
           <RouteFieldRow control={control} />
-
           <LineDivider heightClass={dividerHeight} />
-
           <DateField<TripFormFields>
             error={errors.departureDate?.message}
             control={control}
@@ -192,7 +190,7 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
             {/* You'll Earn aligned under Price */}
             <div className="flex">
               <span className="inline-flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-100 w-fit shadow-sm">
-                <CustomText as="span" textSize="xsm" textVariant="label">
+                <CustomText as="span" textSize="xs" textVariant="label">
                   You’ll earn
                 </CustomText>
                 <AnimatePresence mode="wait">

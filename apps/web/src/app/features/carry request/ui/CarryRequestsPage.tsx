@@ -46,6 +46,12 @@ import {
   HorizontalMenu,
   type TabItem,
 } from "@/app/shared/Authentication/UI/SegmentedTabs";
+import {
+  MobileDetailsSection,
+  MobileFirstHeader,
+  MobileProgressSection,
+  type MobileSection,
+} from "./CarryRequestPageMobile";
 
 export type SelectedTab = "ongoing" | "completed" | "declined" | "cancelled";
 
@@ -185,6 +191,7 @@ export default function CarryRequestsPage() {
         ]).has(item.status),
       );
     }
+
     if (selectedTab === statusToTab.PAID_OUT) {
       result = result.filter(
         (item) => item.status === CARRY_REQUEST_STATUSES.PAID_OUT,
@@ -202,11 +209,19 @@ export default function CarryRequestsPage() {
         (item) => item.status === CARRY_REQUEST_STATUSES.REJECTED,
       );
     }
-    if (result.length === 0 && selectedTab) {
-      setEmptyState(toEmptyStateForMapper(selectedTab));
-    }
+
     return result;
-  }, [carryRequestsList]);
+  }, [carryRequestsList, selectedTab]);
+
+  useEffect(() => {
+    if (!selectedTab) return;
+
+    if (displayList.length === 0) {
+      setEmptyState(toEmptyStateForMapper(selectedTab));
+    } else {
+      setEmptyState(null);
+    }
+  }, [displayList, selectedTab]);
 
   const [inputValue, setValue] = useState<string>("");
   const heightClass = "my-0";
@@ -373,11 +388,13 @@ export default function CarryRequestsPage() {
     <>
       <PageSection>
         {selectedTab && (
-          <HorizontalMenu
-            tabs={tabs}
-            selectedTab={selectedTab}
-            setTab={setSelectedTab}
-          />
+          <div className="flex py-2">
+            <HorizontalMenu
+              tabs={tabs}
+              selectedTab={selectedTab}
+              setTab={setSelectedTab}
+            />
+          </div>
         )}
       </PageSection>
 
@@ -392,7 +409,7 @@ export default function CarryRequestsPage() {
                   <div className="flex flex-wrap items-center justify-around gap-3">
                     {emptyStateMessage.actions.map((action) => (
                       <Link key={action.href} to={action.href}>
-                        <Button variant={action.variant} size="md">
+                        <Button variant={action.variant} size="sm">
                           {action.label}
                         </Button>
                       </Link>
@@ -402,72 +419,135 @@ export default function CarryRequestsPage() {
               }
             />
           )}
-
-          {displayList?.map((request) => {
-            const viewerRole =
-              user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
-
-            const requestUI = mapCarryRequestToUI(request, viewerRole);
-
-            const actions = actionsMapper(
-              viewerRole,
-              request.status,
-              request.initiatorRole,
-              handoverState ?? undefined,
-            );
-
-            return (
-              <Card
-                sizeClass="max-w-5xl"
-                key={request.carryRequestId}
-                cornerRadiusClass="rounded-2xl"
-                className="mx-auto w-full px-6"
-              >
-                <div className="mx-2 flex flex-col gap-4">
-                  <Header
-                    title={requestUI.title}
-                    description={requestUI.description}
-                    requestId={request.carryRequestId.slice(-5)}
-                    status={request.status}
-                  />
-
-                  <LineDivider heightClass={heightClass} />
-
-                  <ProgressRow
-                    currentStep={requestUI.currentStep}
-                    isInitiator={viewerRole === request.initiatorRole}
-                  />
-
-                  <LineDivider heightClass={heightClass} />
-
-                  <DetailsSection
-                    trip={request.tripSnapshot}
-                    parcel={request.parcelSnapshot}
-                    viewerRole={viewerRole}
-                  />
-
-                  {requestUI.title !== "Request cancelled" && (
-                    <LineDivider heightClass={heightClass} />
-                  )}
-
-                  {actions.infoBlock?.displayText ? (
-                    <RequestCompleted actions={actions} />
-                  ) : (
-                    <RequestActions
-                      actions={actions}
-                      request={request}
-                      inputValue={inputValue}
-                      setValue={setValue}
-                      onPrimaryAction={handlePrimaryActions}
-                      onSecondaryAction={handleSecondaryAcion}
-                    />
-                  )}
-                </div>
-              </Card>
-            );
-          })}
+          {displayList?.map((request) => (
+            <CarryRequestCard
+              key={request.carryRequestId}
+              request={request}
+              user={user}
+              handoverState={handoverState}
+              inputValue={inputValue}
+              setValue={setValue}
+              onPrimaryAction={handlePrimaryActions}
+              onSecondaryAction={handleSecondaryAcion}
+            />
+          ))}
         </div>
       </DefaultContainer>
+    </>
+  );
+}
+
+function CarryRequestCard({
+  request,
+  user,
+  handoverState,
+  inputValue,
+  setValue,
+  onPrimaryAction,
+  onSecondaryAction,
+}: {
+  request: CarryRequest;
+  user: { id: string } | null;
+  handoverState?: HandoverConfirmationState;
+  inputValue: string;
+  setValue: (value: string) => void;
+  onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
+  onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
+}) {
+  const [openSection, setOpenSection] = useState<MobileSection | null>(null);
+
+  const viewerRole =
+    user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
+
+  const requestUI = mapCarryRequestToUI(request, viewerRole);
+
+  const actions = actionsMapper(
+    viewerRole,
+    request.status,
+    request.initiatorRole,
+    handoverState ?? undefined,
+  );
+
+  const toggleSection = (section: MobileSection) => {
+    setOpenSection((prev) => (prev === section ? null : section));
+  };
+
+  const totalPrice =
+    request.parcelSnapshot.price_per_kg * request.parcelSnapshot.weight_kg;
+
+  return (
+    <>
+      <Card
+        sizeClass="max-w-5xl"
+        key={request.carryRequestId}
+        className="mx-auto w-full px-4 sm:px-6 flex flex-col gap-3"
+      >
+        <div className="flex flex-col gap-4">
+          <Header
+            title={requestUI.title}
+            description={requestUI.description}
+            requestId={request.carryRequestId.slice(-5)}
+            status={request.status}
+          />
+          <LineDivider heightClass="my-0" />
+
+          <div className="block md:hidden">
+            <MobileFirstHeader
+              toggleSection={toggleSection}
+              trip={request.tripSnapshot}
+              parcel={request.parcelSnapshot}
+              totalPrice={totalPrice}
+            />
+          </div>
+        </div>
+
+        <div className="hidden md:block md:flex md:flex-col gap-4">
+          <ProgressRow
+            currentStep={requestUI.currentStep}
+            isInitiator={viewerRole === request.initiatorRole}
+          />
+
+          <LineDivider heightClass="my-0" />
+
+          <DetailsSection
+            trip={request.tripSnapshot}
+            parcel={request.parcelSnapshot}
+            viewerRole={viewerRole}
+          />
+        </div>
+        {/**requestUI.title !== "Request cancelled" && (
+          <LineDivider heightClass="my-0" />
+        )*/}
+        <LineDivider heightClass="my-0" />
+        {actions.infoBlock?.displayText ? (
+          <RequestCompleted actions={actions} />
+        ) : (
+          <RequestActions
+            actions={actions}
+            request={request}
+            inputValue={inputValue}
+            setValue={setValue}
+            onPrimaryAction={onPrimaryAction}
+            onSecondaryAction={onSecondaryAction}
+          />
+        )}
+      </Card>
+      {openSection === "details" && (
+        <MobileDetailsSection
+          setOpenSection={() => setOpenSection(null)}
+          trip={request.tripSnapshot}
+          parcel={request.parcelSnapshot}
+          viewerRole={viewerRole}
+        />
+      )}
+
+      {openSection === "timeline" && (
+        <MobileProgressSection
+          setOpenSection={() => setOpenSection(null)}
+          currentStep={requestUI.currentStep}
+          isInitiator={viewerRole === request.initiatorRole}
+        />
+      )}
     </>
   );
 }
@@ -486,13 +566,15 @@ function RequestActions({
   setValue: (value: string) => void;
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
+
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-end gap-10">
+    <div className="flex flex-col sm:flex-row items-start justify-end gap-4 sm:gap-4">
       {actions.secondary && (
         <Button
+          className="w-full sm:w-auto"
           onClick={() => onSecondaryAction(actions, request)}
-          variant="error"
+          variant="outline"
           size="md"
           leadingIcon={undefined}
         >
@@ -503,6 +585,7 @@ function RequestActions({
       {actions.primary &&
         actions.primary.key !== UIACTIONKEYS.RELEASE_PAYMENT && (
           <Button
+            className="w-full sm:w-auto"
             onClick={() => onPrimaryAction(actions, request)}
             variant="primary"
             size="md"
@@ -532,11 +615,11 @@ function RequestActions({
 
 function RequestCompleted({ actions }: { actions: UIActions }) {
   return (
-    <div className="flex flex-col items-center gap-2 py-2 text-center">
+    <div className="flex flex-col items-center gap-2 pb-2 text-center">
       <CustomText textVariant="primary">
         {actions.infoBlock?.displayText?.title}
       </CustomText>
-      <CustomText textSize="xsm">
+      <CustomText textSize="xs">
         {actions.infoBlock?.displayText?.description}
       </CustomText>
     </div>
@@ -559,7 +642,7 @@ function InfoBlockInput({
   return (
     <div className="inline-flex flex-col gap-3">
       <div className="inline-flex items-center gap-4">
-        <CustomText textSize="xsm">{actions.infoBlock?.label}</CustomText>
+        <CustomText textSize="xs">{actions.infoBlock?.label}</CustomText>
 
         <input
           value={inputValue}
@@ -581,7 +664,7 @@ function InfoBlockInput({
         </Button>
       </div>
 
-      <CustomText textVariant="primary" textSize="xsm">
+      <CustomText textVariant="primary" textSize="xs">
         {actions.infoBlock?.helperText}
       </CustomText>
     </div>
@@ -593,7 +676,7 @@ function InfoBlockDisplay({ actions }: { actions: UIActions }) {
     <div className="flex justify-end">
       <div className="inline-flex flex-col gap-2">
         <div className="inline-flex items-center gap-3">
-          <CustomText textSize="xsm">{actions.infoBlock?.label}</CustomText>
+          <CustomText textSize="xs">{actions.infoBlock?.label}</CustomText>
           <CustomText
             className="rounded-md bg-secondary-100 px-3 py-1"
             textVariant="primary"
@@ -602,7 +685,7 @@ function InfoBlockDisplay({ actions }: { actions: UIActions }) {
           </CustomText>
         </div>
 
-        <CustomText textVariant="primary" textSize="xsm">
+        <CustomText textVariant="primary" textSize="xs">
           {actions.infoBlock?.helperText}
         </CustomText>
       </div>
@@ -646,7 +729,7 @@ function TripDetails({
 
       <div className="space-y-2">
         <span className="flex gap-1 items-center">
-          <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
+          <SvgIcon size={"xs"} Icon={META_ICONS.ukFlag} />
           <CustomText
             textVariant="primary"
             textSize="md"
@@ -655,7 +738,7 @@ function TripDetails({
             {trip.origin.country}{" "}
           </CustomText>
           <MoveRight className="text-neutral-500 h-5 w-4" strokeWidth={1.5} />
-          <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
+          <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
           <CustomText
             textVariant="primary"
             textSize="md"
@@ -670,14 +753,14 @@ function TripDetails({
             Traveler
           </CustomText>
           <CustomText textVariant="primary" textSize="sm">
-            {trip.travelerName}
+            {trip.traveler_name}
           </CustomText>
 
           <CustomText textVariant="secondary" textSize="sm">
             Departs
           </CustomText>
           <CustomText textVariant="primary" textSize="sm">
-            {format(new Date(trip.departureDate), dateFormat)}
+            {format(new Date(trip.departure_date), dateFormat)}
           </CustomText>
         </div>
       </div>
@@ -701,7 +784,7 @@ function ParcelDetails({
 
       <div className="space-y-2">
         <span className="flex gap-1 items-center">
-          <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
+          <SvgIcon size={"xs"} Icon={META_ICONS.ukFlag} />
           <CustomText
             textVariant="primary"
             textSize="md"
@@ -710,7 +793,7 @@ function ParcelDetails({
             {parcel.origin.country}
           </CustomText>
           <MoveRight className="text-neutral-600 h-5 w-4" strokeWidth={1.5} />
-          <SvgIcon size={"sm"} Icon={META_ICONS.zimFlag} />
+          <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
           <CustomText
             textVariant="primary"
             textSize="md"
@@ -749,7 +832,7 @@ function CostSummary({
   return (
     <section className="space-y-3">
       <span className="inline-flex rounded-full border bg-neutral-100 px-3 py-1">
-        <CustomText textVariant="primary" as="span" textSize="xsm">
+        <CustomText textVariant="primary" as="span" textSize="xs">
           Cost summary
         </CustomText>
       </span>
@@ -809,10 +892,7 @@ function Header({ title, description, requestId, status }: HeaderProps) {
     <SpaceBetweenRow>
       <CurrentStatus title={title} description={description} status={status} />
       <div className="inline-flex flex-col gap-1">
-        <CustomText textSize="sm" textVariant="primary">
-          Request
-        </CustomText>
-        <CustomText textSize="xsm">#{requestId}</CustomText>
+        {/* <CustomText textSize="xs">#{requestId}</CustomText> */}
       </div>
     </SpaceBetweenRow>
   );
@@ -829,25 +909,17 @@ function CurrentStatus({
   return (
     <div className="flex flex-col gap-1">
       <div className="inline-flex items-center gap-2">
-        <CustomText textSize="sm">Status:</CustomText>
-
-        <div className="inline-flex items-center gap-2">
-          <span
-            className={`inline-flex h-3 w-3 rounded-full ${statusColor(status)}`}
-          />
-          <CustomText
-            textSize="lg"
-            textVariant="primary"
-            className="font-medium"
-          >
-            {title}
-          </CustomText>
-        </div>
+        <span
+          className={`inline-flex h-3 w-3 rounded-full ${statusColor(status)}`}
+        />
+        <span className="font-medium font-heading text-ink-primary text-lg sm:text-xl">
+          {title}
+        </span>
       </div>
 
-      <CustomText textSize="sm" as="span" className="pl-[60px]">
+      <span className="text-ink-secondary whitespace-normal text-base">
         {description}
-      </CustomText>
+      </span>
     </div>
   );
 }
@@ -889,7 +961,7 @@ function Step({
     <span className="inline-flex items-center gap-2">
       <SvgIcon color={iconColor} size="md" Icon={META_ICONS.checkedIcon} />
       <CustomText
-        textSize="xsm"
+        textSize="xs"
         textVariant={textColor}
         className="whitespace-nowrap"
       >

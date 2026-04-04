@@ -26,9 +26,9 @@ export const parcelItemSchema = z.object({
 });
 
 const parcelSchema = z.object({
-  originCountry: z.string().min(3, "Country is required"),
+  originCountry: z.string().min(2, "Country is required"),
   originCity: z.string().min(1, "city is required"),
-  destinationCountry: z.string().min(3, "Country is required"),
+  destinationCountry: z.string().min(2, "Country is required"),
   destinationCity: z.string().min(1, "City is required"),
   goodsCategoryIds: z.array(z.string()).min(1, "Select at least one category"),
   itemDescriptions: z

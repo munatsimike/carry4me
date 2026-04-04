@@ -113,15 +113,15 @@ export default function Search({
       <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:w-auto">
         <CustomText
           as="span"
-          textSize="xsm"
+          textSize="xs"
           className="text-center text-neutral-500 sm:text-left whitespace-nowrap"
         >
           Destination
         </CustomText>
 
         <div className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl border bg-white px-3 py-2 shadow-sm sm:min-w-[150px]">
-          <SvgIcon size="md" Icon={META_ICONS.zimFlag} />
-          <CustomText as="span" textSize="xsm" className="text-neutral-700">
+          <SvgIcon size="xs" Icon={META_ICONS.zimFlag} />
+          <CustomText as="span" textSize="xs" className="text-neutral-700">
             Zimbabwe
           </CustomText>
         </div>
@@ -175,7 +175,7 @@ export function SearchResults({
             >
               ({searchResults})
             </CustomText>
-            <CustomText as="p" textSize="xsm" textVariant="secondary">
+            <CustomText as="p" textSize="xs" textVariant="secondary">
               {searchResults === 1 ? "parcel" : "parcels"} found
             </CustomText>
           </span>

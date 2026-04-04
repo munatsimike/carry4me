@@ -54,7 +54,7 @@ export default function ListingSelectionModal<T, U extends Listing>({
                     setListingSelectionOpen(false);
                     setModalState(true);
                   }}
-                  className="w-full transition-all duration-300 rounded-2xl border border-neutral-200 p-4 text-left transition hover:border-primary-300 hover:bg-primary-50 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                  className="w-full transition-all duration-300 rounded-2xl border border-neutral-200  p-2 text-left transition hover:border-primary-300 hover:bg-primary-50 shadow-sm hover:shadow-md hover:-translate-y-0.5"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
@@ -81,7 +81,7 @@ export default function ListingSelectionModal<T, U extends Listing>({
                         </CustomText>
                       </span>
                       <span className="flex gap-2 items-center">
-                        <CustomText as="p" textVariant="label" textSize="xsm">
+                        <CustomText as="p" textVariant="label" textSize="xs">
                           Departure
                         </CustomText>
                         <CustomText as="p" textVariant="primary">
@@ -89,7 +89,7 @@ export default function ListingSelectionModal<T, U extends Listing>({
                         </CustomText>
                       </span>
                       <span className="flex gap-2 items-center">
-                        <CustomText as="p" textVariant="label" textSize="xsm">
+                        <CustomText as="p" textVariant="label" textSize="xs">
                           Available space
                         </CustomText>
                         <CustomText as="p" textVariant="primary">
