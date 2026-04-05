@@ -417,9 +417,9 @@ export function MobileToolBar({
         )}
         <CustomText
           as="h1"
-          textSize="sm"
+          textSize="md"
           textVariant="primary"
-          className="font-medium whitespace-nowrap"
+          className="font-semibold whitespace-nowrap"
         >
           {toHeading(location.pathname)}
         </CustomText>

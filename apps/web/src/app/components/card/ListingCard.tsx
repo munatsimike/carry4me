@@ -52,13 +52,15 @@ export function ListingCard<T extends Listing>({
   const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
   const isTripListing = listing.type === "trip";
   const [updateFav, setUpdate] = useState(false);
-  const {toast}= useToast()
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!updateFav) return;
     async function onToggleLike() {
       if (!user?.id) {
-        toast("You need to login to like parcels or trips.", {variant:"warning"})
+        toast("You need to login to like parcels or trips.", {
+          variant: "warning",
+        });
         return;
       }
       const { result } = await namedCall(
@@ -116,7 +118,7 @@ export function ListingCard<T extends Listing>({
         userName={`${listing.user.fullName?.charAt(0)}${"."} ${listing.user.fullName.substring(listing.user.fullName.indexOf(" "))}`}
         avatar={listing.user.avatarUrl}
       />
-      <LineDivider />
+      <LineDivider heightClass="my-3" />
       <Stack>
         <RouteRow
           origin={listing.route.originCountry}
@@ -136,7 +138,7 @@ export function ListingCard<T extends Listing>({
           category={goodsCategories}
         />
       </Stack>
-      <LineDivider />
+      <LineDivider heightClass="my-3" />
       <WeightAndPrice
         weightLabel={isTripListing ? "Available space" : "Parcel Weight"}
         weight={listing.weightKg}
@@ -144,7 +146,7 @@ export function ListingCard<T extends Listing>({
         price={listing.pricePerKg}
         location={"UK"}
       />
-      <LineDivider />
+      <LineDivider heightClass="my-3" />
       <SendRequestBtn
         isActive={!isDisplayMode}
         buttonTextVariant="onDark"

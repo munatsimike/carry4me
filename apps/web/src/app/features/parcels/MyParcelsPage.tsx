@@ -15,7 +15,6 @@ import CustomModal from "@/app/components/CustomModal";
 import type { FormValues } from "@/types/Ui";
 import type { ParcelListing } from "./domain/Parcel";
 import EmptyState from "@/app/components/EmptyState";
-import CustomText from "@/components/ui/CustomText";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { GetParcelsByIdUseCase } from "./application/GetParcelsByIdUseCase";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
