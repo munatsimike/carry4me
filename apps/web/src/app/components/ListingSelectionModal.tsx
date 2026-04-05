@@ -28,7 +28,7 @@ export default function ListingSelectionModal<T, U extends Listing>({
     <AnimatePresence>
       {listingSelectionOpen && user && selectedParcel && (
         <CustomModal width="2xl" onClose={() => setListingSelectionOpen(false)}>
-          <div className="space-y-4 px-5 py-4">
+          <div className="space-y-4">
             <div>
               <CustomText
                 textSize="lg"

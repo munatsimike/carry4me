@@ -69,7 +69,7 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-[110] w-[97vw] sm:w-full ${sizes[width]} max-h-[90vh] rounded-t-2xl p-3 sm:rounded-2xl bg-white shadow-xl sm:px-5 pt-5 pb-10 border border-neutral-300 `}
+        className={`relative z-[110] w-[97vw] sm:w-full ${sizes[width]} max-h-[97vh] rounded-t-2xl p-3 sm:rounded-2xl bg-white shadow-xl sm:px-5 pt-5 pb-10 border border-neutral-300 `}
         initial={modalAnimation.initial}
         animate={modalAnimation.animate}
         exit={modalAnimation.exit}

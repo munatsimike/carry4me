@@ -119,7 +119,7 @@ export default function ConfirmRequest({
   };
 
   return (
-    <div className="flex flex-col px-5 py-2">
+    <div className="flex flex-col py-2">
       <div className="flex justify-center mb-1">
         <SvgIcon color="primary" size={"lg"} Icon={META_ICONS.sendArrow} />
       </div>
@@ -199,7 +199,7 @@ export function ParcelSummary({
           </CustomText>
         </span>
 
-        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[120px_1fr] sm:items-start">
+        <div className="grid gap-y-1 grid-cols-[120px_1fr] sm:items-start">
           <CustomText textVariant={variantSecondary} textSize={textSizeLabel}>
             Sender
           </CustomText>
@@ -299,7 +299,7 @@ export function TripSummary({ trip, isSenderRequesting }: TripSummaryProps) {
             {trip.route.destinationCountry}
           </CustomText>
         </span>
-        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[120px_1fr] sm:items-start">
+        <div className="grid gap-y-1 grid-cols-[120px_1fr] sm:items-start">
           {trip.user?.fullName && (
             <>
               <CustomText

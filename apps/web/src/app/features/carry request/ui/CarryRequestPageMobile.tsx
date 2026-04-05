@@ -9,6 +9,7 @@ import type { TripSnapshot } from "../domain/TripSnapshot";
 import { MoveRight } from "lucide-react";
 import { dateFormat, progress } from "@/types/Ui";
 import CustomModal from "@/app/components/CustomModal";
+import LineDivider from "@/app/components/LineDivider";
 export type MobileSection = "details" | "timeline";
 
 export function MobileFirstHeader({
@@ -75,14 +76,14 @@ export function MobileFirstHeader({
         <div className="flex items-center gap-4">
           <button
             onClick={() => toggleSection("details")}
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
+            className="text-sm text-blue-600"
           >
             {"Details"}
           </button>
 
           <button
             onClick={() => toggleSection("timeline")}
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
+            className="text-sm text-blue-600"
           >
             {"Timeline"}
           </button>
@@ -107,9 +108,11 @@ export function MobileDetailsSection({
 
   return (
     <CustomModal onClose={setOpenSection}>
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         <TripDetailsMobile trip={trip} viewerRole={viewerRole} />
+        <LineDivider heightClass="" />
         <ParcelDetailsMobile parcel={parcel} viewerRole={viewerRole} />
+        <LineDivider heightClass="" />
         <CostSummaryMobile parcel={parcel} totalPrice={totalPrice} />
       </div>
     </CustomModal>
@@ -123,14 +126,18 @@ export function TripDetailsMobile({
   viewerRole: Role;
 }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-2">
       <CardLabel variant="trip" label="Trip details" />
 
       <div className="grid grid-cols-[88px_1fr] gap-y-2">
         <CustomText textVariant="secondary" textSize="sm">
           Route
         </CustomText>
-        <CustomText textVariant="primary" textSize="sm" className="flex gap-2 items-center">
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="flex gap-2 items-center"
+        >
           {trip.origin.country}{" "}
           <MoveRight className="text-neutral-800 h-4 w-4" strokeWidth={1.5} />{" "}
           {trip.destination.country}
@@ -170,7 +177,12 @@ export function ParcelDetailsMobile({
         <CustomText textVariant="secondary" textSize="sm">
           Route
         </CustomText>
-        <CustomText as="span" className="flex gap-2 items-center" textVariant="primary" textSize="sm">
+        <CustomText
+          as="span"
+          className="flex gap-2 items-center"
+          textVariant="primary"
+          textSize="sm"
+        >
           {parcel.origin.country}{" "}
           <MoveRight className="text-neutral-800 h-4 w-4" strokeWidth={1.5} />{" "}
           {parcel.destination.country}
