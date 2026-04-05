@@ -58,7 +58,7 @@ export default function ProfilePage() {
   const [file, setFile] = useState<File | null>(null);
   const { user, refreshProfile, profile } = useAuth();
   const { toast } = useToast();
-  const {showSupabaseError} = useUniversalModal()
+  const { showSupabaseError } = useUniversalModal();
 
   const {
     control,
@@ -179,12 +179,12 @@ export default function ProfilePage() {
   const onDeleteAvatar = async () => {
     if (!profile.avatarUrl) return;
 
-    const {result} = await namedCall(
+    const { result } = await namedCall(
       "delete avatar",
       deleteAvatarUseCase.execute(user.id, profile.avatarUrl),
     );
     if (!result.success) {
-        showSupabaseError(result.error)
+      showSupabaseError(result.error);
     }
     // delete in storage + db...
     setFile(null);
@@ -224,13 +224,13 @@ export default function ProfilePage() {
       const email = dirtyFields.emailAddress ? values.emailAddress : undefined;
       const password = dirtyFields.password ? values.password : undefined;
 
-      const {result} = await namedCall(
+      const { result } = await namedCall(
         "security update",
         updateAuthDetails.excute(email, password),
       );
 
       if (!result.success) {
-        showSupabaseError(result.error)
+        showSupabaseError(result.error);
       }
     }
 
@@ -291,11 +291,15 @@ export default function ProfilePage() {
       <CustomText
         textSize="xl"
         textVariant="primary"
-        className="pl-4 pb-4 font-medium"
+        className="pl-4 pb-2 sm:pb-4 font-medium"
       >
         Profile & Security
       </CustomText>
-      <Card enableHover={false} className="mx-auto w-full sm:max-w-2xl" paddingClass="p-8 px-10">
+      <Card
+        enableHover={false}
+        className="mx-auto w-full sm:max-w-2xl"
+       
+      >
         <CardHeaderSection
           avatar={profile.avatarUrl ?? ""}
           file={file}
@@ -308,7 +312,7 @@ export default function ProfilePage() {
           onDelete={onDeleteAvatar}
         />
         <form onSubmit={(e) => e.preventDefault()} autoComplete="off">
-          <LineDivider heightClass="my-4" />
+          <LineDivider heightClass="my-2 sm:my-4" />
           <motion.div
             layout
             transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -387,9 +391,11 @@ function LocationSection({
 }: LocationSectionProps) {
   const isEditing = editing === "location";
   return (
-    <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-3"}`}>
+    <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-2"}`}>
       <SectionHeader
         title={"Your location"}
+        isEditing={isEditing}
+        setEditing={() => setEditing("location")}
         icon={
           <MapPin
             className={iconSpecs.className}
@@ -403,10 +409,6 @@ function LocationSection({
             <InfoRow label="Country" value={formProps.watch("country")} />
             <InfoRow label="City" value={formProps.watch("city")} />
           </div>
-          <EditBtn
-            isEditing={isEditing}
-            onEdit={() => setEditing("location")}
-          />
         </div>
       ) : (
         <motion.div
@@ -451,25 +453,27 @@ function SecurityDetailsCard({
 }: securityProps) {
   const isEditing = editing === "security";
   return (
-    <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-3"}`}>
+    <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-2"}`}>
       <SectionHeader
-        title="Security"
+        isEditing={isEditing}
+        setEditing={setEditing}
         icon={
           <ShieldHalf
             className={iconSpecs.className}
             strokeWidth={iconSpecs.strokeWidth}
           />
         }
+        title="Security"
       />
 
       {!isEditing ? (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <div className="flex flex-col gap-2">
-            <InfoRow label="Email address" value={email} />
-            <InfoRow label="Password" value={"**********"} />
+            <InfCol label="Email address" value={email} />
+            <InfCol label="Password" value={"**********"} />
           </div>
-          <EditBtn isEditing={isEditing} onEdit={setEditing} />
         </div>
+        
       ) : (
         <>
           <div className="flex flex-col gap-4">
@@ -538,8 +542,10 @@ function PersonalDetailsSection({
   const isEditing = editing === "personal";
 
   return (
-    <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-3"}`}>
+    <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-2"}`}>
       <SectionHeader
+        isEditing={isEditing}
+        setEditing={() => setEditing("personal")}
         icon={
           <User2
             className={iconSpecs.className}
@@ -564,10 +570,6 @@ function PersonalDetailsSection({
 
               <InfoRow label="Phone" value={profile.phoneNumber} />
             </div>
-            <EditBtn
-              isEditing={isEditing}
-              onEdit={() => setEditing("personal")}
-            />
           </div>
         ) : (
           <motion.div>
@@ -589,9 +591,13 @@ function PersonalDetailsSection({
 function SectionHeader({
   icon,
   title,
+  isEditing ,
+  setEditing,
 }: {
   icon: React.ReactNode;
   title: string;
+  isEditing: boolean;
+  setEditing: () => void;
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -601,6 +607,11 @@ function SectionHeader({
           {title}
         </CustomText>
       </span>
+
+      <EditBtn
+        isEditing={isEditing}
+        onEdit={setEditing}
+      />
     </div>
   );
 }
@@ -631,8 +642,8 @@ type LocationEditFormProps = {
 
 function LocationEditForm({ control, formBtns }: LocationEditFormProps) {
   return (
-    <span className="flex flex-col gap-5">
-      <span className="flex gap-7">
+    <span className="flex flex-col  gap-5">
+      <span className="flex flex-col sm:flex-row gap-5 sm:gap-7">
         <Controller
           name="country"
           control={control}
@@ -725,7 +736,7 @@ type ActionButtonProps = {
 
 function ActionButton({ onClick, onCancel }: ActionButtonProps) {
   return (
-    <div className="mt-4 flex justify-end gap-3">
+    <div className="mt-2 flex justify-end gap-3">
       <Button type="button" variant="neutral" onClick={onCancel} size={"sm"}>
         Cancel
       </Button>
@@ -736,6 +747,17 @@ function ActionButton({ onClick, onCancel }: ActionButtonProps) {
   );
 }
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="grid grid-cols-[130px_auto] sm:grid-cols-[150px_auto] gap-y-1 sm:gap-x-6">
+      <CustomText textVariant="label" textSize="sm">
+        {label}
+      </CustomText>
+      <CustomText textVariant="primary">{value ?? "—"}</CustomText>
+    </div>
+  );
+}
+
+function InfCol({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[150px_auto] gap-y-1 sm:gap-x-6">
       <CustomText textVariant="label" textSize="sm">
@@ -859,7 +881,7 @@ function CardHeaderSection({
   updateAvatar,
 }: CardHeaderSectionProps) {
   return (
-    <span className="flex justify-center">
+    <span className="flex sm:justify-center">
       <span>
         <AvatarPicker
           onDelete={onDelete}
@@ -870,7 +892,7 @@ function CardHeaderSection({
         />
       </span>
 
-      <span className="flex flex-col gap-4 pl-5">
+      <span className="flex flex-col gap-4 pl-4">
         <span className="inline-flex flex-col">
           <CustomText
             textSize="lg"
@@ -908,7 +930,11 @@ function CardHeaderSection({
                 variant={"primary"}
                 size={"xsm"}
               >
-                <CustomText textVariant="onDark" textSize="sm">
+                <CustomText
+                  textVariant="onDark"
+                  textSize="sm"
+                  className="whitespace-nowrap"
+                >
                   Save image
                 </CustomText>
               </Button>

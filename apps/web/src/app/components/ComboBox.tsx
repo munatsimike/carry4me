@@ -15,7 +15,7 @@ type ComboBoxProps = {
   heightClass?: string;
   textSize?: string;
   searchable?: boolean;
-  roundedClass?:string
+  roundedClass?: string;
 };
 
 export default function ComboBox({
@@ -23,7 +23,7 @@ export default function ComboBox({
   placeholder,
   disabled = false,
   className,
-  roundedClass="xl",
+  roundedClass = "rounded-xl",
   value = "",
   onValueChange,
   isDirty,
@@ -82,7 +82,7 @@ export default function ComboBox({
             onValueChange?.(e.target.value);
             setIsOpen(false);
           }}
-          className={cn(baseClasses, roundedClass,"appearance-none")}
+          className={cn(baseClasses, roundedClass, "appearance-none")}
         >
           <option value="" disabled>
             {placeholder}

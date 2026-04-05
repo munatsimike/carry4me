@@ -95,7 +95,13 @@ export class SupabaseAuthRepository implements AuthRepository {
     userId: string,
   ): Promise<RepoResponse<string>> {
     const fileExt = file.name.split(".").pop();
-    const filePath = `${userId}/${crypto.randomUUID()}.${fileExt}`;
+
+    const uniqueId =
+      globalThis.crypto?.randomUUID?.() ??
+      `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const filePath = `${userId}/${uniqueId}.${fileExt}`;
+    console.log(filePath);
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
