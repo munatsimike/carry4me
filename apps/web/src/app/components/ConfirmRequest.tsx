@@ -187,7 +187,7 @@ export function ParcelSummary({
           >
             {parcel.route.originCountry}
           </CustomText>
-          <MoveRight className="text-neutral-600 h-4 w-4" strokeWidth={1.5} />
+          <MoveRight className="text-neutral-800 h-4 w-4" strokeWidth={1.5} />
 
           <CustomText
             as="div"

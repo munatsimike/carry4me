@@ -68,7 +68,7 @@ export default function ListingSelectionModal<T, U extends Listing>({
                           {listing.route.originCountry}
                         </CustomText>
                         <MoveRight
-                          className="text-neutral-600 h-4 w-4"
+                          className="text-neutral-800 h-4 w-4"
                           strokeWidth={1.5}
                         />
                         <CustomText

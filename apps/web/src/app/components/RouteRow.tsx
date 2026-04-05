@@ -28,7 +28,7 @@ export default function RouteRow({
             {origin}
           </CustomText>
         </InlineRow>
-        <MoveRight className="text-neutral-600 h-4 w-4" strokeWidth={1.5} />
+        <MoveRight className="text-neutral-800 h-4 w-4" strokeWidth={1.5} />
         <InlineRow gap="1">
           <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
           <CustomText

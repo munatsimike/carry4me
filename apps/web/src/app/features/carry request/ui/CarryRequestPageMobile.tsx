@@ -34,7 +34,7 @@ export function MobileFirstHeader({
           >
             {trip.origin.country}
           </CustomText>
-          <MoveRight className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
+          <MoveRight className="h-4 w-4 text-neutral-800" strokeWidth={1.5} />
           <SvgIcon size="xs" Icon={META_ICONS.zimFlag} />
           <CustomText
             textSize="sm"
@@ -130,8 +130,10 @@ export function TripDetailsMobile({
         <CustomText textVariant="secondary" textSize="sm">
           Route
         </CustomText>
-        <CustomText textVariant="primary" textSize="sm">
-          {trip.origin.country} → {trip.destination.country}
+        <CustomText textVariant="primary" textSize="sm" className="flex gap-2 items-center">
+          {trip.origin.country}{" "}
+          <MoveRight className="text-neutral-800 h-4 w-4" strokeWidth={1.5} />{" "}
+          {trip.destination.country}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
@@ -168,8 +170,10 @@ export function ParcelDetailsMobile({
         <CustomText textVariant="secondary" textSize="sm">
           Route
         </CustomText>
-        <CustomText textVariant="primary" textSize="sm">
-          {parcel.origin.country} → {parcel.destination.country}
+        <CustomText as="span" className="flex gap-2 items-center" textVariant="primary" textSize="sm">
+          {parcel.origin.country}{" "}
+          <MoveRight className="text-neutral-800 h-4 w-4" strokeWidth={1.5} />{" "}
+          {parcel.destination.country}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">

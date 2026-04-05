@@ -737,7 +737,7 @@ function TripDetails({
           >
             {trip.origin.country}{" "}
           </CustomText>
-          <MoveRight className="text-neutral-500 h-5 w-4" strokeWidth={1.5} />
+          <MoveRight className="text-neutral-800 h-5 w-4" strokeWidth={1.5} />
           <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
           <CustomText
             textVariant="primary"
@@ -792,7 +792,7 @@ function ParcelDetails({
           >
             {parcel.origin.country}
           </CustomText>
-          <MoveRight className="text-neutral-600 h-5 w-4" strokeWidth={1.5} />
+          <MoveRight className="text-neutral-800 h-5 w-4" strokeWidth={1.5} />
           <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
           <CustomText
             textVariant="primary"
