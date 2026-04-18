@@ -98,7 +98,7 @@ function SignInBtn() {
         }
         className="
           whitespace-nowrap
-          text-sm font-medium text-gray-700
+          text-md font-medium text-gray-700
           px-2 py-1
           rounded-full
           transition-colors duration-200
@@ -114,8 +114,8 @@ function SignInBtn() {
           whitespace-nowrap
             flex items-center gap-1
             rounded-full bg-blue-500 text-white
-            px-3 sm:px-4 py-1.5 sm:py-1.5
-            text-sm font-medium
+            px-4 sm:px-4 py-1.5 sm:py-1.5
+            text-md font-medium
             transition-all duration-200
             font-heading
             hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-md

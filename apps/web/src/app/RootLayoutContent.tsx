@@ -84,10 +84,10 @@ function Header({
   const isMobile = useMediaQuery();
 
   return (
-    <header className="sticky top-0 z-50 bg-white">
+    <header className="sticky top-0 z-50 bg-white shadow-sm border border-slate-100">
       <div
         className={cn(
-          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-white sm:px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between border border-slate-100",
+          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-white sm:px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between ",
           pathname === "/" ? "pl-3 pr-4" : "pr-4",
         )}
       >
