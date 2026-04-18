@@ -44,15 +44,16 @@ export function Button({
     xsm: "h-8 px-3 " + cornerRadiusClass,
     sm: "h-9 px-3 " + cornerRadiusClass,
     md: "h-10 px-4 " + cornerRadiusClass,
-    lg: "h-14 px-4 " + cornerRadiusClass,
-    xl: "h-[85px] max-w-sm px-3 rounded-xl",
-    xxl: "w-full min-h-[85px] sm:h-[90px] px-3 rounded-2xl",
+    lg: "h-14 px-6 " + cornerRadiusClass,
+    xl: "h-[85px] w-full md:flex-1 pr-3 rounded-full",
+    xxl: "w-full min-h-[85px] sm:h-[90px] rounded-2xl",
   };
 
   const variants: Record<ButtonVariant, string> = {
-    primary: "bg-primary-500 text-white font-heading hover:bg-primary-600 hover:ring-2 hover:ring-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2",
+    primary:
+      "bg-primary-500 text-white font-heading hover:bg-primary-600 hover:ring-2 hover:ring-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2",
     secondary:
-    "bg-secondary-100 hover:bg-secondary-200 hover:ring-2 hover:ring-indigo-200",
+      "bg-secondary-100 hover:bg-secondary-200 hover:ring-2 hover:ring-indigo-200",
     ghost: "bg-transparent hover:bg-tertiary-50",
     tonal:
       "bg-secondary-200 hover:bg-primary-500 text-primary border border-secondary-400 hover:text-white",

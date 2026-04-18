@@ -57,7 +57,7 @@ export default function DesktopNavigationMenu({
 
 function NavLinks({ children }: { children: React.ReactNode }) {
   return (
-    <nav className="relative flex sm:items-center  px-2 sm:px-5 sm:py-1 sm:flex-row gap-5 text-sm sm:justify-center">
+    <nav className="relative flex sm:items-center px-2 sm:px-5 sm:py-1 sm:flex-row gap-5 text-sm sm:justify-center">
       {children}
     </nav>
   );
@@ -407,13 +407,15 @@ export function MobileToolBar({
   return (
     <>
       <div className="relative flex block sm:hidden items-center justify-between w-full py-1 h-8">
-        {showBackButton && (
+        {showBackButton ? (
           <button
             onClick={() => handleBack()}
             className="rounded-full bg-white p-1 text-neutral-600 border border-neutral-200"
           >
             <ArrowLeft size={18} />
           </button>
+        ) : (
+          <span></span>
         )}
         <CustomText
           as="h1"
@@ -533,7 +535,7 @@ function toHeading(path: string) {
       return "My trips";
     case "/my/parcels":
       return "My Parcels";
-       case "/favourites":
+    case "/favourites":
       return "My Favourites";
     case "/requests":
       return "Your requests";

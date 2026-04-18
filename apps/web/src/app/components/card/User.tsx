@@ -25,7 +25,7 @@ export default function User({ userName, tag, avatar }: UserProps) {
 
         <CustomText
           textVariant="secondary"
-          textSize="xsm"
+          textSize="xs"
           className="leading-none"
         >
           {tag}

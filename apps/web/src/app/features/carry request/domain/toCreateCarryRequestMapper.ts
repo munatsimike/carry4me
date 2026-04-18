@@ -38,8 +38,8 @@ export function toCreateCarryRequestMapper(
       goods_category: parcel.goodsCategory,
     },
     tripSnapshot: {
-      travelerName: trip.user.fullName,
-      departureDate: trip.departDate,
+      traveler_name: trip.user.fullName,
+      departure_date: trip.departDate,
       origin: {
         country: trip.route.originCountry,
         city: trip.route.originCity,

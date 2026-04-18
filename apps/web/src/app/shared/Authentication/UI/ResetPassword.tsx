@@ -105,7 +105,7 @@ export default function ResetPassword() {
           </form>
 
           <div className="mt-2 text-center">
-            <CustomText textVariant="secondary" textSize="xsm">
+            <CustomText textVariant="secondary" textSize="xs">
               Remembered your password?{" "}
               <button
                 onClick={() =>

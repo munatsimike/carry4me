@@ -1,6 +1,7 @@
+import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import type { CreateTripListing } from "../../trips/domain/CreateTrip";
 import { TRIPSTATUSES } from "../../trips/domain/Trip";
-import type { TripFormFields } from "../../trips/ui/CreateTripModal";
+
 
 export default function toCreateTrip(
   formValues: TripFormFields,

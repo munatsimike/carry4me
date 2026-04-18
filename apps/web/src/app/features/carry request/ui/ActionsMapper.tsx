@@ -159,7 +159,7 @@ function requestRejected(viewerRole: Role): UIActions {
   };
 }
 
-function requestCanceled(viewerRole: Role): UIActions {
+/**function requestCanceled(viewerRole: Role): UIActions {
   const label = viewerRole === ROLES.SENDER ? "Browse trips" : "Browse parcels";
   return {
     primary: {
@@ -169,7 +169,7 @@ function requestCanceled(viewerRole: Role): UIActions {
       key: viewerRole === ROLES.SENDER ? "BROWSE_TRIPS" : "BROWSE_PARCELS",
     },
   };
-}
+}**/
 
 function paidOut(): UIActions {
   return {

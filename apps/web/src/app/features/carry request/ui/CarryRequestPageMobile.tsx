@@ -14,7 +14,6 @@ export type MobileSection = "details" | "timeline";
 
 export function MobileFirstHeader({
   trip,
-  parcel,
   totalPrice,
   toggleSection,
 }: {

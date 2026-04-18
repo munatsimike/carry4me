@@ -9,7 +9,6 @@ export function HeroSection() {
   const subHeading =
     "Share your parcel or trip and match with a traveler or sender. Travelers earn, senders save.";
 
-
   const container = {
     hidden: {},
     show: {
@@ -33,9 +32,13 @@ export function HeroSection() {
   };
 
   return (
-    <DefualtContianer className=" flex flex-col items-center mt-16">
+    <DefualtContianer className=" flex flex-col items-center mt-6 sm:mt-14">
       <motion.div variants={container} initial="hidden" animate="show">
-        <Heading textSize="display" textVariant="primary" className="leading-tight">
+        <Heading
+          textSize="display"
+          textVariant="primary"
+          className="leading-tight pb-2 sm:pb-0 font-medium"
+        >
           {String(heading)
             .split(" ")
             .map((w, i) => (

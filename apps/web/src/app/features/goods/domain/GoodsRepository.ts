@@ -6,7 +6,6 @@ import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 
 export interface GoodsRepository {
   list(): Promise<RepoResponse<GoodsCategory[]>>;
-  getBySlug(slug: string): Promise<GoodsCategory | null>;
   saveGoods(input: UserGoods, isTrip: boolean): Promise<RepoResponse<string>>;
   editListingGoods(type: ListingType, editGoods: EditGoodsDto[]): Promise<RepoResponse<string>>;
 }

@@ -104,7 +104,7 @@ export default function CarryRequestsPage() {
 
   const { openInfo, showSupabaseError } = useUniversalModal();
   const [isRequestSent, setisRequestSent] = useState(false);
-  const [isStateLoaded, setIsStateLoaded] = useState(false);
+
   const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -113,7 +113,7 @@ export default function CarryRequestsPage() {
     HandoverConfirmationState | undefined
   >(undefined);
 
-  const [loading, setLoading] = useState(false);
+ 
   const [emptyStateMessage, setEmptyState] = useState<EmptyStateConfig | null>(
     null,
   );
@@ -144,7 +144,7 @@ export default function CarryRequestsPage() {
   useEffect(() => {
     async function fetchRequest() {
       if (!user || !selectedTab) return;
-      setLoading(true);
+    
 
       const { result } = await namedCall(
         "carryRequest",
@@ -153,7 +153,7 @@ export default function CarryRequestsPage() {
 
       if (!result.success) {
         showSupabaseError(result.error);
-        setLoading(false);
+        
         return;
       }
 
@@ -164,7 +164,7 @@ export default function CarryRequestsPage() {
         setEmptyState(null);
         setCarryRequestList(result.data);
       }
-      setLoading(false);
+     
     }
 
     fetchRequest();
@@ -224,7 +224,7 @@ export default function CarryRequestsPage() {
   }, [displayList, selectedTab]);
 
   const [inputValue, setValue] = useState<string>("");
-  const heightClass = "my-0";
+
 
   const checkTravelersWeight = async (carryRequest: CarryRequest) => {
     const { result } = await namedCall(
@@ -380,7 +380,7 @@ export default function CarryRequestsPage() {
   useEffect(() => {
     if (pendingHandoverRequest?.handoverState) {
       setHandoverState(pendingHandoverRequest.handoverState);
-      setIsStateLoaded(true);
+     
     }
   }, [pendingHandoverRequest]);
 
@@ -566,7 +566,6 @@ function RequestActions({
   setValue: (value: string) => void;
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
-
 }) {
   return (
     <div className="flex flex-col sm:flex-row items-start justify-end gap-4 sm:gap-4">
@@ -770,7 +769,7 @@ function TripDetails({
 
 function ParcelDetails({
   parcel,
-  viewerRole,
+
 }: {
   parcel: ParcelSnapshot;
   viewerRole: Role;
@@ -887,7 +886,7 @@ type HeaderProps = {
   status: CarryRequestStatus;
 };
 
-function Header({ title, description, requestId, status }: HeaderProps) {
+function Header({ title, description, status }: HeaderProps) {
   return (
     <SpaceBetweenRow>
       <CurrentStatus title={title} description={description} status={status} />

@@ -23,9 +23,7 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     return { error: null, data };
   }
 
-  getBySlug(slug: string): Promise<GoodsCategory | null> {
-    throw new Error("Method not implemented.");
-  }
+
 
   // what goods categories what senders are sending or what travelers are willing to carry
   async saveGoods(

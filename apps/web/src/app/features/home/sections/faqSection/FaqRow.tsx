@@ -10,7 +10,7 @@ type FaqRowProps = {
   onToggle: () => void;
 };
 
-export default function FaqRow({ item, isOpen, onToggle }: FaqRowProps) {
+export default function FaqRow({ item, isOpen}: FaqRowProps) {
   const variant = item.tag ? tagToVariant[item.tag] : DEFAULT_VARIANT;
   return (
 

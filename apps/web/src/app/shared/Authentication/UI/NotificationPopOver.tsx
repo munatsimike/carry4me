@@ -92,7 +92,7 @@ export default function NotificationPopover({
               )}
             >
               <CustomText textVariant="primary">{item.title}</CustomText>
-              <CustomText textSize="xsm" textVariant="secondary">
+              <CustomText textSize="xs" textVariant="secondary">
                 {item.body}
               </CustomText>
               <p className="text-[12px] text-neutral-400 mt-0.5 text-right font-extralight">

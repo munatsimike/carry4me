@@ -14,7 +14,7 @@ const containerVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      staggerChildren: 0.10,
+      staggerChildren: 0.1,
       delayChildren: 0.3,
     },
   },
@@ -27,19 +27,21 @@ const itemVariants = {
 
 export default function ActionButtons() {
   const size = "xl";
-  const titleSize = "md";
-  const subtitleSize = "xsm";
+  const titleSize = "lg";
+  const subtitleSize = "xs";
+
   return (
     <motion.section
-      className="flex flex-col items-center md:flex-row gap-8 m-24"
+      className="flex w-full flex-col md:flex-row md:justify-center gap-5 sm:gap-7 py-6 sm:p-20 md:max-w-4xl"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {/* Browse Parcels */}
-      <motion.div className="w-full" variants={itemVariants}>
-        <Link to={"/parcels"}>
+      <motion.div variants={itemVariants} className="w-full">
+        <Link to={"/parcels"} className="w-full">
           <Button
+            className="w-full"
             subtitle={
               <CustomText
                 textVariant="onDark"
@@ -54,7 +56,7 @@ export default function ActionButtons() {
             size={size}
             leadingIcon={
               <CircleBadge size={size} bgColor="transparent">
-                <SvgIcon size="xl" Icon={ParcelIcon} color="onDark" />
+                <SvgIcon size="xxl" Icon={ParcelIcon} color="onDark" />
               </CircleBadge>
             }
             trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} color="grey" />}
@@ -72,9 +74,10 @@ export default function ActionButtons() {
       </motion.div>
 
       {/* Browse Trips */}
-      <motion.div variants={itemVariants}>
-        <Link to={"/travelers"}>
+      <motion.div variants={itemVariants} className="w-full">
+        <Link to={"/travelers"} className="w-full">
           <Button
+            className="w-full"
             subtitle={
               <CustomText
                 className="whitespace-nowrap"
@@ -86,10 +89,10 @@ export default function ActionButtons() {
               </CustomText>
             }
             variant="secondary"
-            size="xl"
+            size={size}
             leadingIcon={
               <CircleBadge size={size} bgColor="transparent">
-                <SvgIcon size="xl" Icon={TravelerIcon} color="primary" />
+                <SvgIcon size="xxl" Icon={TravelerIcon} color="primary" />
               </CircleBadge>
             }
             trailingIcon={

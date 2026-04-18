@@ -7,7 +7,7 @@ export default function Greeting({ user }: { user: string | null }) {
   const firstName = user ? user.split(" ")[0] : "";
 
   return (
-    <CustomText as="h1" textVariant="primary" textSize="xxl" className="font-medium leading-tight">
+    <CustomText as="h1" textVariant="primary" textSize="xxl" className="font-medium leading-tight py-2 sm:py-0">
       {greeting} {firstName && `${firstName}!`}
     </CustomText>
   );

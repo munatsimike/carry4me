@@ -57,6 +57,7 @@ export function AuthModal() {
     if (!state.isOpen) {
       reset();
       setError(null);
+      console.log(showPassword)
     }
   }, [state.isOpen, reset]);
 
@@ -178,10 +179,10 @@ export function AuthModal() {
                     </button>
                   </Link>
                 </span>
-                <CustomText as="p" textSize="xsm">
+                <CustomText as="p" textSize="xs">
                   {"or"}
                 </CustomText>
-                <CustomText as="p" textSize="xsm" className="whitespace-nowrap">
+                <CustomText as="p" textSize="xs" className="whitespace-nowrap">
                   {"Continue with"}
                 </CustomText>
               </span>
@@ -197,7 +198,7 @@ export function AuthModal() {
 function OtherWaysToSignIn() {
   const iconTextGap = "2";
   const iconSize = "sm";
-  const lableSize = "xsm";
+  const lableSize = "xs";
   const { state } = useAuthModal();
 
   const redirectTo = state.redirectTo ?? window.location.origin;

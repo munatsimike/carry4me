@@ -5,7 +5,7 @@ import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
 export class SubabaseDashboardRepository implements DashboardDataRepository {
   async getDashboardStats(userId: string): Promise<RepoResponse<RequestStats>> {
-    const { data, status, error } = await supabase.rpc(
+    const { data, error } = await supabase.rpc(
       "get_dashboard_overview",
       {
         p_user_id: userId,
@@ -13,7 +13,7 @@ export class SubabaseDashboardRepository implements DashboardDataRepository {
     );
 
     if (error) {
-      return { data: null, status: status, error: error };
+      return { data: null,  error: error };
     }
 
     return {
@@ -30,7 +30,6 @@ export class SubabaseDashboardRepository implements DashboardDataRepository {
         },
       },
       error: null,
-      status: null,
     };
   }
 }

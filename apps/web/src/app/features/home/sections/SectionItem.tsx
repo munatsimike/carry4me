@@ -12,7 +12,7 @@ export default function SectionItem({
   className = "pl-[52px]",
 }: sectionItemProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col sm:gap-2 pb-4">
       <span className="flex items-center gap-4">
         {icon}
         {label}

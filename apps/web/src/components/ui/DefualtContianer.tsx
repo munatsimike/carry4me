@@ -18,7 +18,7 @@ export default function DefaultContainer({
     <motion.section layout className={`${outerClassName} py-2 sm:py-3`}>
       <div
         className={cn(
-          "mx-auto w-full max-w-container px-4 sm:px-5 lg:px-6",
+          "mx-auto w-full max-w-container py-4 px-4 sm:px-5 lg:px-6",
           center && "flex flex-col items-center",
           className,
         )}

@@ -2,7 +2,6 @@ import type { AuthRepository } from "../Authentication/domain/AuthRepository";
 import type { RepoResponse } from "../domain/RepoResponse";
 import type {
   AppUser,
-  LoginResult,
   UserProfile,
 } from "../Authentication/domain/authTypes";
 import { supabase } from "@/app/shared/supabase/client";

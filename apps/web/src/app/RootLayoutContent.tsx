@@ -13,13 +13,11 @@ import { cn } from "./lib/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUI } from "./shared/Authentication/UI/hooks/useUI";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
-const HIDE_BOTTOM_NAV = ["/create-trip", "/create-parcel"];
 
-export default function AppLayout() {
+export default function RootLayoutContent() {
   const { loading, user, profile } = useAuth();
   const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const showBottomNav = !HIDE_BOTTOM_NAV.includes(location.pathname);
   const { showBottomNavBar } = useUI();
   const isAuthed = !!user;
   if (loading) {
@@ -45,24 +43,27 @@ export default function AppLayout() {
         profile={profile}
         setIsSearchOpen={() => setIsSearchOpen(true)}
       />
-      <main className="min-h-screen flex flex-col">
+
+      <main className="min-h-screen flex flex-col pb-16 sm:pb-0">
         <Outlet context={{ isSearchOpen, setIsSearchOpen }} />
       </main>
 
       <AuthModal />
+
       <AnimatePresence>
-        {(showBottomNav && showBottomNavBar) && (
+        {showBottomNavBar && (
           <motion.div
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="fixed bottom-0 left-0 right-0 border-t bg-white z-50 block sm:hidden py-2 shadow-sm backdrop-blur-md"
+            className="fixed bottom-0 left-0 right-0 z-50 block border-t bg-white py-2 shadow-sm backdrop-blur-md sm:hidden"
           >
-            {<BottomNavBar isAuthed={isAuthed} />}
+            <BottomNavBar isAuthed={isAuthed} />
           </motion.div>
         )}
       </AnimatePresence>
+
       <Footer isAuthed={isAuthed} />
     </div>
   );
@@ -86,7 +87,7 @@ function Header({
     <header className="sticky top-0 z-50 bg-white">
       <div
         className={cn(
-          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-white border-b border-white/20 sm:bg-white  sm:px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between border-b border-r border-l border-neutral-100",
+          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-white sm:px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between border border-slate-100",
           pathname === "/" ? "pl-3 pr-4" : "pr-4",
         )}
       >

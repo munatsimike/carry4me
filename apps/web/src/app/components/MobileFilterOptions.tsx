@@ -1,4 +1,4 @@
-import { Funnel, Plus } from "lucide-react";
+import { Funnel } from "lucide-react";
 import { cn } from "../lib/cn";
 
 type MobileFilterOptionsProps = {

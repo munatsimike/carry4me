@@ -326,7 +326,7 @@ function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
               </CustomText>
               <CustomText
                 textVariant={`${item.count > 0 ? "secondary" : "helperText"}`}
-                textSize="xsm"
+                textSize="xs"
               >{`(${item.count})`}</CustomText>
             </span>
           </Link>

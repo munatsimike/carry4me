@@ -1,5 +1,5 @@
 import type { CarryRequestRepository } from "../domain/CarryRequestRepository";
-import type { CarryRequestStatus } from "../domain/CreateCarryRequest";
+
 
 export class UpdateCarryRequestUseCase {
   repo: CarryRequestRepository;
@@ -7,7 +7,7 @@ export class UpdateCarryRequestUseCase {
     this.repo = repo;
   }
 
-  async execute(requestId: string, status: CarryRequestStatus): Promise<void> {
-    return this.repo.updateCarryRequestStatus(requestId, status);
-  }
+// / **async execute(requestId: string, status: CarryRequestStatus): Promise<string> {
+    // return this.repo.updateCarryRequestStatus(requestId, status);
+  // }**/
 }

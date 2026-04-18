@@ -1,6 +1,6 @@
 import type { FieldNamesMarkedBoolean } from "react-hook-form";
-import type { TripFormFields } from "../ui/CreateTripModal";
 import type { TripDto } from "./TripDto";
+import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 
 export function toTripDtoMapper(
   tripId: string,

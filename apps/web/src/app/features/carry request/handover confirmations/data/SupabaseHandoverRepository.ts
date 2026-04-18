@@ -33,8 +33,6 @@ export class SupabaseHandoverRepository implements HandoverConfirmationRepositor
       senderConfirmed,
       travelerConfirmed,
       bothConfirmed: senderConfirmed && travelerConfirmed,
-      senderConfirmedAt,
-      travelerConfirmedAt,
     };
   }
 }

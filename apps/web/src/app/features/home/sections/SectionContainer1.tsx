@@ -8,7 +8,7 @@ export default function SectionContainer({
 }: ContainerProps) {
   return (
     <section
-      className={`grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-x-20 lg:gap-x-32 ${className}`}
+      className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-x-20 lg:gap-x-32 ${className}`}
     >
       {children}
     </section>

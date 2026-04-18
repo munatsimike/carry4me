@@ -44,7 +44,7 @@ export default function ScrollChipRow({
                 <CustomText
                   as="span"
                   textVariant="tonal"
-                  textSize="xsm"
+                  textSize="xs"
                   className="leading-tight font-light"
                 >
                   {t}

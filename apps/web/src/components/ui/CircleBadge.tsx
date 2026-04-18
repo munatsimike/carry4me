@@ -26,13 +26,13 @@ export function CircleBadge({
   };
 
   const bgColors: Record<CirleBgColor, string> = {
-    success: "bg-trip-50",
+    success: "bg-success-100",
     secondary: "bg-secondary-100",
     neutral: "bg-neutral-100",
     primary: "bg-primary-100",
     onDark: "bg-white",
     transparent: "bg-transparent",
-    tonal:"bg-gray-100"
+    tonal:"bg-slate-200"
   };
   return (
     <span

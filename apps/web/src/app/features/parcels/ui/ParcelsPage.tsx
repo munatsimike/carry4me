@@ -294,7 +294,13 @@ export default function ParcelsPage() {
             toggleLike={handleLikeUpdate}
           />
         )}
-        {displayedParcels.length === 0 && dataloaded && (
+          {hasFilter && displayedParcels.length === 0 && (
+          <EmptyState
+            title="No matching parcels"
+            description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
+          />
+        )}
+        {displayedParcels.length === 0 && dataloaded && !hasFilter &&(
           <EmptyState
             title="No parcels available"
             description="No parcels found. Post your parcels to start receiving trip requests from travelers."
@@ -313,12 +319,7 @@ export default function ParcelsPage() {
             }
           />
         )}
-        {hasFilter && displayedParcels.length === 0 && (
-          <EmptyState
-            title="No matching parcels"
-            description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
-          />
-        )}
+      
         <Link to="/create-parcel?mode=create">
           <FAB isAuthed={!!user?.id} />
         </Link>{" "}

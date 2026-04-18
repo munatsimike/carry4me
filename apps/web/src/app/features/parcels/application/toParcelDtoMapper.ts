@@ -1,6 +1,7 @@
 import type { FieldNamesMarkedBoolean } from "react-hook-form";
-import type { ParcelFormFields } from "../ui/CreateParcelModal";
+
 import type { ParcelDto } from "./ParcelDto";
+import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useParcelForm";
 
 export function toParcelDtoMapper(
   parcelId: string,

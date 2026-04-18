@@ -52,7 +52,7 @@ export default function Text({
     xl: "text-2xl", // 24px
     xxl: "text-[26px]",
     xxxl: "text-3xl", // 30px (primary section headers)
-    display: "text-4xl",
+    display: "text-3xl sm:text-4xl",
   };
 
   const Component = as ?? "h1";

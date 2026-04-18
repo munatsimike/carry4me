@@ -100,7 +100,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
 
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] sm:w-auto">
+      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] sm:w-auto">
         <AnimatePresence>
           {toastItem && (
             <motion.div

@@ -9,8 +9,7 @@ export class GetDashboardDataUseCase {
     this.dashboardRepo = dashboardRepo;
   }
   async execute(userId: string): Promise<Result<DashboardData>> {
-    const { data, status, error } =
-      await this.dashboardRepo.getDashboardStats(userId);
+    const { data, error } = await this.dashboardRepo.getDashboardStats(userId);
     if (data) {
       const stats = data.stats;
       const href = "/requests?tab=ongoing";
@@ -75,6 +74,14 @@ export class GetDashboardDataUseCase {
       };
     }
 
-    return { success: false, error: error, status: status };
+    return {
+      success: false,
+      error: {
+        message: error?.message ? error.message : "Unexpected error has occurred",
+        code: error?.code ? error.code : "",
+        status: error?.status
+      },
+      status: null,
+    };
   }
 }

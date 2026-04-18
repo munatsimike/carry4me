@@ -43,7 +43,7 @@ export default function HowItWorks({ steps }: StepsPros) {
         {/* Steps grid */}
         <motion.section
           variants={howItWorksContainer}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-5 "
         >
           {steps.map((step, index) => (
             <motion.div key={index} variants={howItWorksItem}>

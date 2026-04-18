@@ -1,6 +1,5 @@
-import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
-import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import type { FormMode, GoodsItem } from "@/types/Ui";
+
+import type { GoodsItem } from "@/types/Ui";
 import { useState } from "react";
 import {
   useFieldArray,
