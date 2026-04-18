@@ -236,7 +236,6 @@ export default function TravelersPage() {
     />
   );
 
-
   return (
     <>
       <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4 py-1">
@@ -248,6 +247,7 @@ export default function TravelersPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="py-2"
             >
               <Toolbar
                 hasActiveFilters={hasFilter}
@@ -321,11 +321,10 @@ export default function TravelersPage() {
             description="Try adjusting your search or changing filters. Clear filters or search to see all travelers."
           />
         )}
-   
-          <Link to="/create-trip?mode=create">
-            <FAB isAuthed={!!user?.id}/>
-          </Link>
-      
+
+        <Link to="/create-trip?mode=create">
+          <FAB isAuthed={!!user?.id} />
+        </Link>
       </DefaultContainer>
 
       <ListingSelectionModal
