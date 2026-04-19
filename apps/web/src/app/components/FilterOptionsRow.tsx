@@ -61,6 +61,7 @@ function FilterChip({
       <CustomText
         className="font-semi-medium whitespace-nowrap"
         textVariant="primary"
+        textSize="xs"
       >
         {label}
       </CustomText>
@@ -82,7 +83,7 @@ function Popover({ open, children }: PopoverProps) {
   if (!open) return null;
 
   return (
-   <div className="absolute left-0 bottom-full mb-2 sm:bottom-auto sm:top-full sm:mt-2 sm:mb-0 z-20 min-w-[280px] rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
+    <div className="absolute left-0 bottom-full mb-2 sm:bottom-auto sm:top-full sm:mt-2 sm:mb-0 z-20 min-w-[280px] rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
       {children}
     </div>
   );
@@ -146,7 +147,7 @@ export function FilterOptionsRow({
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 pb-2 items-start md:items-center">
-      <span className="text-md text-neutral-500 whitespace-nowrap">
+      <span className="text-sm text-neutral-500 whitespace-nowrap">
         Filter by
       </span>
 

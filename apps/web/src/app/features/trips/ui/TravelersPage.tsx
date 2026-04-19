@@ -238,7 +238,7 @@ export default function TravelersPage() {
 
   return (
     <>
-      <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4 py-1">
+      <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4">
         <AnimatePresence initial={false}>
           {isMobile && scrollDirection === "up" && (
             <motion.div

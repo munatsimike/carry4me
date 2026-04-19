@@ -87,13 +87,13 @@ function Header({
     <header className="sticky top-0 z-50 bg-white shadow-sm border border-slate-100">
       <div
         className={cn(
-          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-white sm:px-4 pt-3 pb-3 flex items-center gap-3 sm:flex-row sm:items-center justify-between ",
+          "relative shadow-sm sm:shadow-none mx-auto max-w-container bg-white sm:px-4 py-2 flex items-center gap-3 sm:flex-row sm:items-center justify-between ",
           pathname === "/" ? "pl-3 pr-4" : "pr-4",
         )}
       >
         <Link to={isAuthed ? "/dashboard" : "/"} className="font-semibold">
           {!isMobile && (
-            <img src="/logo.svg" alt="Carry4Me" className="h-14 w-auto" />
+            <img src="/logo.svg" alt="Carry4Me" className="h-12 w-auto" />
           )}
         </Link>
 
