@@ -46,7 +46,7 @@ export function Button({
     md: "h-10 px-4 " + cornerRadiusClass,
     lg: "h-14 px-6 " + cornerRadiusClass,
     xl: "h-[85px] w-full md:flex-1 pr-4 rounded-full",
-    xxl: "w-full min-h-[85px] sm:h-[90px] rounded-2xl px-4",
+    xxl: "w-[230px] sm:w-full h-[90px] rounded-2xl px-4",
   };
 
   const variants: Record<ButtonVariant, string> = {
