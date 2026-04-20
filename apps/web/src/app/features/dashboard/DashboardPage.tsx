@@ -342,15 +342,15 @@ function StatsSection({ statsList }: StatsProps) {
         {"Your Stats"}
       </CustomText>
       <div className="min-h-[85px] min-w-[200px] mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {statsList.map((item) => (
             <Link key={item.itemName} to={item.link ?? ""}>
               <Card
                 enableHover={false}
                 key={item.itemName}
-                className="flex flex-col items-center gap-3 hover:bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
+                className="flex min-h-[110px] flex-col items-center justify-center rounded-2xl border border-neutral-200 bg-white px-3 py-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
               >
-                <CustomText className="whitespace-nowrap">
+                <CustomText className="sm:whitespace-nowrap">
                   {item.itemName}
                 </CustomText>
                 <CustomText

@@ -29,7 +29,7 @@ import CustomText from "./components/ui/CustomText";
 import { cn } from "./app/lib/cn";
 
 const iconStyle = "h-5 w-5 stroke-current  sm:hidden";
-const strokeWidth = 1.5;
+const strokeWidth = 2;
 const bellClass = "h-5 w-5 text-neutral-500 md:h-6 w-6 text-neutral-600";
 
 type ProfileProps = {
@@ -112,10 +112,10 @@ function SignInBtn() {
         <button
           className="
           whitespace-nowrap
-            flex items-center gap-1
+            flex items-center gap-2
             rounded-full bg-blue-500 text-white
-            px-4 sm:px-4 py-1.5 sm:py-1.5
-            text-md font-medium
+            px-4 py-1.5
+            text-sm font-medium
             transition-all duration-200
             font-heading
             hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-md
@@ -419,7 +419,7 @@ export function MobileToolBar({
         )}
         <CustomText
           as="h1"
-          textSize="md"
+          textSize="lg"
           textVariant="primary"
           className="font-semibold whitespace-nowrap"
         >

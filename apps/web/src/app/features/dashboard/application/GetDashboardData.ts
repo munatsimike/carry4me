@@ -23,7 +23,7 @@ export class GetDashboardDataUseCase {
               link: href,
             },
             {
-              itemName: "Deliveries completed",
+              itemName: "Deliveries Completed",
               count: stats.delivered,
               link: "/requests?tab=completed",
             },
@@ -33,7 +33,7 @@ export class GetDashboardDataUseCase {
               link: "/my/trips",
             },
             {
-              itemName: "Posted  Parcel",
+              itemName: "Posted  Parcels",
               count: stats.postedParcels,
               link: "/my/parcels",
             },
@@ -46,13 +46,13 @@ export class GetDashboardDataUseCase {
               link: href,
             },
             {
-              itemName: "Awaiting payment",
+              itemName: "Awaiting Payment",
               status: "Pending",
               count: stats.awaitingPayment,
               link: href,
             },
             {
-              itemName: "Awaiting handover",
+              itemName: "Awaiting Handover",
               status: "Pending",
               count: stats.awaitingHandover,
               link: href,
