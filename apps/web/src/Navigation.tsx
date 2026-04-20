@@ -115,7 +115,7 @@ function SignInBtn() {
             flex items-center gap-2
             rounded-full bg-blue-500 text-white
             px-4 py-1.5
-            text-sm font-medium
+            text-md font-medium
             transition-all duration-200
             font-heading
             hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-md

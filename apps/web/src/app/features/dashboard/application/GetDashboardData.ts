@@ -23,7 +23,7 @@ export class GetDashboardDataUseCase {
               link: href,
             },
             {
-              itemName: "Deliveries Completed",
+              itemName: "Deliveries",
               count: stats.delivered,
               link: "/requests?tab=completed",
             },

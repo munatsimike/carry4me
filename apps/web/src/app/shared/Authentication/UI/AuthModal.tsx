@@ -58,6 +58,7 @@ export function AuthModal() {
       reset();
       setError(null);
     }
+    console.log(showPassword)
   }, [state.isOpen, reset]);
 
   useEffect(() => {
