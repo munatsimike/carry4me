@@ -6,19 +6,28 @@ import Benefits from "./sections/benefits/Benefits";
 import FaqSection from "./sections/faqSection/FaqSection";
 import { useEffect } from "react";
 import { useToast } from "@/app/components/Toast";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomModal from "@/app/components/CustomModal";
 import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const { openAuthModal } = useAuthModal();
   const isPassReset = searchParams.get("reset") === "success";
   const isSignup = searchParams.get("signup") === "success";
+   const navigate = useNavigate();
   const isResetLink = searchParams.get("reset-sent")?.trim() === "success";
+    const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!user && !loading) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("redirectToast");
