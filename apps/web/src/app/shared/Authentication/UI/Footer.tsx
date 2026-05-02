@@ -1,4 +1,5 @@
 import { META_ICONS } from "@/app/icons/MetaIcon";
+import { cn } from "@/app/lib/cn";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { Link } from "react-router-dom";
 
@@ -53,6 +54,7 @@ export default function Footer({ isAuthed }: FooterProps) {
 }
 
 function Brand({ isAuthed }: { isAuthed: boolean }) {
+ 
   return (
     <div>
       <Link
@@ -62,12 +64,20 @@ function Brand({ isAuthed }: { isAuthed: boolean }) {
         <img src="/logo.svg" alt="Carry4Me" className="h-12 w-auto" />
       </Link>
 
-      <p className="mt-5 max-w-sm text-[15px] leading-8 text-slate-700">
+      <p
+        className={cn(
+          `mt-5 max-w-sm text-[15px] leading-8 text-slate-700`,
+        )}
+      >
         Send and receive items through trusted travelers. Fast, affordable, and
         community-powered.
       </p>
 
-      <p className="mt-5 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+      <p
+        className={cn(
+          `mt-4 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500"`,
+        )}
+      >
         Trusted connections • Smarter delivery • Community powered
       </p>
     </div>
@@ -81,7 +91,7 @@ function Product() {
         Product
       </h4>
 
-      <ul className="mt-5 space-y-3.5 text-[15px]">
+      <ul className="mt-4 space-y-2 text-[15px]">
         <li>
           <a
             href="/browse/trips"
@@ -118,7 +128,7 @@ function OurLocation() {
         Locations
       </h4>
 
-      <ul className="mt-5 space-y-5">
+      <ul className="mt-5 space-y-4">
         <li>
           <span className="inline-flex items-center gap-1">
             <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
@@ -159,7 +169,7 @@ function OurLocation() {
         </li>
       </ul>
 
-      <p className="mt-6 text-xs font-medium text-slate-500">
+      <p className="mt-5 text-xs font-medium text-slate-500">
         Operating across Europe, UK & USA
       </p>
     </div>
@@ -173,7 +183,7 @@ function Company() {
         Company
       </h4>
 
-      <ul className="mt-5 space-y-3.5 text-[15px]">
+      <ul className="mt-5 space-y-2 text-[15px]">
         <li>
           <a
             href="/about"
@@ -210,7 +220,7 @@ function ContactSection() {
         Contact
       </h4>
 
-      <ul className="mt-5 space-y-4 text-[15px] text-slate-600">
+      <ul className="mt-5 space-y-2 text-[15px] text-slate-600">
         {/* Email */}
         <li className="flex items-start gap-3">
           <span className="mt-0.5">{/* Email Icon */}</span>

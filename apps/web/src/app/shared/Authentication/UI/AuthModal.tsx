@@ -58,7 +58,7 @@ export function AuthModal() {
       reset();
       setError(null);
     }
-    console.log(showPassword)
+    console.log(showPassword);
   }, [state.isOpen, reset]);
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export function AuthModal() {
 
             <div className="flex w-full max-w-xs flex-col gap-5">
               <FloatingInputField
-              className="max-w-sm"
+                className="max-w-sm"
                 hasValue={!!emailAddress}
                 isDirty={!!dirtyFields.email}
                 isTouched={!!touchedFields.email}
@@ -130,7 +130,7 @@ export function AuthModal() {
               />
 
               <FloatingInputField
-               className="max-w-sm"
+                className="max-w-sm"
                 hasValue={!!password}
                 isDirty={!!dirtyFields.password}
                 isTouched={!!touchedFields.password}
@@ -179,14 +179,8 @@ export function AuthModal() {
                     </button>
                   </Link>
                 </span>
-                <CustomText as="p" textSize="xs">
-                  {"or"}
-                </CustomText>
-                <CustomText as="p" textSize="xs" className="whitespace-nowrap">
-                  {"Continue with"}
-                </CustomText>
               </span>
-              <OtherWaysToSignIn />
+              
             </span>
           </div>
         </FormModal>
@@ -194,7 +188,7 @@ export function AuthModal() {
     </AnimatePresence>
   );
 }
-
+/**
 function OtherWaysToSignIn() {
   const iconTextGap = "2";
   const iconSize = "sm";
@@ -240,7 +234,7 @@ function OtherWaysToSignIn() {
     </div>
   );
 }
-
+ */
 function LoginButton({ isFormSubmitting }: { isFormSubmitting: boolean }) {
   return (
     <Button

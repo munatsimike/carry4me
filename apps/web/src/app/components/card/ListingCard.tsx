@@ -118,7 +118,7 @@ export function ListingCard<T extends Listing>({
         userName={`${listing.user.fullName?.charAt(0)}${"."} ${listing.user.fullName.substring(listing.user.fullName.indexOf(" "))}`}
         avatar={listing.user.avatarUrl}
       />
-      <LineDivider heightClass="my-3" />
+      <LineDivider heightClass="my-2" />
       <Stack>
         <RouteRow
           origin={listing.route.originCountry}
@@ -138,7 +138,7 @@ export function ListingCard<T extends Listing>({
           category={goodsCategories}
         />
       </Stack>
-      <LineDivider heightClass="my-3" />
+      <LineDivider heightClass="my-2" />
       <WeightAndPrice
         weightLabel={isTripListing ? "Available space" : "Parcel Weight"}
         weight={listing.weightKg}
@@ -146,7 +146,7 @@ export function ListingCard<T extends Listing>({
         price={listing.pricePerKg}
         location={"UK"}
       />
-      <LineDivider heightClass="my-3" />
+      <LineDivider heightClass="my-2" />
       <SendRequestBtn
         isActive={!isDisplayMode}
         buttonTextVariant="onDark"

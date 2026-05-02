@@ -24,8 +24,8 @@ export default function HomePage() {
     const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!user && !loading) {
-      navigate("/", { replace: true });
+    if (user && !loading) {
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
