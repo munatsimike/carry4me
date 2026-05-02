@@ -25,7 +25,7 @@ export default function FAB({
           exit={{ opacity: 0, y: 3, scale: 0.95 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
           onClick={onClick}
-          className="fixed bottom-20 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg ring-2 ring-indigo-200 transition active:scale-95 sm:hidden"
+          className="fixed bottom-20 right-4 z-50 flex h-15 w-15 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg ring-2 ring-indigo-200 transition active:scale-95 sm:hidden"
         >
           <Plus className="h-5 w-5" />
         </motion.button>
