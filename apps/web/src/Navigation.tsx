@@ -9,7 +9,6 @@ import {
   Package,
   Search,
   Plane,
-  UserPlus,
   ArrowLeft,
   HouseIcon,
 } from "lucide-react";
