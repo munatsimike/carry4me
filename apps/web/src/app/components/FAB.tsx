@@ -1,5 +1,5 @@
 import { Package, Plane, Plus } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence} from "framer-motion";
 import { useScrollDirection } from "../shared/Authentication/UI/hooks/useScrollDirection";
 import { useUI } from "../shared/Authentication/UI/hooks/useUI";
 

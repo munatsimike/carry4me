@@ -26,7 +26,7 @@ const likeVariants = {
     scale: [1, 1.25, 0.95, 1],
     transition: {
       duration: 0.4,
-      ease: "easeOut",
+      ease: [0.22, 1, 0.36, 1] as const,
     },
   },
 };
@@ -47,7 +47,6 @@ export default function HeartToggle({
       initial="initial"
       animate={isLiked ? "liked" : "initial"}
       whileTap={{ scale: 0.9 }}
-     
     >
       <motion.div
         variants={glowVariants}
