@@ -1,9 +1,6 @@
 import type { AuthRepository } from "../Authentication/domain/AuthRepository";
 import type { RepoResponse } from "../domain/RepoResponse";
-import type {
-  AppUser,
-  UserProfile,
-} from "../Authentication/domain/authTypes";
+import type { AppUser, UserProfile } from "../Authentication/domain/authTypes";
 import { supabase } from "@/app/shared/supabase/client";
 import type { UpdateProfileDto } from "../Authentication/application/updateProfileDTO";
 import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
@@ -14,6 +11,10 @@ const emptyRepoResult: RepoResponse<string> = {
 
   error: null,
 };
+
+const redirectUrl = import.meta.env.DEV
+  ? "http://localhost:5173/new-password"
+  : "https://www.carry4me.uk/new-password";
 
 export class SupabaseAuthRepository implements AuthRepository {
   async newPassword(newPassword: string): Promise<RepoResponse<string>> {
@@ -46,7 +47,7 @@ export class SupabaseAuthRepository implements AuthRepository {
 
   async resetPassword(email: string): Promise<RepoResponse<string>> {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:5173/new-password",
+      redirectTo: redirectUrl,
     });
 
     if (error) return { data: null, error };
