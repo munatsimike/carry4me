@@ -54,7 +54,6 @@ export default function Footer({ isAuthed }: FooterProps) {
 }
 
 function Brand({ isAuthed }: { isAuthed: boolean }) {
- 
   return (
     <div>
       <Link
@@ -64,11 +63,7 @@ function Brand({ isAuthed }: { isAuthed: boolean }) {
         <img src="/logo.svg" alt="Carry4Me" className="h-12 w-auto" />
       </Link>
 
-      <p
-        className={cn(
-          `mt-5 max-w-sm text-[15px] leading-8 text-slate-700`,
-        )}
-      >
+      <p className={cn(`mt-4 max-w-sm text-[15px] leading-6 text-slate-700`)}>
         Send and receive items through trusted travelers. Fast, affordable, and
         community-powered.
       </p>

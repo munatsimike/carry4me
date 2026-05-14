@@ -227,8 +227,6 @@ export default function TravelersPage() {
 
   const searchContent = (
     <Search
-      countries={["UK", "USA", "Ireland"]}
-      cities={["London", "Birmingham"]}
       setSearchCountry={setSearchCountry}
       setSearchCity={setSearchCity}
       setClearResults={() => setClearResults(false)}

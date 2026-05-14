@@ -6,9 +6,10 @@ import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect} from "react";
+import { useEffect } from "react";
 import ComboBox from "./ComboBox";
 import { cn } from "../lib/cn";
+import { useLocations } from "../hookes/useLocation";
 
 const searchScema = z.object({
   country: z.string().min(1, "Select country"),
@@ -18,8 +19,6 @@ const searchScema = z.object({
 type SearchFields = z.infer<typeof searchScema>;
 
 type SearchProps = {
-  countries: string[];
-  cities: string[];
   setSearchCountry: (s: string) => void;
   setSearchCity: (s: string) => void;
   setClearResults: () => void;
@@ -27,8 +26,6 @@ type SearchProps = {
 };
 
 export default function Search({
-  countries,
-  cities,
   setSearchCity,
   setSearchCountry,
   clearResults,
@@ -51,11 +48,13 @@ export default function Search({
       setSearchCountry("");
       setClearResults();
     }
-  }, [clearResults]);
+  }, [clearResults, reset, setSearchCity, setSearchCountry, setClearResults]);
 
   const countryValue = watch("country");
   const cityValue = watch("city");
-  
+
+  const { countryOptions, cityOptions } = useLocations(countryValue);
+
   const handleSearch = () => {
     if (!countryValue || !cityValue) return;
     setSearchCity(cityValue);
@@ -65,7 +64,8 @@ export default function Search({
   return (
     <form
       onSubmit={handleSubmit(handleSearch)}
-      className={cn("flex w-full sm:max-w-2xl lg:max-w-3xl flex-col gap-3 rounded-3xl sm:bg-primary-50 sm:border border-primary-100 pt-10 pb-3 px-3 sm:p-1 sm:px-1.5 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
+      className={cn(
+        "flex w-full sm:max-w-2xl lg:max-w-3xl flex-col gap-3 rounded-3xl sm:bg-primary-50 sm:border border-primary-100 pt-10 pb-3 px-3 sm:p-1 sm:px-1.5 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
       )}
     >
       <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">
@@ -75,10 +75,10 @@ export default function Search({
             control={control}
             render={({ field, fieldState }) => (
               <ComboBox
-               heightClass="py-1.5"
+                heightClass="py-1.5"
                 className="w-full rounded-xl"
                 placeholder="Select Country"
-                menuItems={countries}
+                menuItems={countryOptions}
                 value={field.value}
                 onValueChange={field.onChange}
                 isDirty={fieldState.isDirty}
@@ -96,10 +96,10 @@ export default function Search({
             control={control}
             render={({ field, fieldState }) => (
               <ComboBox
-              heightClass="py-1.5"
+                heightClass="py-1.5"
                 className="w-full rounded-xl"
                 placeholder="Select city"
-                menuItems={cities}
+                menuItems={cityOptions}
                 value={field.value}
                 onValueChange={field.onChange}
                 isDirty={fieldState.isDirty}

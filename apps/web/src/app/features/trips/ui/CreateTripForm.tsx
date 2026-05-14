@@ -117,7 +117,7 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
       {step === 1 ? (
         <div className="flex flex-col gap-5">
           <LineDivider heightClass={dividerHeight} />
-          <RouteFieldRow control={control} />
+          <RouteFieldRow control={control} watch={watch} />
           <LineDivider heightClass={dividerHeight} />
           <DateField<TripFormFields>
             error={errors.departureDate?.message}

@@ -157,8 +157,6 @@ export function MyFavouritesPage() {
   const scrollDirection = useScrollDirection();
   const searchContent = (
     <Search
-      countries={["UK", "USA"]}
-      cities={["London", "Florida"]}
       setSearchCity={setSearchCity}
       setSearchCountry={setSearchCountry}
       setClearResults={() => setClearResults(false)}

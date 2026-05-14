@@ -64,7 +64,7 @@ export function DateField<T extends FieldValues>({
                 disabled={disabled}
                 onClick={() => setOpen((v) => !v)}
                 className={[
-                  "w-[180px] h-10 px-3 rounded-lg border border-slate-300 text-left flex items-center justify-between gap-2",
+                  "w-[180px] h-10 px-3 rounded-xl border border-slate-300 text-left flex items-center justify-between gap-2",
                   "focus:outline-none focus:border-primary-500",
                   error
                     ? inputError

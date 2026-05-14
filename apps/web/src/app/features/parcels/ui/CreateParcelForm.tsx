@@ -137,7 +137,7 @@ export default function CreateParcelForm({
       {step === 1 ? (
         <div className="flex flex-col gap-5">
           <LineDivider heightClass={dividerHeight} />
-          <RouteFieldRow control={control} />
+          <RouteFieldRow control={control} watch={watch} />
 
           <LineDivider heightClass={dividerHeight} />
 

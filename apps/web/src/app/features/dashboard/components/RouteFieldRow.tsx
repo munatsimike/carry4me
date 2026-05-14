@@ -1,4 +1,5 @@
 import ComboBox from "@/app/components/ComboBox";
+import { useLocations } from "@/app/hookes/useLocation";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
@@ -8,14 +9,28 @@ import {
   type FieldValues,
   type Path,
 } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 
 type RouteRowProps<T extends FieldValues> = {
   control: Control<T>;
+  watch: (field: Path<T>) => string;
 };
 
 export default function RouteFieldRow<T extends FieldValues>({
   control,
+  watch,
 }: RouteRowProps<T>) {
+  const location = useLocation();
+  const originCountry = watch("originCountry" as Path<T>);
+  const { countryOptions, cityOptions } = useLocations(originCountry);
+  const searchParams = new URLSearchParams(location.search);
+  const destinationCountry = searchParams.get("destinationCountry") ?? "";
+  const destinationCity = searchParams.get("destinationCity") ?? "";
+  const destinationLabel =
+    destinationCountry || destinationCity
+      ? `${destinationCountry}${destinationCountry && destinationCity ? " / " : ""}${destinationCity}`
+      : "Zimbabwe";
+
   return (
     <div className="flex flex-col gap-5 ">
       <div>
@@ -35,7 +50,7 @@ export default function RouteFieldRow<T extends FieldValues>({
                 <ComboBox
                   className="rounded-lg"
                   placeholder="Select Country"
-                  menuItems={["USA","Ireland","UK"]}
+                  menuItems={countryOptions}
                   value={field.value}
                   onValueChange={field.onChange}
                   isDirty={fieldState.isDirty}
@@ -53,7 +68,7 @@ export default function RouteFieldRow<T extends FieldValues>({
                 <ComboBox
                   className="rounded-lg"
                   placeholder="Select City"
-                  menuItems={["London", "Birmingham", "Manchester"]}
+                  menuItems={cityOptions}
                   value={field.value}
                   onValueChange={field.onChange}
                   isDirty={fieldState.isDirty}
@@ -75,10 +90,10 @@ export default function RouteFieldRow<T extends FieldValues>({
           as="span"
           textSize="sm"
           textVariant="primary"
-          className="inline-flex rounded-lg bg-neutral-100 border border-slate-300 px-3 h-9 justify-center items-center max-w-[200px] gap-2"
+          className="inline-flex rounded-xl bg-neutral-100 border border-slate-300 px-3 h-9 justify-center items-center max-w-[200px] gap-2"
         >
           <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
-          {"Zimbabwe"}
+          {destinationLabel}
         </CustomText>
       </div>
     </div>

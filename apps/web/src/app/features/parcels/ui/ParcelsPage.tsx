@@ -225,8 +225,6 @@ export default function ParcelsPage() {
 
   const searchContent = (
     <Search
-      countries={["UK", "USA"]}
-      cities={["London", "Florida"]}
       setSearchCity={setSearchCity}
       setSearchCountry={setSearchCountry}
       setClearResults={() => setClearResults(false)}
@@ -294,13 +292,13 @@ export default function ParcelsPage() {
             toggleLike={handleLikeUpdate}
           />
         )}
-          {hasFilter && displayedParcels.length === 0 && (
+        {hasFilter && displayedParcels.length === 0 && (
           <EmptyState
             title="No matching parcels"
             description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
           />
         )}
-        {displayedParcels.length === 0 && dataloaded && !hasFilter &&(
+        {displayedParcels.length === 0 && dataloaded && !hasFilter && (
           <EmptyState
             title="No parcels available"
             description="No parcels found. Post your parcels to start receiving trip requests from travelers."
@@ -319,7 +317,6 @@ export default function ParcelsPage() {
             }
           />
         )}
-      
         <Link to="/create-parcel?mode=create">
           <FAB isAuthed={!!user?.id} />
         </Link>{" "}
