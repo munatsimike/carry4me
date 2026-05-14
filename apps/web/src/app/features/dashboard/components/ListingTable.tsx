@@ -11,7 +11,7 @@ const tableWrap = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.35, ease: "easeOut" },
+    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 
@@ -30,7 +30,7 @@ const rowVariants = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.22, ease: "easeOut" },
+    transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 
@@ -49,8 +49,8 @@ export function ListingTable<T extends Listing>({
   setListingPreview,
   setModalState,
 }: ListingTableProps<T>) {
-  const textStyle = "font-medium text-ink-primary py-4"
-  const headerStyle = `pl-4 ${textStyle}` ;
+  const textStyle = "font-medium text-ink-primary py-4";
+  const headerStyle = `pl-4 ${textStyle}`;
   const [hoverId, sethover] = useState<string | null>(null);
 
   return (
@@ -135,7 +135,8 @@ export function ListingTable<T extends Listing>({
 
               <TableTd>
                 <span className="iniline-flex rounded-full bg-success-50 px-2 py-1 text-success-500 border border-success-200 text-[12px]">
-                  {row.status.charAt(0).toUpperCase() + row.status.slice(1).toLowerCase()}
+                  {row.status.charAt(0).toUpperCase() +
+                    row.status.slice(1).toLowerCase()}
                 </span>
               </TableTd>
 
