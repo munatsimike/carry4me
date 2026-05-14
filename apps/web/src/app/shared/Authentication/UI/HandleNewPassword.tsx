@@ -70,23 +70,32 @@ export default function NewPassword() {
 
   return (
     <DefaultContainer outerClassName="flex bg-canvas min-h-screen justify-center">
-      <Card>
-        <div className="w-full sm:w-[400px] md:w-[460px] lg:w-[500px] p-6">
+      <CustomText
+        textSize="xl"
+        textVariant="primary"
+        className="pl-4 pb-2 sm:pb-4 font-medium"
+      >
+        Reset password
+      </CustomText>
+      <Card className="mx-auto w-full sm:max-w-xl">
+        <div className="mx-auto w-full sm:w-[400px] md:w-[460px] lg:w-[500px] p-6">
           <div className="mb-6 space-y-2 text-center">
             <CustomText textVariant="primary" textSize="xl">
-              Set new password
+              Enter a new password
             </CustomText>
+
             <CustomText textVariant="secondary" textSize="sm">
               Enter your new password below.
             </CustomText>
           </div>
+
           <form
             onSubmit={handleSubmit(handleUpdatePassword)}
-            className="flex flex-col gap-5"
+            className="mx-auto flex w-full  flex-col gap-5 items-center"
           >
             <FloatingInputField
               hasValue={!!password}
-              className="w-full"
+              className="w-full sm:w-80"
               label="New password"
               type="password"
               error={errors.password?.message}
@@ -103,7 +112,7 @@ export default function NewPassword() {
 
             <FloatingInputField
               hasValue={!!watch("confirmPassword")}
-              className="w-full"
+              className="w-full sm:w-80"
               label="Confirm password"
               type="password"
               error={errors.confirmPassword?.message}
@@ -115,7 +124,8 @@ export default function NewPassword() {
                   value === password || "Passwords do not match",
               })}
             />
-            <span className="pt-2">
+
+            <span className="w-full pt-2">
               <Button
                 type="submit"
                 variant="primary"
