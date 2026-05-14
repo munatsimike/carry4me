@@ -33,7 +33,7 @@ export default function FAB({ onClick, isAuthed, variant }: FABProps) {
   return (
     <AnimatePresence>
       {isVisible && isAuthed && (
-        <motion.button
+        <button
           key="fab"
           type="button"
           {...FAB_ANIMATION_VARIANTS}
@@ -49,7 +49,7 @@ export default function FAB({ onClick, isAuthed, variant }: FABProps) {
               </div>
             </div>
           )}
-        </motion.button>
+        </button>
       )}
     </AnimatePresence>
   );

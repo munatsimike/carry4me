@@ -8,8 +8,9 @@ export function CloseBackBtn({ onClose }: CloseBackBtnProps) {
   return (
     <div className="absolute top-2 right-2">
       <motion.button
-      whileHover={{scale:1.05}}
-      animate={{duration:0.2, ease:"easeInOut"}}
+        whileHover={{ scale: 1.05 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
         type="button"
         onClick={() => onClose(false)}
         className="flex items-center justify-center text-neutral-800 hover:black hover:bg-neutral-100 rounded-lg  transition-all p-1 "
