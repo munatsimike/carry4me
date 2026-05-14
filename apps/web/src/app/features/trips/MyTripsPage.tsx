@@ -140,7 +140,11 @@ export function MyTripsPage() {
         )}{" "}
       </AnimatePresence>
       {sortedTrips.length > 0 && !showCreateTripModal && (
-        <FAB onClick={() => setCreatTripModalState(true)} isAuthed={!!user?.id}/>
+        <FAB
+          onClick={() => setCreatTripModalState(true)}
+          isAuthed={!!user?.id}
+          variant="trip"
+        />
       )}
     </DefaultContainer>
   );

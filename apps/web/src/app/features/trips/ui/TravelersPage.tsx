@@ -321,7 +321,7 @@ export default function TravelersPage() {
         )}
 
         <Link to="/create-trip?mode=create">
-          <FAB isAuthed={!!user?.id} />
+          <FAB isAuthed={!!user?.id} variant="trip" />
         </Link>
       </DefaultContainer>
 
