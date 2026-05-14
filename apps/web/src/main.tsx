@@ -5,10 +5,15 @@ import { router } from "./app/router";
 import "./index.css";
 import { AuthProvider } from "./app/shared/supabase/AuthProvider";
 import { ToastProvider } from "./app/components/Toast";
-
+import { registerSW } from "virtual:pwa-register";
 // main.tsx
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+registerSW({
+  immediate: true,
+});
+
 
 const queryClient = new QueryClient();
 
