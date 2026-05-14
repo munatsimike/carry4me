@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn, inputError, inputNeutral, inputSuccess } from "../lib/cn";
 import { Check, ChevronDown } from "lucide-react";
+import SvgIcon from "@/components/ui/SvgIcon";
+import { toflag } from "../Mapper";
 
 type ComboBoxProps = {
   placeholder: string;
@@ -62,6 +64,7 @@ export default function ComboBox({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+  const selectedFlagIcon = value && (!searchable || !isOpen) ? toflag(value) : null;
   const baseClasses = cn(
     `${heightClass} w-full min-w-0 bg-white pl-3 pr-10 text-sm`,
     "text-ellipsis whitespace-nowrap border outline-none",
@@ -82,7 +85,7 @@ export default function ComboBox({
             onValueChange?.(e.target.value);
             setIsOpen(false);
           }}
-          className={cn(baseClasses, roundedClass, "appearance-none")}
+          className={cn(baseClasses, roundedClass, "appearance-none", selectedFlagIcon && "pl-10")}
         >
           <option value="" disabled>
             {placeholder}
@@ -94,6 +97,12 @@ export default function ComboBox({
             </option>
           ))}
         </select>
+
+        {selectedFlagIcon && (
+          <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+            <SvgIcon size="xs" Icon={selectedFlagIcon} />
+          </div>
+        )}
 
         <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
           <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -117,8 +126,14 @@ export default function ComboBox({
           setQuery(e.target.value);
           setIsOpen(true);
         }}
-        className={cn(baseClasses, roundedClass)}
+        className={cn(baseClasses, roundedClass, selectedFlagIcon && "pl-10")}
       />
+
+      {selectedFlagIcon && (
+        <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+          <SvgIcon size="xs" Icon={selectedFlagIcon} />
+        </div>
+      )}
 
       <button
         type="button"
@@ -139,7 +154,7 @@ export default function ComboBox({
           {filteredItems.length > 0 ? (
             filteredItems.map((item) => {
               const isSelected = value === item;
-
+              const flagIcon = item ? toflag(item) : null;
               return (
                 <button
                   key={item}
@@ -151,7 +166,10 @@ export default function ComboBox({
                   }}
                   className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
                 >
-                  <span className="truncate">{item}</span>
+                  <span className="flex truncate items-center">
+                    {flagIcon && <SvgIcon size={"xs"} Icon={flagIcon} />}
+                    <span className="ml-3">{item}</span>
+                  </span>
                   {isSelected && <Check className="h-4 w-4 text-slate-500" />}
                 </button>
               );
@@ -166,3 +184,5 @@ export default function ComboBox({
     </div>
   );
 }
+
+

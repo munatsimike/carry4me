@@ -1,4 +1,3 @@
-
 import type { GoodsItem } from "@/types/Ui";
 import { useState } from "react";
 import {
@@ -108,8 +107,8 @@ export default function CreateParcelForm({
   const goBack = () => setStep(1);
 
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-col">
+    <div className="flex flex-col gap-4">
+      <div className="relative flex flex-col gap-5">
         <FormHeader
           heading={`${mode === "edit" ? "Edit parcel" : "Post parcel"}`}
           subHeading={

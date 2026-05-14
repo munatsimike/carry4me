@@ -34,7 +34,7 @@ export default function RouteFieldRow<T extends FieldValues>({
   return (
     <div className="flex flex-col gap-5 ">
       <div>
-        <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-2 sm:gap-4 ">
+        <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-2 sm:gap-4 items-center ">
           <CustomText
             className="text-left sm:text-right"
             textSize="sm"
@@ -90,7 +90,7 @@ export default function RouteFieldRow<T extends FieldValues>({
           as="span"
           textSize="sm"
           textVariant="primary"
-          className="inline-flex rounded-xl bg-neutral-100 border border-slate-300 px-3 h-9 justify-center items-center max-w-[200px] gap-2"
+          className="inline-flex rounded-xl bg-neutral-100 border border-slate-300 px-3 h-9 justify-start items-center max-w-[200px] gap-3"
         >
           <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
           {destinationLabel}
