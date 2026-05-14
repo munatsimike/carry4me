@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthModal } from "../AuthModalContext";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "../../../icons/MetaIcon";
+
 import CustomText from "@/components/ui/CustomText";
 import FloatingInputField from "../../../components/CustomInputField";
 import { Button } from "@/components/ui/Button";
@@ -55,8 +56,8 @@ export function AuthModal() {
     if (!state.isOpen) {
       reset();
       setError(null);
+      setShowPassword(false);
     }
-    console.log(showPassword);
   }, [state.isOpen, reset]);
 
   useEffect(() => {
@@ -132,8 +133,15 @@ export function AuthModal() {
                 hasValue={!!password}
                 isDirty={!!dirtyFields.password}
                 isTouched={!!touchedFields.password}
-                type="password"
-                onIconClick={setShowPassword}
+                type={showPassword ? "text" : "password"}
+                trailingIcon={
+                  <SvgIcon
+                    size="lg"
+                    Icon={showPassword ? META_ICONS.eyeOn : META_ICONS.eyeOff}
+                    color={"neutral"}
+                  />
+                }
+                onIconClick={() => setShowPassword((prev) => !prev)}
                 leadingIcon={<SvgIcon size={"sm"} Icon={META_ICONS.lockIcon} />}
                 {...register("password")}
                 label={"Enter password"}
@@ -178,7 +186,6 @@ export function AuthModal() {
                   </Link>
                 </span>
               </span>
-              
             </span>
           </div>
         </FormModal>

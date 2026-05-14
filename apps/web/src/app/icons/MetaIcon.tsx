@@ -30,6 +30,8 @@ import RecycleBin from "@/assets/bin.svg?react"
 import InstagramIcon from "@/assets/instagram-icon.svg?react"
 import USFlagIcon from "@/assets/us-flag-icon.svg?react"
 import HeartFilled from "@/assets/heartFilled.svg?react";
+import EyeOnIcon from "@/assets/eye-on.svg?react";
+import EyeOffIcon from "@/assets/eye-off.svg?react";
 
 export const META_ICONS = {
   planeIcon: PlaneIcon,
@@ -63,5 +65,7 @@ export const META_ICONS = {
   recycleBin: RecycleBin,
   instagramIcon:InstagramIcon,
   uSFlagIcon: USFlagIcon,
-  heartfilled: HeartFilled
+  heartfilled: HeartFilled,
+  eyeOff: EyeOffIcon,
+  eyeOn: EyeOnIcon
 }
