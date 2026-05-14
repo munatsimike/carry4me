@@ -108,7 +108,7 @@ export default function CreateParcelForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative flex flex-col gap-5">
+      <div className="relative flex flex-col gap-4">
         <FormHeader
           heading={`${mode === "edit" ? "Edit parcel" : "Post parcel"}`}
           subHeading={

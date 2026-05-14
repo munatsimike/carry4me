@@ -89,7 +89,7 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative flex flex-col gap-5">
+      <div className="relative flex flex-col gap-4">
         <FormHeader
           heading={mode === "edit" ? "Edit trip" : "Post your trip"}
           subHeading={"Share your trip details to get matched with senders."}
