@@ -1,7 +1,6 @@
 import type { GoodsItem } from "@/types/Ui";
 import { useState } from "react";
 import {
-  useFieldArray,
   type Control,
   type FieldErrors,
   type FieldNamesMarkedBoolean,
@@ -15,7 +14,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import { StepHeader } from "@/app/components/forms/formStepper";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import LineDivider from "@/app/components/LineDivider";
 import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
@@ -24,8 +23,7 @@ import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useP
 import { PriceField } from "../../dashboard/components/PriceField";
 import CustomText from "@/components/ui/CustomText";
 import AgreeToTermsRow from "../../dashboard/components/AgreeToTermsRow";
-import FloatingInputField from "@/app/components/CustomInputField";
-import SvgIcon from "@/components/ui/SvgIcon";
+import { inputError, inputNeutral } from "@/app/lib/cn";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
 export type ParcelFormMode = "edit" | "create";
 
@@ -86,18 +84,6 @@ export default function CreateParcelForm({
   const [step, setStep] = useState<Step>(1);
   const { goodsCategory } = useGoodsCategory();
 
-  function addField() {
-    append({ quantity: 1, description: "" });
-  }
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "itemDescriptions",
-  });
-  function removeField(index: number) {
-    remove(index);
-  }
-
   const goNext = async () => {
     const ok = await trigger(parcelStep1Fields, { shouldFocus: true });
     if (!ok) return;
@@ -107,7 +93,7 @@ export default function CreateParcelForm({
   const goBack = () => setStep(1);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="relative flex flex-col gap-4">
         <FormHeader
           heading={`${mode === "edit" ? "Edit parcel" : "Post parcel"}`}
@@ -134,7 +120,7 @@ export default function CreateParcelForm({
         )}
       </div>
       {step === 1 ? (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <LineDivider heightClass={dividerHeight} />
           <RouteFieldRow control={control} watch={watch} />
 
@@ -170,21 +156,9 @@ export default function CreateParcelForm({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           <LineDivider heightClass={dividerHeight} />
-          <DescriptionQuantityRow
-            errors={errors}
-            fields={fields}
-            onRemove={removeField}
-            register={register}
-            dirty={dirtyFields}
-            touched={touchedFields}
-            hasValueQty={false}
-            hasValueDescription={false}
-          />
-
-          <AddItemButton onClick={addField} />
-
+          <PackageDescriptionField errors={errors} register={register} />
           <LineDivider heightClass={dividerHeight} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-[20px]">
             {/* Weight Field */}
@@ -274,7 +248,7 @@ export default function CreateParcelForm({
   );
 }
 
-type DescriptionQuantityRowProps = {
+type DescriptionProps = {
   fields: GoodsItem[];
   onRemove: (index: number) => void;
   register: UseFormRegister<ParcelFormFields>;
@@ -285,77 +259,41 @@ type DescriptionQuantityRowProps = {
   hasValueDescription: boolean;
 };
 
-function DescriptionQuantityRow({
+function PackageDescriptionField({
   errors,
-  fields,
-  onRemove,
   register,
-  dirty,
-  touched,
-  hasValueQty,
-  hasValueDescription,
-}: DescriptionQuantityRowProps) {
+}: Pick<DescriptionProps, "errors" | "register">) {
   return (
-    <div className="inline-flex flex-col gap-5">
-      <div>
-        <CustomText textSize="sm" textVariant="label">
-          {"Contents of your package"}
-        </CustomText>
-      </div>
+    <div className="flex flex-col gap-2 w-full">
+      <CustomText textSize="sm" textVariant="label">
+        {"Contents of your package"}
+      </CustomText>
 
-      {fields.map((_, index) => (
-        <div key={index} className="flex gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-[80px_190px] gap-10">
-            <FloatingInputField
-              hasValue={hasValueQty}
-              type="number"
-              error={errors.itemDescriptions?.[index]?.quantity?.message}
-              {...register(`itemDescriptions.${index}.quantity`, {
-                valueAsNumber: true,
-              })}
-              label="Qty"
-              isTouched={!!touched.itemDescriptions?.[index]?.quantity}
-              isDirty={!!dirty.itemDescriptions?.[index]?.quantity}
-            />
-            <FloatingInputField
-              hasValue={hasValueDescription}
-              error={errors.itemDescriptions?.[index]?.description?.message}
-              {...register(`itemDescriptions.${index}.description`)}
-              label="item e.g ladies jeans"
-              isTouched={!!touched.itemDescriptions?.[index]?.description}
-              isDirty={!!dirty.itemDescriptions?.[index]?.description}
-            />
-          </div>
-          {index > 0 && (
-            <button
-              type="button"
-              onClick={() => onRemove(index)}
-              className="text-ink-error"
-            >
-              <X className="h-5 w-5 hover:bg-error-50  rounded-lg" />
-            </button>
-          )}
-        </div>
-      ))}
+      <textarea
+        {...register("itemDescriptions.0.description")}
+        placeholder="e.g clothes, shoes, documents, small electronics"
+        className={`
+          min-h-[120px]
+          w-full
+          rounded-xl
+          p-4
+          text-sm
+          outline-none
+          resize-none
+          transition-colors
+          ${
+            errors.itemDescriptions?.[0]?.description
+              ? inputError
+              : inputNeutral
+          }
+        `}
+      />
+
+      {errors.itemDescriptions?.[0]?.description?.message && (
+        <CustomText textSize="xs" className="text-ink-error">
+          {errors.itemDescriptions[0].description.message}
+        </CustomText>
+      )}
     </div>
-  );
-}
-
-function AddItemButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Button
-      type="button"
-      onClick={onClick}
-      className="w-full max-w-[115px]"
-      variant={"outline"}
-      size={"sm"}
-    >
-      <span className="inline-flex items-center gap-2">
-        <SvgIcon Icon={META_ICONS.addIcon} size={"xs"} color="dark" />
-        <CustomText textVariant="primary" textSize="sm">
-          {"Add item"}
-        </CustomText>
-      </span>
-    </Button>
   );
 }
