@@ -30,6 +30,7 @@ import ComboBox from "@/app/components/ComboBox";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import MobileForm from "@/app/features/dashboard/components/MobileForm";
 import { useMediaQuery } from "./hooks/useMediaQuery";
+import { useLocations } from "@/app/hookes/useLocation";
 
 export const UserDetailsScema = z
   .object({
@@ -168,7 +169,7 @@ export default function SignUpPage() {
       <Card
         paddingClass="sm:px-8 py-5"
         sizeClass="max-w-2xl"
-        className="flex flex-col gap-5"
+        className="flex flex-col gap-5 overflow-visible"
         enableHover={false}
       >
         {isMobile ? (
@@ -220,6 +221,7 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
   } = formProps;
 
   const firstName = watch("firstName");
+  const originCountry = watch("country");
   const lastName = watch("lastName");
   const emailAddress = watch("emailAddress");
   const password = watch("password");
@@ -227,6 +229,8 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
   const phoneNumber = watch("phoneNumber");
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
+
+  const { countryOptions, cityOptions } = useLocations(originCountry);
   return (
     <>
       <span className="flex flex-col items-center gap-1 pb-2">
@@ -350,7 +354,7 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
               <ComboBox
                 className="rounded-lg"
                 placeholder="Selected country"
-                menuItems={["UK"]}
+                menuItems={countryOptions}
                 value={field.value}
                 onValueChange={field.onChange}
                 error={fieldState.error?.message}
@@ -368,7 +372,7 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
               <ComboBox
                 className="rounded-lg mt-3"
                 placeholder="Selected city"
-                menuItems={["London"]}
+                menuItems={cityOptions}
                 value={field.value}
                 onValueChange={field.onChange}
                 error={fieldState.error?.message}
