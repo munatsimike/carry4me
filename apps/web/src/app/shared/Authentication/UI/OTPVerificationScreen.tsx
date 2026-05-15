@@ -147,7 +147,7 @@ export function OTPVerificationScreen({
         onSubmit={handleSubmit(handleVerifyOTP)}
         className="w-full flex flex-col gap-5"
       >
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 justify-center items-center">
           <CustomText as="label" textVariant="label" textSize="sm">
             OTP Code
           </CustomText>
@@ -168,8 +168,8 @@ export function OTPVerificationScreen({
           type="submit"
           disabled={isSubmitting}
           className="w-full relative"
-          variant={"error"}
-          size={"lg"}
+          variant={"primary"}
+          size={"sm"}
         >
           {isSubmitting ? (
             <>
