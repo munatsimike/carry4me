@@ -392,7 +392,7 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
           className="w-full"
           disabled={isSubmitting || (submitCount > 0 && !isValid)}
         >
-          <CustomText textVariant="onDark" textSize="md">
+          <CustomText textVariant="onDark" textSize="sm">
             {isSubmitting ? "processing..." : "Join Carry4me"}
           </CustomText>
         </Button>

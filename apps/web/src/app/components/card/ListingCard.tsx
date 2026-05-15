@@ -88,9 +88,7 @@ export function ListingCard<T extends Listing>({
       borderClass={borderClass}
       shadowClass={shadowClass}
     >
-      <div
-        className={`flex justify-between ${isDisplayMode ? "pb-1" : "pb-2"}`}
-      >
+      <div className="flex justify-between pb-1">
         <span className="flex flex-col gap-2">
           {!isDisplayMode && (
             <span className="flex justify-center text-sm pb-2 text-neutral-500">

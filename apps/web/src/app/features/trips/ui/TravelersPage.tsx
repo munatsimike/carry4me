@@ -294,10 +294,10 @@ export default function TravelersPage() {
                 onClick={() => setTripModalState(true)}
                 type="button"
                 variant="primary"
-                size="md"
+                size="sm"
                 className="w-full mt-1"
               >
-                <CustomText textVariant="onDark" textSize="md">
+                <CustomText textVariant="onDark" textSize="sm">
                   {"Post trip"}
                 </CustomText>
               </Button>

@@ -32,13 +32,11 @@ export default function SendRequestBtn<T>({
   const { openInfo } = useUniversalModal();
   const { openAuthModal } = useAuthModal();
   const isTripListing = listingType === "trip";
-  const base = "flex items-center w-full";
- 
+  const base = "flex items-center w-full mb-0";
 
   return (
     <div className={`${base}`}>
       <Button
-    
         isBusy={isActive}
         onClick={() => {
           if (!user) {
@@ -59,7 +57,7 @@ export default function SendRequestBtn<T>({
         }}
         variant={buttonVariant}
         className="shadow-sm w-full"
-        size={"md"}
+        size={"sm"}
         leadingIcon={
           <SvgIcon
             size={"sm"}

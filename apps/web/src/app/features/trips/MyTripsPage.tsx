@@ -49,17 +49,17 @@ export function MyTripsPage() {
 
   const { showSupabaseError } = useUniversalModal();
 
-  const deleteTrip = async (parcelId: string) => {
+  const deleteTrip = async (tripId: string) => {
     const { result } = await namedCall(
-      "delete parcel",
-      deleteTripUseCase.execute(parcelId),
+      "delete trip",
+      deleteTripUseCase.execute(tripId),
     );
     if (!result.success) {
       return;
     }
 
     await refreshProfile();
-    toast("Parcel deleted successfully", { variant: "success" });
+    toast("Trip deleted successfully", { variant: "success" });
   };
 
   useEffect(() => {
@@ -95,7 +95,9 @@ export function MyTripsPage() {
             "You haven’t posted any trips yet. Start by creating a new trips to let others send trips with you."
           }
           action={
-            <Button className="w-full" variant={"primary"} size={"sm"}>
+            <Button
+             onClick={() => setCreatTripModalState(true)}
+            className="w-full" variant={"primary"} size={"sm"}>
               + Post a trip
             </Button>
           }
@@ -119,7 +121,7 @@ export function MyTripsPage() {
       )}
 
       <AnimatePresence>
-        {/* edit parcel */}
+        {/* edit trip */}
         {showCreateTripModal && (
           <CreateTripModal
             mode={editTrip ? "edit" : undefined}
@@ -127,7 +129,7 @@ export function MyTripsPage() {
             setModalState={() => setCreatTripModalState(false)}
           />
         )}
-        {/*show preview moda */}
+        {/*show preview mode */}
         {tripreview && (
           <CustomModal onClose={() => setTripPreview(null)} width="md">
             <TravelerCard

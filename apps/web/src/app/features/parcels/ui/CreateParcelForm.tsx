@@ -120,7 +120,7 @@ export default function CreateParcelForm({
 
         {step === 2 && (
           <motion.span
-            className="inline-flex absolute left-5 top-4"
+            className="hidden sm:block inline-flex absolute left-5 top-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4 }}

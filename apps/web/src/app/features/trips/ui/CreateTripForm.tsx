@@ -94,12 +94,11 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
           heading={mode === "edit" ? "Edit trip" : "Post your trip"}
           subHeading={"Share your trip details to get matched with senders."}
         />
-      
-          <StepHeader currentStep={step} />
-   
+
+        <StepHeader currentStep={step} />
 
         {step === 2 && (
-          <span className="hidden sm:block inline-flex absolute left-0 top-0">
+          <span className="hidden sm:block inline-flex absolute left-5 top-4">
             <Button
               type="button"
               variant="neutral"
