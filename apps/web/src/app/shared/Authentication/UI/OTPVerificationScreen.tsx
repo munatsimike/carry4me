@@ -3,17 +3,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
-import SvgIcon from "@/components/ui/SvgIcon";
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import FloatingInputField from "@/app/components/CustomInputField";
 import LineDivider from "@/app/components/LineDivider";
 import ErrorText from "@/app/components/text/ErrorText";
 import Spinner from "@/app/components/Spinner";
-
-import { META_ICONS } from "@/app/icons/MetaIcon";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { VerifyPhoneOTPUseCase } from "../application/VerifyPhoneOTPUseCase";
 import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
