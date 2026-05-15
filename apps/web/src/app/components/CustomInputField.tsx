@@ -14,6 +14,7 @@ type CustomInputFieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
   className?: string;
   label?: string;
   error?: string;
+  helperText?: string;
   leadingIcon?: React.ReactNode;
   trailingIcon?: React.ReactNode;
   onIconClick?: () => void;
@@ -22,6 +23,7 @@ type CustomInputFieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
 export default function FloatingInputField({
   label,
   error,
+  helperText,
   leadingIcon,
   trailingIcon,
   className,
@@ -71,6 +73,9 @@ export default function FloatingInputField({
           </button>
         )}
       </div>
+      {helperText && !error && (
+        <p className="mt-1 text-sm text-neutral-500">{helperText}</p>
+      )}
     </ErrorText>
   );
 }

@@ -21,6 +21,7 @@ import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuer
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
 import PageSection from "@/app/components/PageSection";
 import FAB from "@/app/components/FAB";
+import { PhoneVerificationModal } from "@/app/shared/Authentication/UI/PhoneVerificationModal";
 
 export function MyParcelsPage() {
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ export function MyParcelsPage() {
   const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
     null,
   );
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, profile } = useAuth();
   const { toast } = useToast();
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
   const getParcelByIdUseCase = useMemo(
@@ -40,7 +41,7 @@ export function MyParcelsPage() {
     () => new DeleteParcelUseCase(parcelRepo),
     [parcelRepo],
   );
-
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const isMobile = useMediaQuery();
   const { showSupabaseError } = useUniversalModal();
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
@@ -86,6 +87,15 @@ export function MyParcelsPage() {
     loadTrips();
   }, [user?.id]);
 
+  const handleOnClick = () => {
+    if (user?.id && profile?.phoneVerified === false) {
+      setShowPhoneVerification(true);
+      return;
+    }
+
+    setParcelModalState(true);
+  };
+
   return (
     <>
       <PageSection>
@@ -103,7 +113,7 @@ export function MyParcelsPage() {
             action={
               <Button
                 className="w-full"
-                onClick={() => setParcelModalState(true)}
+                onClick={() => handleOnClick()}
                 variant={"primary"}
                 size={"sm"}
               >
@@ -155,6 +165,17 @@ export function MyParcelsPage() {
             onClick={() => setParcelModalState(true)}
             isAuthed={!!user?.id}
             variant="parcel"
+          />
+        )}
+
+        {showPhoneVerification && user?.id && (
+          <PhoneVerificationModal
+            isOpen={showPhoneVerification}
+            userId={user.id}
+            isVerified={false}
+            onClose={() => {
+              setShowPhoneVerification(false);
+            }}
           />
         )}
       </DefaultContainer>

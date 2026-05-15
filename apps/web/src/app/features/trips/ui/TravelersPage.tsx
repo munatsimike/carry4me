@@ -37,6 +37,7 @@ import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScro
 import { Link, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
+import { PhoneVerificationModal } from "@/app/shared/Authentication/UI/PhoneVerificationModal";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -48,7 +49,7 @@ export default function TravelersPage() {
   );
   const { showSupabaseError } = useUniversalModal();
   const [tripList, setTripList] = useState<TripListing[]>([]);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [dataloaded, setDataLoaded] = useState<boolean>(false);
   useEffect(() => {
     let cancel = false;
@@ -203,7 +204,7 @@ export default function TravelersPage() {
     toggleLike(id, setTripList);
   };
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
-
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
   const isMobile = useMediaQuery();
   const scrollDirection = useScrollDirection();
@@ -233,6 +234,15 @@ export default function TravelersPage() {
       clearResults={clearSearchResults}
     />
   );
+
+  const handleOnClick = () => {
+    if (user?.id && profile?.phoneVerified === false) {
+      setShowPhoneVerification(true);
+      return;
+    }
+
+    setTripModalState(true);
+  };
 
   return (
     <>
@@ -291,7 +301,7 @@ export default function TravelersPage() {
             description="No trips found. Post your trip to start receiving parcel requests from senders."
             action={
               <Button
-                onClick={() => setTripModalState(true)}
+                onClick={() => handleOnClick()}
                 type="button"
                 variant="primary"
                 size="sm"
@@ -323,6 +333,17 @@ export default function TravelersPage() {
         <Link to="/create-trip?mode=create">
           <FAB isAuthed={!!user?.id} variant="trip" />
         </Link>
+
+        {showPhoneVerification && user?.id && (
+          <PhoneVerificationModal
+            isOpen={showPhoneVerification}
+            userId={user.id}
+            isVerified={false}
+            onClose={() => {
+              setShowPhoneVerification(false);
+            }}
+          />
+        )}
       </DefaultContainer>
 
       <ListingSelectionModal

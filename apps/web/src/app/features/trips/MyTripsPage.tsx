@@ -22,13 +22,15 @@ import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuer
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
 
 import FAB from "@/app/components/FAB";
+import { PhoneVerificationModal } from "@/app/shared/Authentication/UI/PhoneVerificationModal";
 
 export function MyTripsPage() {
   const [loading, setLoading] = useState(true);
   const [mypTrips, setMyTrips] = useState<TripListing[]>([]);
   const isMobile = useMediaQuery();
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, profile } = useAuth();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [showCreateTripModal, setCreatTripModalState] =
     useState<boolean>(false);
   const [editTrip, setEditTrip] = useState<FormValues | null>(null);
@@ -84,6 +86,15 @@ export function MyTripsPage() {
     loadTrips();
   }, [user?.id]);
 
+    const handleOnClick = () => {
+    if (user?.id && profile?.phoneVerified === false) {
+      setShowPhoneVerification(true);
+      return;
+    }
+
+    setCreatTripModalState(true);
+  };
+
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       {loading ? (
@@ -96,7 +107,7 @@ export function MyTripsPage() {
           }
           action={
             <Button
-             onClick={() => setCreatTripModalState(true)}
+             onClick={() => handleOnClick()}
             className="w-full" variant={"primary"} size={"sm"}>
               + Post a trip
             </Button>
@@ -148,6 +159,17 @@ export function MyTripsPage() {
           variant="trip"
         />
       )}
+     {showPhoneVerification && user?.id && (
+          <PhoneVerificationModal
+            isOpen={showPhoneVerification}
+            userId={user.id}
+            isVerified={false}
+            onClose={() => {
+              setShowPhoneVerification(false);
+            }}
+          />
+        )}
+
     </DefaultContainer>
   );
 }

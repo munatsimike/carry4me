@@ -163,7 +163,9 @@ export class SupabaseAuthRepository implements AuthRepository {
   async fetchUserProfile(userId: string): Promise<RepoResponse<UserProfile>> {
     const { data, status, error } = await supabase
       .from("profiles")
-      .select("id,full_name, avatar_url,city,country_code,phone_number")
+      .select(
+        "id,full_name, avatar_url,city,country_code,phone_number,phone_verified",
+      )
       .eq("id", userId)
       .single();
 
@@ -185,6 +187,7 @@ export class SupabaseAuthRepository implements AuthRepository {
         countryCode: data.country_code,
         city: data.city,
         phoneNumber: data.phone_number,
+        phoneVerified: data.phone_verified ?? false,
       },
       error: null,
     };
@@ -275,6 +278,58 @@ export class SupabaseAuthRepository implements AuthRepository {
     const path = url.split(marker)[1] ?? null;
 
     return path.split("?")[0];
+  }
+
+  // Phone Verification Methods
+  async sendPhoneOTP(phoneNumber: string): Promise<RepoResponse<string>> {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: phoneNumber,
+    });
+
+    if (error) {
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: null,
+        },
+      };
+    }
+
+    return { data: "OTP sent successfully", error: null };
+  }
+
+  async verifyPhoneOTP(
+    phoneNumber: string,
+    token: string,
+  ): Promise<RepoResponse<User>> {
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: phoneNumber,
+      token,
+      type: "sms",
+    });
+
+    if (error) {
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message,
+          status: null,
+        },
+      };
+    }
+
+    if (data.user) {
+      // Mark phone as verified in profiles table
+      await supabase
+        .from("profiles")
+        .update({ phone_verified: true })
+        .eq("id", data.user.id);
+    }
+
+    return { data: data.user, error: null };
   }
 }
 

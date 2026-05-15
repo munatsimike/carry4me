@@ -2,10 +2,7 @@ import type { User } from "@supabase/supabase-js";
 import type { RepoResponse } from "../../domain/RepoResponse";
 import type { UpdateAuthDto } from "../application/UpdateAuthDto";
 import type { UpdateProfileDto } from "../application/updateProfileDTO";
-import type {
-  AppUser,
-  UserProfile,
-} from "./authTypes";
+import type { AppUser, UserProfile } from "./authTypes";
 
 export interface AuthRepository {
   login(email: string, password: string): Promise<RepoResponse<User>>;
@@ -23,10 +20,18 @@ export interface AuthRepository {
     updateProfile: Partial<UpdateProfileDto>,
   ): Promise<RepoResponse<string>>;
 
-  resetPassword(email:string):Promise<RepoResponse<string>>
-  newPassword(password:string):Promise<RepoResponse<string>>
+  resetPassword(email: string): Promise<RepoResponse<string>>;
+  newPassword(password: string): Promise<RepoResponse<string>>;
 
   updateAuthDetails(
     updateAuthDto: Partial<UpdateAuthDto>,
   ): Promise<RepoResponse<string>>;
+
+  // Phone Verification Methods
+  sendPhoneOTP(phoneNumber: string): Promise<RepoResponse<string>>;
+  verifyPhoneOTP(
+    phoneNumber: string,
+    token: string,
+  ): Promise<RepoResponse<User>>;
+
 }

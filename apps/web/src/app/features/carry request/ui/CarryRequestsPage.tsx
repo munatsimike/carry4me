@@ -408,8 +408,8 @@ export default function CarryRequestsPage() {
                 emptyStateMessage.actions && (
                   <div className="flex flex-wrap items-center justify-around gap-3">
                     {emptyStateMessage.actions.map((action) => (
-                      <Link key={action.href} to={action.href}>
-                        <Button variant={action.variant} size="sm">
+                      <Link key={action.href} to={action.href} className="w-full sm:flex-1">
+                        <Button variant={action.variant} size="sm" className="w-full whitespace-nowrap">
                           {action.label}
                         </Button>
                       </Link>

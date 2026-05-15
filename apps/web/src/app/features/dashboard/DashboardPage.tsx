@@ -29,6 +29,7 @@ import { useUniversalModal } from "@/app/shared/Authentication/application/Dialo
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import Greeting from "@/app/components/Greeting";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
+import { PhoneVerificationModal } from "@/app/shared/Authentication/UI/PhoneVerificationModal";
 
 /**
  * Dashboard Page
@@ -80,10 +81,14 @@ export default function DashboardPage() {
   const [notifications, setNotification] = useState<CarryRequestNotification[]>(
     [],
   );
+
   const navigate = useNavigate();
   const isMobile = useMediaQuery();
   const { user, profile, loading } = useAuth();
   const { showSupabaseError } = useUniversalModal();
+
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+
   // fetch goods category
   // redirect is user is not logged in
   useEffect(() => {
@@ -126,15 +131,30 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [user?.id, profile]);
 
+  const requirePhoneVerification = (action: "trip" | "parcel") => {
+    if (!user?.id) return;
+
+    if (profile?.phoneVerified === false) {
+      setShowPhoneVerification(true);
+      return;
+    }
+
+    if (action === "trip") {
+      setCreateTrip(true);
+    }
+
+    if (action === "parcel") {
+      setCreateParcel(true);
+    }
+  };
+
   useEffect(() => {
     if (!createTrip || !isMobile) return;
-
     navigate("/create-trip?mode=create");
   }, [createTrip, isMobile, navigate]);
 
   useEffect(() => {
     if (!createParcel || !isMobile) return;
-
     navigate("/create-parcel?mode=create");
   }, [createParcel, isMobile, navigate]);
 
@@ -144,8 +164,8 @@ export default function DashboardPage() {
 
       <div className="flex flex-col gap-12 pt-2 sm:pt-4">
         <ActionButtonRow
-          setTripModalState={setCreateTrip}
-          setParcelModalState={setCreateParcel}
+          onPostTrip={() => requirePhoneVerification("trip")}
+          onPostParcel={() => requirePhoneVerification("parcel")}
         />
 
         <div className="flex flex-col sm:justify-center md:flex-row gap-6">
@@ -159,14 +179,29 @@ export default function DashboardPage() {
 
       <AnimatePresence>
         {createTrip && !isMobile && (
-          <CreateTripModal setModalState={() => setCreateTrip(false)} />
+          <CreateTripModal
+            setModalState={() => requirePhoneVerification("trip")}
+          />
         )}
 
         {/* hide and show post parcel modal */}
         {createParcel && !isMobile && (
-          <CreatParcelModal setModalState={() => setCreateParcel(false)} />
+          <CreatParcelModal
+            setModalState={() => requirePhoneVerification("parcel")}
+          />
         )}
       </AnimatePresence>
+
+      {showPhoneVerification && user?.id && (
+        <PhoneVerificationModal
+          isOpen={showPhoneVerification}
+          userId={user.id}
+          isVerified={false}
+          onClose={() => {
+            setShowPhoneVerification(false);
+          }}
+        />
+      )}
     </DefaultContainer>
   );
 }
@@ -371,13 +406,10 @@ function StatsSection({ statsList }: StatsProps) {
 
 // row with dashboard action buttons- post parcel, post trip, browse trip and browse parcel
 type ActionButtonRowProps = {
-  setTripModalState: (v: boolean) => void;
-  setParcelModalState: (state: boolean) => void;
+  onPostTrip: () => void;
+  onPostParcel: () => void;
 };
-function ActionButtonRow({
-  setParcelModalState,
-  setTripModalState,
-}: ActionButtonRowProps) {
+function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     show: {
@@ -404,7 +436,7 @@ function ActionButtonRow({
     >
       <motion.div variants={itemVariants}>
         <ActionButton
-          onClick={setTripModalState}
+          onClick={onPostTrip}
           btnText="Post a trip"
           iconColor="onDark"
           icon={META_ICONS.travelerIcon}
@@ -413,7 +445,7 @@ function ActionButtonRow({
 
       <motion.div variants={itemVariants}>
         <ActionButton
-          onClick={setParcelModalState}
+          onClick={onPostParcel}
           btnText="Post a parcel"
           btnVariant="secondary"
           textVariant="primary"
@@ -455,8 +487,7 @@ type ActionButtonsProps = {
   iconColor?: IconColor;
   btnText: string;
   icon?: SvgIconComponent;
-  onClick?: (v: boolean) => void;
-  showModal?: boolean;
+  onClick?: () => void;
 };
 
 function ActionButton({
@@ -465,13 +496,12 @@ function ActionButton({
   textVariant = "onDark",
   iconColor = "primary",
   btnText,
-  showModal,
   icon = META_ICONS.parcelBox,
   onClick,
 }: ActionButtonsProps) {
   return (
     <Button
-      onClick={onClick ? () => onClick(!showModal) : () => {}}
+      onClick={onClick ? () => onClick() : () => {}}
       variant={btnVariant}
       size={"xxl"}
       trailingIcon={

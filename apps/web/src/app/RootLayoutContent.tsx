@@ -8,7 +8,7 @@ import { useAuth } from "./shared/supabase/AuthProvider";
 import Footer from "./shared/Authentication/UI/Footer";
 import type { UserProfile } from "./shared/Authentication/domain/authTypes";
 import { useMediaQuery } from "./shared/Authentication/UI/hooks/useMediaQuery";
-import { useState } from "react";
+import { useState} from "react";
 import { cn } from "./lib/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUI } from "./shared/Authentication/UI/hooks/useUI";
@@ -20,6 +20,10 @@ export default function RootLayoutContent() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { showBottomNavBar } = useUI();
   const isAuthed = !!user;
+
+  // Show phone verification modal if user is logged in and phone is not verified
+
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
