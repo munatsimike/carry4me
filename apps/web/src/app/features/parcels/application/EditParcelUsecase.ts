@@ -1,7 +1,5 @@
-import type { Result } from "@/app/shared/Authentication/domain/Result";
 import type { ParcelRepository } from "../domain/ParcelRepository";
 import type { ParcelDto } from "./ParcelDto";
-import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
 
 export class EditParcelUsecase {
   repo: ParcelRepository;
@@ -10,9 +8,7 @@ export class EditParcelUsecase {
     this.repo = repo;
   }
 
-  async execute(editParcel: Partial<ParcelDto>): Promise<Result<string>> {
-    const result = await this.repo.editParcel(editParcel);
-
-    return toResult(result);
+  async execute(editParcel: Partial<ParcelDto>): Promise<string> {
+    return await this.repo.editParcel(editParcel);
   }
 }

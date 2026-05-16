@@ -7,9 +7,10 @@ import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 
 export default function HowItWorks({ steps }: StepsPros) {
+  const { openSignInModal } = useSignInModal();
   const howItWorksContainer = {
     hidden: { opacity: 0, y: 18 },
     show: {
@@ -58,25 +59,22 @@ export default function HowItWorks({ steps }: StepsPros) {
           variants={howItWorksItem}
         >
           <motion.div>
-            <Link to="/signup">
-              <Button
-                type="button"
-                className="w-full sm:w-auto"
-                variant="secondary"
-                size="lg"
-                leadingIcon={
-                  <SvgIcon
-                    color="primary"
-                    size="lg"
-                    Icon={META_ICONS.addAccount}
-                  />
-                }
-              >
-                <CustomText textVariant="primary">
-                  Sign up to get started
-                </CustomText>
-              </Button>
-            </Link>
+            <Button
+              type="button"
+              onClick={() => openSignInModal({ redirectTo: "/dashboard" })}
+              className="w-full sm:w-[250px]"
+              variant="secondary"
+              size="lg"
+              leadingIcon={
+                <SvgIcon
+                  color="primary"
+                  size="lg"
+                  Icon={META_ICONS.addAccount}
+                />
+              }
+            >
+              <CustomText textVariant="primary">Get Started</CustomText>
+            </Button>
           </motion.div>
         </motion.div>
       </motion.div>

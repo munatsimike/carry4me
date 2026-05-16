@@ -30,15 +30,6 @@ function toErrorMessage(err: unknown) {
   return String(err);
 }
 
-function isNoRowError(err: unknown) {
-  const code = (err as any)?.code;
-  const msg = (err as any)?.message;
-  return (
-    code === "PGRST116" ||
-    (typeof msg === "string" && msg.toLowerCase().includes("0 rows"))
-  );
-}
-
 async function withTimeout<T>(promise: Promise<T>, ms = 10_000): Promise<T> {
   let timeoutId: number | undefined;
 
@@ -73,27 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // Timeout protects against "loading forever"
-      const { data, error } = await withTimeout(
+      const profileData = await withTimeout(
         authRepository.fetchUserProfile(userId),
         10_000,
       );
       // Ignore stale results / unmounted
       if (!mountedRef.current || myRequestId !== requestIdRef.current) return;
 
-      if (error) {
-        if (isNoRowError(error)) {
-          setProfile(null);
-          setError(null);
-          return;
-        }
-
-        setError(toErrorMessage(error));
-        setProfile(null);
-        return;
-      }
-
       setError(null);
-      setProfile(data ?? null);
+      setProfile(profileData);
     } catch (e) {
       if (!mountedRef.current || myRequestId !== requestIdRef.current) return;
       setError(toErrorMessage(e));

@@ -1,4 +1,4 @@
-import type { AppError } from "../../domain/RepoResponse";
+import { AppError, type AppErrorShape } from "../../domain/AppError";
 
 // src/application/errors/types.ts
 export type ErrorCategory =
@@ -49,9 +49,12 @@ function getErrorCode(error: unknown): string | undefined {
   return typeof code === "string" ? code : undefined;
 }
 
-export function normalizeSupabaseError(error: AppError): NormalizedError {
-  const message = getErrorMessage(error.message);
-  const code = getErrorCode(error.code);
+export function normalizeSupabaseError(
+  error: AppError | AppErrorShape,
+): NormalizedError {
+  const appError = error instanceof AppError ? error : AppError.fromUnknown(error);
+  const message = getErrorMessage(appError.message);
+  const code = getErrorCode(appError.code);
 
   if (!error || (message && message.includes("Failed to fetch"))) {
     return {
@@ -64,7 +67,7 @@ export function normalizeSupabaseError(error: AppError): NormalizedError {
   }
 
   // HTTP first
-  switch (error.status ?? undefined) {
+  switch (appError.status ?? undefined) {
     case 401:
       return {
         category: "AUTH",

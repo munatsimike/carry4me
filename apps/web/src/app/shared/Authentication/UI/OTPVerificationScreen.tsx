@@ -15,7 +15,7 @@ import { VerifyPhoneOTPUseCase } from "../application/VerifyPhoneOTPUseCase";
 import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
-import { namedCall } from "../application/NamedCall";
+import { AppError } from "@/app/shared/domain/AppError";
 import { ShieldCheck } from "lucide-react";
 
 const otpSchema = z.object({
@@ -82,40 +82,28 @@ export function OTPVerificationScreen({
 
   const handleVerifyOTP = async (values: OTPFormValues) => {
     setLoading(true);
-    const { result } = await namedCall(
-      "verifyPhoneOTP",
-      verifyOTPUseCase.execute(phoneNumber, values.otpCode),
-    );
-
-    if (!result.success) {
-      setError(result.error.message || "Invalid OTP");
-      showSupabaseError(result.error);
+    try {
+      await verifyOTPUseCase.execute(phoneNumber, values.otpCode);
+      setStep("completed");
+      onVerificationComplete();
+    } catch (err) {
+      setError(AppError.fromUnknown(err).message);
+      showSupabaseError(err);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Mark as completed
-    setStep("completed");
-    setLoading(false);
-    onVerificationComplete();
   };
 
   const handleResendOTP = async () => {
     setResendLoading(true);
-    const { result } = await namedCall(
-      "resendPhoneOTP",
-      sendOTPUseCase.execute(phoneNumber),
-    );
-
-    if (!result.success) {
-      showSupabaseError(result.error);
+    try {
+      await sendOTPUseCase.execute(phoneNumber);
+      setResendTimer(60);
+    } catch (err) {
+      showSupabaseError(err);
+    } finally {
       setResendLoading(false);
-      return;
     }
-
-    // Start resend timer (60 seconds)
-    setResendTimer(60);
-    setResendLoading(false);
   };
 
   return (

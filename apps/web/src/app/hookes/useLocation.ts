@@ -7,15 +7,7 @@ const locationRepository = new SupabaseLocationRepository();
 export function useLocations(selectedCountry?: string) {
   const query = useQuery({
     queryKey: ["locations"],
-    queryFn: async () => {
-      const response = await locationRepository.getLocations();
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      return response.data ?? [];
-    },
+    queryFn: () => locationRepository.getLocations(),
     staleTime: 1000 * 60 * 60 * 24,
     gcTime: 1000 * 60 * 60 * 24,
     refetchOnWindowFocus: false,

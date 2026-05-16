@@ -3,7 +3,6 @@ import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { SupabaseParcelRepository } from "./data/SupabaseParcelRepository";
 import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
@@ -55,35 +54,26 @@ export function MyParcelsPage() {
 
   // delete parcel
   const deleteParcel = async (parcelId: string) => {
-    const { result } = await namedCall(
-      "delete parcel",
-      deleteParcelUseCase.execute(parcelId),
-    );
-    if (!result.success) {
-      return;
+    try {
+      await deleteParcelUseCase.execute(parcelId);
+      await refreshProfile();
+      toast("Parcel deleted successfully", { variant: "success" });
+    } catch (err) {
+      showSupabaseError(err);
     }
-
-    await refreshProfile();
-    toast("Parcel deleted successfully", { variant: "success" });
   };
 
   useEffect(() => {
     async function loadTrips() {
       if (!user?.id) return;
       setLoading(true);
-      const { result } = await namedCall(
-        "myParcels",
-        getParcelByIdUseCase.execute(user?.id),
-      );
-      if (!result.success) {
+      try {
+        const data = await getParcelByIdUseCase.execute(user?.id);
+        setMyParcels(data);
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
         setLoading(false);
-        showSupabaseError(result.error);
-        return;
-      }
-
-      if (result.data) {
-        setLoading(false);
-        setMyParcels(result.data);
       }
     }
     loadTrips();

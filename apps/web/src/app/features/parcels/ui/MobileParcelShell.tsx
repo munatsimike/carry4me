@@ -1,7 +1,6 @@
 import useParcelForm from "@/app/shared/Authentication/UI/hooks/useParcelForm";
 import CreateParcelForm from "./CreateParcelForm";
 import MobileForm from "../../dashboard/components/MobileForm";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useEffect, useMemo, useState } from "react";
 import type { FormValues } from "@/types/Ui";
 import { useSearchParams } from "react-router-dom";
@@ -30,16 +29,10 @@ import { MyParcelsIdUseCase } from "../application/MyParcelsUseCase";
   useEffect(() => {
     if (mode === "edit" && id) {
       async function fetchParcel() {
-        const { result } = await namedCall(
-          "fetch parcel by id mobile",
-          parcelByIdUseCase.execute(id!),
-        );
-        if (!result.success) {
-          showSupabaseError(result.error);
-          return;
-        }
-        if (result.data.length === 1) {
-          const data = result.data[0];
+        try {
+          const parcels = await parcelByIdUseCase.execute(id!);
+          if (parcels.length !== 1) return;
+          const data = parcels[0];
           setInitialFormValues({
             id: data.id,
             originCountry: data.route.originCountry,
@@ -54,6 +47,8 @@ import { MyParcelsIdUseCase } from "../application/MyParcelsUseCase";
             senderId: data.user.id!,
             departureDate: data.departDate,
           });
+        } catch (err) {
+          showSupabaseError(err);
         }
       }
 

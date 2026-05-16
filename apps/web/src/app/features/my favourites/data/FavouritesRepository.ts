@@ -1,24 +1,26 @@
-import type { Listing, ListingType } from "../../../shared/Authentication/domain/Listing";
-import type { RepoResponse } from "../../../shared/domain/RepoResponse";
+import type {
+  Listing,
+  ListingType,
+} from "../../../shared/Authentication/domain/Listing";
 
 export interface FavouriteRepository {
-  fetchFavourites(userId: string): Promise<RepoResponse<Listing[]>>;
+  fetchFavourites(userId: string): Promise<Listing[]>;
 
   addFavourite(
     userId: string,
     listingId: string,
     listingType: ListingType,
-  ): Promise<RepoResponse<string>>;
+  ): Promise<string>;
 
   removeFavourite(
     userId: string,
     listingId: string,
     listingType: ListingType,
-  ): Promise<RepoResponse<string>>;
+  ): Promise<string>;
 
   toggleFavourite(
     userId: string,
     listingId: string,
     listingType: ListingType,
-  ): Promise<RepoResponse<boolean>>;
+  ): Promise<boolean>;
 }

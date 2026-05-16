@@ -4,7 +4,6 @@ import CustomText from "@/components/ui/CustomText";
 import FloatingInputField from "@/app/components/CustomInputField";
 import { Button } from "@/components/ui/Button";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
-import { namedCall } from "../application/NamedCall";
 import { Card } from "@/app/components/card/Card";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,18 +52,14 @@ export default function NewPassword() {
   const navigate = useNavigate();
 
   const handleUpdatePassword = async (values: FormValues) => {
-    const { result } = await namedCall(
-      "new password",
-      newPasswordUseCase.execute(values.password),
-    );
-
-    if (!result.success) {
-      showSupabaseError(result.error);
-    } else {
+    try {
+      await newPasswordUseCase.execute(values.password);
       reset();
       navigate("/?reset=success", {
         replace: true,
       });
+    } catch (err) {
+      showSupabaseError(err);
     }
   };
 

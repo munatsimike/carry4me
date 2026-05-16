@@ -5,7 +5,6 @@ import { useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
 import { MyTripsUseCase } from "../application/MyTripsUseCase";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import MobileForm from "../../dashboard/components/MobileForm";
 
@@ -28,16 +27,10 @@ export default function MobileTripShell() {
   useEffect(() => {
     if (mode === "edit" && id) {
       async function fetchTrip() {
-        const { result } = await namedCall(
-          "fetch trip by id mobile",
-          tripByIdUseCase.execute(id!),
-        );
-        if (!result.success) {
-          showSupabaseError(result.error);
-          return;
-        }
-        if (result.data.length === 1) {
-          const data = result.data[0];
+        try {
+          const trips = await tripByIdUseCase.execute(id!);
+          if (trips.length !== 1) return;
+          const data = trips[0];
           setInitialFormValues({
             id: data.id,
             originCountry: data.route.originCountry,
@@ -52,6 +45,8 @@ export default function MobileTripShell() {
             senderId: data.user.id!,
             departureDate: data.departDate,
           });
+        } catch (err) {
+          showSupabaseError(err);
         }
       }
 

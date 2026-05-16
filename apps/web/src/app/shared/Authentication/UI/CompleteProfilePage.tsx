@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SignUpUseCase } from "../application/SignUpUseCase";
 import type { AppUser } from "../domain/authTypes";
-import { namedCall } from "../application/NamedCall";
+import { AppError } from "@/app/shared/domain/AppError";
 import CustomText from "@/components/ui/CustomText";
 import LineDivider from "@/app/components/LineDivider";
 import FloatingInputField from "@/app/components/CustomInputField";
@@ -126,26 +126,21 @@ export default function CompleteProfile() {
       },
     };
 
-    const { result } = await namedCall(
-      "signup",
-      signupUseCase.execute(newUser),
-    );
-
-    if (!result.success) {
-      if (result.error.code === "user_already_exists") {
-        showSupabaseError(result.error, "Signin", {
-          onLogin: () =>
-            openSignInModal(),
+    try {
+      await signupUseCase.execute(newUser);
+      navigate("/?signup=success", {
+        replace: true,
+      });
+    } catch (err) {
+      const appError = AppError.fromUnknown(err);
+      if (appError.code === "user_already_exists") {
+        showSupabaseError(appError, "Signin", {
+          onLogin: () => openSignInModal(),
         });
       } else {
-        showSupabaseError(result.error);
+        showSupabaseError(appError);
       }
-      return;
     }
-
-    navigate("/?signup=success", {
-      replace: true,
-    });
   };
 
   const formContents = (

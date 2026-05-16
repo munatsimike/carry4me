@@ -1,6 +1,4 @@
 import type { AuthRepository } from "../domain/AuthRepository";
-import type { Result } from "../domain/Result";
-import { toResult } from "./toResultMapper";
 
 export class SendPhoneOTPUseCase {
   private repo: AuthRepository;
@@ -9,8 +7,7 @@ export class SendPhoneOTPUseCase {
     this.repo = repo;
   }
 
-  async execute(phoneNumber: string): Promise<Result<string>> {
-    const result = await this.repo.sendPhoneOTP(phoneNumber);
-    return toResult(result);
+  async execute(phoneNumber: string): Promise<string> {
+    return await this.repo.sendPhoneOTP(phoneNumber);
   }
 }

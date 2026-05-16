@@ -10,7 +10,7 @@ import { SupabaseCarryRequestRepository } from "../features/carry request/data/S
 import { CreateCarryRequestUseCase } from "../features/carry request/application/CreateCarryReaquest";
 import type { GoodsCategory } from "../features/goods/domain/GoodsCategory";
 import { useToast } from "./Toast";
-import { namedCall } from "../shared/Authentication/application/NamedCall";
+import { AppError } from "@/app/shared/domain/AppError";
 import { useUniversalModal } from "../shared/Authentication/application/DialogBoxModalProvider";
 import { CircleCheck, Clock, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -84,27 +84,8 @@ export default function ConfirmRequest({
       onClose();
       return;
     }
-    const { result } = await namedCall(
-      "create carry request",
-      createRequest.execute(loggedInUserId, parcel, trip),
-    );
-
-    if (!result.success) {
-      onClose();
-      if (result.status === 409) {
-        openInfo({
-          icon: <Clock className="h-6 w-6 text-warning-400" />,
-          title: "Pending request exists",
-          message: `You already have a request with this ${isSenderRequesting ? "sender" : "traveler"} that is waiting for a response. Please check the existing request for updates.`,
-          label: "Go to requests",
-          onClick: () => navigate("/requests"),
-        });
-      } else {
-        showSupabaseError(result.error);
-      }
-    }
-
-    if (result.success) {
+    try {
+      await createRequest.execute(loggedInUserId, parcel, trip);
       openInfo({
         icon: <CircleCheck className="h-6 w-6 text-success-500" />,
         title: "Request sent",
@@ -115,6 +96,20 @@ export default function ConfirmRequest({
       });
       setLoadRequest(true);
       onClose();
+    } catch (err) {
+      onClose();
+      const appError = AppError.fromUnknown(err);
+      if (appError.status === 409) {
+        openInfo({
+          icon: <Clock className="h-6 w-6 text-warning-400" />,
+          title: "Pending request exists",
+          message: `You already have a request with this ${isSenderRequesting ? "sender" : "traveler"} that is waiting for a response. Please check the existing request for updates.`,
+          label: "Go to requests",
+          onClick: () => navigate("/requests"),
+        });
+      } else {
+        showSupabaseError(appError);
+      }
     }
   };
 

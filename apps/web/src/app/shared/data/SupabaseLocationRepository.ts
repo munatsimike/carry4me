@@ -1,11 +1,11 @@
 import { supabase } from "@/app/shared/supabase/client";
+import { throwIfSupabaseError } from "@/app/shared/domain/AppError";
 
 import type { LocationRepository } from "../Authentication/domain/LocationRepository";
-import type { RepoResponse } from "../domain/RepoResponse";
 import type { MyLocation } from "../Authentication/domain/MyLocation";
 
 export class SupabaseLocationRepository implements LocationRepository {
-  async getLocations(): Promise<RepoResponse<MyLocation[]>> {
+  async getLocations(): Promise<MyLocation[]> {
     const { data, error } = await supabase
       .from("countries")
       .select(
@@ -25,27 +25,15 @@ export class SupabaseLocationRepository implements LocationRepository {
         referencedTable: "cities",
       });
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          message: error.message,
-          code: error.code ?? undefined,
-          status: null,
-        },
-      };
-    }
+    throwIfSupabaseError(error);
 
-    return {
-      data: (data ?? []).map((country) => ({
-        country: {
-          id: country.id,
-          name: country.name,
-          code: country.code,
-        },
-        cities: country.cities ?? [],
-      })),
-      error: null,
-    };
+    return (data ?? []).map((country) => ({
+      country: {
+        id: country.id,
+        name: country.name,
+        code: country.code,
+      },
+      cities: country.cities ?? [],
+    }));
   }
 }

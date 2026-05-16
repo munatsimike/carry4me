@@ -1,4 +1,4 @@
-import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
+import { requireData, throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import type { FavouriteRepository } from "./FavouritesRepository";
 import type {
   Listing,
@@ -12,45 +12,21 @@ import {
 } from "@/app/shared/Authentication/domain/SupabaseHelper";
 
 export class SupabaseFavouriteRepository implements FavouriteRepository {
-  async fetchFavourites(userId: string): Promise<RepoResponse<Listing[]>> {
+  async fetchFavourites(userId: string): Promise<Listing[]> {
     const tripIds = await getFavListingIds(userId, "trip_id");
     const parcelIds = await getFavListingIds(userId, "parcel_id");
 
-    if (!tripIds || !parcelIds) {
-      return {
-        data: null,
-        error: { message: "unable to fetch favourites", code: "" },
-      };
-    }
+    const tripsResult = await getTripsByIds(tripIds, new Set(tripIds));
+    const parcelsResult = await getParcelsByIds(parcelIds, new Set(parcelIds));
 
-    const { data: tripsResult, error: tripsError } = await getTripsByIds(
-      tripIds,
-      new Set(tripIds),
-    );
-
-    const { data: parcelsResult, error: parcelsError } = await getParcelsByIds(
-      parcelIds,
-      new Set(parcelIds),
-    );
-
-    if (tripsError || parcelsError || !tripsResult || !parcelsResult) {
-      return {
-        data: null,
-        error: { message: "failed to fetch listings", code: "" },
-      };
-    }
-
-    return {
-      data: [...tripsResult, ...parcelsResult],
-      error: null,
-    };
+    return [...tripsResult, ...parcelsResult];
   }
 
   async addFavourite(
     userId: string,
     listingId: string,
     listingType: ListingType,
-  ): Promise<RepoResponse<string>> {
+  ): Promise<string> {
     const payload =
       listingType === "trip"
         ? { user_id: userId, trip_id: listingId }
@@ -62,24 +38,16 @@ export class SupabaseFavouriteRepository implements FavouriteRepository {
       .select("id")
       .single();
 
-    if (error) {
-      return {
-        data: null,
-        error: { message: error.message, status: status, code: error.code },
-      };
-    }
+    throwIfSupabaseError(error, status);
 
-    return {
-      data: data.id,
-      error: null,
-    };
+    return requireData(data).id;
   }
 
   async removeFavourite(
     userId: string,
     listingId: string,
     listingType: ListingType,
-  ): Promise<RepoResponse<string>> {
+  ): Promise<string> {
     const column = listingType === "trip" ? "trip_id" : "parcel_id";
 
     const { data, error, status } = await supabase
@@ -90,24 +58,16 @@ export class SupabaseFavouriteRepository implements FavouriteRepository {
       .select("id")
       .single();
 
-    if (error) {
-      return {
-        data: null,
-        error: { message: error.message, status: status, code: error.code },
-      };
-    }
+    throwIfSupabaseError(error, status);
 
-    return {
-      data: data.id,
-      error: null,
-    };
+    return requireData(data).id;
   }
 
   async toggleFavourite(
     userId: string,
     listingId: string,
     listingType: ListingType,
-  ): Promise<RepoResponse<boolean>> {
+  ): Promise<boolean> {
     const column = listingType === "trip" ? "trip_id" : "parcel_id";
     const {
       data: existing,
@@ -120,61 +80,14 @@ export class SupabaseFavouriteRepository implements FavouriteRepository {
       .eq(column, listingId)
       .maybeSingle();
 
-    if (fetchError) {
-      return {
-        data: null,
-        error: {
-          message: fetchError.message,
-          status: status,
-          code: fetchError.code,
-        },
-      };
-    }
+    throwIfSupabaseError(fetchError, status);
 
     if (existing) {
-      const { error: removeResult } = await this.removeFavourite(
-        userId,
-        listingId,
-        listingType,
-      );
-
-      if (removeResult) {
-        return {
-          data: null,
-          error: {
-            message: removeResult.message,
-            code: removeResult.code,
-            status: removeResult.status,
-          },
-        };
-      }
-
-      return {
-        data: false,
-        error: null,
-      };
+      await this.removeFavourite(userId, listingId, listingType);
+      return false;
     }
 
-    const { error: addResult } = await this.addFavourite(
-      userId,
-      listingId,
-      listingType,
-    );
-
-    if (addResult) {
-      return {
-        data: null,
-        error: {
-          message: addResult.message,
-          status: addResult.status,
-          code: addResult.code,
-        },
-      };
-    }
-
-    return {
-      data: true,
-      error: null,
-    };
+    await this.addFavourite(userId, listingId, listingType);
+    return true;
   }
 }

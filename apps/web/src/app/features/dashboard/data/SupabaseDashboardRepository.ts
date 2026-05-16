@@ -1,35 +1,29 @@
 import { supabase } from "@/app/shared/supabase/client";
+import { requireData, throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import type { DashboardDataRepository } from "../domain/DashBoardRepository";
 import type { RequestStats } from "../domain/stats.types";
-import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
 export class SubabaseDashboardRepository implements DashboardDataRepository {
-  async getDashboardStats(userId: string): Promise<RepoResponse<RequestStats>> {
-    const { data, error } = await supabase.rpc(
-      "get_dashboard_overview",
-      {
-        p_user_id: userId,
-      },
-    );
+  async getDashboardStats(userId: string): Promise<RequestStats> {
+    const { data, error } = await supabase.rpc("get_dashboard_overview", {
+      p_user_id: userId,
+    });
 
-    if (error) {
-      return { data: null,  error: error };
-    }
+    throwIfSupabaseError(error);
+
+    const overview = requireData(data);
 
     return {
-      data: {
-        stats: {
-          postedParcels: data.total_posted_parcels,
-          postedTrips: data.total_posted_trips,
-          activeRequests: data.active_requests,
-          pendingAproval: data.pending_matches,
-          awaitingPayment: data.pending_payment,
-          awaitingHandover: data.pending_handover,
-          inProgress: data.in_transit,
-          delivered: data.completed,
-        },
+      stats: {
+        postedParcels: overview.total_posted_parcels,
+        postedTrips: overview.total_posted_trips,
+        activeRequests: overview.active_requests,
+        pendingAproval: overview.pending_matches,
+        awaitingPayment: overview.pending_payment,
+        awaitingHandover: overview.pending_handover,
+        inProgress: overview.in_transit,
+        delivered: overview.completed,
       },
-      error: null,
     };
   }
 }

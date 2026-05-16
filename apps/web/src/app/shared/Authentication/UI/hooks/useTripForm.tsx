@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import z from "zod";
-import { namedCall } from "../../application/NamedCall";
 import { toTripDtoMapper } from "@/app/features/trips/application/toTripDtoMapper";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
 import { SupabaseGoodsRepository } from "@/app/features/goods/data/SupabaseGoodsRepository";
@@ -123,35 +122,23 @@ export function useTripForm({
     }
 
     if (!initialFormValues?.id) return;
-    const { result: tripResult } = await namedCall(
-      "edit trip",
-      editTripUsecase.execute(
+    try {
+      await editTripUsecase.execute(
         toTripDtoMapper(initialFormValues?.id, values, dirtyFields),
-      ),
-    );
+      );
 
-    if (!tripResult.success) {
-      showSupabaseError(tripResult.error);
-      return;
-    }
-
-    if (dirtyFields.goodsCategoryIds) {
-      const { result } = await namedCall(
-        "edit goods",
-        editGoodsUsecase.execute(
+      if (dirtyFields.goodsCategoryIds) {
+        await editGoodsUsecase.execute(
           values.goodsCategoryIds,
           initialFormValues.id,
           "trip",
-        ),
-      );
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
+        );
       }
-    }
-    if (tripResult.success) {
+
       toast("changes saved successfully", { variant: "success" });
       await refreshProfile();
+    } catch (err) {
+      showSupabaseError(err);
     }
   };
 
@@ -162,7 +149,7 @@ export function useTripForm({
     if (!ok) return;
 
     try {
-      const tripId = await createTrip(values, user.id, useCase);
+      const tripId = await createTrip(values, user.id, useCase, showSupabaseError);
       if (!tripId) return;
 
       await SaveGoodsCategories(
@@ -176,8 +163,8 @@ export function useTripForm({
       } else {
         setToDashBoard(true);
       }
-    } catch (e) {
-      showSupabaseError({ code: "error", message: "" });
+    } catch (err) {
+      showSupabaseError(err);
     }
   };
 
@@ -201,17 +188,14 @@ async function createTrip(
   values: TripFormFields,
   userId: string,
   useCase: CreateTripUseCase,
+  showSupabaseError: (err: unknown) => void,
 ): Promise<string> {
-  const { result } = await namedCall(
-    "createTrip",
-    useCase.execute(userId, toCreateTrip(values)),
-  );
-
-  if (!result.success) {
+  try {
+    return await useCase.execute(userId, toCreateTrip(values));
+  } catch (err) {
+    showSupabaseError(err);
     return "";
   }
-
-  return result.data;
 }
 
 async function SaveGoodsCategories(

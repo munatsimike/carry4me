@@ -1,6 +1,4 @@
 import type { AuthRepository } from "../domain/AuthRepository";
-import type { Result } from "../domain/Result";
-import { toResult } from "./toResultMapper";
 
 export class DeleteAvatarUseCase {
   repo: AuthRepository;
@@ -13,8 +11,7 @@ export class DeleteAvatarUseCase {
     userId: string,
     path: string,
     bucketName: string = "avatars",
-  ): Promise<Result<string>> {
-    const result = await this.repo.deleteAvatar(userId, path, bucketName);
-    return toResult(result);
+  ): Promise<string> {
+    return await this.repo.deleteAvatar(userId, path, bucketName);
   }
 }

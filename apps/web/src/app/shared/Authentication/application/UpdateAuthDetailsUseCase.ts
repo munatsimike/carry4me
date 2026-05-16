@@ -1,6 +1,5 @@
+import { AppError } from "@/app/shared/domain/AppError";
 import type { AuthRepository } from "../domain/AuthRepository";
-import type { Result } from "../domain/Result";
-import { toResult } from "./toResultMapper";
 import type { UpdateProfileDto } from "./updateProfileDTO";
 
 export class UpdateAuthDetailsUseCase {
@@ -13,13 +12,11 @@ export class UpdateAuthDetailsUseCase {
     userId: string,
     email?: string,
     phoneNumber?: string,
-  ): Promise<Result<string>> {
-    
-    const result = await this.repo.updateProfile(
+  ): Promise<string> {
+    return await this.repo.updateProfile(
       userId,
       this.toUpdateAuthDto(email, phoneNumber),
     );
-    return toResult(result);
   }
 
   toUpdateAuthDto(
@@ -34,7 +31,12 @@ export class UpdateAuthDetailsUseCase {
       dto.phone_number = phoneNumber;
     }
 
-    if (Object.keys(dto).length === 0) throw Error;
+    if (Object.keys(dto).length === 0) {
+      throw new AppError({
+        message: "Email or phone number is required",
+        code: "VALIDATION_ERROR",
+      });
+    }
     return dto;
   }
 }

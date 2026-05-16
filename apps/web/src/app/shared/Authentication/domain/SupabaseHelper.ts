@@ -1,5 +1,5 @@
 import type { TripListing } from "@/app/features/trips/domain/Trip";
-import type { RepoResponse } from "../../domain/RepoResponse";
+import { AppError, throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import { supabase } from "../../supabase/client";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import { mapTripRowToTrip } from "@/app/features/trips/domain/tripmappers";
@@ -10,41 +10,35 @@ export type Table = "parcels" | "trips";
 export async function deleteById(
   listingId: string,
   table: Table,
-): Promise<RepoResponse<string>> {
+): Promise<string> {
   const { data, error, status } = await supabase
     .from(table)
     .delete()
     .eq("id", listingId)
     .select("id");
 
-  if (error) {
-    return {
-      data: null,
-      error: {
-        code: error.code,
-        message: error.message,
-        status: status,
-      },
-    };
-  }
+  throwIfSupabaseError(error, status);
 
   if (!data || data.length === 0) {
-    return {
-      data: null,
-      error: { code: "", message: "Parcel not found or not authorized." },
-    };
+    throw new AppError({
+      code: "NOT_FOUND",
+      message: "Parcel not found or not authorized.",
+    });
   }
 
-  return {
-    data: listingId,
-    error: null,
-  };
+  return listingId;
 }
+
+type FavouriteRow = {
+  trip_id?: string | null;
+  parcel_id?: string | null;
+  created_at?: string;
+};
 
 export async function getFavItem(
   userId: string,
   column: "trip_id" | "parcel_id",
-): Promise<RepoResponse<any[]>> {
+): Promise<FavouriteRow[]> {
   const { data, error, status } = await supabase
     .from("favourites")
     .select(`${column}, created_at`)
@@ -52,26 +46,17 @@ export async function getFavItem(
     .not(column, "is", null)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    return {
-      data: null,
-      error: {
-        code: error.code,
-        message: error.message,
-        status: status,
-      },
-    };
-  }
+  throwIfSupabaseError(error, status);
 
-  return { data, error: null };
+  return data ?? [];
 }
 
 export async function getTripsByIds(
   tripIds: string[],
   likedTripIds?: Set<string>,
-): Promise<RepoResponse<TripListing[]>> {
+): Promise<TripListing[]> {
   if (!tripIds.length) {
-    return { data: [], error: null };
+    return [];
   }
 
   const { data, error, status } = await supabase
@@ -91,28 +76,17 @@ export async function getTripsByIds(
     )
     .in("id", tripIds);
 
-  if (error) {
-    return {
-      data: null,
-      error: {
-        code: error.code,
-        message: error.message,
-        status: status,
-      },
-    };
-  }
+  throwIfSupabaseError(error, status);
 
-  const result = data.map((row) => mapTripRowToTrip(row, likedTripIds));
-
-  return { data: result, error: null };
+  return (data ?? []).map((row) => mapTripRowToTrip(row, likedTripIds));
 }
 
 export async function getParcelsByIds(
   parcelIds: string[],
   likedTripIds?: Set<string>,
-): Promise<RepoResponse<ParcelListing[]>> {
+): Promise<ParcelListing[]> {
   if (!parcelIds.length) {
-    return { data: [], error: null };
+    return [];
   }
 
   const { data, error, status } = await supabase
@@ -127,21 +101,9 @@ export async function getParcelsByIds(
     )
     .in("id", parcelIds);
 
-  if (error) {
-    return {
-      data: null,
-      error: {
-        code: error.code,
-        message: error.message,
-        status: status,
-      },
-    };
-  }
+  throwIfSupabaseError(error, status);
 
-  return {
-    data: data.map((row) => toParcelMapper(row, likedTripIds)) ?? [],
-    error: null,
-  };
+  return (data ?? []).map((row) => toParcelMapper(row, likedTripIds));
 }
 
 export async function getFavListingIds(
@@ -149,11 +111,8 @@ export async function getFavListingIds(
   column: "trip_id" | "parcel_id",
 ): Promise<string[]> {
   if (!userId) return [];
-  const { data, error } = await getFavItem(userId, column);
-  if (error) return [];
-  return (
-    data
-      ?.map((v) => (column === "parcel_id" ? v.parcel_id : v.trip_id))
-      .filter((id): id is string => Boolean(id)) ?? []
-  );
+  const data = await getFavItem(userId, column);
+  return data
+    .map((v) => (column === "parcel_id" ? v.parcel_id : v.trip_id))
+    .filter((id): id is string => Boolean(id));
 }

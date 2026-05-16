@@ -1,8 +1,5 @@
-
 import type { LocationRepository } from "../domain/LocationRepository";
 import type { MyLocation } from "../domain/MyLocation";
-import type { Result } from "../domain/Result";
-import { toResult } from "./toResultMapper";
 
 /**
  * Use case for fetching location data from the repository.
@@ -15,12 +12,7 @@ export class GetLocationUseCase {
     this.repo = repo;
   }
 
-  /**
-   * Retrieve all countries and map the repository response into a Result.
-   */
-  async getCountries(): Promise<Result<MyLocation[]>> {
-    const countries = await this.repo.getLocations();
-    return toResult(countries);
+  async getCountries(): Promise<MyLocation[]> {
+    return await this.repo.getLocations();
   }
-
 }

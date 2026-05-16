@@ -13,7 +13,7 @@ import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
-import { namedCall } from "../application/NamedCall";
+import { AppError } from "@/app/shared/domain/AppError";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import SvgIcon from "@/components/ui/SvgIcon";
 
@@ -69,23 +69,17 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
 
   const handleSendOTP = async (values: PhoneFormValues) => {
     setLoading(true);
-    const { result } = await namedCall(
-      "sendPhoneOTP",
-      sendOTPUseCase.execute(values.phoneNumber),
-    );
-
-    if (!result.success) {
-      setError(result.error.message || "Failed to send OTP");
-      showSupabaseError(result.error);
+    try {
+      await sendOTPUseCase.execute(values.phoneNumber);
+      setPhoneNumber(values.phoneNumber);
+      setStep("otp-verification");
+      onPhoneSubmitted();
+    } catch (err) {
+      setError(AppError.fromUnknown(err).message);
+      showSupabaseError(err);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Store phone number and move to OTP verification step
-    setPhoneNumber(values.phoneNumber);
-    setStep("otp-verification");
-    setLoading(false);
-    onPhoneSubmitted();
   };
 
   return (

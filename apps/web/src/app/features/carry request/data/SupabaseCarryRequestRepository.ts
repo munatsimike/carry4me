@@ -1,4 +1,5 @@
 import { supabase } from "@/app/shared/supabase/client";
+import { requireData, throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import type { CarryRequestRepository } from "../domain/CarryRequestRepository";
 import {
   type CarryRequestStatus,
@@ -6,13 +7,12 @@ import {
 } from "../domain/CreateCarryRequest";
 import { toCarryRequestMapper } from "../domain/toCarryRequestMapper";
 import type { CarryRequest } from "../domain/CarryRequest";
-import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 
 export class SupabaseCarryRequestRepository implements CarryRequestRepository {
   async updateCarryRequestStatus(
     carryRequestId: string,
     newStatus: CarryRequestStatus,
-  ): Promise<RepoResponse<string>> {
+  ): Promise<string> {
     const { data, status, error } = await supabase
       .from("carry_requests")
       .update({
@@ -22,19 +22,13 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       .eq("id", carryRequestId)
       .select("id")
       .single();
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    return { data: data.id, error: null };
+
+    throwIfSupabaseError(error, status);
+
+    return requireData(data).id;
   }
 
-  async isExpired(requestId: string): Promise<RepoResponse<boolean>> {
+  async isExpired(requestId: string): Promise<boolean> {
     const { data, error, status } = await supabase.rpc(
       "perform_carry_request_action",
       {
@@ -43,31 +37,21 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       },
     );
 
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
+    throwIfSupabaseError(error, status);
 
     if (!data.ok && data.reason === "PAYMENT_EXPIRED") {
-      return { data: false, error: error };
+      return false;
     }
 
-    return { data: true, error: error };
+    return true;
   }
 
-  async fetchCarryRequestsForUser(
-    userId: string,
-  ): Promise<RepoResponse<CarryRequest[]>> {
-    const { error: isExpiredErrors } = await supabase.rpc(
+  async fetchCarryRequestsForUser(userId: string): Promise<CarryRequest[]> {
+    const { error: expireError } = await supabase.rpc(
       "expire_overdue_carry_requests",
     );
 
-    if (isExpiredErrors) return { data: null, error: isExpiredErrors };
+    throwIfSupabaseError(expireError);
 
     const { data, status, error } = await supabase
       .from("carry_requests")
@@ -91,23 +75,12 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       .or(`sender_user_id.eq.${userId},traveler_user_id.eq.${userId}`)
       .order("created_at", { ascending: false });
 
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    const result = (data ?? []).map(toCarryRequestMapper);
+    throwIfSupabaseError(error, status);
 
-    return { data: result, error: null };
+    return (data ?? []).map(toCarryRequestMapper);
   }
 
-  async createCarryRequest(
-    request: CreateCarryRequest,
-  ): Promise<RepoResponse<string>> {
+  async createCarryRequest(request: CreateCarryRequest): Promise<string> {
     const { data, status, error } = await supabase
       .from("carry_requests")
       .insert({
@@ -122,15 +95,9 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       })
       .select("id")
       .single();
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    return { data: data.id, error: null };
+
+    throwIfSupabaseError(error, status);
+
+    return requireData(data).id;
   }
 }

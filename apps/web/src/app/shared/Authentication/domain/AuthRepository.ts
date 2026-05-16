@@ -1,35 +1,34 @@
 import type { User } from "@supabase/supabase-js";
-import type { RepoResponse } from "../../domain/RepoResponse";
 import type { UpdateAuthDto } from "../application/UpdateAuthDto";
 import type { UpdateProfileDto } from "../application/updateProfileDTO";
 import type { AppUser, UserProfile } from "./authTypes";
 
 export interface AuthRepository {
-  logout(): Promise<RepoResponse<boolean>>;
-  fetchUserProfile(userId: string): Promise<RepoResponse<UserProfile>>;
-  completeProfile(user: AppUser): Promise<RepoResponse<string>>;
-  uploadAvatar(file: File, userId: string): Promise<RepoResponse<string>>;
+  logout(): Promise<boolean>;
+  fetchUserProfile(userId: string): Promise<UserProfile | null>;
+  completeProfile(user: AppUser): Promise<string>;
+  uploadAvatar(file: File, userId: string): Promise<string>;
   deleteAvatar(
     userId: string,
     path: string,
     bucketName: string,
-  ): Promise<RepoResponse<string>>;
+  ): Promise<string>;
   updateProfile(
     userId: string,
     updateProfile: Partial<UpdateProfileDto>,
-  ): Promise<RepoResponse<string>>;
+  ): Promise<string>;
 
-  resetPassword(email: string): Promise<RepoResponse<string>>;
-  newPassword(password: string): Promise<RepoResponse<string>>;
+  resetPassword(email: string): Promise<string>;
+  newPassword(password: string): Promise<string>;
 
   updateAuthDetails(
     updateAuthDto: Partial<UpdateAuthDto>,
-  ): Promise<RepoResponse<string>>;
+  ): Promise<string>;
 
   // Phone Verification Methods
-  sendPhoneOTP(phoneNumber: string): Promise<RepoResponse<string>>;
+  sendPhoneOTP(phoneNumber: string): Promise<string>;
   verifyPhoneOTP(
     phoneNumber: string,
     token: string,
-  ): Promise<RepoResponse<User>>;
+  ): Promise<User>;
 }

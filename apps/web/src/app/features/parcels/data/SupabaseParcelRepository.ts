@@ -1,9 +1,9 @@
 import { supabase } from "@/app/shared/supabase/client";
+import { requireData, throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import type { CreateParcel } from "../domain/CreateParcel";
 import type { ParcelRepository as ParcelRepository } from "../domain/ParcelRepository";
 import { PARCELSTATUSES, type ParcelListing } from "../domain/Parcel";
 import { toParcelMapper } from "../domain/toParcelMapper";
-import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import {
   deleteById,
   getFavListingIds,
@@ -11,32 +11,24 @@ import {
 import type { ParcelDto } from "../application/ParcelDto";
 
 export class SupabaseParcelRepository implements ParcelRepository {
-  async deleteParcel(parcelId: string): Promise<RepoResponse<string>> {
+  async deleteParcel(parcelId: string): Promise<string> {
     return deleteById(parcelId, "parcels");
   }
 
-  async editParcel(
-    editParcel: Partial<ParcelDto>,
-  ): Promise<RepoResponse<string>> {
+  async editParcel(editParcel: Partial<ParcelDto>): Promise<string> {
     const { data, error, status } = await supabase
       .from("parcels")
       .update(editParcel)
       .eq("id", editParcel.id)
       .select("id")
       .single();
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    return { data: data.id, error: null };
+
+    throwIfSupabaseError(error, status);
+
+    return requireData(data).id;
   }
 
-  async isParcelOpen(parcelId: string): Promise<RepoResponse<boolean>> {
+  async isParcelOpen(parcelId: string): Promise<boolean> {
     const { data, error, status } = await supabase
       .from("parcels")
       .select("id")
@@ -44,23 +36,12 @@ export class SupabaseParcelRepository implements ParcelRepository {
       .eq("status", PARCELSTATUSES.OPEN)
       .maybeSingle();
 
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
+    throwIfSupabaseError(error, status);
 
-    return { data: !!data, error: null };
+    return !!data;
   }
 
-  parcelsById(
-    userId: string,
-    parcelId?: string,
-  ): Promise<RepoResponse<ParcelListing[]>> {
+  parcelsById(userId: string, parcelId?: string): Promise<ParcelListing[]> {
     return this.fetchParcels(userId, parcelId, true);
   }
 
@@ -68,7 +49,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     userId?: string,
     parcelId?: string,
     shouldFilter: boolean = false,
-  ): Promise<RepoResponse<ParcelListing[]>> {
+  ): Promise<ParcelListing[]> {
     const query = supabase.from("parcels").select(
       `*, sender:profiles(id,full_name,avatar_url), parcel_categories(
       category:goods_categories(
@@ -89,24 +70,17 @@ export class SupabaseParcelRepository implements ParcelRepository {
 
     const { data, error, status } = await query;
 
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    if (!data) return { data: [], error: null };
-    const favParcelIds = await getFavListingIds(userId ?? "", "parcel_id");
-    const favParcelIdSet = new Set(favParcelIds ?? []);
-    const parcelList = data.map((row) => toParcelMapper(row, favParcelIdSet));
+    throwIfSupabaseError(error, status);
 
-    return { data: parcelList, error: null };
+    if (!data) return [];
+
+    const favParcelIds = await getFavListingIds(userId ?? "", "parcel_id");
+    const favParcelIdSet = new Set(favParcelIds);
+
+    return data.map((row) => toParcelMapper(row, favParcelIdSet));
   }
 
-  async createParcel(parcel: CreateParcel): Promise<RepoResponse<string>> {
+  async createParcel(parcel: CreateParcel): Promise<string> {
     const { data, error, status } = await supabase
       .from("parcels")
       .insert({
@@ -123,15 +97,8 @@ export class SupabaseParcelRepository implements ParcelRepository {
       .select("id")
       .single();
 
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    return { data: data.id, error: null };
+    throwIfSupabaseError(error, status);
+
+    return requireData(data).id;
   }
 }

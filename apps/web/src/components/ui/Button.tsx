@@ -44,7 +44,7 @@ export function Button({
     xs: "h-8 px-3 " + cornerRadiusClass,
     sm: "h-9 px-3 " + cornerRadiusClass,
     md: "h-10 px-4 " + cornerRadiusClass,
-    lg: "h-12 px-6 " + cornerRadiusClass,
+    lg: "h-12 px-4 " + cornerRadiusClass,
     xl: "h-[70px] w-full md:flex-1 pr-4 rounded-full",
     xxl: "w-[230px] sm:w-full h-[90px] rounded-2xl px-4",
   };

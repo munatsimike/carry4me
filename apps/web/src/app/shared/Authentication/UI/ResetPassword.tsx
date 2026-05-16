@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { useMemo } from "react";
 import { ResetPasswordUseCase } from "../application/ResetPasswordUseCase";
-import { namedCall } from "../application/NamedCall";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
@@ -51,16 +50,12 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   const handleReset = async (values: EmailField) => {
-    const { result } = await namedCall(
-      "reset password",
-      resetPasswordUseCase.execute(values.emailAddress),
-    );
-
-    if (!result.success) {
-      showSupabaseError(result.error);
-    } else {
+    try {
+      await resetPasswordUseCase.execute(values.emailAddress);
       resetField("emailAddress");
       navigate("/?reset-sent=success");
+    } catch (err) {
+      showSupabaseError(err);
     }
   };
 

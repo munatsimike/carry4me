@@ -1,7 +1,5 @@
-import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
-import type { ParcelRepository } from "../domain/ParcelRepository";
 import type { ParcelListing } from "../domain/Parcel";
-import type { Result } from "@/app/shared/Authentication/domain/Result";
+import type { ParcelRepository } from "../domain/ParcelRepository";
 
 export class GetParcelsUseCase {
   repo: ParcelRepository;
@@ -10,8 +8,7 @@ export class GetParcelsUseCase {
     this.repo = repo;
   }
 
-  async execute(userId?: string): Promise<Result<ParcelListing[]>> {
-    const result = await this.repo.fetchParcels(userId);
-    return toResult(result);
+  async execute(userId?: string): Promise<ParcelListing[]> {
+    return await this.repo.fetchParcels(userId);
   }
 }

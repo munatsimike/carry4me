@@ -15,7 +15,6 @@ import EmptyState from "@/app/components/EmptyState";
 import { GetFavouritesUseCase } from "../application/GetFavouritesUseCase";
 import { SupabaseFavouriteRepository } from "../data/SupabaseFavouriteRepository";
 import type { Listing } from "@/app/shared/Authentication/domain/Listing";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import FavouritesList from "./FavouritesList";
 import {
@@ -81,18 +80,11 @@ export function MyFavouritesPage() {
   useEffect(() => {
     async function fetchFavourites() {
       if (!user?.id) return;
-      const { result } = await namedCall(
-        "fetch fav",
-        getFavourites.execute(user.id),
-      );
-
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
-      }
-
-      if (result.success) {
-        setFavListings(result.data);
+      try {
+        const data = await getFavourites.execute(user.id);
+        setFavListings(data);
+      } catch (err) {
+        showSupabaseError(err);
       }
     }
 

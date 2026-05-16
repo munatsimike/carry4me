@@ -28,7 +28,6 @@ import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
 import { PerformCarryRequestActionUseCase } from "../application/PerformCarryRequestActionUseCase";
 import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActionRepository";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import EmptyState from "@/app/components/EmptyState";
 import {
@@ -146,23 +145,18 @@ export default function CarryRequestsPage() {
       if (!user || !selectedTab) return;
     
 
-      const { result } = await namedCall(
-        "carryRequest",
-        fetchCarryRequestUseCase.execute(user.id),
-      );
+      try {
+        const data = await fetchCarryRequestUseCase.execute(user.id);
 
-      if (!result.success) {
-        showSupabaseError(result.error);
-        
-        return;
-      }
-
-      if (result.data.length === 0) {
-        setEmptyState(toEmptyStateForMapper(selectedTab));
-        setCarryRequestList([]);
-      } else {
-        setEmptyState(null);
-        setCarryRequestList(result.data);
+        if (data.length === 0) {
+          setEmptyState(toEmptyStateForMapper(selectedTab));
+          setCarryRequestList([]);
+        } else {
+          setEmptyState(null);
+          setCarryRequestList(data);
+        }
+      } catch (err) {
+        showSupabaseError(err);
       }
      
     }
@@ -227,58 +221,53 @@ export default function CarryRequestsPage() {
 
 
   const checkTravelersWeight = async (carryRequest: CarryRequest) => {
-    const { result } = await namedCall(
-      "check space before accept",
-      performRequestActions.isSpaceAvailable(
+    try {
+      const hasSpace = await performRequestActions.isSpaceAvailable(
         carryRequest.tripId,
         carryRequest.parcelSnapshot.weight_kg,
-      ),
-    );
+      );
 
-    if (!result.success) {
-      showSupabaseError(result.error);
+      if (!hasSpace) {
+        openInfo({
+          icon: <Package className={dialogIconStyle} />,
+          title: "Not enough space",
+          message:
+            "This parcel exceeds your available space. Try browsing documents, smaller parcels or adjust your weight.",
+          label: "Adjust weight",
+          secondaryLabel: "Browse parcels",
+          onClick: () => navigate("/my/trips"),
+          secondaryAction: () => navigate("/parcels"),
+        });
+        return false;
+      }
+      return true;
+    } catch (err) {
+      showSupabaseError(err);
       return false;
     }
-
-    if (result.success && result.data === false) {
-      openInfo({
-        icon: <Package className={dialogIconStyle} />,
-        title: "Not enough space",
-        message:
-          "This parcel exceeds your available space. Try browsing documents, smaller parcels or adjust your weight.",
-        label: "Adjust weight",
-        secondaryLabel: "Browse parcels",
-        onClick: () => navigate("/my/trips"),
-        secondaryAction: () => navigate("/parcels"),
-      });
-      return false;
-    }
-    return true;
   };
 
   const isParcelAvailable = async (carryRequest: CarryRequest) => {
-    const { result } = await namedCall(
-      "is parcle available",
-      performRequestActions.isParcelAvailable(carryRequest.parcelId),
-    );
+    try {
+      const available = await performRequestActions.isParcelAvailable(
+        carryRequest.parcelId,
+      );
 
-    if (!result.success && result.error) {
-      showSupabaseError(result.error);
+      if (!available) {
+        openInfo({
+          icon: <PackageX className={dialogIconStyle} />,
+          title: "Parcel no longer available",
+          message: "This parcel is no longer available. Browse other parcels.",
+          label: "Browse parcels",
+          onClick: () => navigate("/parcels"),
+        });
+        return false;
+      }
+      return true;
+    } catch (err) {
+      showSupabaseError(err);
       return false;
     }
-
-    if (result.success && !result.data) {
-      openInfo({
-        icon: <PackageX className={dialogIconStyle} />,
-        title: "Parcel no longer available",
-        message: "This parcel is no longer available. Browse other parcels.",
-        label: "Browse parcels",
-        onClick: () => navigate("/parcels"),
-      });
-
-      return false;
-    }
-    return true;
   };
 
   const handlePrimaryActions = async (
@@ -298,24 +287,25 @@ export default function CarryRequestsPage() {
 
     /// check if request has not expired
     if (actions.primary.key === UIACTIONKEYS.PAY) {
-      const { result } = await namedCall(
-        "isExpired",
-        performRequestActions.isExpired(carryRequest.carryRequestId),
-      );
+      try {
+        const canPay = await performRequestActions.isExpired(
+          carryRequest.carryRequestId,
+        );
 
-      if (!result.success) {
-        showSupabaseError(result.error);
-      }
-
-      if (result.success && !result.data) {
-        openInfo({
-          title: "Request Expired",
-          message: "The request has expired, you can send another request.",
-          label:
-            carryRequest.initiatorRole === ROLES.SENDER
-              ? "Browse trips"
-              : "Browse parcels",
-        });
+        if (!canPay) {
+          openInfo({
+            title: "Request Expired",
+            message: "The request has expired, you can send another request.",
+            label:
+              carryRequest.initiatorRole === ROLES.SENDER
+                ? "Browse trips"
+                : "Browse parcels",
+          });
+          return;
+        }
+      } catch (err) {
+        showSupabaseError(err);
+        return;
       }
     }
 
@@ -330,16 +320,13 @@ export default function CarryRequestsPage() {
     }
 
     if (response.ok) {
-      const { result } = await namedCall(
-        "reserve",
-        performRequestActions.reserveWeight(
+      try {
+        await performRequestActions.reserveWeight(
           carryRequest.tripId,
           carryRequest.parcelSnapshot.weight_kg,
-        ),
-      );
-
-      if (!result.success) {
-        showSupabaseError(result.error);
+        );
+      } catch (err) {
+        showSupabaseError(err);
         return;
       }
     }

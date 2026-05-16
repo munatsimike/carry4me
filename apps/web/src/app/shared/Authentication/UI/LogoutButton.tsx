@@ -20,9 +20,8 @@ export default function LogoutButton({
 
   const logout = async () => {
     setLoading(true);
-    const result = await useCase.execute();
-
-    if (result.success) {
+    try {
+      await useCase.execute();
       sessionStorage.setItem(
         "redirectToast",
         JSON.stringify({
@@ -33,12 +32,12 @@ export default function LogoutButton({
       navigate("/", {
         replace: true,
       });
+    } catch (err) {
+      showSupabaseError(err);
+    } finally {
+      setLoading(false);
+      onClosePopOver(false);
     }
-    if (!result.success) {
-      showSupabaseError(result.error);
-    }
-    setLoading(false);
-    onClosePopOver(false);
   };
 
   return (

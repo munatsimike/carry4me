@@ -1,7 +1,6 @@
-import type { TripsRepository } from "../domain/TripRepository";
+import { AppError } from "@/app/shared/domain/AppError";
 import type { CreateTripListing } from "../domain/CreateTrip";
-import type { Result } from "@/app/shared/Authentication/domain/Result";
-import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
+import type { TripsRepository } from "../domain/TripRepository";
 
 export class CreateTripUseCase {
   private repo: TripsRepository;
@@ -9,18 +8,17 @@ export class CreateTripUseCase {
     this.repo = repo;
   }
 
-  async execute(
-    userId: string,
-    input: CreateTripListing,
-  ): Promise<Result<string>> {
+  async execute(userId: string, input: CreateTripListing): Promise<string> {
     this.validate(input);
-    const data = await this.repo.createTrip(userId, input);
-    return toResult(data);
+    return await this.repo.createTrip(userId, input);
   }
 
   private validate(input: CreateTripListing) {
     if (input.capacityKg <= 0) {
-      throw new Error("Capacity should be greater than 0");
+      throw new AppError({
+        message: "Capacity should be greater than 0",
+        code: "VALIDATION_ERROR",
+      });
     }
   }
 }

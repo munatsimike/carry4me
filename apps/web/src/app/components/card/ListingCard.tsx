@@ -14,7 +14,6 @@ import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import User from "./User";
 import { format } from "date-fns";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { SupabaseFavouriteRepository } from "@/app/features/my favourites/data/SupabaseFavouriteRepository";
 import { useEffect, useMemo, useState } from "react";
 import { UpadateFavouriteUseCase } from "@/app/features/my favourites/application/UpdateFavouriteUseCase";
@@ -63,21 +62,18 @@ export function ListingCard<T extends Listing>({
         });
         return;
       }
-      const { result } = await namedCall(
-        "onLIke",
-        updateFavUseCase.execute({
+      try {
+        await updateFavUseCase.execute({
           userId: user.id,
           listingId: listing.id,
           listingType: listing.type,
-        }),
-      );
-
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
+        });
+        toggleLike(listing.id);
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
+        setUpdate(false);
       }
-      toggleLike(listing.id);
-      setUpdate(false);
     }
     onToggleLike();
   }, [updateFav]);

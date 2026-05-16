@@ -1,8 +1,6 @@
-import type { Result } from "@/app/shared/Authentication/domain/Result";
+import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 import type { GoodsRepository } from "../domain/GoodsRepository";
 import type { EditGoodsDto } from "./EditGoodsDto";
-import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
-import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 
 export class EditGoodsUsecase {
   repo: GoodsRepository;
@@ -14,13 +12,11 @@ export class EditGoodsUsecase {
     selectedGoodsIds: string[],
     listingId: string,
     listingType: ListingType,
-  ): Promise<Result<string>> {
-    const result = await this.repo.editListingGoods(
+  ): Promise<string> {
+    return await this.repo.editListingGoods(
       listingType,
       this.toGoodsCategoryDto(selectedGoodsIds, listingId, listingType),
     );
-
-    return toResult(result);
   }
 
   toGoodsCategoryDto(

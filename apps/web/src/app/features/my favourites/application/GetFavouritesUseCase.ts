@@ -1,7 +1,5 @@
-import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
-import type { SupabaseFavouriteRepository } from "../data/SupabaseFavouriteRepository";
-import type { Result } from "@/app/shared/Authentication/domain/Result";
 import type { Listing } from "@/app/shared/Authentication/domain/Listing";
+import type { SupabaseFavouriteRepository } from "../data/SupabaseFavouriteRepository";
 
 export class GetFavouritesUseCase {
   repo: SupabaseFavouriteRepository;
@@ -10,8 +8,7 @@ export class GetFavouritesUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string): Promise<Result<Listing[]>> {
-    const result = await this.repo.fetchFavourites(userId);
-    return toResult(result);
+  async execute(userId: string): Promise<Listing[]> {
+    return await this.repo.fetchFavourites(userId);
   }
 }

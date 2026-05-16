@@ -1,8 +1,6 @@
-import type { Result } from "@/app/shared/Authentication/domain/Result";
 import type { PerformActionRepository } from "../domain/PerformActionRepository";
 import { type UIActionKey } from "../ui/ActionsMapper";
 import type { SupabaseCarryRequestRepository } from "../data/SupabaseCarryRequestRepository";
-import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
 import type { SupabaseTripsRepository } from "../../trips/data/SupabaseTripsRepository";
 import type { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 
@@ -25,38 +23,25 @@ export class PerformCarryRequestActionUseCase {
   }
 
   async execute(action: UIActionKey, carryRequestId: string) {
-    const result = await this.performActionRepo.performAction(
-      action,
-      carryRequestId,
-    );
-
-    return result;
+    return await this.performActionRepo.performAction(action, carryRequestId);
   }
 
-  async isExpired(requestId: string): Promise<Result<boolean>> {
-    const result = await this.carryRequestRepo.isExpired(requestId);
-    return toResult(result);
+  async isExpired(requestId: string): Promise<boolean> {
+    return await this.carryRequestRepo.isExpired(requestId);
   }
 
   async isSpaceAvailable(
     tripId: string,
     requiredSpac: number,
-  ): Promise<Result<boolean>> {
-    const result = await this.tripRepo.availableSpace(tripId, requiredSpac);
-    return toResult(result);
+  ): Promise<boolean> {
+    return await this.tripRepo.availableSpace(tripId, requiredSpac);
   }
 
-  async isParcelAvailable(parcelId: string): Promise<Result<boolean>> {
-    const result = await this.parcelRepo.isParcelOpen(parcelId);
-
-    return toResult(result);
+  async isParcelAvailable(parcelId: string): Promise<boolean> {
+    return await this.parcelRepo.isParcelOpen(parcelId);
   }
 
-  async reserveWeight(
-    tripId: string,
-    parcelWeight: number,
-  ): Promise<Result<string>> {
-    const result = await this.tripRepo.reserveWeight(tripId, parcelWeight);
-    return toResult(result);
+  async reserveWeight(tripId: string, parcelWeight: number): Promise<string> {
+    return await this.tripRepo.reserveWeight(tripId, parcelWeight);
   }
 }

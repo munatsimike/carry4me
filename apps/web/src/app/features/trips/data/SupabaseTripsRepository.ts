@@ -1,9 +1,9 @@
 import { supabase } from "@/app/shared/supabase/client";
+import { requireData, throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import type { TripsRepository } from "../domain/TripRepository";
 import type { CreateTripListing } from "../domain/CreateTrip";
 import { TRIPSTATUSES, type TripListing } from "../domain/Trip";
 import { mapTripRowToTrip } from "../domain/tripmappers";
-import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import {
   deleteById,
   getFavListingIds,
@@ -11,7 +11,7 @@ import {
 import type { TripDto } from "../application/TripDto";
 
 export class SupabaseTripsRepository implements TripsRepository {
-  async editTrip(editTrip: Partial<TripDto>): Promise<RepoResponse<string>> {
+  async editTrip(editTrip: Partial<TripDto>): Promise<string> {
     const { data, error, status } = await supabase
       .from("trips")
       .update(editTrip)
@@ -19,29 +19,20 @@ export class SupabaseTripsRepository implements TripsRepository {
       .select("id")
       .single();
 
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    return { data: data.id, error: null };
+    throwIfSupabaseError(error, status);
+
+    return requireData(data).id;
   }
 
-  async deleteTrip(parcelId: string): Promise<RepoResponse<string>> {
+  async deleteTrip(parcelId: string): Promise<string> {
     return deleteById(parcelId, "trips");
   }
-  async tripsById(userId: string, tripId:string): Promise<RepoResponse<TripListing[]>> {
-    return this.listTrips(userId, tripId,true);
+
+  async tripsById(userId: string, tripId: string): Promise<TripListing[]> {
+    return this.listTrips(userId, tripId, true);
   }
 
-  async reserveWeight(
-    tripId: string,
-    parcelWeight: number,
-  ): Promise<RepoResponse<string>> {
+  async reserveWeight(tripId: string, parcelWeight: number): Promise<string> {
     const {
       data: trip,
       error: fetchError,
@@ -52,15 +43,7 @@ export class SupabaseTripsRepository implements TripsRepository {
       .eq("id", tripId)
       .single();
 
-    if (fetchError)
-      return {
-        data: null,
-        error: {
-          code: fetchError.code,
-          message: fetchError.message,
-          status: fetchStatus,
-        },
-      };
+    throwIfSupabaseError(fetchError, fetchStatus);
 
     const currentReservedWeight = trip.reserved_weight_kg ?? 0;
     const newReservedWeight = currentReservedWeight + parcelWeight;
@@ -72,23 +55,12 @@ export class SupabaseTripsRepository implements TripsRepository {
       .select("id")
       .single();
 
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
+    throwIfSupabaseError(error, status);
 
-    return { data: data.id, error: null };
+    return requireData(data).id;
   }
 
-  async availableSpace(
-    tripId: string,
-    parcelWeight: number,
-  ): Promise<RepoResponse<boolean>> {
+  async availableSpace(tripId: string, parcelWeight: number): Promise<boolean> {
     const { data, status, error } = await supabase.rpc(
       "trip_has_available_capacity",
       {
@@ -96,23 +68,17 @@ export class SupabaseTripsRepository implements TripsRepository {
         p_required_weight: parcelWeight,
       },
     );
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    return { data, error: null };
+
+    throwIfSupabaseError(error, status);
+
+    return data === true;
   }
 
   async listTrips(
     userId?: string,
-    tripId?:string,
+    tripId?: string,
     shouldFilter: boolean = false,
-  ): Promise<RepoResponse<TripListing[]>> {
+  ): Promise<TripListing[]> {
     let query = supabase.from("trips").select(`
       *,
       traveler:profiles(id, full_name, avatar_url),
@@ -125,8 +91,8 @@ export class SupabaseTripsRepository implements TripsRepository {
       )
     `);
 
-    if(tripId){
-      query.eq("id", tripId)
+    if (tripId) {
+      query.eq("id", tripId);
     }
 
     if (shouldFilter && userId) {
@@ -136,25 +102,15 @@ export class SupabaseTripsRepository implements TripsRepository {
 
     const { data, error, status } = await query;
 
-     if(error)  return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-      
+    throwIfSupabaseError(error, status);
+
     const favTripIds = await getFavListingIds(userId ?? "", "trip_id");
-    const favTripIdSet = new Set(favTripIds ?? []);
-    const result = data.map((row) => mapTripRowToTrip(row, favTripIdSet));
-    return { data: result, error: null };
+    const favTripIdSet = new Set(favTripIds);
+
+    return (data ?? []).map((row) => mapTripRowToTrip(row, favTripIdSet));
   }
 
-  async createTrip(
-    userId: string,
-    input: CreateTripListing,
-  ): Promise<RepoResponse<string>> {
+  async createTrip(userId: string, input: CreateTripListing): Promise<string> {
     const { data, error, status } = await supabase
       .from("trips")
       .insert({
@@ -172,14 +128,8 @@ export class SupabaseTripsRepository implements TripsRepository {
       .select("id")
       .single();
 
-    if(error)  return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    return { data: data.id, error: null };
+    throwIfSupabaseError(error, status);
+
+    return requireData(data).id;
   }
 }

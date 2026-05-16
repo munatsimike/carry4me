@@ -1,83 +1,71 @@
 import type { AuthRepository } from "../Authentication/domain/AuthRepository";
-import type { RepoResponse } from "../domain/RepoResponse";
 import type { AppUser, UserProfile } from "../Authentication/domain/authTypes";
 import { supabase } from "@/app/shared/supabase/client";
 import type { UpdateProfileDto } from "../Authentication/application/updateProfileDTO";
 import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
 import type { User } from "@supabase/supabase-js";
-
-const emptyRepoResult: RepoResponse<string> = {
-  data: null,
-
-  error: null,
-};
+import {
+  AppError,
+  requireData,
+  throwIfSupabaseError,
+} from "@/app/shared/domain/AppError";
 
 const redirectUrl = import.meta.env.DEV
   ? "http://localhost:5173/new-password"
   : "https://www.carry4me.uk/new-password";
 
 export class SupabaseAuthRepository implements AuthRepository {
-  async newPassword(newPassword: string): Promise<RepoResponse<string>> {
+  async newPassword(newPassword: string): Promise<string> {
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
 
-    if (sessionError) {
-      return { data: null, error: sessionError };
-    }
+    throwIfSupabaseError(sessionError);
 
     if (!session) {
-      return {
-        data: null,
-        error: new Error(
+      throw new AppError({
+        code: "NO_SESSION",
+        message:
           "No recovery session found. Open the reset link from your email first.",
-        ),
-      };
+      });
     }
 
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
-    if (error) return { data: null, error };
+    throwIfSupabaseError(error);
 
-    return { data: "success", error: null };
+    return "success";
   }
 
-  async resetPassword(email: string): Promise<RepoResponse<string>> {
+  async resetPassword(email: string): Promise<string> {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
 
-    if (error) return { data: null, error };
+    throwIfSupabaseError(error);
 
-    return { data: "success", error: null };
+    return "success";
   }
 
-  async updateAuthDetails(
-    updateAuthDto: UpdateAuthDto,
-  ): Promise<RepoResponse<string>> {
+  async updateAuthDetails(updateAuthDto: UpdateAuthDto): Promise<string> {
     const { data, error } = await supabase.auth.updateUser(updateAuthDto);
-    if (error) return emptyRepoResult;
-    return { data: data.user.id, error: null };
+    throwIfSupabaseError(error);
+    return requireData(data.user).id;
   }
 
- 
-  async completeProfile(appUser: AppUser): Promise<RepoResponse<string>> {
+  async completeProfile(appUser: AppUser): Promise<string> {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return {
-        data: null,
-        error: {
-          code: "NO_USER",
-          message: "No authenticated user found",
-          status: null,
-        },
-      };
+      throw new AppError({
+        code: "NO_USER",
+        message: "No authenticated user found",
+      });
     }
 
     const { data, error } = await supabase
@@ -95,24 +83,12 @@ export class SupabaseAuthRepository implements AuthRepository {
       .select("id")
       .single();
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message ?? "",
-          status: null,
-        },
-      };
-    }
+    throwIfSupabaseError(error);
 
-    return { data: data.id, error: null };
+    return requireData(data).id;
   }
 
-  async uploadAvatar(
-    file: File,
-    userId: string,
-  ): Promise<RepoResponse<string>> {
+  async uploadAvatar(file: File, userId: string): Promise<string> {
     const fileExt = file.name.split(".").pop();
 
     const uniqueId =
@@ -129,56 +105,31 @@ export class SupabaseAuthRepository implements AuthRepository {
         contentType: file.type,
       });
 
-    if (uploadError) {
-      return {
-        data: null,
-        error: {
-          code: uploadError.statusCode,
-          message: uploadError.message,
-          status: uploadError.status,
-        },
-      };
-    }
+    throwIfSupabaseError(
+      uploadError
+        ? {
+            message: uploadError.message,
+            code: uploadError.name,
+          }
+        : null,
+      uploadError?.status ?? null,
+    );
 
-    const { error } = await this.updateAvataPath(userId, filePath);
+    await this.updateAvataPath(userId, filePath);
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: error.status,
-        },
-      };
-    }
-
-    return { data: filePath, error: null };
+    return filePath;
   }
 
-  async updateAvataPath(
-    userId: string,
-    path: string,
-  ): Promise<RepoResponse<null>> {
+  private async updateAvataPath(userId: string, path: string): Promise<void> {
     const { error } = await supabase
       .from("profiles")
       .update({ avatar_url: path })
       .eq("id", userId);
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-        },
-      };
-    }
-
-    return { data: null, error: null };
+    throwIfSupabaseError(error);
   }
 
-  async fetchUserProfile(userId: string): Promise<RepoResponse<UserProfile>> {
+  async fetchUserProfile(userId: string): Promise<UserProfile | null> {
     const { data, status, error } = await supabase
       .from("profiles")
       .select(
@@ -187,187 +138,121 @@ export class SupabaseAuthRepository implements AuthRepository {
       .eq("id", userId)
       .maybeSingle();
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status,
-        },
-      };
-    }
+    throwIfSupabaseError(error, status);
 
     if (!data) {
-      console.warn(`No profile found for userId: ${userId}`);
-      return {
-        data: null,
-        error: {
-          code: "PROFILE_NOT_FOUND",
-          message: "Profile not found",
-          status,
-        },
-      };
+      return null;
     }
 
     const publicUrl = fetchPublicUrl(data.avatar_url);
 
     return {
-      data: {
-        id: data.id,
-        fullName: data.full_name,
-        avatarUrl: publicUrl,
-        countryCode: data.country_code,
-        city: data.city,
-        phoneNumber: data.phone_number,
-        email: data.email,
-        phoneVerified: data.phone_verified === true,
-      },
-      error: null,
+      id: data.id,
+      fullName: data.full_name,
+      avatarUrl: publicUrl,
+      countryCode: data.country_code,
+      city: data.city,
+      phoneNumber: data.phone_number,
+      email: data.email,
+      phoneVerified: data.phone_verified === true,
     };
   }
 
   async updateProfile(
     userId: string,
     updateProfile: Partial<UpdateProfileDto>,
-  ): Promise<RepoResponse<string>> {
-   
-    const { data, error, status } = await supabase
+  ): Promise<string> {
+    const { error, status } = await supabase
       .from("profiles")
       .update(updateProfile)
-      .eq("id", userId)
-    
- 
-    if (error){
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      }
-    };
-    return { data: data, error: null };
+      .eq("id", userId);
+
+    throwIfSupabaseError(error, status);
+
+    return userId;
   }
 
-  async logout(): Promise<RepoResponse<boolean>> {
+  async logout(): Promise<boolean> {
     const { error } = await supabase.auth.signOut();
-    if (error) {
-      return { error, data: null };
-    }
-
-    return { data: true, error: null };
+    throwIfSupabaseError(error);
+    return true;
   }
 
   async deleteAvatar(
     userId: string,
     publicUrl: string,
     bucketName: string = "avatars",
-  ): Promise<RepoResponse<string>> {
+  ): Promise<string> {
     const path = this.extractStoragePath(publicUrl, bucketName);
-    if (!path) return emptyRepoResult;
+    if (!path) {
+      throw new AppError({
+        code: "INVALID_PATH",
+        message: "Could not resolve avatar storage path",
+      });
+    }
+
     const { error } = await supabase.storage.from("avatars").remove([path]);
 
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.statusCode,
-          message: error.message,
-          status: error.status,
-        },
-      };
-    this.updateProfile(userId, { avatar_url: null });
-    return { data: "success", error: null };
+    throwIfSupabaseError(
+      error
+        ? {
+            message: error.message,
+            code: error.name,
+          }
+        : null,
+      error?.status ?? null,
+    );
+
+    await this.updateProfile(userId, { avatar_url: null });
+    return "success";
   }
 
   extractStoragePath(url: string, bucket: string) {
     const marker = `/object/public/${bucket}/`;
     const path = url.split(marker)[1] ?? null;
 
-    return path.split("?")[0];
+    return path?.split("?")[0] ?? null;
   }
 
-  // Phone Verification Methods
-  async sendPhoneOTP(phoneNumber: string): Promise<RepoResponse<string>> {
+  async sendPhoneOTP(phoneNumber: string): Promise<string> {
     const { error } = await supabase.auth.signInWithOtp({
       phone: phoneNumber,
     });
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: null,
-        },
-      };
-    }
+    throwIfSupabaseError(error);
 
-    return { data: "OTP sent successfully", error: null };
+    return "OTP sent successfully";
   }
 
-  async verifyPhoneOTP(
-    phoneNumber: string,
-    token: string,
-  ): Promise<RepoResponse<User>> {
+  async verifyPhoneOTP(phoneNumber: string, token: string): Promise<User> {
     const { data, error } = await supabase.auth.verifyOtp({
       phone: phoneNumber,
       token,
       type: "sms",
     });
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: null,
-        },
-      };
-    }
+    throwIfSupabaseError(error);
 
-    if (data.user) {
-      const { data: profile, error: profileError } = await supabase
+    const user = requireData(data.user, "No user returned after OTP verification");
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    throwIfSupabaseError(profileError);
+
+    if (profile) {
+      const { error: updateError } = await supabase
         .from("profiles")
-        .select("id")
-        .eq("id", data.user.id)
-        .maybeSingle();
+        .update({ phone_verified: true })
+        .eq("id", user.id);
 
-      if (profileError) {
-        return {
-          data: null,
-          error: {
-            code: profileError.code,
-            message: profileError.message,
-            status: null,
-          },
-        };
-      }
-
-      if (profile) {
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ phone_verified: true })
-          .eq("id", data.user.id);
-
-        if (updateError) {
-          return {
-            data: null,
-            error: {
-              code: updateError.code,
-              message: updateError.message,
-              status: null,
-            },
-          };
-        }
-      }
+      throwIfSupabaseError(updateError);
     }
 
-    return { data: data.user, error: null };
+    return user;
   }
 }
 

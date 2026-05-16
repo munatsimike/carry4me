@@ -1,4 +1,5 @@
 import { supabase } from "@/app/shared/supabase/client";
+import { throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import type { HandoverConfirmationRow } from "../domain/HandoverConfirmation";
 import type { HandoverConfirmationState } from "../domain/HandoverConfirmationState";
 import { ROLES } from "../../domain/CreateCarryRequest";
@@ -8,11 +9,12 @@ export class SupabaseHandoverRepository implements HandoverConfirmationRepositor
   async fetchConfirmations(
     carryRequestId: string,
   ): Promise<HandoverConfirmationRow[]> {
-    const { data } = await supabase
+    const { data, error, status } = await supabase
       .from("carry_request_handover_confirmations")
       .select("carry_request_id,user_id,role,confirmed_at")
-      .eq("carry_request_id", carryRequestId)
-      .throwOnError();
+      .eq("carry_request_id", carryRequestId);
+
+    throwIfSupabaseError(error, status);
 
     return (data ?? []) as HandoverConfirmationRow[];
   }

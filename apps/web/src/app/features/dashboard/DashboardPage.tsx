@@ -26,7 +26,6 @@ import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import Greeting from "@/app/components/Greeting";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 
@@ -98,27 +97,15 @@ export default function DashboardPage() {
 
     // fetch dashboard data, recent activies deliveries, posted parcels and trips etc
     const fetchDashboardData = async () => {
-      const [dashboardData, notifications] = await Promise.all([
-        namedCall("dashboard", getDashboardDataUseCase.execute(user.id)),
-        namedCall("Notifications", getNotificationUseCase.execute(user.id)),
-      ]);
-
-      if (dashboardData.result.success)
-        setDashboardData(dashboardData.result.data);
-
-      if (notifications.result.success)
-        setNotification(notifications.result.data.slice(0, 4));
-
-      // show fetch dashboard data error
-      if (!dashboardData.result.success) {
-        showSupabaseError(dashboardData.result.error);
-        return;
-      }
-
-      // show fetch notification errors
-      if (!notifications.result.success) {
-        showSupabaseError(notifications.result.error);
-        return;
+      try {
+        const [dashboardResult, notificationsResult] = await Promise.all([
+          getDashboardDataUseCase.execute(user.id),
+          getNotificationUseCase.execute(user.id),
+        ]);
+        setDashboardData(dashboardResult);
+        setNotification(notificationsResult.slice(0, 4));
+      } catch (err) {
+        showSupabaseError(err);
       }
     };
 

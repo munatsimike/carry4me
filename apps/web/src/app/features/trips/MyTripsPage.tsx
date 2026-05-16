@@ -4,7 +4,6 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SupabaseTripsRepository } from "./data/SupabaseTripsRepository";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { DeleteTripUseCase } from "./application/DeleteTripUseCase";
 import { useToast } from "@/app/components/Toast";
@@ -52,35 +51,26 @@ export function MyTripsPage() {
   const { showSupabaseError } = useUniversalModal();
 
   const deleteTrip = async (tripId: string) => {
-    const { result } = await namedCall(
-      "delete trip",
-      deleteTripUseCase.execute(tripId),
-    );
-    if (!result.success) {
-      return;
+    try {
+      await deleteTripUseCase.execute(tripId);
+      await refreshProfile();
+      toast("Trip deleted successfully", { variant: "success" });
+    } catch (err) {
+      showSupabaseError(err);
     }
-
-    await refreshProfile();
-    toast("Trip deleted successfully", { variant: "success" });
   };
 
   useEffect(() => {
     async function loadTrips() {
       if (!user?.id) return;
       setLoading(true);
-      const { result } = await namedCall(
-        "my trips",
-        tripByIdUseCase.execute(user?.id),
-      );
-      if (!result.success) {
+      try {
+        const data = await tripByIdUseCase.execute(user?.id);
+        setMyTrips(data);
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
         setLoading(false);
-        showSupabaseError(result.error);
-        return;
-      }
-
-      if (result.data) {
-        setLoading(false);
-        setMyTrips(result.data);
       }
     }
     loadTrips();
@@ -116,7 +106,7 @@ export function MyTripsPage() {
               variant={"primary"}
               size={"sm"}
             >
-              + Post a trip
+              Post Trip
             </Button>
           }
         />

@@ -11,7 +11,6 @@ import { EditGoodsUsecase } from "@/app/features/goods/application/EditGoodsUseC
 import { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
 import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
 import toCreateParcelMapper from "@/app/features/goods/domain/toCreatParcelMapper";
-import { namedCall } from "../../application/NamedCall";
 import type { FormMode, FormValues } from "@/types/Ui";
 import { toParcelDtoMapper } from "@/app/features/parcels/application/toParcelDtoMapper";
 import { useToast } from "@/app/components/Toast";
@@ -19,7 +18,6 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { parcelStep2Fields } from "@/app/features/parcels/ui/CreateParcelForm";
 import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import { useNavigate } from "react-router-dom";
-import type { AppError } from "@/app/shared/domain/RepoResponse";
 export const parcelItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
   description: z.string().trim().min(1, "Item description is required"),
@@ -122,36 +120,23 @@ export default function useParcelForm({
     }
 
     if (!initialFormValues?.id) return;
-    const { result } = await namedCall(
-      "edit parcel hook form",
-      editParcelUsecase.execute(
+    try {
+      await editParcelUsecase.execute(
         toParcelDtoMapper(initialFormValues?.id, values, dirtyFields),
-      ),
-    );
+      );
 
-    if (!result.success) {
-      showSupabaseError(result.error);
-      return;
-    }
-
-    if (dirtyFields.goodsCategoryIds) {
-      const { result } = await namedCall(
-        "edit goods",
-        editGoodsUsecase.execute(
+      if (dirtyFields.goodsCategoryIds) {
+        await editGoodsUsecase.execute(
           values.goodsCategoryIds,
           initialFormValues.id,
           "parcel",
-        ),
-      );
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
+        );
       }
-    }
 
-    if (result.success) {
       toast("changes saved successfully", { variant: "success" });
       await refreshProfile();
+    } catch (err) {
+      showSupabaseError(err);
     }
   };
 
@@ -181,8 +166,8 @@ export default function useParcelForm({
         setToDashBoard(true);
       }
       toast("Parcel saved successfully", { variant: "success" });
-    } catch (e) {
-      showSupabaseError({ code: "error", message: "" });
+    } catch (err) {
+      showSupabaseError(err);
     }
   };
 
@@ -212,18 +197,14 @@ async function createParcel(
   values: ParcelFormFields,
   userId: string,
   useCase: CreateParcelUseCase,
-  showSupabaseError: (v: AppError) => void,
+  showSupabaseError: (err: unknown) => void,
 ): Promise<string> {
-  const { result } = await namedCall(
-    "create parcel hook form",
-    useCase.execute(toCreateParcelMapper(userId, values)),
-  );
-  if (!result.success) {
-    showSupabaseError(result.error);
+  try {
+    return await useCase.execute(toCreateParcelMapper(userId, values));
+  } catch (err) {
+    showSupabaseError(err);
     return "";
   }
-
-  return result.data;
 }
 async function SaveGoodsCategories(
   saveGoodsUseCase: SaveGoodsUseCase,

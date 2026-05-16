@@ -15,7 +15,6 @@ import type { ParcelListing } from "../../parcels/domain/Parcel";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { useToast } from "@/app/components/Toast";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow, sortTrips } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
@@ -55,20 +54,14 @@ export default function TravelersPage() {
   useEffect(() => {
     let cancel = false;
     async function fetchTravelers() {
-      const { result } = await namedCall(
-        "travelers",
-        fetchTripsUseCase.execute(user?.id),
-      );
-
-      if (cancel) return;
-
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
-      }
-      if (result.success) {
+      try {
+        const data = await fetchTripsUseCase.execute(user?.id);
+        if (cancel) return;
         setDataLoaded(true);
-        setTripList(result.data);
+        setTripList(data);
+      } catch (err) {
+        if (cancel) return;
+        showSupabaseError(err);
       }
     }
 
@@ -166,30 +159,27 @@ export default function TravelersPage() {
     }
 
     if (parcels.length === 0) {
-      const { result } = await namedCall(
-        "Parcel",
-        getParcelUseCase.execute(user.id),
-      );
+      try {
+        const data = await getParcelUseCase.execute(user.id);
 
-      if (!result.success) {
-        showSupabaseError(result.error);
+        if (data.length === 0) {
+          toast("Post a parcel first to start matching with travelers.", {
+            variant: "warning",
+          });
+          return;
+        }
+
+        if (data.length === 1) {
+          setSelectedParcel(data[0]);
+        }
+
+        if (data.length > 1) {
+          setParcel(data);
+          setParcelSelectionOpen(true);
+        }
+      } catch (err) {
+        showSupabaseError(err);
         return;
-      }
-
-      if (result.data === null) {
-        toast("Post a parcel first to start matching with travelers.", {
-          variant: "warning",
-        });
-        return;
-      }
-
-      if (result.data.length === 1) {
-        setSelectedParcel(result.data[0]);
-      }
-
-      if (result.data.length > 1) {
-        setParcel(result.data);
-        setParcelSelectionOpen(true);
       }
     }
 
@@ -313,7 +303,7 @@ export default function TravelersPage() {
                 className="w-full mt-1"
               >
                 <CustomText textVariant="onDark" textSize="sm">
-                  {"Post trip"}
+                  {"Post Trip"}
                 </CustomText>
               </Button>
             }

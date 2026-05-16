@@ -1,7 +1,5 @@
-import { toResult } from "@/app/shared/Authentication/application/toResultMapper";
-import type { TripsRepository } from "../domain/TripRepository";
-import type { Result } from "@/app/shared/Authentication/domain/Result";
 import type { TripListing } from "../domain/Trip";
+import type { TripsRepository } from "../domain/TripRepository";
 
 export class MyTripsUseCase {
   repo: TripsRepository;
@@ -9,8 +7,7 @@ export class MyTripsUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string, tripId?:string): Promise<Result<TripListing[]>> {
-    const result = await this.repo.tripsById(userId, tripId);
-    return toResult(result);
+  async execute(userId: string, tripId?: string): Promise<TripListing[]> {
+    return await this.repo.tripsById(userId, tripId);
   }
 }

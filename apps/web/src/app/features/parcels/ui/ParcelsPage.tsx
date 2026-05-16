@@ -12,7 +12,6 @@ import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
 import { useToast } from "@/app/components/Toast";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import PageSection from "@/app/components/PageSection";
 import { AnimatePresence, motion } from "framer-motion";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
@@ -60,19 +59,14 @@ export default function ParcelsPage() {
     if (cancel) return;
 
     async function fetchParcels() {
-      const { result } = await namedCall(
-        "parcels",
-        getParcelsUseCase.execute(user?.id),
-      );
-
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
-      }
-
-      if (result.success) {
-        setParcelsList(result.data);
+      try {
+        const data = await getParcelsUseCase.execute(user?.id);
+        if (cancel) return;
+        setParcelsList(data);
         setDataLoaded(true);
+      } catch (err) {
+        if (cancel) return;
+        showSupabaseError(err);
       }
     }
 
@@ -164,31 +158,27 @@ export default function ParcelsPage() {
     }
 
     if (userTrips.length === 0) {
-      // fetch a trip to be matched with a parcel
-      const { result } = await namedCall(
-        "trip",
-        getTripUseCase.execute(user.id),
-      );
-      if (!result.success) {
-        showSupabaseError(result.error);
+      try {
+        const data = await getTripUseCase.execute(user.id);
+
+        if (data.length === 0) {
+          toast("Post a trip first to start matching with senders.", {
+            variant: "warning",
+          });
+          return;
+        }
+
+        if (data.length === 1) {
+          setSelectedTrip(data[0]);
+        }
+
+        if (data.length > 1) {
+          setUserTrips(data);
+          setTripSelectionOpen(true);
+        }
+      } catch (err) {
+        showSupabaseError(err);
         return;
-      }
-
-      // check if any trip is available for the loggedin user
-      if (result.success && result.data === null) {
-        toast("Post a trip first to start matching with senders.", {
-          variant: "warning",
-        });
-        return;
-      }
-
-      if (result.data.length === 1) {
-        setSelectedTrip(result.data[0]);
-      }
-
-      if (result.data.length > 1) {
-        setUserTrips(result.data);
-        setTripSelectionOpen(true);
       }
     }
 
@@ -326,7 +316,7 @@ export default function ParcelsPage() {
                 className="w-full mt-1"
               >
                 <CustomText textVariant="onDark" textSize="sm">
-                  {"Post parcel"}
+                  {"Post Parcel"}
                 </CustomText>
               </Button>
             }

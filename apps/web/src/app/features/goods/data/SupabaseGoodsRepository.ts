@@ -1,35 +1,23 @@
 import { supabase } from "@/app/shared/supabase/client";
+import { AppError, throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import type { GoodsCategory } from "../domain/GoodsCategory";
 import type { GoodsRepository } from "../domain/GoodsRepository";
 import type { UserGoods } from "../domain/UserGoods";
-import type { RepoResponse } from "@/app/shared/domain/RepoResponse";
 import type { EditGoodsDto } from "../application/EditGoodsDto";
 import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 
 export class SupabaseGoodsRepository implements GoodsRepository {
-  async list(): Promise<RepoResponse<GoodsCategory[]>> {
+  async list(): Promise<GoodsCategory[]> {
     const { data, status, error } = await supabase
       .from("goods_categories")
       .select("id, slug, name");
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          status: status,
-          message: error.message,
-        },
-      };
-    return { error: null, data };
+
+    throwIfSupabaseError(error, status);
+
+    return data ?? [];
   }
 
-
-
-  // what goods categories what senders are sending or what travelers are willing to carry
-  async saveGoods(
-    input: UserGoods,
-    isTrip: boolean,
-  ): Promise<RepoResponse<string>> {
+  async saveGoods(input: UserGoods, isTrip: boolean): Promise<string> {
     const foreignKey = isTrip ? "trip_id" : "parcel_id";
     const table = isTrip ? "trip_accepted_categories" : "parcel_categories";
     const rows = input.categoryIds.map((item) => ({
@@ -37,31 +25,22 @@ export class SupabaseGoodsRepository implements GoodsRepository {
       category_id: item,
     }));
 
-    const { data, status, error } = await supabase.from(table).insert(rows);
-    if (error)
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          status: status,
-          message: error.message,
-        },
-      };
-    return { error: null, data };
+    const { error, status } = await supabase.from(table).insert(rows);
+
+    throwIfSupabaseError(error, status);
+
+    return input.tripParcelId;
   }
 
   async editListingGoods(
     type: ListingType,
     editGoods: EditGoodsDto[],
-  ): Promise<RepoResponse<string>> {
+  ): Promise<string> {
     if (editGoods.length === 0) {
-      return {
-        data: null,
-        error: {
-          message: "No goods categories provided",
-          status: 400,
-        },
-      };
+      throw new AppError({
+        message: "No goods categories provided",
+        status: 400,
+      });
     }
 
     const isTrip = type === "trip";
@@ -71,26 +50,13 @@ export class SupabaseGoodsRepository implements GoodsRepository {
     const listingId = isTrip ? editGoods[0].trip_id : editGoods[0].parcel_id;
 
     if (!listingId) {
-      return {
-        data: null,
-        error: {
-          message: "No goods categories provided",
-          status: 400,
-        },
-      };
+      throw new AppError({
+        message: "No goods categories provided",
+        status: 400,
+      });
     }
-    const { error: deleteResult } = await this.deleteListingGoods(
-      table,
-      idColumnName,
-      listingId,
-    );
 
-    if (deleteResult) {
-      return {
-        data: null,
-        error: deleteResult,
-      };
-    }
+    await this.deleteListingGoods(table, idColumnName, listingId);
 
     const rows = isTrip
       ? editGoods.map((item) => ({
@@ -104,47 +70,21 @@ export class SupabaseGoodsRepository implements GoodsRepository {
 
     const { error, status } = await supabase.from(table).insert(rows);
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    }
+    throwIfSupabaseError(error, status);
 
-    return {
-      data: listingId,
-      error: null,
-    };
+    return listingId;
   }
 
-  async deleteListingGoods(
+  private async deleteListingGoods(
     tableName: string,
     idColumnName: string,
     listingId: string,
-  ): Promise<RepoResponse<null>> {
+  ): Promise<void> {
     const { error, status } = await supabase
       .from(tableName)
       .delete()
       .eq(idColumnName, listingId);
 
-    if (error) {
-      return {
-        data: null,
-        error: {
-          code: error.code,
-          message: error.message,
-          status: status,
-        },
-      };
-    }
-
-    return {
-      data: null,
-      error: null,
-    };
+    throwIfSupabaseError(error, status);
   }
 }

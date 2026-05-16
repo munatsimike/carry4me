@@ -1,7 +1,5 @@
 import type { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import type { UserProfile } from "../domain/authTypes";
-import type { Result } from "../domain/Result";
-import { toResult } from "./toResultMapper";
 
 export class GetUsersNameUseCase {
   repo: SupabaseAuthRepository;
@@ -10,8 +8,7 @@ export class GetUsersNameUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string): Promise<Result<UserProfile>> {
-    const result = await this.repo.fetchUserProfile(userId);
-    return toResult(result);
+  async execute(userId: string): Promise<UserProfile | null> {
+    return await this.repo.fetchUserProfile(userId);
   }
 }

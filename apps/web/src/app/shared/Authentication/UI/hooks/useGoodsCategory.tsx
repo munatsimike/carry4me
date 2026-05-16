@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { namedCall } from "../../application/NamedCall";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import { useUniversalModal } from "../../application/DialogBoxModalProvider";
 import { SupabaseGoodsRepository } from "@/app/features/goods/data/SupabaseGoodsRepository";
@@ -22,16 +21,14 @@ export default function useGoodsCategory() {
     async function fetchGoods() {
       setIsLoading(true);
 
-      const { result } = await namedCall("goods", getGoodsUseCase.execute());
-
-      if (!result.success) {
-        showSupabaseError(result.error);
+      try {
+        const data = await getGoodsUseCase.execute();
+        setCategory(data);
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
         setIsLoading(false);
-        return;
       }
-
-      setCategory(result.data);
-      setIsLoading(false);
     }
 
     fetchGoods();

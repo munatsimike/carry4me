@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useUniversalModal } from "../../application/DialogBoxModalProvider";
 import { GetGoodsUseCase } from "@/app/features/goods/application/GetGoodsUseCase";
-import { namedCall } from "../../application/NamedCall";
 import type { CustomRange, SortOption } from "@/types/Ui";
 
 export type FiltersFormValues = {
@@ -66,14 +65,12 @@ export function useFiltersForm({
     if (goodsCategory.length > 1) return;
 
     async function fetchGoods() {
-      const { result } = await namedCall("goods", getGoodsUseCase.execute());
-
-      if (!result.success) {
-        showSupabaseError(result.error);
-        return;
+      try {
+        const data = await getGoodsUseCase.execute();
+        setCategory(data.filter((item) => item.name !== "Other"));
+      } catch (err) {
+        showSupabaseError(err);
       }
-
-      setCategory(result.data.filter((item) => item.name !== "Other"));
     }
 
     fetchGoods();

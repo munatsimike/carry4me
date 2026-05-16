@@ -16,7 +16,6 @@ import type { UserProfile } from "./app/shared/Authentication/domain/authTypes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SupabaseNotificationRepository } from "./app/features/carry request/carry request events/data/SupabaseNotificationRepository";
 import { GetNotificationUseCase } from "./app/features/carry request/carry request events/application/CreateNotificationUseCase";
-import { namedCall } from "./app/shared/Authentication/application/NamedCall";
 import { useToast } from "./app/components/Toast";
 import type { CarryRequestNotification } from "./app/features/carry request/carry request events/domain/CarryRequestNotification";
 import { AnimatePresence, motion } from "framer-motion";
@@ -138,19 +137,14 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
     async function markAllAsRead() {
       if (!userProfile?.id) return;
       if (unreadNotifications.length > 0 && showNotificationPopOver) {
-        const { result } = await namedCall(
-          "mark notification as read",
-          getNotificationUseCase.makeAllAsRead(userProfile?.id),
-        );
-        if (!result.success) {
-          return;
-        }
-
-        if (result.success) {
+        try {
+          await getNotificationUseCase.makeAllAsRead(userProfile?.id);
           setNotifications((prev) =>
             prev.map((n) => ({ ...n, readAt: new Date().toISOString() })),
           );
           setUnreadNotification([]);
+        } catch {
+          return;
         }
       }
     }
@@ -161,23 +155,17 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
   useEffect(() => {
     async function fetchNotification() {
       if (!userProfile?.id) return;
-      const { result } = await namedCall(
-        "get notifications",
-        getNotificationUseCase.execute(userProfile?.id),
-      );
-
-      if (!result.success) {
+      try {
+        const data = await getNotificationUseCase.execute(userProfile?.id);
+        setNotifications(data);
+        if (data.length > 0) {
+          const unreadNot = data.filter((item) => item.readAt === null);
+          setUnreadNotification(unreadNot);
+        }
+      } catch {
         toast("unable to load notifications at the moment", {
           variant: "error",
         });
-      }
-
-      if (result.success) {
-        setNotifications(result.data);
-        if (result.data.length > 0) {
-          const unreadNot = result.data.filter((item) => item.readAt === null);
-          setUnreadNotification(unreadNot);
-        }
       }
     }
     fetchNotification();

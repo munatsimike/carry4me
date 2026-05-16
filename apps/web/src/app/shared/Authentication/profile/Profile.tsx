@@ -1,7 +1,6 @@
 import { Card } from "@/app/components/card/Card";
 import FloatingInputField from "@/app/components/CustomInputField";
 import { useToast } from "@/app/components/Toast";
-import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { SignUpUseCase } from "@/app/shared/Authentication/application/SignUpUseCase";
 import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
@@ -182,30 +181,27 @@ export default function ProfilePage() {
 
   const updateAvatar = async () => {
     if (!file) return;
-    const result = await upLoadAvatrUseCase.uploadAvatar(user.id, file);
-    if (!result.success) {
-      return;
+    try {
+      await upLoadAvatrUseCase.uploadAvatar(user.id, file);
+      toast("Profile pic changed successfully", { variant: "success" });
+      await refreshProfile();
+    } catch (err) {
+      showSupabaseError(err);
     }
-
-    toast("Profile pic changed successfully", { variant: "success" });
-    await refreshProfile();
   };
 
   const onDeleteAvatar = async () => {
     if (!profile.avatarUrl) return;
 
-    const { result } = await namedCall(
-      "delete avatar",
-      deleteAvatarUseCase.execute(user.id, profile.avatarUrl),
-    );
-    if (!result.success) {
-      showSupabaseError(result.error);
+    try {
+      await deleteAvatarUseCase.execute(user.id, profile.avatarUrl);
+      setFile(null);
+      setPreview(null);
+      await refreshProfile();
+      toast("profile pic deleted", { variant: "success" });
+    } catch (err) {
+      showSupabaseError(err);
     }
-    // delete in storage + db...
-    setFile(null);
-    setPreview(null);
-    await refreshProfile();
-    toast("profile pic deleted", { variant: "success" });
   };
 
   const onUpdateProfile = async () => {
@@ -235,13 +231,13 @@ export default function ProfilePage() {
       const email = dirtyFields.emailAddress ? values.emailAddress : undefined;
       const phoneNumber = dirtyFields.phoneNumber ? values.phoneNumber : undefined;
 
-      const { result } = await namedCall(
-        "security update",
-        updateAuthDetails.excute(user.id, email, phoneNumber),
-      );
-
-      if (!result.success) {
-        showSupabaseError(result.error);
+      try {
+        await updateAuthDetails.excute(user.id, email, phoneNumber);
+        toast("Profile updated successfully", { variant: "success" });
+        reset(getValues());
+        await refreshProfile();
+      } catch (err) {
+        showSupabaseError(err);
       }
     }
 
@@ -263,9 +259,8 @@ export default function ProfilePage() {
       if (!ok) return;
       const values = getValues();
 
-      const result = await namedCall(
-        "profile update",
-        updateProfileUseCase.execute(user?.id, {
+      try {
+        await updateProfileUseCase.execute(user?.id, {
           fullName: `${values.firstName} ${values.lastName}`,
           id: null,
           avatarUrl: null,
@@ -273,23 +268,14 @@ export default function ProfilePage() {
           city: values.city,
           email: values.emailAddress,
           phoneNumber: values.phoneNumber,
-        }),
-      );
-
-      if (result.result) {
+        });
+        reset(getValues());
+        setFile(null);
         toast("Profile updated successfully", { variant: "success" });
+        await refreshProfile();
+      } catch (err) {
+        showSupabaseError(err);
       }
-
-      if (!result.result) {
-        toast("Upload failed", { variant: "error" });
-        return;
-      }
-
-      reset(getValues());
-      // optional: clear file after successful upload
-      setFile(null);
-      toast("Profile updated successfuly", { variant: "success" });
-      await refreshProfile();
     }
   };
 
