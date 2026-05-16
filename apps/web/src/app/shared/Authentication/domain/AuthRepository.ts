@@ -8,7 +8,7 @@ export interface AuthRepository {
   login(email: string, password: string): Promise<RepoResponse<User>>;
   logout(): Promise<RepoResponse<boolean>>;
   fetchUserProfile(userId: string): Promise<RepoResponse<UserProfile>>;
-  signUp(user: AppUser): Promise<RepoResponse<string>>;
+  completeProfile(user: AppUser): Promise<RepoResponse<string>>;
   uploadAvatar(file: File, userId: string): Promise<RepoResponse<string>>;
   deleteAvatar(
     userId: string,
@@ -33,5 +33,4 @@ export interface AuthRepository {
     phoneNumber: string,
     token: string,
   ): Promise<RepoResponse<User>>;
-
 }

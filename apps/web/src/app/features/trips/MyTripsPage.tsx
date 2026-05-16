@@ -7,7 +7,6 @@ import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { DeleteTripUseCase } from "./application/DeleteTripUseCase";
 import { useToast } from "@/app/components/Toast";
-
 import { MyTripsUseCase } from "./application/MyTripsUseCase";
 import type { TripListing } from "./domain/Trip";
 import type { FormValues } from "@/types/Ui";
@@ -15,22 +14,21 @@ import { AnimatePresence } from "framer-motion";
 import CreateTripModal from "./ui/CreateTripModal";
 import CustomModal from "@/app/components/CustomModal";
 import TravelerCard from "./ui/TravelerCard";
-
 import EmptyState from "@/app/components/EmptyState";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
-
 import FAB from "@/app/components/FAB";
-import { PhoneVerificationModal } from "@/app/shared/Authentication/UI/PhoneVerificationModal";
+import { useNavigate } from "react-router-dom";
 
 export function MyTripsPage() {
   const [loading, setLoading] = useState(true);
   const [mypTrips, setMyTrips] = useState<TripListing[]>([]);
   const isMobile = useMediaQuery();
   const { user, refreshProfile, profile } = useAuth();
+  const navigate = useNavigate();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+
   const [showCreateTripModal, setCreatTripModalState] =
     useState<boolean>(false);
   const [editTrip, setEditTrip] = useState<FormValues | null>(null);
@@ -86,15 +84,16 @@ export function MyTripsPage() {
     loadTrips();
   }, [user?.id]);
 
-    const handleOnClick = () => {
-    if (user?.id && profile?.phoneVerified === false) {
-      setShowPhoneVerification(true);
+  const handleOnClick = () => {
+    if (!user?.id) return;
+
+    if (!profile) {
+      navigate("/complete-profile");
       return;
     }
 
     setCreatTripModalState(true);
   };
-
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       {loading ? (
@@ -107,8 +106,11 @@ export function MyTripsPage() {
           }
           action={
             <Button
-             onClick={() => handleOnClick()}
-            className="w-full" variant={"primary"} size={"sm"}>
+              onClick={() => handleOnClick()}
+              className="w-full"
+              variant={"primary"}
+              size={"sm"}
+            >
               + Post a trip
             </Button>
           }
@@ -159,17 +161,6 @@ export function MyTripsPage() {
           variant="trip"
         />
       )}
-     {showPhoneVerification && user?.id && (
-          <PhoneVerificationModal
-            isOpen={showPhoneVerification}
-            userId={user.id}
-            isVerified={false}
-            onClose={() => {
-              setShowPhoneVerification(false);
-            }}
-          />
-        )}
-
     </DefaultContainer>
   );
 }

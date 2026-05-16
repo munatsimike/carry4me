@@ -29,7 +29,6 @@ import { useUniversalModal } from "@/app/shared/Authentication/application/Dialo
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import Greeting from "@/app/components/Greeting";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
-import { PhoneVerificationModal } from "@/app/shared/Authentication/UI/PhoneVerificationModal";
 
 /**
  * Dashboard Page
@@ -58,12 +57,10 @@ export default function DashboardPage() {
     () => new SubabaseDashboardRepository(),
     [],
   );
-
   const getDashboardDataUseCase = useMemo(
     () => new GetDashboardDataUseCase(dashboardDataRepository),
     [dashboardDataRepository],
   );
-
   const supabaseNotificationRepo = useMemo(
     () => new SupabaseNotificationRepository(),
     [],
@@ -81,13 +78,10 @@ export default function DashboardPage() {
   const [notifications, setNotification] = useState<CarryRequestNotification[]>(
     [],
   );
-
   const navigate = useNavigate();
   const isMobile = useMediaQuery();
   const { user, profile, loading } = useAuth();
   const { showSupabaseError } = useUniversalModal();
-
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
 
   // fetch goods category
   // redirect is user is not logged in
@@ -134,11 +128,10 @@ export default function DashboardPage() {
   const requirePhoneVerification = (action: "trip" | "parcel") => {
     if (!user?.id) return;
 
-    if (profile?.phoneVerified === false) {
-      setShowPhoneVerification(true);
+    if (!profile) {
+      navigate("/complete-profile");
       return;
     }
-
     if (action === "trip") {
       setCreateTrip(true);
     }
@@ -179,29 +172,14 @@ export default function DashboardPage() {
 
       <AnimatePresence>
         {createTrip && !isMobile && (
-          <CreateTripModal
-            setModalState={() => requirePhoneVerification("trip")}
-          />
+          <CreateTripModal setModalState={() => setCreateTrip(false)} />
         )}
 
         {/* hide and show post parcel modal */}
         {createParcel && !isMobile && (
-          <CreatParcelModal
-            setModalState={() => requirePhoneVerification("parcel")}
-          />
+          <CreatParcelModal setModalState={() => setCreateParcel(false)} />
         )}
       </AnimatePresence>
-
-      {showPhoneVerification && user?.id && (
-        <PhoneVerificationModal
-          isOpen={showPhoneVerification}
-          userId={user.id}
-          isVerified={false}
-          onClose={() => {
-            setShowPhoneVerification(false);
-          }}
-        />
-      )}
     </DefaultContainer>
   );
 }

@@ -19,9 +19,9 @@ export default function HomePage() {
   const { openAuthModal } = useAuthModal();
   const isPassReset = searchParams.get("reset") === "success";
   const isSignup = searchParams.get("signup") === "success";
-   const navigate = useNavigate();
+  const navigate = useNavigate();
   const isResetLink = searchParams.get("reset-sent")?.trim() === "success";
-    const { user, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     if (user && !loading) {
@@ -76,12 +76,7 @@ export default function HomePage() {
           />
         )}
 
-        {isSignup && (
-          <Modal
-            onClose={() => handleClose("signup")}
-            onSignIn={() => openAuthModal({ mode: "signin" })}
-          />
-        )}
+        {isSignup && <Modal onClose={() => handleClose("signup")} />}
       </AnimatePresence>
     </>
   );
@@ -89,7 +84,7 @@ export default function HomePage() {
 
 type Param = "reset" | "signup";
 type ModalProps = {
-  onSignIn: () => void;
+  onSignIn?: () => void;
   onClose: () => void;
   param?: Param;
 };
@@ -111,25 +106,30 @@ function Modal({ onSignIn, onClose, param = "signup" }: ModalProps) {
 
         <CustomText as="p" className="mb-3" textVariant="secondary">
           {param === "signup"
-            ? "Your account was created successfully"
+            ? "Activate your account by clicking the link in the email we sent you and start using Carry4Me!"
             : "Your password was reset successfully"}
-          .Sign in to continue.
         </CustomText>
 
         <div className="flex justify-end gap-4">
-          <Button onClick={onClose} variant="outline" size="md">
+          <Button
+            onClick={onClose}
+            variant={param === "signup" ? "primary" : "outline"}
+            size="sm"
+          >
             Close
           </Button>
-          <Button
-            onClick={() => {
-              onSignIn();
-              onClose();
-            }}
-            variant="primary"
-            size="md"
-          >
-            Sign In
-          </Button>
+          {onSignIn && (
+            <Button
+              onClick={() => {
+                onSignIn?.();
+                onClose();
+              }}
+              variant="primary"
+              size="sm"
+            >
+              Sign In
+            </Button>
+          )}
         </div>
       </div>
     </CustomModal>

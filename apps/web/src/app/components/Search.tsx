@@ -132,7 +132,7 @@ export default function Search({
           type="submit"
           cornerRadiusClass="rounded-full"
           variant="primary"
-          size="xsm"
+          size="xs"
           className="flex w-full items-center justify-center gap-2 sm:max-w-[200px]"
           leadingIcon={
             <SvgIcon color="onDark" size="sm" Icon={META_ICONS.searchIcon} />

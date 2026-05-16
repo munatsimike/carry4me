@@ -11,7 +11,7 @@ export class SignUpUseCase {
   }
 
   async execute(appUser: AppUser): Promise<Result<string>> {
-    const result = await this.repo.signUp(appUser);
+    const result = await this.repo.completeProfile(appUser);
     return toResult(result);
   }
 

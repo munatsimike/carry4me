@@ -37,7 +37,14 @@ export const UserDetailsScema = z
     firstName: z.string().trim().min(2, "First name is required"),
     lastName: z.string().trim().min(2, "Last name is required"),
     emailAddress: z.string().trim().email("Enter a valid email"),
-    phoneNumber: z.string().trim().min(7, "Enter a valid phone number"),
+    phoneNumber: z
+      .string()
+      .trim()
+      .min(7, "Enter a valid phone number")
+      .regex(
+        /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/im,
+        "Enter a valid phone number format",
+      ),
     country: z.string().trim().min(1, "Country is required"),
     city: z.string().trim().min(2, "City is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
@@ -65,7 +72,7 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.28 } },
 };
 
-export default function SignUpPage() {
+export default function CompleteProfile() {
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
   const navigate = useNavigate();
@@ -134,7 +141,6 @@ export default function SignUpPage() {
       } else {
         showSupabaseError(result.error);
       }
-
       return;
     }
 
@@ -144,13 +150,7 @@ export default function SignUpPage() {
   };
 
   const formContents = (
-    <SigupFormContents
-      onClick={() =>
-        openAuthModal({
-          mode: "signin",
-          redirectTo: "/signup",
-        })
-      }
+    <FormContents
       formProps={{
         register: register,
         watch: watch,
@@ -205,9 +205,8 @@ type FormProps = {
 
 type SigupFormProps = {
   formProps: FormProps;
-  onClick: () => void;
 };
-function SigupFormContents({ formProps, onClick }: SigupFormProps) {
+function FormContents({ formProps }: SigupFormProps) {
   const {
     register,
     watch,
@@ -224,8 +223,6 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
   const originCountry = watch("country");
   const lastName = watch("lastName");
   const emailAddress = watch("emailAddress");
-  const password = watch("password");
-  const confirmPassword = watch("confirmPassword");
   const phoneNumber = watch("phoneNumber");
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
@@ -237,29 +234,23 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
         <CircleBadge size="lg">
           <SvgIcon size={"lg"} Icon={META_ICONS.addAccount} color="primary" />
         </CircleBadge>
-        <CustomText as="h1" textVariant="primary" textSize="xl">
-          Join Carry4me
+        <CustomText
+          as="h1"
+          textVariant="primary"
+          textSize="lg"
+          className="font-medium"
+        >
+          Complete your profile
         </CustomText>
         <CustomText as="p" textVariant="label" textSize="sm">
-          Join a community that helps people send parcels home with ease.
+          Complete your profile to start sending and receiving parcels.
         </CustomText>
-        <span className="inline-flex items-center gap-1">
-          <CustomText as="p" className="text-sm text-neutral-400">
-            Already have an account?
-          </CustomText>
-
-          <button type="button" onClick={onClick}>
-            <CustomText as="span" textVariant="linkText">
-              Sign in
-            </CustomText>
-          </button>
-        </span>
       </span>
       <LineDivider heightClass="my-0" />
       {/* Personal details */}
       <motion.div variants={item} className={contentClass}>
         <span className={headerContent}>
-          <CustomText textVariant="primary" textSize="lg">
+          <CustomText textVariant="primary" textSize="md">
             Personal details
           </CustomText>
           <span className={contentClass}>
@@ -307,46 +298,12 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
         </span>
         <LineDivider heightClass="my-0" />
       </motion.div>
-
-      {/* Security */}
-      <motion.div variants={item} className={contentClass}>
-        <span className={headerContent}>
-          <CustomText textVariant="primary" textSize="lg">
-            Security
-          </CustomText>
-
-          <FloatingInputField
-            hasValue={!!password}
-            label="Password"
-            type="password"
-            error={errors.password?.message}
-            isDirty={!!dirtyFields.password}
-            isTouched={!!touchedFields.password}
-            {...register("password")}
-          />
-
-          <FloatingInputField
-            className="my-3"
-            hasValue={!!confirmPassword}
-            label="Confirm password"
-            type="password"
-            error={errors.confirmPassword?.message}
-            isDirty={!!dirtyFields.confirmPassword}
-            isTouched={!!touchedFields.confirmPassword}
-            {...register("confirmPassword")}
-          />
-
-          <LineDivider heightClass="m-0" />
-        </span>
-      </motion.div>
-
       {/* Location */}
       <motion.div variants={item} className={contentClass}>
         <span className={headerContent}>
-          <CustomText textVariant="primary" textSize="lg">
+          <CustomText textVariant="primary" textSize="md">
             Your location
           </CustomText>
-
           <Controller
             control={control}
             name="country"
@@ -383,7 +340,6 @@ function SigupFormContents({ formProps, onClick }: SigupFormProps) {
             )}
           ></Controller>
         </span>
-
         <LineDivider heightClass="my-0" />
       </motion.div>
 

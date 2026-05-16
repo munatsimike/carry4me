@@ -1,31 +1,16 @@
-import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { PhoneEntryScreen } from "./PhoneEntryScreen";
 import { OTPVerificationScreen } from "./OTPVerificationScreen";
 import CustomModal from "@/app/components/CustomModal";
+import { useAuthModal } from "../AuthModalContext";
 
-interface PhoneVerificationModalProps {
-  isOpen: boolean;
-  userId: string;
-  isVerified: boolean;
-  onClose: () => void;
-}
-
-export function PhoneVerificationModal({
-  isOpen,
-  userId,
-  isVerified,
-  onClose
-}: PhoneVerificationModalProps) {
+export function PhoneVerificationModal() {
   const { step, setStep, resetPhoneVerification } = usePhoneVerification();
-  useEffect(() => {
-    if (!isOpen || !userId || isVerified) return;
-  }, [userId, isVerified]);
-
+  const { state, closeAuthModal } = useAuthModal();
   const handleClose = () => {
     resetPhoneVerification();
-    onClose();
+    closeAuthModal();
   };
 
   const handlePhoneSubmitted = () => {
@@ -38,13 +23,13 @@ export function PhoneVerificationModal({
 
   const handleVerificationComplete = () => {
     resetPhoneVerification();
-    onClose();
+    closeAuthModal();
   };
 
   return (
     <AnimatePresence>
-      {isOpen && (
-        <CustomModal onClose={handleClose}>
+      {state.isOpen && (
+        <CustomModal onClose={handleClose} width="xl">
           {step === "phone-entry" && (
             <PhoneEntryScreen onPhoneSubmitted={handlePhoneSubmitted} />
           )}

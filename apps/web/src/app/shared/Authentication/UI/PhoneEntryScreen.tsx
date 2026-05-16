@@ -5,7 +5,6 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
-import { CircleBadge } from "@/components/ui/CircleBadge";
 import FloatingInputField from "@/app/components/CustomInputField";
 import LineDivider from "@/app/components/LineDivider";
 import ErrorText from "@/app/components/text/ErrorText";
@@ -15,7 +14,8 @@ import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import { namedCall } from "../application/NamedCall";
-import { ShieldCheck } from "lucide-react";
+import { META_ICONS } from "@/app/icons/MetaIcon";
+import SvgIcon from "@/components/ui/SvgIcon";
 
 const phoneSchema = z.object({
   phoneNumber: z
@@ -89,18 +89,22 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-5 px-4 sm:px-0">
+    <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-3 px-4 sm:px-0">
       <motion.div variants={item} className="flex items-center justify-center">
         <ErrorText error={submitError?.toString()}>
-          <span className="inline-flex flex-col gap-2 items-center">
-            <CircleBadge size="lg">
-              <ShieldCheck className="text-primary-500" size={28} />
-            </CircleBadge>
-            <CustomText as="h1" textVariant="primary" textSize="xl">
-              Verify Your Phone
+          <span className="inline-flex flex-col gap-1 items-center">
+            <SvgIcon size={"xl"} Icon={META_ICONS.loginIcon} color="primary" />
+
+            <CustomText
+              as="h1"
+              textVariant="primary"
+              textSize="lg"
+              className="font-medium"
+            >
+              Sign in or create an account
             </CustomText>
             <CustomText as="p" textVariant="label" textSize="sm">
-              We'll send you a code via SMS to verify your phone number.
+              Enter your phone number to continue with Carry4Me.
             </CustomText>
           </span>
         </ErrorText>
@@ -113,22 +117,24 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
       <motion.form
         variants={item}
         onSubmit={handleSubmit(handleSendOTP)}
-        className="w-full flex flex-col gap-5"
+        className="w-full flex flex-col gap-4"
       >
-        <div className="flex flex-col gap-2 justify-center items-center">
-          <CustomText as="label" textVariant="label" textSize="sm">
-            Phone Number
-          </CustomText>
-          <FloatingInputField
-            hasValue
-            placeholder="Enter your phone number"
-            {...register("phoneNumber")}
-            disabled={isSubmitting}
-            error={errors.phoneNumber?.message}
-            isDirty={dirtyFields.phoneNumber ?? false}
-            isTouched={!!touchedFields.phoneNumber}
-            helperText="Include country code (e.g., +1234567890)"
-          />
+        <div className="flex justify-center">
+          <div className="flex flex-col gap-2">
+            <CustomText as="label" textVariant="label" textSize="xs">
+              Phone Number
+            </CustomText>
+            <FloatingInputField
+              hasValue
+              placeholder="Enter your phone number"
+              {...register("phoneNumber")}
+              disabled={isSubmitting}
+              error={errors.phoneNumber?.message}
+              isDirty={dirtyFields.phoneNumber ?? false}
+              isTouched={!!touchedFields.phoneNumber}
+              helperText="Include country code (e.g., +44640020023)"
+            />
+          </div>
         </div>
 
         <Button

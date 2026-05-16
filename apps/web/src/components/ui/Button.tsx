@@ -6,7 +6,7 @@ export type ButtonVariant =
   | "error"
   | "outline"
   | "neutral";
-type ButtonSize = "xsm" | "sm" | "md" | "lg" | "xl" | "xxl";
+type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant: ButtonVariant;
@@ -41,11 +41,11 @@ export function Button({
   }`;
 
   const sizes: Record<ButtonSize, string> = {
-    xsm: "h-8 px-3 " + cornerRadiusClass,
+    xs: "h-8 px-3 " + cornerRadiusClass,
     sm: "h-9 px-3 " + cornerRadiusClass,
     md: "h-10 px-4 " + cornerRadiusClass,
-    lg: "h-14 px-6 " + cornerRadiusClass,
-    xl: "h-[85px] w-full md:flex-1 pr-4 rounded-full",
+    lg: "h-12 px-6 " + cornerRadiusClass,
+    xl: "h-[70px] w-full md:flex-1 pr-4 rounded-full",
     xxl: "w-[230px] sm:w-full h-[90px] rounded-2xl px-4",
   };
 

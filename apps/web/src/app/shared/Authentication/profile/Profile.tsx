@@ -19,7 +19,6 @@ import {
   Controller,
   type Control,
 } from "react-hook-form";
-import { UserDetailsScema, type UserDetailsFields } from "../UI/SignUpPage";
 import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
 import CustomText from "@/components/ui/CustomText";
@@ -31,6 +30,12 @@ import { UpdateAuthDetailsUseCase } from "../application/UpdateAuthDetailsUseCas
 import { DeleteAvatarUseCase } from "../application/DeleteAvatarUseCase";
 import ComboBox from "@/app/components/ComboBox";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
+import { useNavigate} from "react-router-dom";
+import {
+  UserDetailsScema,
+  type UserDetailsFields,
+} from "../UI/CompleteProfilePage";
+import { useLocations } from "@/app/hookes/useLocation";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -59,6 +64,7 @@ export default function ProfilePage() {
   const { user, refreshProfile, profile } = useAuth();
   const { toast } = useToast();
   const { showSupabaseError } = useUniversalModal();
+  const navigate = useNavigate();
 
   const {
     control,
@@ -81,6 +87,9 @@ export default function ProfilePage() {
     },
     mode: "onTouched",
   });
+
+  const originCountry = watch("country");
+  const { countryOptions, cityOptions } = useLocations(originCountry);
 
   useEffect(() => {
     if (!user || !profile) return;
@@ -134,6 +143,12 @@ export default function ProfilePage() {
     const url = profile?.avatarUrl ?? null;
     setPreview(url);
   }, [profile?.avatarUrl, file]);
+
+  useEffect(() => {
+    if (!user && !profile) {
+      navigate("/complete-profile");
+    }
+  }, [user, profile]);
 
   if (!user) {
     return (
@@ -295,11 +310,7 @@ export default function ProfilePage() {
       >
         Profile & Security
       </CustomText>
-      <Card
-        enableHover={false}
-        className="mx-auto w-full sm:max-w-2xl"
-       
-      >
+      <Card enableHover={false} className="mx-auto w-full sm:max-w-2xl">
         <CardHeaderSection
           avatar={profile.avatarUrl ?? ""}
           file={file}
@@ -333,6 +344,7 @@ export default function ProfilePage() {
             />
             <LineDivider heightClass="my-0" />
             <SecurityDetailsCard
+              profile={profile}
               email={user.email ?? ""}
               iconSpecs={iconSpecs}
               editing={editing}
@@ -353,6 +365,8 @@ export default function ProfilePage() {
               control={control}
               iconSpecs={iconSpecs}
               editing={editing}
+              cities={cityOptions}
+              countries={countryOptions}
               formProps={{
                 register: register,
                 watch: watch,
@@ -378,6 +392,8 @@ type LocationSectionProps = {
   formProps: FormProps;
   formBtn: ActionButtonProps;
   editing: ProfileSection | null;
+  cities: string[];
+  countries: string[];
   setEditing: (v: ProfileSection | null) => void;
 };
 
@@ -387,9 +403,12 @@ function LocationSection({
   control,
   iconSpecs,
   editing,
+  cities,
+  countries,
   setEditing,
 }: LocationSectionProps) {
   const isEditing = editing === "location";
+
   return (
     <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-2"}`}>
       <SectionHeader
@@ -417,7 +436,12 @@ function LocationSection({
           exit={{ opacity: 0, y: 5 }}
           transition={{ duration: 0.5 }}
         >
-          <LocationEditForm control={control} formBtns={formBtn} />
+          <LocationEditForm
+            control={control}
+            formBtns={formBtn}
+            cities={cities}
+            countries={countries}
+          />
         </motion.div>
       )}
     </div>
@@ -425,6 +449,7 @@ function LocationSection({
 }
 
 type securityProps = {
+  profile: UserProfile;
   email: string;
   editing: ProfileSection | null;
   setEditing: () => void;
@@ -444,8 +469,8 @@ function SecurityDetailsCard({
   setEditing,
   actionBtns,
   watch,
-  error,
   register,
+  profile,
   iconSpecs,
   onClick,
   dirtyFields,
@@ -470,10 +495,9 @@ function SecurityDetailsCard({
         <div className="flex items-center">
           <div className="flex flex-col gap-2">
             <InfCol label="Email address" value={email} />
-            <InfCol label="Password" value={"**********"} />
+            <InfoRow label="Phone" value={profile.phoneNumber} />
           </div>
         </div>
-        
       ) : (
         <>
           <div className="flex flex-col gap-4">
@@ -487,25 +511,12 @@ function SecurityDetailsCard({
               {...register("emailAddress")}
             />
             <FloatingInputField
-              className="w-full sm:max-w-[350px]"
-              autoComplete="new-password"
-              hasValue={!!watch("password")}
-              label="Password"
-              type="password"
-              error={error.password?.message}
-              isDirty={!!dirtyFields.password}
-              isTouched={!!touchedFields.password}
-              {...register("password")}
-            />
-            <FloatingInputField
-              className="w-full sm:max-w-[350px]"
-              hasValue={!!watch("confirmPassword")}
-              label="confirm Password"
-              type="password"
-              error={error.confirmPassword?.message}
-              isDirty={!!dirtyFields.password}
-              isTouched={!!touchedFields.password}
-              {...register("confirmPassword")}
+              className="w-full sm:max-w-[220px]"
+              hasValue={!!watch("phoneNumber")}
+              label="Phone number"
+              isDirty={!!dirtyFields.phoneNumber}
+              isTouched={!!touchedFields.phoneNumber}
+              {...register("phoneNumber")}
             />
           </div>
           <ActionButton onClick={onClick} onCancel={actionBtns.onCancel} />
@@ -567,8 +578,6 @@ function PersonalDetailsSection({
                 label="Last name"
                 value={profile.fullName?.split(" ")[1]}
               />
-
-              <InfoRow label="Phone" value={profile.phoneNumber} />
             </div>
           </div>
         ) : (
@@ -591,7 +600,7 @@ function PersonalDetailsSection({
 function SectionHeader({
   icon,
   title,
-  isEditing ,
+  isEditing,
   setEditing,
 }: {
   icon: React.ReactNode;
@@ -608,10 +617,7 @@ function SectionHeader({
         </CustomText>
       </span>
 
-      <EditBtn
-        isEditing={isEditing}
-        onEdit={setEditing}
-      />
+      <EditBtn isEditing={isEditing} onEdit={setEditing} />
     </div>
   );
 }
@@ -640,17 +646,22 @@ type LocationEditFormProps = {
   formBtns: ActionButtonProps;
 };
 
-function LocationEditForm({ control, formBtns }: LocationEditFormProps) {
+function LocationEditForm({
+  control,
+  formBtns,
+  cities,
+  countries,
+}: LocationEditFormProps & { cities: string[]; countries: string[] }) {
   return (
-    <span className="flex flex-col  gap-5">
-      <span className="flex flex-col sm:flex-row gap-5 sm:gap-7">
+    <span className="flex flex-col  gap-3">
+      <span className="flex flex-col gap-2 sm:gap-3">
         <Controller
           name="country"
           control={control}
           render={({ field, fieldState }) => (
             <ComboBox
               placeholder={"Select country"}
-              menuItems={["UK", "NL"]}
+              menuItems={countries}
               value={field.value}
               onValueChange={field.onChange}
               error={fieldState.error?.message}
@@ -661,12 +672,12 @@ function LocationEditForm({ control, formBtns }: LocationEditFormProps) {
         ></Controller>
 
         <Controller
-          name="country"
+          name="city"
           control={control}
           render={({ field, fieldState }) => (
             <ComboBox
               placeholder={"Select city"}
-              menuItems={["London", "Harare", "Amsterdam"]}
+              menuItems={cities}
               value={field.value}
               onValueChange={field.onChange}
               error={fieldState.error?.message}
@@ -715,15 +726,6 @@ function PersonalEditForm({
           {...register("lastName")}
         />
       </span>
-
-      <FloatingInputField
-        className="w-full sm:max-w-[220px]"
-        hasValue={!!watch("phoneNumber")}
-        label="Phone number"
-        isDirty={!!dirtyFields.phoneNumber}
-        isTouched={!!touchedFields.phoneNumber}
-        {...register("phoneNumber")}
-      />
       <ActionButton onClick={onClick} onCancel={onCancel} />
     </div>
   );
@@ -737,10 +739,10 @@ type ActionButtonProps = {
 function ActionButton({ onClick, onCancel }: ActionButtonProps) {
   return (
     <div className="mt-2 flex justify-end gap-3">
-      <Button type="button" variant="neutral" onClick={onCancel} size={"sm"}>
+      <Button type="button" variant="neutral" onClick={onCancel} size={"xs"}>
         Cancel
       </Button>
-      <Button onClick={onClick} type="button" variant="primary" size={"sm"}>
+      <Button onClick={onClick} type="button" variant="primary" size={"xs"}>
         {"Save changes"}
       </Button>
     </div>
@@ -915,11 +917,7 @@ function CardHeaderSection({
               exit={{ opacity: 0, y: 7 }}
               className="flex gap-2"
             >
-              <Button
-                onClick={() => setFile(null)}
-                variant="neutral"
-                size="xsm"
-              >
+              <Button onClick={() => setFile(null)} variant="neutral" size="xs">
                 <CustomText textVariant="secondary" textSize="sm">
                   cancel
                 </CustomText>
@@ -928,7 +926,7 @@ function CardHeaderSection({
                 onClick={updateAvatar}
                 type="button"
                 variant={"primary"}
-                size={"xsm"}
+                size={"xs"}
               >
                 <CustomText
                   textVariant="onDark"

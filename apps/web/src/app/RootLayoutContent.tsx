@@ -3,15 +3,15 @@ import DesktopNavigationMenu, {
   MobileToolBar,
 } from "@/Navigation";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { AuthModal } from "./shared/Authentication/UI/AuthModal";
 import { useAuth } from "./shared/supabase/AuthProvider";
 import Footer from "./shared/Authentication/UI/Footer";
 import type { UserProfile } from "./shared/Authentication/domain/authTypes";
 import { useMediaQuery } from "./shared/Authentication/UI/hooks/useMediaQuery";
-import { useState} from "react";
+import { useState } from "react";
 import { cn } from "./lib/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUI } from "./shared/Authentication/UI/hooks/useUI";
+import { PhoneVerificationModal } from "./shared/Authentication/UI/PhoneVerificationModal";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
 
 export default function RootLayoutContent() {
@@ -22,7 +22,6 @@ export default function RootLayoutContent() {
   const isAuthed = !!user;
 
   // Show phone verification modal if user is logged in and phone is not verified
-
 
   if (loading) {
     return (
@@ -52,7 +51,7 @@ export default function RootLayoutContent() {
         <Outlet context={{ isSearchOpen, setIsSearchOpen }} />
       </main>
 
-      <AuthModal />
+      <PhoneVerificationModal />
 
       <AnimatePresence>
         {showBottomNavBar && (

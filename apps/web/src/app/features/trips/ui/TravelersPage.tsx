@@ -34,10 +34,9 @@ import CreateTripModal from "./CreateTripModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
-import { PhoneVerificationModal } from "@/app/shared/Authentication/UI/PhoneVerificationModal";
 
 export default function TravelersPage() {
   const repo = useMemo(() => new SupabaseTripsRepository(), []);
@@ -204,11 +203,10 @@ export default function TravelersPage() {
     toggleLike(id, setTripList);
   };
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
   const isMobile = useMediaQuery();
   const scrollDirection = useScrollDirection();
-
+  const navigate = useNavigate();
   const filterForm = useFiltersForm({
     setSelectedDate: setFilterByDate,
     setPriceRange,
@@ -236,8 +234,10 @@ export default function TravelersPage() {
   );
 
   const handleOnClick = () => {
-    if (user?.id && profile?.phoneVerified === false) {
-      setShowPhoneVerification(true);
+    if (!user?.id) return;
+
+    if (!profile) {
+      navigate("/complete-profile");
       return;
     }
 
@@ -333,17 +333,6 @@ export default function TravelersPage() {
         <Link to="/create-trip?mode=create">
           <FAB isAuthed={!!user?.id} variant="trip" />
         </Link>
-
-        {showPhoneVerification && user?.id && (
-          <PhoneVerificationModal
-            isOpen={showPhoneVerification}
-            userId={user.id}
-            isVerified={false}
-            onClose={() => {
-              setShowPhoneVerification(false);
-            }}
-          />
-        )}
       </DefaultContainer>
 
       <ListingSelectionModal

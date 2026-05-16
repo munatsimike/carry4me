@@ -33,10 +33,9 @@ import CreateParcelModal from "./CreateParcelModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
-import { PhoneVerificationModal } from "@/app/shared/Authentication/UI/PhoneVerificationModal";
 
 export default function ParcelsPage() {
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -205,7 +204,7 @@ export default function ParcelsPage() {
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
   const scrollDirection = useScrollDirection();
   const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
-  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const navigate = useNavigate();
   const filterForm = useFiltersForm({
     setSelectedDate: setFilterByDate,
     setPriceRange,
@@ -232,13 +231,13 @@ export default function ParcelsPage() {
       clearResults={clearSearchResults}
     />
   );
-
   const handleOnClick = () => {
-    if (user?.id && profile?.phoneVerified === false) {
-      setShowPhoneVerification(true);
+    if (!user?.id) return;
+
+    if (!profile) {
+      navigate("/complete-profile");
       return;
     }
-
     setParcelModalState(true);
   };
 
@@ -330,16 +329,6 @@ export default function ParcelsPage() {
         <Link to="/create-parcel?mode=create">
           <FAB isAuthed={!!user?.id} variant="parcel" />
         </Link>{" "}
-        {showPhoneVerification && user?.id && (
-          <PhoneVerificationModal
-            isOpen={showPhoneVerification}
-            userId={user.id}
-            isVerified={false}
-            onClose={() => {
-              setShowPhoneVerification(false);
-            }}
-          />
-        )}
       </DefaultContainer>
 
       <ListingSelectionModal

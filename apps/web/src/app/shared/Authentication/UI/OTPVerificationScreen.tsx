@@ -56,10 +56,8 @@ export function OTPVerificationScreen({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState<number>(0);
   const [resendLoading, setResendLoading] = useState<boolean>(false);
-
   const { phoneNumber, setStep, setLoading, setError } = usePhoneVerification();
   const { showSupabaseError } = useUniversalModal();
-
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const verifyOTPUseCase = useMemo(
     () => new VerifyPhoneOTPUseCase(authRepo),
@@ -121,14 +119,14 @@ export function OTPVerificationScreen({
   };
 
   return (
-    <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-5 px-4 sm:px-0">
+    <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-3 px-4 sm:px-0">
       <motion.div variants={item} className="flex items-center justify-center">
         <ErrorText error={submitError?.toString()}>
-          <span className="inline-flex flex-col gap-2 items-center">
+          <span className="inline-flex flex-col gap-1 items-center">
             <CircleBadge size="lg">
               <ShieldCheck className="text-primary-500" size={24} />
             </CircleBadge>
-            <CustomText as="h1" textVariant="primary" textSize="xl">
+            <CustomText as="h1" textVariant="primary" textSize="lg" className="font-medium">
               Verify OTP Code
             </CustomText>
             <CustomText as="p" textVariant="label" textSize="sm">
@@ -145,23 +143,25 @@ export function OTPVerificationScreen({
       <motion.form
         variants={item}
         onSubmit={handleSubmit(handleVerifyOTP)}
-        className="w-full flex flex-col gap-5"
+        className="w-full flex flex-col gap-4"
       >
-        <div className="flex flex-col gap-2 justify-center items-center">
-          <CustomText as="label" textVariant="label" textSize="sm">
-            OTP Code
-          </CustomText>
-          <FloatingInputField
-            hasValue={!!otpCode}
-            placeholder="000000"
-            {...register("otpCode")}
-            disabled={isSubmitting}
-            error={errors.otpCode?.message}
-            isDirty={dirtyFields.otpCode ?? false}
-            isTouched={!!touchedFields.otpCode}
-            maxLength={6}
-            className="text-center text-2xl tracking-widest font-mono"
-          />
+        <div className="flex justify-center">
+          <div className="flex flex-col gap-2">
+            <CustomText as="label" textVariant="label" textSize="xs">
+              OTP Code
+            </CustomText>
+            <FloatingInputField
+              hasValue={!!otpCode}
+              placeholder="000000"
+              {...register("otpCode")}
+              disabled={isSubmitting}
+              error={errors.otpCode?.message}
+              isDirty={dirtyFields.otpCode ?? false}
+              isTouched={!!touchedFields.otpCode}
+              maxLength={6}
+              className="text-center text-2xl tracking-widest font-mono"
+            />
+          </div>
         </div>
 
         <Button

@@ -74,7 +74,7 @@ export default function FloatingInputField({
         )}
       </div>
       {helperText && !error && (
-        <p className="mt-1 text-sm text-neutral-500">{helperText}</p>
+        <p className="mt-1 text-sm text-neutral-400">{helperText}</p>
       )}
     </ErrorText>
   );

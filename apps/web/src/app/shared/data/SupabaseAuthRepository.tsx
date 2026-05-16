@@ -63,31 +63,48 @@ export class SupabaseAuthRepository implements AuthRepository {
     return { data: data.user.id, error: null };
   }
 
-  async signUp(appUser: AppUser): Promise<RepoResponse<string>> {
-    const { data, error } = await supabase.auth.signUp({
-      email: appUser.auth.email,
-      password: appUser.auth.password,
-      options: {
-        data: {
-          full_name: appUser.profile.fullName,
-          avatar_url: appUser.profile.avatarUrl,
-          country_code: appUser.profile.countryCode,
-          phone_number: appUser.profile.phoneNumber,
-          city: appUser.profile.city,
-        },
-      },
-    });
+  async completeProfile(appUser: AppUser): Promise<RepoResponse<string>> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (error || !data.user?.id)
+    if (!user) {
       return {
         data: null,
         error: {
-          code: error?.code,
-          message: error?.message ?? "",
+          code: "NO_USER",
+          message: "No authenticated user found",
           status: null,
         },
       };
-    return { data: data.user?.id, error: null };
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        full_name: appUser.profile.fullName,
+        avatar_url: appUser.profile.avatarUrl,
+        country_code: appUser.profile.countryCode,
+        phone_number: user.phone,
+        city: appUser.profile.city,
+        phone_verified: true,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      return {
+        data: null,
+        error: {
+          code: error.code,
+          message: error.message ?? "",
+          status: null,
+        },
+      };
+    }
+
+    return { data: data.id, error: null };
   }
 
   async uploadAvatar(
@@ -101,7 +118,6 @@ export class SupabaseAuthRepository implements AuthRepository {
       `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     const filePath = `${userId}/${uniqueId}.${fileExt}`;
-    console.log(filePath);
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
@@ -164,21 +180,36 @@ export class SupabaseAuthRepository implements AuthRepository {
     const { data, status, error } = await supabase
       .from("profiles")
       .select(
-        "id,full_name, avatar_url,city,country_code,phone_number,phone_verified",
+        "id,full_name,avatar_url,city,country_code,phone_number,phone_verified",
       )
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
-    if (error)
+    if (error) {
       return {
         data: null,
         error: {
           code: error.code,
           message: error.message,
-          status: status,
+          status,
         },
       };
+    }
+
+    if (!data) {
+      console.warn(`No profile found for userId: ${userId}`);
+      return {
+        data: null,
+        error: {
+          code: "PROFILE_NOT_FOUND",
+          message: "Profile not found",
+          status,
+        },
+      };
+    }
+
     const publicUrl = fetchPublicUrl(data.avatar_url);
+
     return {
       data: {
         id: data.id,
@@ -187,7 +218,7 @@ export class SupabaseAuthRepository implements AuthRepository {
         countryCode: data.country_code,
         city: data.city,
         phoneNumber: data.phone_number,
-        phoneVerified: data.phone_verified ?? false,
+        phoneVerified: data.phone_verified === true,
       },
       error: null,
     };

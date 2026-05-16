@@ -32,7 +32,7 @@ export default function ActionButtons() {
 
   return (
     <motion.section
-      className="flex w-full flex-col md:flex-row md:justify-center gap-5 sm:gap-7 py-6 sm:p-20 md:max-w-4xl"
+      className="flex w-full flex-col md:flex-row md:justify-center gap-5 sm:gap-5 py-5 sm:p-20 md:max-w-4xl"
       variants={containerVariants}
       initial="hidden"
       animate="show"
