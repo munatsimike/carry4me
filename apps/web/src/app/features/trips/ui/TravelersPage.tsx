@@ -13,6 +13,7 @@ import { GetParcelUseCase } from "../../parcels/application/GetParcelUseCase";
 import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
 import { useToast } from "@/app/components/Toast";
 import { namedCall } from "@/app/shared/Authentication/application/NamedCall";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
@@ -49,6 +50,7 @@ export default function TravelersPage() {
   const { showSupabaseError } = useUniversalModal();
   const [tripList, setTripList] = useState<TripListing[]>([]);
   const { user, profile } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [dataloaded, setDataLoaded] = useState<boolean>(false);
   useEffect(() => {
     let cancel = false;
@@ -234,7 +236,10 @@ export default function TravelersPage() {
   );
 
   const handleOnClick = () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      openAuthModal({ mode: "signin", redirectTo: "/travelers" });
+      return;
+    }
 
     if (!profile) {
       navigate("/complete-profile");

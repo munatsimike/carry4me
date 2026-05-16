@@ -1,4 +1,5 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +32,7 @@ export function MyParcelsPage() {
     null,
   );
   const { user, refreshProfile, profile } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const navigate = useNavigate();
   const { toast } = useToast();
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
@@ -88,12 +90,16 @@ export function MyParcelsPage() {
   }, [user?.id]);
 
   const handleOnClick = () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      openAuthModal({ mode: "signin", redirectTo: "/my/parcels" });
+      return;
+    }
 
     if (!profile) {
       navigate("/complete-profile");
       return;
     }
+
     setParcelModalState(true);
   };
 

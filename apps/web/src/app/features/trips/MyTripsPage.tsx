@@ -1,4 +1,5 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -26,6 +27,7 @@ export function MyTripsPage() {
   const [mypTrips, setMyTrips] = useState<TripListing[]>([]);
   const isMobile = useMediaQuery();
   const { user, refreshProfile, profile } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const navigate = useNavigate();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
 
@@ -85,7 +87,10 @@ export function MyTripsPage() {
   }, [user?.id]);
 
   const handleOnClick = () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      openAuthModal({ mode: "signin", redirectTo: "/my/trips" });
+      return;
+    }
 
     if (!profile) {
       navigate("/complete-profile");
