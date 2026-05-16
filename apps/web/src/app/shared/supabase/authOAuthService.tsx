@@ -1,5 +1,5 @@
 
-// oauth.ts (or at bottom of AuthModal.tsx)
+// OAuth provider helpers for future social sign-in
 
 import { supabase } from "@/app/shared/supabase/client";
 

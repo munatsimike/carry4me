@@ -11,7 +11,7 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import FloatingInputField from "@/app/components/CustomInputField";
 import { motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
-import { useAuthModal } from "../AuthModalContext";
+import { useSignInModal } from "../SignInModalContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import { useNavigate } from "react-router-dom";
 
@@ -46,7 +46,7 @@ export default function ResetPassword() {
     () => new ResetPasswordUseCase(repo),
     [repo],
   );
-  const { openAuthModal } = useAuthModal();
+  const { openSignInModal } = useSignInModal();
   const { showSupabaseError } = useUniversalModal();
   const navigate = useNavigate();
 
@@ -109,9 +109,7 @@ export default function ResetPassword() {
               Remembered your password?{" "}
               <button
                 onClick={() =>
-                  openAuthModal({
-                    mode: "signin",
-                  })
+                  openSignInModal()
                 }
               >
                 <CustomText

@@ -1,5 +1,5 @@
 import { UniversalModalProvider } from "./DialogBoxModalProvider";
-import { AuthModalProvider } from "../AuthModalContext";
+import { SignInModalProvider } from "../SignInModalContext";
 import { UIProvider } from "../UI/hooks/useUI";
 import { PhoneVerificationProvider } from "../PhoneVerificationContext";
 import RootLayoutContent from "@/app/RootLayoutContent";
@@ -8,11 +8,11 @@ export function RootLayout() {
   return (
     <UIProvider>
       <UniversalModalProvider>
-        <AuthModalProvider>
+        <SignInModalProvider>
           <PhoneVerificationProvider>
             <RootLayoutContent />
           </PhoneVerificationProvider>
-        </AuthModalProvider>
+        </SignInModalProvider>
       </UniversalModalProvider>
     </UIProvider>
   );

@@ -5,7 +5,6 @@ import type { UpdateProfileDto } from "../application/updateProfileDTO";
 import type { AppUser, UserProfile } from "./authTypes";
 
 export interface AuthRepository {
-  login(email: string, password: string): Promise<RepoResponse<User>>;
   logout(): Promise<RepoResponse<boolean>>;
   fetchUserProfile(userId: string): Promise<RepoResponse<UserProfile>>;
   completeProfile(user: AppUser): Promise<RepoResponse<string>>;

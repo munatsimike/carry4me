@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useAuthModal } from "./app/shared/Authentication/AuthModalContext";
+import { useSignInModal } from "./app/shared/Authentication/SignInModalContext";
 import {
   Bell,
   BellRing,
@@ -82,7 +82,7 @@ function GuestNavigation() {
 }
 
 function SignInBtn() {
-  const { openAuthModal } = useAuthModal();
+  const { openSignInModal } = useSignInModal();
   const location = useLocation();
 
   return (
@@ -90,10 +90,7 @@ function SignInBtn() {
       {/* SECONDARY ACTION */}
       <button
         onClick={() =>
-          openAuthModal({
-            mode: "signin",
-            redirectTo: location.pathname,
-          })
+          openSignInModal({ redirectTo: location.pathname })
         }
         className="
           whitespace-nowrap

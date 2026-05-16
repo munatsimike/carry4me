@@ -7,7 +7,7 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 import { LockKeyholeOpen } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
-import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
+import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 
 type SendRequestBtnProps<T> = {
   listingType?: ListingType;
@@ -30,7 +30,7 @@ export default function SendRequestBtn<T>({
 }: SendRequestBtnProps<T>) {
   const { user } = useAuth();
   const { openInfo } = useUniversalModal();
-  const { openAuthModal } = useAuthModal();
+  const { openSignInModal } = useSignInModal();
   const isTripListing = listingType === "trip";
   const base = "flex items-center w-full mb-0";
 
@@ -46,10 +46,7 @@ export default function SendRequestBtn<T>({
               title: "Sign in to continue",
               message: `Please sign in to send a request to this ${isTripListing ? "sender" : "traveler"}.`,
               onClick: () => {
-                openAuthModal({
-                  mode: "signin",
-                  redirectTo: location.pathname,
-                });
+                openSignInModal({ redirectTo: location.pathname });
               },
             });
           }

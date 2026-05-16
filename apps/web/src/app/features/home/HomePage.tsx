@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { useToast } from "@/app/components/Toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomModal from "@/app/components/CustomModal";
-import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
+import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
@@ -16,7 +16,7 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { openAuthModal } = useAuthModal();
+  const { openSignInModal } = useSignInModal();
   const isPassReset = searchParams.get("reset") === "success";
   const isSignup = searchParams.get("signup") === "success";
   const navigate = useNavigate();
@@ -72,7 +72,7 @@ export default function HomePage() {
         {isPassReset && (
           <Modal
             onClose={() => handleClose("reset")}
-            onSignIn={() => openAuthModal({ mode: "signin" })}
+            onSignIn={() => openSignInModal()}
           />
         )}
 

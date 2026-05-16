@@ -25,7 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
-import { useAuthModal } from "../AuthModalContext";
+import { useSignInModal } from "../SignInModalContext";
 import ComboBox from "@/app/components/ComboBox";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import MobileForm from "@/app/features/dashboard/components/MobileForm";
@@ -76,7 +76,7 @@ export default function CompleteProfile() {
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
   const navigate = useNavigate();
-  const { openAuthModal } = useAuthModal();
+  const { openSignInModal } = useSignInModal();
   const isMobile = useMediaQuery();
   const {
     control,
@@ -135,9 +135,7 @@ export default function CompleteProfile() {
       if (result.error.code === "user_already_exists") {
         showSupabaseError(result.error, "Signin", {
           onLogin: () =>
-            openAuthModal({
-              mode: "signin",
-            }),
+            openSignInModal(),
         });
       } else {
         showSupabaseError(result.error);

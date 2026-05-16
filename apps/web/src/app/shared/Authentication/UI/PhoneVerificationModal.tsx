@@ -3,14 +3,14 @@ import { usePhoneVerification } from "../PhoneVerificationContext";
 import { PhoneEntryScreen } from "./PhoneEntryScreen";
 import { OTPVerificationScreen } from "./OTPVerificationScreen";
 import CustomModal from "@/app/components/CustomModal";
-import { useAuthModal } from "../AuthModalContext";
+import { useSignInModal } from "../SignInModalContext";
 
 export function PhoneVerificationModal() {
   const { step, setStep, resetPhoneVerification } = usePhoneVerification();
-  const { state, closeAuthModal } = useAuthModal();
+  const { state, closeSignInModal } = useSignInModal();
   const handleClose = () => {
     resetPhoneVerification();
-    closeAuthModal();
+    closeSignInModal();
   };
 
   const handlePhoneSubmitted = () => {
@@ -23,7 +23,7 @@ export function PhoneVerificationModal() {
 
   const handleVerificationComplete = () => {
     resetPhoneVerification();
-    closeAuthModal();
+    closeSignInModal();
   };
 
   return (

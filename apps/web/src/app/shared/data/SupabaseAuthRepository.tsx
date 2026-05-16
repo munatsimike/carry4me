@@ -248,45 +248,16 @@ export class SupabaseAuthRepository implements AuthRepository {
         },
       }
     };
-     console.log(data);
     return { data: data, error: null };
   }
 
   async logout(): Promise<RepoResponse<boolean>> {
     const { error } = await supabase.auth.signOut();
-    if (error) throw Error;
     if (error) {
-      return { error: error, data: null };
+      return { error, data: null };
     }
 
     return { data: true, error: null };
-  }
-
-  async login(email: string, password: string): Promise<RepoResponse<User>> {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      return { data: null, error };
-    }
-
-    const user = data.user;
-
-    if (!user) {
-      return {
-        data: null,
-        error: {
-          code: "",
-          message: "Login succeeded but no user returned.",
-        },
-      };
-    }
-    return {
-      data: user,
-      error: null,
-    };
   }
 
   async deleteAvatar(
@@ -360,11 +331,40 @@ export class SupabaseAuthRepository implements AuthRepository {
     }
 
     if (data.user) {
-      // Mark phone as verified in profiles table
-      await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .update({ phone_verified: true })
-        .eq("id", data.user.id);
+        .select("id")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        return {
+          data: null,
+          error: {
+            code: profileError.code,
+            message: profileError.message,
+            status: null,
+          },
+        };
+      }
+
+      if (profile) {
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ phone_verified: true })
+          .eq("id", data.user.id);
+
+        if (updateError) {
+          return {
+            data: null,
+            error: {
+              code: updateError.code,
+              message: updateError.message,
+              status: null,
+            },
+          };
+        }
+      }
     }
 
     return { data: data.user, error: null };

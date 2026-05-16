@@ -8,7 +8,7 @@ import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
 import type { TripListing } from "@/app/features/trips/domain/Trip";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import { useAuthModal } from "@/app/shared/Authentication/AuthModalContext";
+import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
 import { useToast } from "@/app/components/Toast";
@@ -52,7 +52,7 @@ export default function ParcelsPage() {
   );
   const [parcelsList, setParcelsList] = useState<ParcelListing[]>([]);
   const { user, profile } = useAuth();
-  const { openAuthModal } = useAuthModal();
+  const { openSignInModal } = useSignInModal();
   const [dataloaded, setDataLoaded] = useState<boolean>(false);
   useEffect(() => {
     let cancel = false;
@@ -235,7 +235,7 @@ export default function ParcelsPage() {
   );
   const handleOnClick = () => {
     if (!user?.id) {
-      openAuthModal({ mode: "signin", redirectTo: "/parcels" });
+      openSignInModal({ redirectTo: "/parcels" });
       return;
     }
 
