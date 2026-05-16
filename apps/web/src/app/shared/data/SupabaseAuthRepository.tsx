@@ -63,6 +63,7 @@ export class SupabaseAuthRepository implements AuthRepository {
     return { data: data.user.id, error: null };
   }
 
+ 
   async completeProfile(appUser: AppUser): Promise<RepoResponse<string>> {
     const {
       data: { user },
@@ -88,6 +89,7 @@ export class SupabaseAuthRepository implements AuthRepository {
         country_code: appUser.profile.countryCode,
         phone_number: user.phone,
         city: appUser.profile.city,
+        email: appUser.profile.email,
         phone_verified: true,
       })
       .select("id")
@@ -180,7 +182,7 @@ export class SupabaseAuthRepository implements AuthRepository {
     const { data, status, error } = await supabase
       .from("profiles")
       .select(
-        "id,full_name,avatar_url,city,country_code,phone_number,phone_verified",
+        "id,full_name,avatar_url,city,country_code,phone_number,phone_verified,email",
       )
       .eq("id", userId)
       .maybeSingle();
@@ -218,6 +220,7 @@ export class SupabaseAuthRepository implements AuthRepository {
         countryCode: data.country_code,
         city: data.city,
         phoneNumber: data.phone_number,
+        email: data.email,
         phoneVerified: data.phone_verified === true,
       },
       error: null,
@@ -228,12 +231,14 @@ export class SupabaseAuthRepository implements AuthRepository {
     userId: string,
     updateProfile: Partial<UpdateProfileDto>,
   ): Promise<RepoResponse<string>> {
+   
     const { data, error, status } = await supabase
       .from("profiles")
       .update(updateProfile)
-      .eq("id", userId);
-
-    if (error)
+      .eq("id", userId)
+    
+ 
+    if (error){
       return {
         data: null,
         error: {
@@ -241,7 +246,9 @@ export class SupabaseAuthRepository implements AuthRepository {
           message: error.message,
           status: status,
         },
-      };
+      }
+    };
+     console.log(data);
     return { data: data, error: null };
   }
 

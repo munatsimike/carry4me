@@ -1,7 +1,7 @@
 import type { AuthRepository } from "../domain/AuthRepository";
 import type { Result } from "../domain/Result";
 import { toResult } from "./toResultMapper";
-import type { UpdateAuthDto } from "./UpdateAuthDto";
+import type { UpdateProfileDto } from "./updateProfileDTO";
 
 export class UpdateAuthDetailsUseCase {
   repo: AuthRepository;
@@ -9,24 +9,29 @@ export class UpdateAuthDetailsUseCase {
     this.repo = repo;
   }
 
-  async excute(email?: string, password?: string): Promise<Result<string>> {
-    const result = await this.repo.updateAuthDetails(
-      this.toUpdateAuthDto(email, password),
+  async excute(
+    userId: string,
+    email?: string,
+    phoneNumber?: string,
+  ): Promise<Result<string>> {
+    
+    const result = await this.repo.updateProfile(
+      userId,
+      this.toUpdateAuthDto(email, phoneNumber),
     );
     return toResult(result);
   }
 
   toUpdateAuthDto(
     email: string | undefined,
-    password: string | undefined,
-  ): Partial<UpdateAuthDto> {
-    const dto: UpdateAuthDto = {};
-
+    phoneNumber: string | undefined,
+  ): Partial<UpdateProfileDto> {
+    const dto: Partial<UpdateProfileDto> = {};
     if (email) {
       dto.email = email;
     }
-    if (password) {
-      dto.password = password;
+    if (phoneNumber) {
+      dto.phone_number = phoneNumber;
     }
 
     if (Object.keys(dto).length === 0) throw Error;

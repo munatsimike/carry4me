@@ -89,7 +89,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-3 px-4 sm:px-0">
+    <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-4 px-4 sm:px-0">
       <motion.div variants={item} className="flex items-center justify-center">
         <ErrorText error={submitError?.toString()}>
           <span className="inline-flex flex-col gap-1 items-center">
@@ -98,13 +98,13 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
             <CustomText
               as="h1"
               textVariant="primary"
-              textSize="lg"
+              textSize="xl"
               className="font-medium"
             >
-              Sign in or create an account
+              Sign in
             </CustomText>
             <CustomText as="p" textVariant="label" textSize="sm">
-              Enter your phone number to continue with Carry4Me.
+              Enter your phone number to continue.
             </CustomText>
           </span>
         </ErrorText>
@@ -117,7 +117,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
       <motion.form
         variants={item}
         onSubmit={handleSubmit(handleSendOTP)}
-        className="w-full flex flex-col gap-4"
+        className="w-full flex flex-col gap-5"
       >
         <div className="flex justify-center">
           <div className="flex flex-col gap-2">

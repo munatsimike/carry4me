@@ -20,6 +20,7 @@ export type UserProfile = {
   city: string | null;
   phoneNumber: string | null;
   phoneVerified?: boolean;
+  email: string;
 };
 
 export type AppUser = {

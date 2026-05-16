@@ -1,4 +1,4 @@
 export type UpdateAuthDto ={
     email?: string,
-    password?:string
+    phone_number?: string
 }

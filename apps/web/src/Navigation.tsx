@@ -87,23 +87,6 @@ function SignInBtn() {
 
   return (
     <div className="flex items-center gap-2">
-      {/* PRIMARY ACTION */}
-      <NavItem to="signup">
-        <button
-          className="flex gap-2
-          whitespace-nowrap
-          text-md font-medium text-gray-700
-          px-2 py-1
-          rounded-full
-          transition-colors duration-200
-          hover:text-blue-600
-        "
-        >
-          {/**<UserPlus className={iconStyle} strokeWidth={strokeWidth} />**/}
-          Sign up
-        </button>
-      </NavItem>
-
       {/* SECONDARY ACTION */}
       <button
         onClick={() =>

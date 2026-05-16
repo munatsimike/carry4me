@@ -30,7 +30,7 @@ import { UpdateAuthDetailsUseCase } from "../application/UpdateAuthDetailsUseCas
 import { DeleteAvatarUseCase } from "../application/DeleteAvatarUseCase";
 import ComboBox from "@/app/components/ComboBox";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
-import { useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   UserDetailsScema,
   type UserDetailsFields,
@@ -211,15 +211,11 @@ export default function ProfilePage() {
   const onUpdateProfile = async () => {
     if (editing === "security") {
       const values = getValues();
-
       const wantsEmailChange = !!dirtyFields.emailAddress;
-      const wantsPasswordChange =
-        !!dirtyFields.password ||
-        !!dirtyFields.confirmPassword ||
-        !!values.password?.trim() ||
-        !!values.confirmPassword?.trim();
+      const wantsPhoneChange =
+        !!dirtyFields.phoneNumber 
 
-      const isDirty = wantsEmailChange || wantsPasswordChange;
+      const isDirty = wantsEmailChange || wantsPhoneChange;
 
       if (!isDirty) {
         toast("Make changes to update profile", { variant: "warning" });
@@ -231,17 +227,17 @@ export default function ProfilePage() {
         if (!ok) return;
       }
 
-      if (wantsPasswordChange) {
-        const ok = await trigger(["password", "confirmPassword"]);
+      if (wantsPhoneChange) {
+        const ok = await trigger("phoneNumber");
         if (!ok) return;
       }
 
       const email = dirtyFields.emailAddress ? values.emailAddress : undefined;
-      const password = dirtyFields.password ? values.password : undefined;
+      const phoneNumber = dirtyFields.phoneNumber ? values.phoneNumber : undefined;
 
       const { result } = await namedCall(
         "security update",
-        updateAuthDetails.excute(email, password),
+        updateAuthDetails.excute(user.id, email, phoneNumber),
       );
 
       if (!result.success) {
@@ -275,6 +271,7 @@ export default function ProfilePage() {
           avatarUrl: null,
           countryCode: values.country,
           city: values.city,
+          email: values.emailAddress,
           phoneNumber: values.phoneNumber,
         }),
       );
@@ -345,7 +342,6 @@ export default function ProfilePage() {
             <LineDivider heightClass="my-0" />
             <SecurityDetailsCard
               profile={profile}
-              email={user.email ?? ""}
               iconSpecs={iconSpecs}
               editing={editing}
               setEditing={() => setEditing("security")}
@@ -450,7 +446,6 @@ function LocationSection({
 
 type securityProps = {
   profile: UserProfile;
-  email: string;
   editing: ProfileSection | null;
   setEditing: () => void;
   actionBtns: ActionButtonProps;
@@ -464,7 +459,6 @@ type securityProps = {
 };
 
 function SecurityDetailsCard({
-  email,
   editing,
   setEditing,
   actionBtns,
@@ -494,7 +488,7 @@ function SecurityDetailsCard({
       {!isEditing ? (
         <div className="flex items-center">
           <div className="flex flex-col gap-2">
-            <InfCol label="Email address" value={email} />
+            <InfCol label="Email address" value={profile.email} />
             <InfoRow label="Phone" value={profile.phoneNumber} />
           </div>
         </div>

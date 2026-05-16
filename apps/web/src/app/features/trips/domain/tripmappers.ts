@@ -43,6 +43,7 @@ export function mapTripRowToTrip(
       id: row.traveler.id,
       fullName: row.traveler.full_name,
       avatarUrl: publicUrl,
+      email: "",
       countryCode: null,
       city: null,
       phoneNumber: null,

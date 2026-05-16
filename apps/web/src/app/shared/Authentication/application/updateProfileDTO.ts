@@ -4,4 +4,5 @@ export type UpdateProfileDto = {
   country_code: string;
   phone_number: string;
   avatar_url: string | null;
+  email: string;
 };

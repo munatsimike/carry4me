@@ -36,6 +36,7 @@ export function toParcelMapper(row: ParcelRow,  likedTripIds: Set<string> = new 
     user: {
       id: row.sender.id,
       fullName: row.sender.full_name,
+      email: "",
       avatarUrl: publicUrl,
       countryCode: null,
       city: null,

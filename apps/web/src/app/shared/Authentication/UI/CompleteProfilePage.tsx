@@ -108,7 +108,7 @@ export default function CompleteProfile() {
 
   const { showSupabaseError } = useUniversalModal();
 
-  const onSignUp = async (values: UserDetailsFields) => {
+  const onSubmit = async (values: UserDetailsFields) => {
     const newUser: AppUser = {
       auth: {
         id: null,
@@ -117,6 +117,7 @@ export default function CompleteProfile() {
       },
       profile: {
         id: null,
+        email: values.emailAddress,
         fullName: `${values.firstName} ${values.lastName}`.trim(),
         avatarUrl: null,
         countryCode: values.country,
@@ -173,12 +174,12 @@ export default function CompleteProfile() {
         enableHover={false}
       >
         {isMobile ? (
-          <MobileForm submit={handleSubmit(onSignUp)}>
+          <MobileForm submit={handleSubmit(onSubmit)}>
             {formContents}
           </MobileForm>
         ) : (
           <motion.form
-            onSubmit={handleSubmit(onSignUp)}
+            onSubmit={handleSubmit(onSubmit)}
             variants={container}
             initial="hidden"
             animate="show"
