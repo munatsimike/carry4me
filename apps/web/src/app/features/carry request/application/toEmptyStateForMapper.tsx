@@ -13,15 +13,15 @@ export function toEmptyStateForMapper(navTab: string): EmptyStateConfig {
     case "ongoing":
       return {
         title: "No ongoing requests",
-        body: "You have no ongoing requests yet. Start by browsing parcels or trips to connect with other users.",
+        body: "You have no ongoing requests yet. Browse trips or parcels to get started.",
         actions: [
           {
-            label: "Browse Trips",
+            label: "Browse trips",
             href: "/travelers",
             variant: "secondary",
           },
           {
-            label: "Browse Parcels",
+            label: "Browse parcels",
             href: "/parcels",
             variant: "primary",
           },
@@ -31,27 +31,27 @@ export function toEmptyStateForMapper(navTab: string): EmptyStateConfig {
     case "declined":
       return {
         title: "No declined requests",
-        body: "You don't have any declined requests.",
+        body: "You don’t have any declined requests.",
       };
 
     case "cancelled":
       return {
         title: "No cancelled requests",
-        body: "You haven't cancelled any requests.",
+        body: "You haven’t cancelled any requests.",
       };
 
     case "completed":
       return {
         title: "No completed requests",
-        body: "You haven't completed any deliveries yet.",
+        body: "You haven’t completed any deliveries yet.",
         actions: [
           {
-            label: "Browse Trips",
+            label: "Browse trips",
             href: "/travelers",
             variant: "secondary",
           },
           {
-            label: "Browse Parcels",
+            label: "Browse parcels",
             href: "/parcels",
             variant: "primary",
           },

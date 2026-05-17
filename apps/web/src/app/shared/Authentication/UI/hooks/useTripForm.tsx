@@ -132,7 +132,7 @@ export function useTripForm({
         );
       }
 
-      toast("changes saved successfully", { variant: "success" });
+      toast("Changes saved successfully.", { variant: "success" });
       await refreshProfile();
       await invalidateTrips();
     } catch (err) {
@@ -161,7 +161,7 @@ export function useTripForm({
       );
 
       await invalidateTrips();
-      toast("Trip saved successfully", { variant: "success" });
+      toast("Trip posted successfully.", { variant: "success" });
       if (setModalState) {
         setModalState();
       } else {

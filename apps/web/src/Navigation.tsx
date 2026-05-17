@@ -91,9 +91,9 @@ function SignInBtn() {
           openSignInModal({ redirectTo: location.pathname })
         }
         className="
-            flex min-h-10 items-center gap-2
+            flex min-h-5 items-center gap-2
             rounded-full bg-blue-500 text-white
-            px-3 py-2 sm:px-4
+            px-3 py-1.5 sm:px-4
             text-sm sm:text-md font-medium
             transition-all duration-200
             font-heading
@@ -127,7 +127,7 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
 
   useEffect(() => {
     if (isError) {
-      toast("unable to load notifications at the moment", {
+      toast("We couldn’t load notifications right now.", {
         variant: "error",
       });
     }
@@ -465,13 +465,13 @@ function toHeading(path: string) {
     case "/parcels":
       return "Parcels";
     case "/signup":
-      return "Signup";
+      return "Sign up";
     case "/dashboard":
       return "Dashboard";
     case "/my/trips":
       return "My trips";
     case "/my/parcels":
-      return "My Parcels";
+      return "My parcels";
     case "/favourites":
       return "My Favourites";
     case "/requests":

@@ -44,7 +44,7 @@ export function MyTripsPage() {
   const deleteTrip = (tripId: string) => {
     deleteTripMutation.mutate(tripId, {
       onSuccess: () => {
-        toast("Trip deleted successfully", { variant: "success" });
+        toast("Trip deleted successfully.", { variant: "success" });
       },
     });
   };
@@ -69,9 +69,9 @@ export function MyTripsPage() {
         <p>Loading…</p>
       ) : sortedTrips.length === 0 ? (
         <EmptyState
-          title={"No Trips"}
+          title="No trips yet"
           description={
-            "You haven’t posted any trips yet. Start by creating a new trips to let others send trips with you."
+            "You haven’t posted a trip yet. Add one to start receiving parcel requests."
           }
           action={
             <Button
@@ -80,7 +80,7 @@ export function MyTripsPage() {
               variant={"primary"}
               size={"sm"}
             >
-              Post Trip
+              Post trip
             </Button>
           }
         />

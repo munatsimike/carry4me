@@ -182,7 +182,7 @@ export function SearchResults({
               ({searchResults})
             </CustomText>
             <CustomText as="p" textSize="xs" textVariant="secondary">
-              {searchResults === 1 ? "parcel" : "parcels"} found
+              {searchResults === 1 ? "result" : "results"} found
             </CustomText>
           </span>
 

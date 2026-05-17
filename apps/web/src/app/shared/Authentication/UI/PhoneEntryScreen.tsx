@@ -110,7 +110,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
         <div className="flex justify-center">
           <div className="flex flex-col gap-2">
             <CustomText as="label" textVariant="label" textSize="xs">
-              Phone Number
+              Phone number
             </CustomText>
             <FloatingInputField
               hasValue
@@ -120,7 +120,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
               error={errors.phoneNumber?.message}
               isDirty={dirtyFields.phoneNumber ?? false}
               isTouched={!!touchedFields.phoneNumber}
-              helperText="Include country code (e.g., +44640020023)"
+              helperText="Include your country code, for example +44..."
             />
           </div>
         </div>
@@ -135,10 +135,10 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
           {isSubmitting ? (
             <>
               <Spinner />
-              <span className="ml-2">Sending OTP...</span>
+              <span className="ml-2">Sending code...</span>
             </>
           ) : (
-            "Send Verification Code"
+            "Send verification code"
           )}
         </Button>
       </motion.form>

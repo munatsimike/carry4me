@@ -8,6 +8,6 @@ type PriceFieldProps<T extends FieldValues> = NumberInputFieldProps<T>;
 
 export function PriceField<T extends FieldValues>(props: PriceFieldProps<T>) {
   return (
-    <NumberInputField {...props} label={props.label ?? "Price per (kg)"} />
+    <NumberInputField {...props} label={props.label ?? "Price per kg"} />
   );
 }

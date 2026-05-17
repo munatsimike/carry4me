@@ -89,7 +89,7 @@ export const safetyRules: InfoItem[] = [
 export const benefits: InfoItem[] = [
   {
     Icon: Wallet,
-    label: "Save Money",
+    label: "Save money",
     value:
       "Much cheaper than traditional shipping. You negotiate the delivery fee.",
     tag: "sender",
@@ -102,7 +102,7 @@ export const benefits: InfoItem[] = [
   },
   {
     Icon: Lock,
-    label: "Pay After Delivery",
+    label: "Pay after delivery",
     value:
       "Your payment is only released once the parcel is successfully delivered.",
     tag: "sender",
@@ -110,14 +110,14 @@ export const benefits: InfoItem[] = [
 
   {
     Icon: Money,
-    label: "Earn Extra Money",
-    value: "Make money delivering packages on your existing trip.",
+    label: "Earn extra money",
+    value: "Earn money carrying parcels on your existing trip.",
     tag: "traveler",
   },
 
   {
     Icon: Rocket,
-    label: "Flexible & Fast",
+    label: "Flexible and fast",
     value:
       "Personalized delivery options based on real travelers going your way.",
     tag: "sender",
@@ -125,52 +125,52 @@ export const benefits: InfoItem[] = [
 
   {
     Icon: LoveHands,
-    label: "Help Family & Community",
+    label: "Help family and community",
     value: "Support people needing to send items home safely.",
     tag: "traveler",
   },
 ];
 export const questions: InfoItem[] = [
   {
-    label: "What items can I send ?",
+    label: "What items can I send?",
     value:
       "You can send common personal items such as clothes, documents, and small electronics. All items must be legal and allowed for transport.",
     tag: "sender",
   },
   {
-    label: "How is payment handled ? ",
+    label: "How is payment handled?",
     value:
       "The sender pays after you accept a request. Carry4Me securely holds the funds and releases them to you after delivery is confirmed.",
     tag: "traveler",
   },
   {
-    label: "How do I send a parcel ?",
+    label: "How do I send a parcel?",
     value:
       "Post your parcel details, browse available travelers, and send a carry request. Once accepted, make payment and hand over the parcel.",
     tag: "sender",
   },
 
   {
-    label: "Can I choose what parcels I carry ?",
+    label: "Can I choose which parcels I carry?",
     value:
       "Yes. You decide which requests to accept and can choose parcels that fit your space, preferences, and travel plans.",
     tag: "traveler",
   },
 
   {
-    label: "How does pricing work ?",
+    label: "How does pricing work?",
     value:
       "Travelers set a price per kilogram. You see the total cost before requesting, so there are no surprises.",
     tag: "sender",
   },
 
   {
-    label: "When do I get paid ?",
+    label: "When do I get paid?",
     value:
       "You get paid after delivery using a payout code provided by the sender or recipient.",
     tag: "traveler",
   },
-];;
+];
 
 
 

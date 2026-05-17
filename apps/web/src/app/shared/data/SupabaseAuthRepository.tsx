@@ -239,7 +239,7 @@ export class SupabaseAuthRepository implements AuthRepository {
 
     throwIfSupabaseError(error);
 
-    return "OTP sent successfully";
+    return "Verification code sent";
   }
 
   async verifyPhoneOTP(phoneNumber: string, token: string): Promise<User> {
@@ -251,7 +251,10 @@ export class SupabaseAuthRepository implements AuthRepository {
 
     throwIfSupabaseError(error);
 
-    const user = requireData(data.user, "No user returned after OTP verification");
+    const user = requireData(
+      data.user,
+      "No user returned after phone verification",
+    );
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")

@@ -147,7 +147,7 @@ export default function TravelersPage() {
         });
 
         if (data.length === 0) {
-          toast("Post a parcel first to start matching with travelers.", {
+          toast("Post a parcel first to match with a traveler.", {
             variant: "warning",
           });
           return;
@@ -284,7 +284,7 @@ export default function TravelersPage() {
         {displayedTrips.length === 0 && isFetched && !hasFilter && !isSearchActive && (
           <EmptyState
             title="No trips available"
-            description="No trips found. Post your trip to start receiving parcel requests from senders."
+            description="No trips are available yet. Post your trip to start receiving parcel requests."
             action={
               <Button
                 onClick={() => handleOnClick()}
@@ -294,7 +294,7 @@ export default function TravelersPage() {
                 className="w-full mt-1"
               >
                 <CustomText textVariant="onDark" textSize="sm">
-                  {"Post Trip"}
+                  {"Post trip"}
                 </CustomText>
               </Button>
             }
@@ -312,7 +312,7 @@ export default function TravelersPage() {
         {(hasFilter || isSearchActive) && displayedTrips.length === 0 && isFetched && (
           <EmptyState
             title="No matching travelers"
-            description="Try adjusting your search or changing filters. Clear filters or search to see all travelers."
+            description="Try adjusting your search or filters to find more travelers."
           />
         )}
 

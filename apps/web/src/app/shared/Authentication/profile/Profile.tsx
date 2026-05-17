@@ -183,7 +183,7 @@ export default function ProfilePage() {
     if (!file) return;
     try {
       await upLoadAvatrUseCase.uploadAvatar(user.id, file);
-      toast("Profile pic changed successfully", { variant: "success" });
+      toast("Profile photo updated successfully.", { variant: "success" });
       await refreshProfile();
     } catch (err) {
       showSupabaseError(err);
@@ -198,7 +198,7 @@ export default function ProfilePage() {
       setFile(null);
       setPreview(null);
       await refreshProfile();
-      toast("profile pic deleted", { variant: "success" });
+      toast("Profile photo removed.", { variant: "success" });
     } catch (err) {
       showSupabaseError(err);
     }
@@ -233,7 +233,7 @@ export default function ProfilePage() {
 
       try {
         await updateAuthDetails.excute(user.id, email, phoneNumber);
-        toast("Profile updated successfully", { variant: "success" });
+        toast("Profile updated successfully.", { variant: "success" });
         reset(getValues());
         await refreshProfile();
       } catch (err) {
@@ -271,7 +271,7 @@ export default function ProfilePage() {
         });
         reset(getValues());
         setFile(null);
-        toast("Profile updated successfully", { variant: "success" });
+        toast("Profile updated successfully.", { variant: "success" });
         await refreshProfile();
       } catch (err) {
         showSupabaseError(err);

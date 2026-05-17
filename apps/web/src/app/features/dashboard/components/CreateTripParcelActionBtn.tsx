@@ -31,7 +31,7 @@ export default function ActionBtn({
         size="md"
       >
         <CustomText textVariant="onDark">
-          {isSubmitting ? "Posting..." : "Review & Post"}
+          {isSubmitting ? "Posting..." : "Review and post"}
         </CustomText>
       </Button>
     </div>

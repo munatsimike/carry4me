@@ -128,7 +128,7 @@ export default function ParcelsPage() {
     // check if parcel to be matched to a trip does not belong to the logged in user
     if (parcel.user.id === user.id) {
       toast(
-        "You can’t match with your own parcel.Browse available trips instead.",
+        "You can’t match with your own parcel. Browse available trips instead.",
         { variant: "warning" },
       );
       return;
@@ -142,7 +142,7 @@ export default function ParcelsPage() {
         });
 
         if (data.length === 0) {
-          toast("Post a trip first to start matching with senders.", {
+          toast("Post a trip first to match with a sender.", {
             variant: "warning",
           });
           return;
@@ -286,13 +286,13 @@ export default function ParcelsPage() {
         {(hasFilter || isSearchActive) && displayedParcels.length === 0 && isFetched && (
           <EmptyState
             title="No matching parcels"
-            description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
+            description="Try adjusting your search or filters to find more parcels."
           />
         )}
         {displayedParcels.length === 0 && isFetched && !hasFilter && !isSearchActive && (
           <EmptyState
             title="No parcels available"
-            description="No parcels found. Post your parcels to start receiving trip requests from travelers."
+            description="No parcels are available yet. Post a parcel to start receiving trip requests."
             action={
               <Button
                 onClick={() => handleOnClick()}
@@ -302,7 +302,7 @@ export default function ParcelsPage() {
                 className="w-full mt-1"
               >
                 <CustomText textVariant="onDark" textSize="sm">
-                  {"Post Parcel"}
+                  {"Post parcel"}
                 </CustomText>
               </Button>
             }

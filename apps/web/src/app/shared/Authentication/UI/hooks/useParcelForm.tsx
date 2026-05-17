@@ -127,7 +127,7 @@ export default function useParcelForm({
         );
       }
 
-      toast("changes saved successfully", { variant: "success" });
+      toast("Changes saved successfully.", { variant: "success" });
       await refreshProfile();
       await invalidateParcels();
     } catch (err) {
@@ -141,7 +141,6 @@ export default function useParcelForm({
     if (!ok) return;
 
     try {
-      // your existing save flow...
       const parcelId = await createParcel(
         values,
         user.id,
@@ -161,7 +160,7 @@ export default function useParcelForm({
       } else {
         setToDashBoard(true);
       }
-      toast("Parcel saved successfully", { variant: "success" });
+      toast("Parcel posted successfully.", { variant: "success" });
     } catch (err) {
       showSupabaseError(err);
     }

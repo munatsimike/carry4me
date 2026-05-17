@@ -50,7 +50,7 @@ export default function ConfirmRequest({
 
     if (parcel.weightKg > trip.weightKg) {
       const message = isSenderRequesting
-        ? "This traveler does not have enough space for your parcel."
+        ? "This traveler doesn’t have enough space for your parcel."
         : "You do not have enough space to carry this parcel.";
 
       toast(message, {
@@ -78,7 +78,7 @@ export default function ConfirmRequest({
     );
     if (!canCarry) {
       toast(
-        "This traveler does not accept one or more item categories in your parcel.",
+        "This traveler doesn’t accept one or more item categories in your parcel.",
         { variant: "warning" },
       );
       onClose();
@@ -103,7 +103,7 @@ export default function ConfirmRequest({
         openInfo({
           icon: <Clock className="h-6 w-6 text-warning-400" />,
           title: "Pending request exists",
-          message: `You already have a request with this ${isSenderRequesting ? "sender" : "traveler"} that is waiting for a response. Please check the existing request for updates.`,
+          message: `You already have a pending request with this ${isSenderRequesting ? "sender" : "traveler"}. Check your existing request for updates.`,
           label: "Go to requests",
           onClick: () => navigate("/requests"),
         });
@@ -120,12 +120,12 @@ export default function ConfirmRequest({
       </div>
       <div className="flex flex-col items-center">
         <CustomText textSize="lg" textVariant="primary" className="font-medium">
-          {"Send a carry parcel request"}
+          {"Send carry request"}
         </CustomText>
         <CustomText textSize="sm" textVariant="secondary">
           {isSenderRequesting
-            ? "You're requesting this traveler to carry your parcel on their trip."
-            : "You're requesting  to carry this parcel on your upcoming trip."}
+            ? "You’re asking this traveler to carry your parcel on their trip."
+            : "You’re offering to carry this parcel on your upcoming trip."}
         </CustomText>
       </div>
       <LineDivider />

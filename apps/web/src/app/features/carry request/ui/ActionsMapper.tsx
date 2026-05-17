@@ -176,9 +176,9 @@ function paidOut(): UIActions {
     infoBlock: {
       mode: INFOMODES.DISPLAY,
       displayText: {
-        title: "Thank you  for using Carry4Me.",
+        title: "Thank you for using Carry4Me.",
         description:
-          "Need help or suggestions? WhatsApp +31 6 5831 89  or  info@carry4me.com.",
+          "Need help or have feedback? WhatsApp +31 6 5831 89 or email info@carry4me.com.",
       },
     },
   };

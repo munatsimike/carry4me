@@ -30,7 +30,7 @@ export const phoneNumberSchema = z
   .min(1, "Phone number is required")
   .refine(
     (value) => isValidPhoneNumber(value),
-    "Enter a valid phone number with country code, e.g. +263...",
+    "Enter a valid phone number with a country code, for example +263...",
   );
 
 export const otpCodeSchema = z

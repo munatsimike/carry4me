@@ -46,7 +46,7 @@ export function ListingCard<T extends Listing>({
 
   const handleToggleLike = () => {
     if (!user?.id) {
-      toast("You need to login to like parcels or trips.", {
+      toast("Please sign in to save parcels or trips.", {
         variant: "warning",
       });
       return;
@@ -120,9 +120,9 @@ export function ListingCard<T extends Listing>({
       </Stack>
       <LineDivider heightClass="my-2" />
       <WeightAndPrice
-        weightLabel={isTripListing ? "Available space" : "Parcel Weight"}
+        weightLabel={isTripListing ? "Available space" : "Parcel weight"}
         weight={listing.weightKg}
-        priceLabel={isTripListing ? "Price/kg" : "Budget/kg"}
+        priceLabel={isTripListing ? "Price per kg" : "Budget per kg"}
         price={listing.pricePerKg}
         location={"UK"}
       />

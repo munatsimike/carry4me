@@ -98,7 +98,7 @@ export default function CreateParcelForm({
         <FormHeader
           heading={`${mode === "edit" ? "Edit parcel" : "Post parcel"}`}
           subHeading={
-            "Share your parcel details to get matched with travelers."
+            "Share your parcel details and get matched with travelers."
           }
           icon={META_ICONS.parcelBox}
         />
@@ -266,7 +266,7 @@ function PackageDescriptionField({
   return (
     <div className="flex flex-col gap-2 w-full">
       <CustomText textSize="sm" textVariant="label">
-        {"Contents of your package"}
+        {"Parcel contents"}
       </CustomText>
 
       <textarea
@@ -274,7 +274,7 @@ function PackageDescriptionField({
           setValueAs: (value) =>
             typeof value === "string" ? value.trimStart() : value,
         })}
-        placeholder="e.g clothes, shoes, documents, small electronics"
+        placeholder="e.g. clothes, shoes, documents, small electronics"
         maxLength={160}
         className={`
           min-h-[120px]

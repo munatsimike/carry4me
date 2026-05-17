@@ -112,7 +112,7 @@ export function OTPVerificationScreen({
               <ShieldCheck className="text-primary-500" size={24} />
             </CircleBadge>
             <CustomText as="h1" textVariant="primary" textSize="lg" className="font-medium">
-              Verify OTP Code
+              Verify your phone
             </CustomText>
             <CustomText as="p" textVariant="label" textSize="sm">
               We sent a 6-digit code to <strong>{phoneNumber}</strong>
@@ -133,7 +133,7 @@ export function OTPVerificationScreen({
         <div className="flex justify-center">
           <div className="flex flex-col gap-2">
             <CustomText as="label" textVariant="label" textSize="xs">
-              OTP Code
+              Verification code
             </CustomText>
             <FloatingInputField
               hasValue={!!otpCode}
@@ -162,7 +162,7 @@ export function OTPVerificationScreen({
               <span className="ml-2">Verifying...</span>
             </>
           ) : (
-            "Verify Phone Number"
+            "Verify phone number"
           )}
         </Button>
       </motion.form>
@@ -176,7 +176,7 @@ export function OTPVerificationScreen({
             onClick={onPhoneEdit}
             className="text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
-            Edit Phone Number
+            Edit phone number
           </button>
 
           <button
@@ -189,7 +189,7 @@ export function OTPVerificationScreen({
               ? "Sending..."
               : resendTimer > 0
                 ? `Resend in ${resendTimer}s`
-                : "Resend Code"}
+                : "Resend code"}
           </button>
         </div>
       </motion.div>

@@ -205,7 +205,7 @@ export function MyFavouritesPage() {
         {hasFilter && displayedFavourites.length === 0 && (
           <EmptyState
             title="No matching parcels"
-            description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
+            description="Try adjusting your search or filters to find more saved listings."
           />
         )}
       </DefaultContainer>

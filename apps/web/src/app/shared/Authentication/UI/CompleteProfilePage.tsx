@@ -138,7 +138,7 @@ export default function CompleteProfile() {
     } catch (err) {
       const appError = AppError.fromUnknown(err);
       if (appError.code === "user_already_exists") {
-        showSupabaseError(appError, "Signin", {
+        showSupabaseError(appError, "Sign in", {
           onLogin: () => openSignInModal(),
         });
       } else {
@@ -309,7 +309,7 @@ function FormContents({ formProps }: SigupFormProps) {
             render={({ field, fieldState }) => (
               <ComboBox
                 className="rounded-lg"
-                placeholder="Selected country"
+                placeholder="Select country"
                 menuItems={countryOptions}
                 value={field.value}
                 onValueChange={field.onChange}
@@ -327,7 +327,7 @@ function FormContents({ formProps }: SigupFormProps) {
             render={({ field, fieldState }) => (
               <ComboBox
                 className="rounded-lg mt-3"
-                placeholder="Selected city"
+                placeholder="Select city"
                 menuItems={cityOptions}
                 value={field.value}
                 onValueChange={field.onChange}
@@ -352,7 +352,7 @@ function FormContents({ formProps }: SigupFormProps) {
           disabled={isSubmitting || (submitCount > 0 && !isValid)}
         >
           <CustomText textVariant="onDark" textSize="sm">
-            {isSubmitting ? "processing..." : "Join Carry4me"}
+            {isSubmitting ? "Creating account..." : "Join Carry4Me"}
           </CustomText>
         </Button>
       </span>

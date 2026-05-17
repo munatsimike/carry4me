@@ -92,7 +92,7 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
       <div className="relative flex flex-col gap-4">
         <FormHeader
           heading={mode === "edit" ? "Edit trip" : "Post your trip"}
-          subHeading={"Share your trip details to get matched with senders."}
+          subHeading="Share your trip details and get matched with senders."
         />
 
         <StepHeader currentStep={step} />

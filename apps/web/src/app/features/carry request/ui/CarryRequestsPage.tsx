@@ -188,7 +188,7 @@ export default function CarryRequestsPage() {
           icon: <Package className={dialogIconStyle} />,
           title: "Not enough space",
           message:
-            "This parcel exceeds your available space. Try browsing documents, smaller parcels or adjust your weight.",
+            "This parcel exceeds your available space. Try a smaller parcel or update your trip capacity.",
           label: "Adjust weight",
           secondaryLabel: "Browse parcels",
           onClick: () => navigate("/my/trips"),
@@ -250,8 +250,8 @@ export default function CarryRequestsPage() {
 
         if (!canPay) {
           openInfo({
-            title: "Request Expired",
-            message: "The request has expired, you can send another request.",
+          title: "Request expired",
+          message: "This request has expired. You can send a new one.",
             label:
               carryRequest.initiatorRole === ROLES.SENDER
                 ? "Browse trips"

@@ -48,7 +48,7 @@ export function MyParcelsPage() {
   const deleteParcel = (parcelId: string) => {
     deleteParcelMutation.mutate(parcelId, {
       onSuccess: () => {
-        toast("Parcel deleted successfully", { variant: "success" });
+        toast("Parcel deleted successfully.", { variant: "success" });
       },
     });
   };
@@ -77,9 +77,9 @@ export function MyParcelsPage() {
           <p>Loading…</p>
         ) : sortedParcels.length === 0 ? (
           <EmptyState
-            title={"No parcels"}
+            title="No parcels yet"
             description={
-              "You haven’t posted any parcels yet. Start by creating a new parcels to let others send trips with you."
+              "You haven’t posted a parcel yet. Add one to start receiving trip requests."
             }
             action={
               <Button
@@ -88,7 +88,7 @@ export function MyParcelsPage() {
                 variant={"primary"}
                 size={"sm"}
               >
-                + Post a parcel
+                Post parcel
               </Button>
             }
           />
