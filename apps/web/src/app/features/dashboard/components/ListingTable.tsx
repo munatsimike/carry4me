@@ -4,6 +4,7 @@ import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
 import { useState } from "react";
 import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import type { FormValues } from "@/types/Ui";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 
 // 1) Variants
 const tableWrap = {
@@ -67,7 +68,7 @@ export function ListingTable<T extends Listing>({
             <TableTd className={headerStyle}>Route</TableTd>
             <TableTd className={headerStyle}>Date</TableTd>
             <TableTd className={headerStyle}>Space</TableTd>
-            <TableTd className={headerStyle}>Price/kg</TableTd>
+            <TableTd className={headerStyle}>Price per kg</TableTd>
             <TableTd className={headerStyle}>Status</TableTd>
             <TableTd className={`pl-6 ${textStyle}`}>Actions</TableTd>
           </tr>
@@ -130,7 +131,16 @@ export function ListingTable<T extends Listing>({
               </TableTd>
 
               <TableTd>
-                <TableText text={row.pricePerKg.toString()} />
+                <TableText
+                  text={formatCurrencyByCountry(
+                    row.route.originCountry,
+                    row.pricePerKg,
+                    {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    },
+                  )}
+                />
               </TableTd>
 
               <TableTd>

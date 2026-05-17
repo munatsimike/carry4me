@@ -40,6 +40,7 @@ import { MoveRight, Package, PackageX } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
 import { useToast } from "@/app/components/Toast";
 import { format } from "date-fns";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 import {
   HorizontalMenu,
   type TabItem,
@@ -777,6 +778,8 @@ function CostSummary({
   parcel: ParcelSnapshot;
   totalPrice: number;
 }) {
+  const priceCountry = parcel.origin.country;
+
   return (
     <section className="space-y-3">
       <span className="inline-flex rounded-full border bg-neutral-100 px-3 py-1">
@@ -798,10 +801,7 @@ function CostSummary({
         </CustomText>
         <div className="grid grid-cols-[auto_auto] justify-end gap-1 tabular-nums">
           <CustomText textVariant="primary" textSize="sm">
-            $
-          </CustomText>
-          <CustomText textVariant="primary" textSize="sm">
-            {parcel.price_per_kg.toFixed(2)}
+            {formatCurrencyByCountry(priceCountry, parcel.price_per_kg)}
           </CustomText>
         </div>
 
@@ -814,14 +814,7 @@ function CostSummary({
             textSize="md"
             className="font-medium"
           >
-            $
-          </CustomText>
-          <CustomText
-            textVariant="primary"
-            textSize="md"
-            className="font-medium"
-          >
-            {totalPrice.toFixed(2)}
+            {formatCurrencyByCountry(priceCountry, totalPrice)}
           </CustomText>
         </div>
       </div>

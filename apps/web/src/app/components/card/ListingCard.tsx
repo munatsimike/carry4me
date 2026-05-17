@@ -124,7 +124,7 @@ export function ListingCard<T extends Listing>({
         weight={listing.weightKg}
         priceLabel={isTripListing ? "Price per kg" : "Budget per kg"}
         price={listing.pricePerKg}
-        location={"UK"}
+        country={listing.route.originCountry}
       />
       <LineDivider heightClass="my-2" />
       <SendRequestBtn

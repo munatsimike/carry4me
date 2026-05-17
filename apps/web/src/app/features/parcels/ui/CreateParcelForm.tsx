@@ -25,6 +25,7 @@ import CustomText from "@/components/ui/CustomText";
 import AgreeToTermsRow from "../../dashboard/components/AgreeToTermsRow";
 import { inputError, inputNeutral } from "@/app/lib/cn";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 export type ParcelFormMode = "edit" | "create";
 
 type Step = 1 | 2;
@@ -80,6 +81,7 @@ export default function CreateParcelForm({
 
   const priceValue = watch("pricePerKg");
   const weightValue = watch("weight");
+  const originCountry = watch("originCountry");
   const dividerHeight = "my-0";
   const [step, setStep] = useState<Step>(1);
   const { goodsCategory } = useGoodsCategory();
@@ -213,7 +215,10 @@ export default function CreateParcelForm({
                           : ""
                       }
                     >
-                      ${(priceValue * weightValue).toFixed(2)}
+                      {formatCurrencyByCountry(
+                        originCountry,
+                        priceValue * weightValue,
+                      )}
                     </CustomText>
                   </motion.span>
                 </AnimatePresence>

@@ -25,6 +25,7 @@ import type {
 import type { FormMode } from "@/types/Ui";
 import { useState } from "react";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 
 export const step1Fields: Array<keyof TripFormFields> = [
   "originCountry",
@@ -84,6 +85,7 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
   const { goodsCategory } = useGoodsCategory();
   const weightValue = watch("weight");
   const priceValue = watch("pricePerKg");
+  const originCountry = watch("originCountry");
 
   const dividerHeight = "";
 
@@ -208,7 +210,10 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
                         priceValue * weightValue > 0 ? "text-green-600" : ""
                       }`}
                     >
-                      ${(priceValue * weightValue).toFixed(2)}
+                      {formatCurrencyByCountry(
+                        originCountry,
+                        priceValue * weightValue,
+                      )}
                     </CustomText>
                   </motion.span>
                 </AnimatePresence>

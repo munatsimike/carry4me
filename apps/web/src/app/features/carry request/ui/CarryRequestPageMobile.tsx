@@ -10,6 +10,7 @@ import { MoveRight } from "lucide-react";
 import { dateFormat, progress } from "@/types/Ui";
 import CustomModal from "@/app/components/CustomModal";
 import LineDivider from "@/app/components/LineDivider";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 export type MobileSection = "details" | "timeline";
 
 export function MobileFirstHeader({
@@ -68,7 +69,7 @@ export function MobileFirstHeader({
               textVariant="primary"
               className="font-medium"
             >
-              ${totalPrice.toFixed(2)}
+              {formatCurrencyByCountry(trip.origin.country, totalPrice)}
             </CustomText>
           </div>
         </div>
@@ -212,6 +213,8 @@ export function CostSummaryMobile({
   parcel: ParcelSnapshot;
   totalPrice: number;
 }) {
+  const priceCountry = parcel.origin.country;
+
   return (
     <section className="space-y-3">
       <span className="inline-flex rounded-full border bg-neutral-100 px-3 py-1">
@@ -232,14 +235,14 @@ export function CostSummaryMobile({
           Price per kg
         </CustomText>
         <CustomText textVariant="primary" textSize="sm">
-          ${parcel.price_per_kg.toFixed(2)}
+          {formatCurrencyByCountry(priceCountry, parcel.price_per_kg)}
         </CustomText>
 
         <CustomText textVariant="primary" textSize="sm" className="font-medium">
           Total
         </CustomText>
         <CustomText textVariant="primary" textSize="sm" className="font-medium">
-          ${totalPrice.toFixed(2)}
+          {formatCurrencyByCountry(priceCountry, totalPrice)}
         </CustomText>
       </div>
     </section>

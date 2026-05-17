@@ -16,6 +16,7 @@ import { CircleCheck, Clock, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CardLabel from "./card/CardLabel";
 import { format } from "date-fns/format";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 
 type ConfirmRequestProps = {
   loggedInUserId: string;
@@ -164,6 +165,7 @@ export function ParcelSummary({
     : parcel.pricePerKg;
 
   const totalPrice = pricePerKg * parcel.weightKg;
+  const priceCountry = parcel.route.originCountry;
   const variantSecondary = "secondary";
   const variantPrimary = "primary";
   const textSizeLabel = "sm";
@@ -232,7 +234,7 @@ export function ParcelSummary({
             className="textabular-nums text-right"
             textVariant="primary"
           >
-            ${pricePerKg.toFixed(2)}
+            {formatCurrencyByCountry(priceCountry, pricePerKg)}
           </CustomText>
         </div>
 
@@ -252,7 +254,7 @@ export function ParcelSummary({
             textVariant="primary"
             textSize="md"
           >
-            ${totalPrice.toFixed(2)}
+            {formatCurrencyByCountry(priceCountry, totalPrice)}
           </CustomText>
         </div>
       </div>

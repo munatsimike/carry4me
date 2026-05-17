@@ -1,13 +1,12 @@
 import CustomText from "@/components/ui/CustomText";
-import { countryToCurrency } from "../../Mapper";
-import type { Location } from "@/types/Ui";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 
 type WeightAndPriceProps = {
   weightLabel?: string;
   priceLabel?: string;
   weight: number;
   price: number;
-  location: Location;
+  country?: string | null;
 };
 
 export function WeightAndPrice({
@@ -15,9 +14,8 @@ export function WeightAndPrice({
   weight,
   priceLabel = "Price per kg",
   price,
-  location,
+  country,
 }: WeightAndPriceProps) {
-  const currency = countryToCurrency[location];
   const labelColor = "neutral";
   const baseLabel = "flex justify-end";
   const textSize = "sm";
@@ -57,8 +55,10 @@ export function WeightAndPrice({
           textVariant="primary"
           textSize="md"
         >
-          {currency}
-          {price}
+          {formatCurrencyByCountry(country, price, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+          })}
         </CustomText>
       </div>
     </div>

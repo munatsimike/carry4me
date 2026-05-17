@@ -1,4 +1,3 @@
-import type { Location } from "@/types/Ui";
 import { META_ICONS } from "./icons/MetaIcon";
 export const DEFAULT_VARIANT = "primary" as const;
 
@@ -6,13 +5,6 @@ export const tagToVariant = {
   sender: "primary",
   traveler: "success",
 } as const;
-
-export const countryToCurrency: Record<Location, string> = {
-  UK: "£",
-  USA: "$",
-  Zimbabwe: "$",
-};
-
 
 export function toflag(country: string) {
   switch (country) {

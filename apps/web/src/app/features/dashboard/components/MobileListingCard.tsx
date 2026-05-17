@@ -8,6 +8,7 @@ import { MoveRight } from "lucide-react";
 import { Card } from "@/app/components/card/Card";
 import LineDivider from "@/app/components/LineDivider";
 import CategoryRow from "@/app/components/CategoryRow";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 
 export function MobileListingCard<T extends Listing>({
   data,
@@ -98,7 +99,17 @@ export function MobileListingCard<T extends Listing>({
             {/* Quick summary */}
             <div className="grid grid-cols-2 gap-2 justify-items-start">
               <SummaryPill label="Space" value={`${row.weightKg} kg`} />
-              <SummaryPill label="Price/kg" value={`${row.pricePerKg}`} />
+              <SummaryPill
+                label="Price per kg"
+                value={formatCurrencyByCountry(
+                  row.route.originCountry,
+                  row.pricePerKg,
+                  {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  },
+                )}
+              />
             </div>
 
             {/* Footer actions */}
