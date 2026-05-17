@@ -2,13 +2,16 @@ import z from "zod";
 import { useUniversalModal } from "../../application/DialogBoxModalProvider";
 import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
-import { CreateParcelUseCase } from "@/app/features/parcels/application/CreateParcelUseCase";
-import { SupabaseGoodsRepository } from "@/app/features/goods/data/SupabaseGoodsRepository";
-import { EditParcelUsecase } from "@/app/features/parcels/application/EditParcelUsecase";
-import { useEffect, useMemo, useState } from "react";
-import { EditGoodsUsecase } from "@/app/features/goods/application/EditGoodsUseCase";
-import { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
+import { useEffect, useState } from "react";
+import {
+  createParcelUseCase,
+  editParcelUseCase,
+  saveGoodsUseCase,
+  editGoodsUseCase,
+} from "@/app/lib/useCases";
+import { useInvalidateParcels } from "@/app/hooks/mutations/useParcelMutations";
+import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
+import type { CreateParcelUseCase } from "@/app/features/parcels/application/CreateParcelUseCase";
 import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
 import toCreateParcelMapper from "@/app/features/goods/domain/toCreatParcelMapper";
 import type { FormMode, FormValues } from "@/types/Ui";
@@ -65,18 +68,7 @@ export default function useParcelForm({
   initialFormValues,
   setModalState,
 }: UseParcelFormProps) {
-  const repo = useMemo(() => new SupabaseParcelRepository(), []);
-  const useCase = useMemo(() => new CreateParcelUseCase(repo), [repo]);
-  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
-  const editParcelUsecase = useMemo(() => new EditParcelUsecase(repo), [repo]);
-  const editGoodsUsecase = useMemo(
-    () => new EditGoodsUsecase(goodsRepo),
-    [goodsRepo],
-  );
-  const saveGoodsUseCase = useMemo(
-    () => new SaveGoodsUseCase(goodsRepo),
-    [goodsRepo],
-  );
+  const invalidateParcels = useInvalidateParcels();
   const { showSupabaseError } = useUniversalModal();
   const {
     register,
@@ -121,12 +113,12 @@ export default function useParcelForm({
 
     if (!initialFormValues?.id) return;
     try {
-      await editParcelUsecase.execute(
+      await editParcelUseCase.execute(
         toParcelDtoMapper(initialFormValues?.id, values, dirtyFields),
       );
 
       if (dirtyFields.goodsCategoryIds) {
-        await editGoodsUsecase.execute(
+        await editGoodsUseCase.execute(
           values.goodsCategoryIds,
           initialFormValues.id,
           "parcel",
@@ -135,6 +127,7 @@ export default function useParcelForm({
 
       toast("changes saved successfully", { variant: "success" });
       await refreshProfile();
+      await invalidateParcels();
     } catch (err) {
       showSupabaseError(err);
     }
@@ -150,7 +143,7 @@ export default function useParcelForm({
       const parcelId = await createParcel(
         values,
         user.id,
-        useCase,
+        createParcelUseCase,
         showSupabaseError,
       );
 
@@ -160,6 +153,7 @@ export default function useParcelForm({
         saveGoodsUseCase,
         toGoodsMapper(parcelId, selectedIds),
       );
+      await invalidateParcels();
       if (setModalState) {
         setModalState();
       } else {

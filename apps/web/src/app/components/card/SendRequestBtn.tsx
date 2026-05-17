@@ -2,11 +2,8 @@ import { Button, type ButtonVariant } from "@/components/ui/Button";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import SendIcon from "@/assets/send-arrow-icon.svg?react";
 import CustomText, { type TextVariant } from "@/components/ui/CustomText";
-import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
-import { LockKeyholeOpen } from "lucide-react";
-import { dialogIconStyle } from "@/app/lib/cn";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 
 type SendRequestBtnProps<T> = {
@@ -29,9 +26,8 @@ export default function SendRequestBtn<T>({
   isActive = false,
 }: SendRequestBtnProps<T>) {
   const { user } = useAuth();
-  const { openInfo } = useUniversalModal();
   const { openSignInModal } = useSignInModal();
-  const isTripListing = listingType === "trip";
+  const page = listingType === "trip" ? "/travelers" : "/parcels";
   const base = "flex items-center w-full mb-0";
 
   return (
@@ -39,17 +35,11 @@ export default function SendRequestBtn<T>({
       <Button
         isBusy={isActive}
         onClick={() => {
-          if (!user) {
-            return openInfo({
-              icon: <LockKeyholeOpen className={dialogIconStyle} />,
-              label: "Sign in",
-              title: "Sign in to continue",
-              message: `Please sign in to send a request to this ${isTripListing ? "sender" : "traveler"}.`,
-              onClick: () => {
-                openSignInModal({ redirectTo: location.pathname });
-              },
-            });
+          if (!user?.id) {
+            openSignInModal({ redirectTo: page });
+            return;
           }
+
           primaryAction(payLoad);
         }}
         variant={buttonVariant}

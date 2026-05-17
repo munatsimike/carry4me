@@ -8,14 +8,12 @@ import { ToastProvider } from "./app/components/Toast";
 import { registerSW } from "virtual:pwa-register";
 // main.tsx
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./app/lib/queryClient";
 
 registerSW({
   immediate: true,
 });
-
-
-const queryClient = new QueryClient();
 
 if (import.meta.env.DEV) {
   window.addEventListener("unhandledrejection", (e) => {

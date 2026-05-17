@@ -1,9 +1,8 @@
-import { SupabaseGoodsRepository } from "@/app/features/goods/data/SupabaseGoodsRepository";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useUniversalModal } from "../../application/DialogBoxModalProvider";
-import { GetGoodsUseCase } from "@/app/features/goods/application/GetGoodsUseCase";
+import { useGoodsCategories } from "@/app/hooks/queries/useGoodsQueries";
+import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import type { CustomRange, SortOption } from "@/types/Ui";
 
 export type FiltersFormValues = {
@@ -52,29 +51,13 @@ export function useFiltersForm({
   setSortOption,
 }: UseFiltersFormProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [goodsCategory, setCategory] = useState<GoodsCategory[]>([]);
-  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
-  const getGoodsUseCase = useMemo(
-    () => new GetGoodsUseCase(goodsRepo),
-    [goodsRepo],
+  const { data, error } = useGoodsCategories();
+  useQueryErrorEffect(error);
+
+  const goodsCategory: GoodsCategory[] = useMemo(
+    () => data?.filter((item) => item.name !== "Other") ?? [],
+    [data],
   );
- 
-  const { showSupabaseError } = useUniversalModal();
-
-  useEffect(() => {
-    if (goodsCategory.length > 1) return;
-
-    async function fetchGoods() {
-      try {
-        const data = await getGoodsUseCase.execute();
-        setCategory(data.filter((item) => item.name !== "Other"));
-      } catch (err) {
-        showSupabaseError(err);
-      }
-    }
-
-    fetchGoods();
-  }, [goodsCategory.length, getGoodsUseCase, showSupabaseError]);
 
   const form = useForm<FiltersFormValues>({
     defaultValues: filterDefaults,

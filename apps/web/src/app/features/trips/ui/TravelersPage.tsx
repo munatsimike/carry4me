@@ -1,16 +1,12 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import Travelers from "./Travelers";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import PageSection from "@/app/components/PageSection";
 import Search, { SearchResults } from "@/app/components/Search";
-import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
-import { GetTripsUseCase } from "../application/GetTripsUseCase";
 import type { TripListing } from "../domain/Trip";
 import { AnimatePresence, motion } from "framer-motion";
-import { GetParcelUseCase } from "../../parcels/application/GetParcelUseCase";
-import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
@@ -27,7 +23,6 @@ import {
 } from "@/app/util/filters";
 import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
-import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import CreateTripModal from "./CreateTripModal";
@@ -37,43 +32,31 @@ import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScro
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
+import {
+  useToggleTripListLike,
+  useTripsList,
+} from "@/app/hooks/queries/useTripsQueries";
+import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/app/lib/queryKeys";
+import { getParcelUseCase } from "@/app/lib/useCases";
 
 export default function TravelersPage() {
-  const repo = useMemo(() => new SupabaseTripsRepository(), []);
-  const fetchTripsUseCase = useMemo(() => new GetTripsUseCase(repo), [repo]);
-  const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
-  const getParcelUseCase = useMemo(
-    () => new GetParcelUseCase(parcelRepo),
-    [parcelRepo],
-  );
-  const { showSupabaseError } = useUniversalModal();
-  const [tripList, setTripList] = useState<TripListing[]>([]);
   const { user, profile } = useAuth();
   const { openSignInModal } = useSignInModal();
-  const [dataloaded, setDataLoaded] = useState<boolean>(false);
-  useEffect(() => {
-    let cancel = false;
-    async function fetchTravelers() {
-      try {
-        const data = await fetchTripsUseCase.execute(user?.id);
-        if (cancel) return;
-        setDataLoaded(true);
-        setTripList(data);
-      } catch (err) {
-        if (cancel) return;
-        showSupabaseError(err);
-      }
-    }
+  const { showSupabaseError } = useUniversalModal();
+  const queryClient = useQueryClient();
 
-    fetchTravelers();
+  const {
+    data: tripList = [],
+    isFetched,
+    error,
+  } = useTripsList(user?.id);
+  useQueryErrorEffect(error);
 
-    return () => {
-      cancel = true;
-    };
-  }, []);
+  const toggleTripLike = useToggleTripListLike(user?.id);
 
   const [selectedTrip, setTrip] = useState<TripListing | null>(null);
-
   const [parcels, setParcel] = useState<ParcelListing[]>([]);
   const [modalState, setModalState] = useState<boolean>(false);
   const [selectedParcel, setSelectedParcel] = useState<ParcelListing | null>(
@@ -90,7 +73,6 @@ export default function TravelersPage() {
   const isSearchActive = !!country && !!city;
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
 
-  //store filter date
   const [priceRange, setPriceRange] = useState<CustomRange>({
     min: 0,
     max: 0,
@@ -143,6 +125,7 @@ export default function TravelersPage() {
     goodsCategory,
     sortOption,
   ]);
+
   const handleRequest = async (trip: TripListing) => {
     if (!user?.id) {
       return;
@@ -160,7 +143,10 @@ export default function TravelersPage() {
 
     if (parcels.length === 0) {
       try {
-        const data = await getParcelUseCase.execute(user.id);
+        const data = await queryClient.fetchQuery({
+          queryKey: queryKeys.parcels.byUser(user.id),
+          queryFn: () => getParcelUseCase.execute(user.id),
+        });
 
         if (data.length === 0) {
           toast("Post a parcel first to start matching with travelers.", {
@@ -192,8 +178,9 @@ export default function TravelersPage() {
   };
 
   const handleLikeUpdate = (id: string) => {
-    toggleLike(id, setTripList);
+    toggleTripLike(id);
   };
+
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
   const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
   const isMobile = useMediaQuery();
@@ -290,7 +277,7 @@ export default function TravelersPage() {
             <CreateTripModal setModalState={() => setTripModalState(false)} />
           )}
         </AnimatePresence>
-        {tripList.length === 0 && dataloaded && (
+        {tripList.length === 0 && isFetched && (
           <EmptyState
             title="No trips available"
             description="No trips found. Post your trip to start receiving parcel requests from senders."

@@ -14,10 +14,9 @@ import {
 } from "lucide-react";
 import type { UserProfile } from "./app/shared/Authentication/domain/authTypes";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SupabaseNotificationRepository } from "./app/features/carry request/carry request events/data/SupabaseNotificationRepository";
-import { GetNotificationUseCase } from "./app/features/carry request/carry request events/application/CreateNotificationUseCase";
 import { useToast } from "./app/components/Toast";
-import type { CarryRequestNotification } from "./app/features/carry request/carry request events/domain/CarryRequestNotification";
+import { useNotifications } from "./app/hooks/queries/useNotificationsQueries";
+import { useMarkNotificationsReadMutation } from "./app/hooks/mutations/useNotificationMutations";
 import { AnimatePresence, motion } from "framer-motion";
 import { UserProfileMenu } from "./app/shared/Authentication/UI/userProfileMenu";
 import NotificationPopover from "./app/shared/Authentication/UI/NotificationPopOver";
@@ -110,66 +109,37 @@ function SignInBtn() {
 }
 
 function AuthenticatedNavigation({ userProfile }: ProfileProps) {
-  const notificatoinRepo = useMemo(
-    () => new SupabaseNotificationRepository(),
-    [],
-  );
-  const getNotificationUseCase = useMemo(
-    () => new GetNotificationUseCase(notificatoinRepo),
-    [notificatoinRepo],
-  );
-  const [notifications, setNotifications] = useState<
-    CarryRequestNotification[]
-  >([]);
-
   const [showNotificationPopOver, setShowNotification] =
     useState<boolean>(false);
   const [showPopOver, setShowPrfilePopOver] = useState(false);
-
-  const [unreadNotifications, setUnreadNotification] = useState<
-    CarryRequestNotification[]
-  >([]);
   const { toast } = useToast();
   const triggerNotRef = useRef<HTMLButtonElement | null>(null);
   const triggerProfRef = useRef<HTMLButtonElement | null>(null);
 
-  useEffect(() => {
-    async function markAllAsRead() {
-      if (!userProfile?.id) return;
-      if (unreadNotifications.length > 0 && showNotificationPopOver) {
-        try {
-          await getNotificationUseCase.makeAllAsRead(userProfile?.id);
-          setNotifications((prev) =>
-            prev.map((n) => ({ ...n, readAt: new Date().toISOString() })),
-          );
-          setUnreadNotification([]);
-        } catch {
-          return;
-        }
-      }
-    }
+  const { data: notifications = [], isError } = useNotifications(
+    userProfile?.id ?? undefined,
+  );
+  const markAllReadMutation = useMarkNotificationsReadMutation();
 
-    markAllAsRead();
-  }, [showNotificationPopOver]);
+  const unreadNotifications = useMemo(
+    () => notifications.filter((item) => item.readAt === null),
+    [notifications],
+  );
 
   useEffect(() => {
-    async function fetchNotification() {
-      if (!userProfile?.id) return;
-      try {
-        const data = await getNotificationUseCase.execute(userProfile?.id);
-        setNotifications(data);
-        if (data.length > 0) {
-          const unreadNot = data.filter((item) => item.readAt === null);
-          setUnreadNotification(unreadNot);
-        }
-      } catch {
-        toast("unable to load notifications at the moment", {
-          variant: "error",
-        });
-      }
+    if (isError) {
+      toast("unable to load notifications at the moment", {
+        variant: "error",
+      });
     }
-    fetchNotification();
-  }, [userProfile?.id]);
+  }, [isError, toast]);
+
+  useEffect(() => {
+    if (!userProfile?.id) return;
+    if (unreadNotifications.length > 0 && showNotificationPopOver) {
+      markAllReadMutation.mutate(userProfile.id);
+    }
+  }, [showNotificationPopOver, userProfile?.id, unreadNotifications.length]);
 
   return (
     <>

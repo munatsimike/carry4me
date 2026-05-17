@@ -1,83 +1,56 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ListingTable } from "../dashboard/components/ListingTable";
-import { SupabaseParcelRepository } from "./data/SupabaseParcelRepository";
-import { DeleteParcelUseCase } from "./application/DeleteParcelUseCase";
 import { useToast } from "@/app/components/Toast";
 import { AnimatePresence } from "framer-motion";
-
 import CreateParcelModal from "./ui/CreateParcelModal";
 import ParcelCard from "./ui/ParcelCard";
 import CustomModal from "@/app/components/CustomModal";
 import type { FormValues } from "@/types/Ui";
 import type { ParcelListing } from "./domain/Parcel";
 import EmptyState from "@/app/components/EmptyState";
-import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { GetParcelsByIdUseCase } from "./application/GetParcelsByIdUseCase";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
 import PageSection from "@/app/components/PageSection";
 import FAB from "@/app/components/FAB";
 import { useNavigate } from "react-router-dom";
+import { useMyParcels } from "@/app/hooks/queries/useParcelsQueries";
+import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
+import { useDeleteParcelMutation } from "@/app/hooks/mutations/useParcelMutations";
 
 export function MyParcelsPage() {
-  const [loading, setLoading] = useState(true);
-  const [myParcels, setMyParcels] = useState<ParcelListing[]>([]);
   const [editParcel, setFormValues] = useState<FormValues | null>(null);
   const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
     null,
   );
-  const { user, refreshProfile, profile } = useAuth();
+  const { user, profile } = useAuth();
   const { openSignInModal } = useSignInModal();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
-  const getParcelByIdUseCase = useMemo(
-    () => new GetParcelsByIdUseCase(parcelRepo),
-    [parcelRepo],
-  );
-  const deleteParcelUseCase = useMemo(
-    () => new DeleteParcelUseCase(parcelRepo),
-    [parcelRepo],
-  );
   const isMobile = useMediaQuery();
-  const { showSupabaseError } = useUniversalModal();
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
+
+  const { data: myParcels = [], isLoading, error } = useMyParcels(user?.id);
+  useQueryErrorEffect(error);
+
+  const deleteParcelMutation = useDeleteParcelMutation();
+
   const sortedParcels = useMemo(() => {
     return [...myParcels].sort((a, b) =>
       a.departDate > b.departDate ? 1 : -1,
     );
   }, [myParcels]);
 
-  // delete parcel
-  const deleteParcel = async (parcelId: string) => {
-    try {
-      await deleteParcelUseCase.execute(parcelId);
-      await refreshProfile();
-      toast("Parcel deleted successfully", { variant: "success" });
-    } catch (err) {
-      showSupabaseError(err);
-    }
+  const deleteParcel = (parcelId: string) => {
+    deleteParcelMutation.mutate(parcelId, {
+      onSuccess: () => {
+        toast("Parcel deleted successfully", { variant: "success" });
+      },
+    });
   };
-
-  useEffect(() => {
-    async function loadTrips() {
-      if (!user?.id) return;
-      setLoading(true);
-      try {
-        const data = await getParcelByIdUseCase.execute(user?.id);
-        setMyParcels(data);
-      } catch (err) {
-        showSupabaseError(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadTrips();
-  }, [user?.id]);
 
   const handleOnClick = () => {
     if (!user?.id) {
@@ -99,7 +72,7 @@ export function MyParcelsPage() {
         <div className="flex items-center justify-center"></div>
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        {loading ? (
+        {isLoading ? (
           <p>Loading…</p>
         ) : sortedParcels.length === 0 ? (
           <EmptyState
@@ -122,7 +95,7 @@ export function MyParcelsPage() {
           <MobileListingCard
             setListingPreview={setParcelPreview}
             data={myParcels}
-            onEdit={setFormValues} // set edit
+            onEdit={setFormValues}
             onDelete={deleteParcel}
             setModalState={setParcelModalState}
           />
@@ -130,14 +103,13 @@ export function MyParcelsPage() {
           <ListingTable
             setListingPreview={setParcelPreview}
             data={myParcels}
-            onEdit={setFormValues} // set edit
+            onEdit={setFormValues}
             onDelete={deleteParcel}
             setModalState={setParcelModalState}
           />
         )}
 
         <AnimatePresence>
-          {/* edit parcel */}
           {showParcelModal && (
             <CreateParcelModal
               mode={editParcel ? "edit" : undefined}
@@ -145,7 +117,6 @@ export function MyParcelsPage() {
               setModalState={() => setParcelModalState(false)}
             />
           )}
-          {/*show preview moda */}
           {parcelPreview && (
             <CustomModal onClose={() => setParcelPreview(null)} width="md">
               <ParcelCard

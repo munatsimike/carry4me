@@ -10,12 +10,10 @@ import {
 } from "@/app/util/filters";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import EmptyState from "@/app/components/EmptyState";
-import { GetFavouritesUseCase } from "../application/GetFavouritesUseCase";
-import { SupabaseFavouriteRepository } from "../data/SupabaseFavouriteRepository";
-import type { Listing } from "@/app/shared/Authentication/domain/Listing";
-import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { useFavourites } from "@/app/hooks/queries/useFavouritesQueries";
+import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import FavouritesList from "./FavouritesList";
 import {
   HorizontalMenu,
@@ -38,11 +36,6 @@ const tabs: TabItem<MyFavTabs>[] = [
 ];
 
 export function MyFavouritesPage() {
-  const favouritesRepo = useMemo(() => new SupabaseFavouriteRepository(), []);
-  const getFavourites = useMemo(
-    () => new GetFavouritesUseCase(favouritesRepo),
-    [favouritesRepo],
-  );
   const [searchCountry, setSearchCountry] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [clearSearchResults, setClearResults] = useState<boolean>(false);
@@ -63,8 +56,9 @@ export function MyFavouritesPage() {
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
-  const [favListing, setFavListings] = useState<Listing[]>([]);
-  const { showSupabaseError } = useUniversalModal();
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
+  const { data: favListing = [], error } = useFavourites(user?.id);
+  useQueryErrorEffect(error);
   const [selectedTab, setSelectedTab] = useState<MyFavTabs>("all");
   const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
@@ -77,22 +71,13 @@ export function MyFavouritesPage() {
     setSortOption,
   });
 
-  useEffect(() => {
-    async function fetchFavourites() {
-      if (!user?.id) return;
-      try {
-        const data = await getFavourites.execute(user.id);
-        setFavListings(data);
-      } catch (err) {
-        showSupabaseError(err);
-      }
-    }
-
-    fetchFavourites();
-  }, [user?.id]);
+  const visibleFavourites = useMemo(
+    () => favListing.filter((item) => !removedIds.has(item.id)),
+    [favListing, removedIds],
+  );
 
   const displayedFavourites = useMemo(() => {
-    let result = favListing;
+    let result = visibleFavourites;
 
     if (isSearchActive) {
       result = filterByCountryCity(searchCity, searchCountry, result);
@@ -120,7 +105,7 @@ export function MyFavouritesPage() {
 
     return result;
   }, [
-    favListing,
+    visibleFavourites,
     isSearchActive,
     searchCity,
     searchCountry,
@@ -134,7 +119,7 @@ export function MyFavouritesPage() {
 
   const handleLikeUpdate = (id: string) => {
     setTimeout(() => {
-      setFavListings((prev) => prev.filter((item) => item.id !== id));
+      setRemovedIds((prev) => new Set(prev).add(id));
     }, 300);
   };
 

@@ -11,10 +11,13 @@ import { Button } from "@/components/ui/Button";
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/app/lib/queryKeys";
+import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
+import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
+import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import statusColor from "./StatustColorMapper";
 import actionsMapper, { UIACTIONKEYS, type UIActions } from "./ActionsMapper";
-import { FetchCarryRequestsUseCase } from "../application/FetchCarryRequestsUseCase";
-import { SupabaseCarryRequestRepository } from "../data/SupabaseCarryRequestRepository";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { CarryRequest } from "../domain/CarryRequest";
 import {
@@ -25,8 +28,6 @@ import {
 } from "../domain/CreateCarryRequest";
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
-import { PerformCarryRequestActionUseCase } from "../application/PerformCarryRequestActionUseCase";
-import { SupabasePerformActionRepository } from "../data/PerformCarryRequestActionRepository";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import EmptyState from "@/app/components/EmptyState";
@@ -35,10 +36,8 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { SupabaseTripsRepository } from "../../trips/data/SupabaseTripsRepository";
 import { MoveRight, Package, PackageX } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
-import { SupabaseParcelRepository } from "../../parcels/data/SupabaseParcelRepository";
 import { useToast } from "@/app/components/Toast";
 import { format } from "date-fns";
 import {
@@ -67,44 +66,16 @@ const statusToTab: Record<CarryRequestStatus, SelectedTab> = {
 };
 
 export default function CarryRequestsPage() {
-  const [carryRequestsList, setCarryRequestList] = useState<CarryRequest[]>([]);
+  const { user, refreshProfile } = useAuth();
   const [selectedTab, setSelectedTab] = useState<SelectedTab | null>(null);
-  const carryRequestRepository = useMemo(
-    () => new SupabaseCarryRequestRepository(),
-    [],
-  );
-  const fetchCarryRequestUseCase = useMemo(
-    () => new FetchCarryRequestsUseCase(carryRequestRepository),
-    [carryRequestRepository],
-  );
+  const queryClient = useQueryClient();
+  const performRequestActions = performCarryRequestActionUseCase;
 
-  const performActionRepository = useMemo(
-    () => new SupabasePerformActionRepository(),
-    [],
-  );
-
-  const parcelRepository = useMemo(() => new SupabaseParcelRepository(), []);
-  const tripRepository = useMemo(() => new SupabaseTripsRepository(), []);
-  const performRequestActions = useMemo(
-    () =>
-      new PerformCarryRequestActionUseCase(
-        carryRequestRepository,
-        performActionRepository,
-        tripRepository,
-        parcelRepository,
-      ),
-    [
-      performActionRepository,
-      carryRequestRepository,
-      tripRepository,
-      parcelRepository,
-    ],
-  );
+  const { data: carryRequestsList = [], error } = useCarryRequests(user?.id);
+  useQueryErrorEffect(error, !!user?.id);
 
   const { openInfo, showSupabaseError } = useUniversalModal();
   const [isRequestSent, setisRequestSent] = useState(false);
-
-  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -141,28 +112,13 @@ export default function CarryRequestsPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    async function fetchRequest() {
-      if (!user || !selectedTab) return;
-    
-
-      try {
-        const data = await fetchCarryRequestUseCase.execute(user.id);
-
-        if (data.length === 0) {
-          setEmptyState(toEmptyStateForMapper(selectedTab));
-          setCarryRequestList([]);
-        } else {
-          setEmptyState(null);
-          setCarryRequestList(data);
-        }
-      } catch (err) {
-        showSupabaseError(err);
-      }
-     
+    if (!selectedTab) return;
+    if (carryRequestsList.length === 0) {
+      setEmptyState(toEmptyStateForMapper(selectedTab));
+    } else {
+      setEmptyState(null);
     }
-
-    fetchRequest();
-  }, [user?.id, selectedTab]);
+  }, [carryRequestsList.length, selectedTab]);
 
   const tabs: TabItem<SelectedTab>[] = [
     { id: "ongoing", label: "Ongoing", count: tabCounts.ongoing },
@@ -333,6 +289,9 @@ export default function CarryRequestsPage() {
 
     setisRequestSent(true);
     refreshProfile();
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.carryRequests.all,
+    });
     toast("Parcel accepted. Waiting for payment from the sender.", {
       variant: "success",
     });
@@ -354,6 +313,9 @@ export default function CarryRequestsPage() {
     }
 
     if (response.ok) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.carryRequests.all,
+      });
       toast("Request cancelled. The traveler has been notified.", {
         variant: "success",
       });

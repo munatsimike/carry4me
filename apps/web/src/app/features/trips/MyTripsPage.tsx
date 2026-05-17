@@ -1,13 +1,10 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { SupabaseTripsRepository } from "./data/SupabaseTripsRepository";
 import { ListingTable } from "../dashboard/components/ListingTable";
-import { DeleteTripUseCase } from "./application/DeleteTripUseCase";
 import { useToast } from "@/app/components/Toast";
-import { MyTripsUseCase } from "./application/MyTripsUseCase";
 import type { TripListing } from "./domain/Trip";
 import type { FormValues } from "@/types/Ui";
 import { AnimatePresence } from "framer-motion";
@@ -15,66 +12,41 @@ import CreateTripModal from "./ui/CreateTripModal";
 import CustomModal from "@/app/components/CustomModal";
 import TravelerCard from "./ui/TravelerCard";
 import EmptyState from "@/app/components/EmptyState";
-import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
 import FAB from "@/app/components/FAB";
 import { useNavigate } from "react-router-dom";
+import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
+import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
+import { useDeleteTripMutation } from "@/app/hooks/mutations/useTripMutations";
 
 export function MyTripsPage() {
-  const [loading, setLoading] = useState(true);
-  const [mypTrips, setMyTrips] = useState<TripListing[]>([]);
   const isMobile = useMediaQuery();
-  const { user, refreshProfile, profile } = useAuth();
+  const { user, profile } = useAuth();
   const { openSignInModal } = useSignInModal();
   const navigate = useNavigate();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
-
   const [showCreateTripModal, setCreatTripModalState] =
     useState<boolean>(false);
   const [editTrip, setEditTrip] = useState<FormValues | null>(null);
-  const tripRepo = useMemo(() => new SupabaseTripsRepository(), []);
   const { toast } = useToast();
-  const tripByIdUseCase = useMemo(
-    () => new MyTripsUseCase(tripRepo),
-    [tripRepo],
-  );
-  const deleteTripUseCase = useMemo(
-    () => new DeleteTripUseCase(tripRepo),
-    [tripRepo],
-  );
+
+  const { data: myTrips = [], isLoading, error } = useMyTrips(user?.id);
+  useQueryErrorEffect(error);
+
+  const deleteTripMutation = useDeleteTripMutation();
 
   const sortedTrips = useMemo(() => {
-    return [...mypTrips].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
-  }, [mypTrips]);
+    return [...myTrips].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
+  }, [myTrips]);
 
-  const { showSupabaseError } = useUniversalModal();
-
-  const deleteTrip = async (tripId: string) => {
-    try {
-      await deleteTripUseCase.execute(tripId);
-      await refreshProfile();
-      toast("Trip deleted successfully", { variant: "success" });
-    } catch (err) {
-      showSupabaseError(err);
-    }
+  const deleteTrip = (tripId: string) => {
+    deleteTripMutation.mutate(tripId, {
+      onSuccess: () => {
+        toast("Trip deleted successfully", { variant: "success" });
+      },
+    });
   };
-
-  useEffect(() => {
-    async function loadTrips() {
-      if (!user?.id) return;
-      setLoading(true);
-      try {
-        const data = await tripByIdUseCase.execute(user?.id);
-        setMyTrips(data);
-      } catch (err) {
-        showSupabaseError(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadTrips();
-  }, [user?.id]);
 
   const handleOnClick = () => {
     if (!user?.id) {
@@ -89,9 +61,10 @@ export function MyTripsPage() {
 
     setCreatTripModalState(true);
   };
+
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
-      {loading ? (
+      {isLoading ? (
         <p>Loading…</p>
       ) : sortedTrips.length === 0 ? (
         <EmptyState
@@ -112,7 +85,7 @@ export function MyTripsPage() {
         />
       ) : isMobile ? (
         <MobileListingCard
-          data={mypTrips}
+          data={myTrips}
           onEdit={setEditTrip}
           onDelete={deleteTrip}
           setListingPreview={setTripPreview}
@@ -120,7 +93,7 @@ export function MyTripsPage() {
         />
       ) : (
         <ListingTable
-          data={mypTrips}
+          data={myTrips}
           onEdit={setEditTrip}
           onDelete={deleteTrip}
           setListingPreview={setTripPreview}
@@ -129,7 +102,6 @@ export function MyTripsPage() {
       )}
 
       <AnimatePresence>
-        {/* edit trip */}
         {showCreateTripModal && (
           <CreateTripModal
             mode={editTrip ? "edit" : undefined}
@@ -137,7 +109,6 @@ export function MyTripsPage() {
             setModalState={() => setCreatTripModalState(false)}
           />
         )}
-        {/*show preview mode */}
         {tripreview && (
           <CustomModal onClose={() => setTripPreview(null)} width="md">
             <TravelerCard

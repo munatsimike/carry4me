@@ -13,12 +13,16 @@ import { dateFormat, type CardMode } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import User from "./User";
 import { format } from "date-fns";
-import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { SupabaseFavouriteRepository } from "@/app/features/my favourites/data/SupabaseFavouriteRepository";
-import { useEffect, useMemo, useState } from "react";
-import { UpadateFavouriteUseCase } from "@/app/features/my favourites/application/UpdateFavouriteUseCase";
+import type { Location } from "@/types/Ui";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "../Toast";
+import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
+
+function toLocation(country: string): Location {
+  if (country === "UK" || country.includes("United Kingdom")) return "UK";
+  if (country === "USA" || country.includes("United States")) return "USA";
+  return "Zimbabwe";
+}
 
 interface ListingCardProps<T extends Listing> {
   mode?: CardMode;
@@ -37,46 +41,34 @@ export function ListingCard<T extends Listing>({
     (x: GoodsCategory) => x.name,
   );
 
-  const favouritesRepo = useMemo(() => new SupabaseFavouriteRepository(), []);
-
-  const updateFavUseCase = useMemo(
-    () => new UpadateFavouriteUseCase(favouritesRepo),
-    [favouritesRepo],
-  );
   const { user } = useAuth();
+  const { toast } = useToast();
+  const toggleFavourite = useToggleFavouriteMutation();
 
-  const { showSupabaseError } = useUniversalModal();
   const isDisplayMode = mode === "display";
   const borderClass = isDisplayMode ? "border border-neutral-200" : "";
   const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
   const isTripListing = listing.type === "trip";
-  const [updateFav, setUpdate] = useState(false);
-  const { toast } = useToast();
 
-  useEffect(() => {
-    if (!updateFav) return;
-    async function onToggleLike() {
-      if (!user?.id) {
-        toast("You need to login to like parcels or trips.", {
-          variant: "warning",
-        });
-        return;
-      }
-      try {
-        await updateFavUseCase.execute({
-          userId: user.id,
-          listingId: listing.id,
-          listingType: listing.type,
-        });
-        toggleLike(listing.id);
-      } catch (err) {
-        showSupabaseError(err);
-      } finally {
-        setUpdate(false);
-      }
+  const handleToggleLike = () => {
+    if (!user?.id) {
+      toast("You need to login to like parcels or trips.", {
+        variant: "warning",
+      });
+      return;
     }
-    onToggleLike();
-  }, [updateFav]);
+
+    toggleFavourite.mutate(
+      {
+        userId: user.id,
+        listingId: listing.id,
+        listingType: listing.type,
+      },
+      {
+        onSuccess: () => toggleLike(listing.id),
+      },
+    );
+  };
 
   return (
     <Card
@@ -92,10 +84,10 @@ export function ListingCard<T extends Listing>({
             </span>
           )}
           <span className="flex justify-between gap-2">
-            <CardLabel
-              variant={isTripListing ? "trip" : "parcel"}
-              label={isTripListing ? "Trip" : "Parcel"}
-            />
+          <CardLabel
+            variant={isTripListing ? "trip" : "parcel"}
+            label={isTripListing ? "Trip" : "Parcel"}
+          />
           </span>
         </span>
 
@@ -103,7 +95,7 @@ export function ListingCard<T extends Listing>({
           isActive={isDisplayMode}
           isLiked={listing.isLiked}
           onToggleLike={() => {
-            setUpdate(true);
+            handleToggleLike();
           }}
         />
       </div>
@@ -141,15 +133,15 @@ export function ListingCard<T extends Listing>({
         location={"UK"}
       />
       <LineDivider heightClass="my-2" />
-      <SendRequestBtn
+          <SendRequestBtn
         isActive={!isDisplayMode}
         buttonTextVariant="onDark"
         iconColorVariant="onDark"
         buttonVariant="primary"
-        payLoad={listing}
-        primaryAction={onClick}
+            payLoad={listing}
+            primaryAction={onClick}
         listingType={listing.type}
-      />
+          />
     </Card>
   );
 }

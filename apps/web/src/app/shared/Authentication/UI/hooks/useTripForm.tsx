@@ -1,15 +1,17 @@
 import type { FormMode, FormValues } from "@/types/Ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import z from "zod";
 import { toTripDtoMapper } from "@/app/features/trips/application/toTripDtoMapper";
-import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
-import { SupabaseGoodsRepository } from "@/app/features/goods/data/SupabaseGoodsRepository";
-import { EditTripUsecase } from "@/app/features/trips/application/EditTripUsecase";
-import { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
-import { EditGoodsUsecase } from "@/app/features/goods/application/EditGoodsUseCase";
-import { CreateTripUseCase } from "@/app/features/trips/application/CreateTripUsecase";
+import {
+  createTripUseCase,
+  editTripUseCase,
+  saveGoodsUseCase,
+  editGoodsUseCase,
+} from "@/app/lib/useCases";
+import { useInvalidateTrips } from "@/app/hooks/mutations/useTripMutations";
+import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
 import { useUniversalModal } from "../../application/DialogBoxModalProvider";
@@ -58,18 +60,7 @@ export function useTripForm({
   mode,
   setModalState,
 }: ListingFormProps) {
-  const repo = useMemo(() => new SupabaseTripsRepository(), []);
-  const editTripUsecase = useMemo(() => new EditTripUsecase(repo), [repo]);
-  const goodsRepo = useMemo(() => new SupabaseGoodsRepository(), []);
-  const saveGoodsUseCase = useMemo(
-    () => new SaveGoodsUseCase(goodsRepo),
-    [goodsRepo],
-  );
-  const editGoodsUsecase = useMemo(
-    () => new EditGoodsUsecase(goodsRepo),
-    [goodsRepo],
-  );
-  const useCase = useMemo(() => new CreateTripUseCase(repo), [repo]);
+  const invalidateTrips = useInvalidateTrips();
   const [toDasshboard, setToDashBoard] = useState<boolean>(false);
   const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
@@ -123,12 +114,12 @@ export function useTripForm({
 
     if (!initialFormValues?.id) return;
     try {
-      await editTripUsecase.execute(
+      await editTripUseCase.execute(
         toTripDtoMapper(initialFormValues?.id, values, dirtyFields),
       );
 
       if (dirtyFields.goodsCategoryIds) {
-        await editGoodsUsecase.execute(
+        await editGoodsUseCase.execute(
           values.goodsCategoryIds,
           initialFormValues.id,
           "trip",
@@ -137,6 +128,7 @@ export function useTripForm({
 
       toast("changes saved successfully", { variant: "success" });
       await refreshProfile();
+      await invalidateTrips();
     } catch (err) {
       showSupabaseError(err);
     }
@@ -149,7 +141,12 @@ export function useTripForm({
     if (!ok) return;
 
     try {
-      const tripId = await createTrip(values, user.id, useCase, showSupabaseError);
+      const tripId = await createTrip(
+        values,
+        user.id,
+        createTripUseCase,
+        showSupabaseError,
+      );
       if (!tripId) return;
 
       await SaveGoodsCategories(
@@ -157,6 +154,7 @@ export function useTripForm({
         toGoodsMapper(tripId, selectedIds),
       );
 
+      await invalidateTrips();
       toast("Trip saved successfully", { variant: "success" });
       if (setModalState) {
         setModalState();
@@ -187,7 +185,7 @@ export function useTripForm({
 async function createTrip(
   values: TripFormFields,
   userId: string,
-  useCase: CreateTripUseCase,
+  useCase: typeof createTripUseCase,
   showSupabaseError: (err: unknown) => void,
 ): Promise<string> {
   try {

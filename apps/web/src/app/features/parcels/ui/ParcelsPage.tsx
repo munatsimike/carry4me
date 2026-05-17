@@ -1,17 +1,21 @@
 import CustomModal from "@/app/components/CustomModal";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Parcels from "./Parcels";
 import Search, { SearchResults } from "@/app/components/Search";
-import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
-import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
 import type { TripListing } from "@/app/features/trips/domain/Trip";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
-import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase";
-import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
 import { useToast } from "@/app/components/Toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/app/lib/queryKeys";
+import { getTripUseCase } from "@/app/lib/useCases";
+import {
+  useParcelsList,
+  useToggleParcelListLike,
+} from "@/app/hooks/queries/useParcelsQueries";
+import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import PageSection from "@/app/components/PageSection";
 import { AnimatePresence, motion } from "framer-motion";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
@@ -26,7 +30,6 @@ import {
 } from "@/app/util/filters";
 import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
-import { toggleLike } from "@/app/shared/Authentication/UI/helpers";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import CreateParcelModal from "./CreateParcelModal";
@@ -38,44 +41,18 @@ import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersF
 import FAB from "@/app/components/FAB";
 
 export default function ParcelsPage() {
-  const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
-  const getParcelsUseCase = useMemo(
-    () => new GetParcelsUseCase(parcelRepo),
-    [parcelRepo],
-  );
   const { showSupabaseError } = useUniversalModal();
-  const tripRepo = useMemo(() => new SupabaseTripsRepository(), []);
-  const getTripUseCase = useMemo(
-    () => new GetTripUseCase(tripRepo),
-    [parcelRepo],
-  );
-  const [parcelsList, setParcelsList] = useState<ParcelListing[]>([]);
+  const queryClient = useQueryClient();
   const { user, profile } = useAuth();
   const { openSignInModal } = useSignInModal();
-  const [dataloaded, setDataLoaded] = useState<boolean>(false);
-  useEffect(() => {
-    let cancel = false;
 
-    if (cancel) return;
-
-    async function fetchParcels() {
-      try {
-        const data = await getParcelsUseCase.execute(user?.id);
-        if (cancel) return;
-        setParcelsList(data);
-        setDataLoaded(true);
-      } catch (err) {
-        if (cancel) return;
-        showSupabaseError(err);
-      }
-    }
-
-    fetchParcels();
-
-    return () => {
-      cancel = true;
-    };
-  }, []);
+  const {
+    data: parcelsList = [],
+    isFetched,
+    error,
+  } = useParcelsList(user?.id);
+  useQueryErrorEffect(error);
+  const toggleParcelLike = useToggleParcelListLike(user?.id);
 
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
   const [modalState, setModalState] = useState<boolean>(false);
@@ -159,7 +136,10 @@ export default function ParcelsPage() {
 
     if (userTrips.length === 0) {
       try {
-        const data = await getTripUseCase.execute(user.id);
+        const data = await queryClient.fetchQuery({
+          queryKey: queryKeys.trips.byUser(user.id),
+          queryFn: () => getTripUseCase.execute(user.id),
+        });
 
         if (data.length === 0) {
           toast("Post a trip first to start matching with senders.", {
@@ -190,7 +170,7 @@ export default function ParcelsPage() {
   };
 
   const handleLikeUpdate = (id: string) => {
-    toggleLike(id, setParcelsList);
+    toggleParcelLike(id);
   };
   const isMobile = useMediaQuery();
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
@@ -303,7 +283,7 @@ export default function ParcelsPage() {
             description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
           />
         )}
-        {displayedParcels.length === 0 && dataloaded && !hasFilter && (
+        {displayedParcels.length === 0 && isFetched && !hasFilter && (
           <EmptyState
             title="No parcels available"
             description="No parcels found. Post your parcels to start receiving trip requests from travelers."

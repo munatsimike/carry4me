@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/supabase/AuthProvider";
 import DefaultContainer from "@/components/ui/DefualtContianer";
@@ -15,17 +15,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";
-import { GetDashboardDataUseCase } from "./application/GetDashboardData";
 import type { DashboardData } from "./domain/DashboardData";
-import { SubabaseDashboardRepository } from "./data/SupabaseDashboardRepository";
 import { Clock, Truck } from "lucide-react";
-import { GetNotificationUseCase } from "../carry request/carry request events/application/CreateNotificationUseCase";
-import { SupabaseNotificationRepository } from "../carry request/carry request events/data/SupabaseNotificationRepository";
 import type { CarryRequestNotification } from "../carry request/carry request events/domain/CarryRequestNotification";
+import { useDashboard } from "@/app/hooks/queries/useDashboardQueries";
+import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
-import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import Greeting from "@/app/components/Greeting";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 
@@ -52,35 +49,19 @@ import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuer
 export default function DashboardPage() {
   //Create get goods use case
 
-  const dashboardDataRepository = useMemo(
-    () => new SubabaseDashboardRepository(),
-    [],
-  );
-  const getDashboardDataUseCase = useMemo(
-    () => new GetDashboardDataUseCase(dashboardDataRepository),
-    [dashboardDataRepository],
-  );
-  const supabaseNotificationRepo = useMemo(
-    () => new SupabaseNotificationRepository(),
-    [],
-  );
-  const getNotificationUseCase = useMemo(
-    () => new GetNotificationUseCase(supabaseNotificationRepo),
-    [supabaseNotificationRepo],
-  );
-  const [fullName, setFullName] = useState<string | null>(null);
   const [createParcel, setCreateParcel] = useState<boolean>(false);
   const [createTrip, setCreateTrip] = useState<boolean>(false);
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null,
-  );
-  const [notifications, setNotification] = useState<CarryRequestNotification[]>(
-    [],
-  );
   const navigate = useNavigate();
   const isMobile = useMediaQuery();
   const { user, profile, loading } = useAuth();
-  const { showSupabaseError } = useUniversalModal();
+
+  const { data, error } = useDashboard(user?.id);
+  useQueryErrorEffect(error, !!user?.id);
+
+  const fullName = profile?.fullName ?? null;
+  const dashboardData: DashboardData | null = data?.dashboard ?? null;
+  const notifications: CarryRequestNotification[] =
+    data?.recentNotifications ?? [];
 
   // fetch goods category
   // redirect is user is not logged in
@@ -89,28 +70,6 @@ export default function DashboardPage() {
       navigate("/", { replace: true });
     }
   }, [user, navigate]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    if (profile) setFullName(profile.fullName);
-
-    // fetch dashboard data, recent activies deliveries, posted parcels and trips etc
-    const fetchDashboardData = async () => {
-      try {
-        const [dashboardResult, notificationsResult] = await Promise.all([
-          getDashboardDataUseCase.execute(user.id),
-          getNotificationUseCase.execute(user.id),
-        ]);
-        setDashboardData(dashboardResult);
-        setNotification(notificationsResult.slice(0, 4));
-      } catch (err) {
-        showSupabaseError(err);
-      }
-    };
-
-    fetchDashboardData();
-  }, [user?.id, profile]);
 
   const requirePhoneVerification = (action: "trip" | "parcel") => {
     if (!user?.id) return;

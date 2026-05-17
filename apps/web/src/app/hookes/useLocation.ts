@@ -1,13 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { SupabaseLocationRepository } from "../shared/data/SupabaseLocationRepository";
-
-const locationRepository = new SupabaseLocationRepository();
+import { queryKeys } from "@/app/lib/queryKeys";
+import { getLocationUseCase } from "@/app/lib/useCases";
 
 export function useLocations(selectedCountry?: string) {
   const query = useQuery({
-    queryKey: ["locations"],
-    queryFn: () => locationRepository.getLocations(),
+    queryKey: queryKeys.locations.all,
+    queryFn: () => getLocationUseCase.getCountries(),
     staleTime: 1000 * 60 * 60 * 24,
     gcTime: 1000 * 60 * 60 * 24,
     refetchOnWindowFocus: false,
