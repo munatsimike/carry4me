@@ -1,5 +1,4 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -16,20 +15,17 @@ import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuer
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
 import PageSection from "@/app/components/PageSection";
 import FAB from "@/app/components/FAB";
-import { useNavigate } from "react-router-dom";
 import { useMyParcels } from "@/app/hooks/queries/useParcelsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { useDeleteParcelMutation } from "@/app/hooks/mutations/useParcelMutations";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
 
 export function MyParcelsPage() {
   const [editParcel, setFormValues] = useState<FormValues | null>(null);
   const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
     null,
   );
-  const { user, profileIncomplete } = useAuth();
-  const { openSignInModal } = useSignInModal();
-  const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const isMobile = useMediaQuery();
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
@@ -54,13 +50,9 @@ export function MyParcelsPage() {
   };
 
   const handleOnClick = () => {
-    if (!user?.id) {
-      openSignInModal({ redirectTo: "/my/parcels" });
-      return;
-    }
-
-    if (profileIncomplete) {
-      navigate(COMPLETE_PROFILE_PATH);
+    const blockReason = getAccountActionBlockReason(profile, "post_listing");
+    if (blockReason) {
+      toast(blockReason, { variant: "warning" });
       return;
     }
 
@@ -131,7 +123,7 @@ export function MyParcelsPage() {
         </AnimatePresence>
         {sortedParcels.length > 0 && !showParcelModal && (
           <FAB
-            onClick={() => setParcelModalState(true)}
+            onClick={handleOnClick}
             isAuthed={!!user?.id}
             variant="parcel"
           />

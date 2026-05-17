@@ -2,44 +2,24 @@ import DesktopNavigationMenu, {
   BottomNavBar,
   MobileToolBar,
 } from "@/Navigation";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./shared/supabase/AuthProvider";
 import Footer from "./shared/Authentication/UI/Footer";
 import type { UserProfile } from "./shared/Authentication/domain/authTypes";
-import { COMPLETE_PROFILE_PATH } from "./shared/Authentication/domain/profileCompletion";
 import { useMediaQuery } from "./shared/Authentication/UI/hooks/useMediaQuery";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "./lib/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUI } from "./shared/Authentication/UI/hooks/useUI";
 import { PhoneVerificationModal } from "./shared/Authentication/UI/PhoneVerificationModal";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
-const PUBLIC_WHILE_INCOMPLETE = new Set([
-  "/",
-  "/about",
-  "/signin",
-  "/travelers",
-  "/parcels",
-  COMPLETE_PROFILE_PATH,
-]);
 
 export default function RootLayoutContent() {
-  const { loading, user, profile, profileIncomplete } = useAuth();
+  const { loading, user, profile } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { showBottomNavBar } = useUI();
   const isAuthed = !!user;
-
-  useEffect(() => {
-    if (loading || !user || !profileIncomplete) return;
-    if (PUBLIC_WHILE_INCOMPLETE.has(location.pathname)) return;
-
-    navigate(COMPLETE_PROFILE_PATH, {
-      replace: true,
-      state: { from: location.pathname },
-    });
-  }, [loading, user, profileIncomplete, location.pathname, navigate]);
 
   // Show phone verification modal if user is logged in and phone is not verified
 

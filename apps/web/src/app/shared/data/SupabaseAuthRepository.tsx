@@ -1,5 +1,12 @@
 import type { AuthRepository } from "../Authentication/domain/AuthRepository";
-import type { AppUser, UserProfile } from "../Authentication/domain/authTypes";
+import type {
+  AppUser,
+  UserProfile,
+} from "../Authentication/domain/authTypes";
+import {
+  ACCOUNT_STATUSES,
+  type AccountStatus,
+} from "../Authentication/domain/accountStatus";
 import { supabase } from "@/app/shared/supabase/client";
 import type { UpdateProfileDto } from "../Authentication/application/updateProfileDTO";
 import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
@@ -71,7 +78,21 @@ function buildVerifiedPhoneProfileUpdate(
     phone_verified: true,
     phone_country_code: phoneCountryCode,
     security_review_required: securityReviewRequired,
+    account_status: securityReviewRequired
+      ? ACCOUNT_STATUSES.PENDING_REVIEW
+      : ACCOUNT_STATUSES.ACTIVE,
   };
+}
+
+function toAccountStatus(value: unknown): AccountStatus {
+  if (
+    value === ACCOUNT_STATUSES.PENDING_REVIEW ||
+    value === ACCOUNT_STATUSES.SUSPENDED
+  ) {
+    return value;
+  }
+
+  return ACCOUNT_STATUSES.ACTIVE;
 }
 
 export class SupabaseAuthRepository implements AuthRepository {
@@ -113,6 +134,9 @@ export class SupabaseAuthRepository implements AuthRepository {
         phone_verified: true,
         phone_country_code: phoneCountryCode,
         security_review_required: securityReviewRequired,
+        account_status: securityReviewRequired
+          ? ACCOUNT_STATUSES.PENDING_REVIEW
+          : ACCOUNT_STATUSES.ACTIVE,
       }, { onConflict: "id" })
       .select("id")
       .single();
@@ -167,7 +191,7 @@ export class SupabaseAuthRepository implements AuthRepository {
     const { data, status, error } = await supabase
       .from("profiles")
       .select(
-        "id,full_name,avatar_url,city,country_code,phone_number,phone_country_code,phone_verified,security_review_required,email",
+        "id,full_name,avatar_url,city,country_code,phone_number,phone_country_code,phone_verified,security_review_required,account_status,email",
       )
       .eq("id", userId)
       .maybeSingle();
@@ -191,6 +215,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       email: data.email,
       phoneVerified: data.phone_verified === true,
       securityReviewRequired: data.security_review_required === true,
+      accountStatus: toAccountStatus(data.account_status),
     };
   }
 

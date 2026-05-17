@@ -7,6 +7,8 @@ import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { useNavigate } from "react-router-dom";
 import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
+import { useToast } from "@/app/components/Toast";
 
 type SendRequestBtnProps<T> = {
   listingType?: ListingType;
@@ -27,9 +29,10 @@ export default function SendRequestBtn<T>({
   iconColorVariant = "onDark",
   isActive = false,
 }: SendRequestBtnProps<T>) {
-  const { user, profileIncomplete } = useAuth();
+  const { user, profile, profileIncomplete } = useAuth();
   const { openSignInModal } = useSignInModal();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const page = listingType === "trip" ? "/travelers" : "/parcels";
   const base = "flex items-center w-full mb-0";
 
@@ -45,6 +48,12 @@ export default function SendRequestBtn<T>({
 
           if (profileIncomplete) {
             navigate(COMPLETE_PROFILE_PATH);
+            return;
+          }
+
+          const blockReason = getAccountActionBlockReason(profile, "send_request");
+          if (blockReason) {
+            toast(blockReason, { variant: "warning" });
             return;
           }
 

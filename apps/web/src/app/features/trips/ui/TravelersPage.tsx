@@ -36,11 +36,12 @@ import { queryKeys } from "@/app/lib/queryKeys";
 import { getParcelUseCase } from "@/app/lib/useCases";
 import type { ListingPageParams } from "@/types/Pagination";
 import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
 
 const PAGE_SIZE = 9;
 
 export default function TravelersPage() {
-  const { user, profileIncomplete } = useAuth();
+  const { user, profile, profileIncomplete } = useAuth();
   const { openSignInModal } = useSignInModal();
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
@@ -126,6 +127,12 @@ export default function TravelersPage() {
 
   const handleRequest = async (trip: TripListing) => {
     if (!user?.id) {
+      return;
+    }
+
+    const blockReason = getAccountActionBlockReason(profile, "send_request");
+    if (blockReason) {
+      toast(blockReason, { variant: "warning" });
       return;
     }
 
@@ -218,6 +225,12 @@ export default function TravelersPage() {
 
     if (profileIncomplete) {
       navigate(COMPLETE_PROFILE_PATH);
+      return;
+    }
+
+    const blockReason = getAccountActionBlockReason(profile, "post_listing");
+    if (blockReason) {
+      toast(blockReason, { variant: "warning" });
       return;
     }
 

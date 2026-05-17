@@ -36,13 +36,14 @@ import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersF
 import FAB from "@/app/components/FAB";
 import type { ListingPageParams } from "@/types/Pagination";
 import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
 
 const PAGE_SIZE = 9;
 
 export default function ParcelsPage() {
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
-  const { user, profileIncomplete } = useAuth();
+  const { user, profile, profileIncomplete } = useAuth();
   const { openSignInModal } = useSignInModal();
 
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
@@ -122,6 +123,12 @@ export default function ParcelsPage() {
   //
   const handleRequest = async (parcel: ParcelListing) => {
     if (!user) {
+      return;
+    }
+
+    const blockReason = getAccountActionBlockReason(profile, "send_request");
+    if (blockReason) {
+      toast(blockReason, { variant: "warning" });
       return;
     }
 
@@ -211,6 +218,12 @@ export default function ParcelsPage() {
 
     if (profileIncomplete) {
       navigate(COMPLETE_PROFILE_PATH);
+      return;
+    }
+
+    const blockReason = getAccountActionBlockReason(profile, "post_listing");
+    if (blockReason) {
+      toast(blockReason, { variant: "warning" });
       return;
     }
 

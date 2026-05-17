@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/supabase/AuthProvider";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
@@ -26,6 +26,7 @@ import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
 import Greeting from "@/app/components/Greeting";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
+import { useToast } from "@/app/components/Toast";
 
 /**
  * Dashboard Page
@@ -54,7 +55,8 @@ export default function DashboardPage() {
   const [createTrip, setCreateTrip] = useState<boolean>(false);
   const navigate = useNavigate();
   const isMobile = useMediaQuery();
-  const { user, profile, loading, profileIncomplete } = useAuth();
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
 
   const { data, error } = useDashboard(user?.id);
   useQueryErrorEffect(error, !!user?.id);
@@ -64,21 +66,15 @@ export default function DashboardPage() {
   const notifications: CarryRequestNotification[] =
     data?.recentNotifications ?? [];
 
-  // fetch goods category
-  // redirect is user is not logged in
-  useEffect(() => {
-    if (!user && !loading) {
-      navigate("/", { replace: true });
-    }
-  }, [user, navigate]);
-
   const requirePhoneVerification = (action: "trip" | "parcel") => {
     if (!user?.id) return;
 
-    if (profileIncomplete) {
-      navigate(COMPLETE_PROFILE_PATH);
+    const blockReason = getAccountActionBlockReason(profile, "post_listing");
+    if (blockReason) {
+      toast(blockReason, { variant: "warning" });
       return;
     }
+
     if (action === "trip") {
       setCreateTrip(true);
     }

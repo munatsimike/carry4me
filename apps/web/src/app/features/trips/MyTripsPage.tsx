@@ -1,5 +1,4 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -15,17 +14,14 @@ import EmptyState from "@/app/components/EmptyState";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
 import FAB from "@/app/components/FAB";
-import { useNavigate } from "react-router-dom";
 import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { useDeleteTripMutation } from "@/app/hooks/mutations/useTripMutations";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
 
 export function MyTripsPage() {
   const isMobile = useMediaQuery();
-  const { user, profileIncomplete } = useAuth();
-  const { openSignInModal } = useSignInModal();
-  const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
   const [showCreateTripModal, setCreatTripModalState] =
     useState<boolean>(false);
@@ -50,13 +46,9 @@ export function MyTripsPage() {
   };
 
   const handleOnClick = () => {
-    if (!user?.id) {
-      openSignInModal({ redirectTo: "/my/trips" });
-      return;
-    }
-
-    if (profileIncomplete) {
-      navigate(COMPLETE_PROFILE_PATH);
+    const blockReason = getAccountActionBlockReason(profile, "post_listing");
+    if (blockReason) {
+      toast(blockReason, { variant: "warning" });
       return;
     }
 
@@ -123,7 +115,7 @@ export function MyTripsPage() {
       </AnimatePresence>
       {sortedTrips.length > 0 && !showCreateTripModal && (
         <FAB
-          onClick={() => setCreatTripModalState(true)}
+          onClick={handleOnClick}
           isAuthed={!!user?.id}
           variant="trip"
         />

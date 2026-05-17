@@ -15,6 +15,10 @@ import MobileParcelShaell from "./features/parcels/ui/MobileParcelShell";
 import { RootLayout } from "./shared/Authentication/application/RootLayout";
 import { PhoneVerificationModal } from "./shared/Authentication/UI/PhoneVerificationModal";
 import CompleteProfile from "./shared/Authentication/UI/CompleteProfilePage";
+import {
+  CompleteProfileRoute,
+  ProtectedRoute,
+} from "./shared/Authentication/application/RouteGuards";
 
 export const router = createBrowserRouter([
   {
@@ -25,17 +29,80 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "about", element: <AboutPage /> },
       { path: "signin", element: <PhoneVerificationModal /> },
-      { path: "complete-profile", element: <CompleteProfile /> },
+      {
+        path: "complete-profile",
+        element: (
+          <CompleteProfileRoute>
+            <CompleteProfile />
+          </CompleteProfileRoute>
+        ),
+      },
       { path: "travelers", element: <TravelersPage /> },
       { path: "parcels", element: <ParcelsPage /> },
-      { path: "requests", element: <CarryRequestsPage /> },
-      { path: "dashboard", element: <DashboardPage /> },
-      { path: "profile", element: <ProfilePage /> },
-      { path: "favourites", element: <MyFavouritesPage /> },
-      { path: "my/trips", element: <MyTripsPage /> },
-      { path: "my/parcels", element: <MyParcelsPage /> },
-      { path: "create-trip", element: <MobileTripShell /> },
-      { path: "create-parcel", element: <MobileParcelShaell /> },
+      {
+        path: "requests",
+        element: (
+          <ProtectedRoute>
+            <CarryRequestsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dashboard",
+        element: (
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute blockSuspended={false}>
+            <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "favourites",
+        element: (
+          <ProtectedRoute>
+            <MyFavouritesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "my/trips",
+        element: (
+          <ProtectedRoute>
+            <MyTripsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "my/parcels",
+        element: (
+          <ProtectedRoute>
+            <MyParcelsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "create-trip",
+        element: (
+          <ProtectedRoute blockPendingReviewActions>
+            <MobileTripShell />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "create-parcel",
+        element: (
+          <ProtectedRoute blockPendingReviewActions>
+            <MobileParcelShaell />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);

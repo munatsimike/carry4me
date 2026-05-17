@@ -13,18 +13,26 @@ import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import {
+  getDefaultAuthedPath,
+  isSuspended,
+} from "@/app/shared/Authentication/domain/accountStatus";
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSignup = searchParams.get("signup") === "success";
   const navigate = useNavigate();
-  const { user, loading, profileIncomplete } = useAuth();
+  const { user, loading, profile, profileIncomplete } = useAuth();
 
   useEffect(() => {
+    if (isSuspended(profile)) return;
+
     if (user && !loading) {
-      navigate(profileIncomplete ? COMPLETE_PROFILE_PATH : "/dashboard");
+      navigate(
+        profileIncomplete ? COMPLETE_PROFILE_PATH : getDefaultAuthedPath(profile),
+      );
     }
-  }, [user, loading, profileIncomplete, navigate]);
+  }, [user, loading, profile, profileIncomplete, navigate]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("redirectToast");

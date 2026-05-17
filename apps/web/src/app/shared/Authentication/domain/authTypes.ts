@@ -1,3 +1,5 @@
+import type { AccountStatus } from "./accountStatus";
+
 export type LogoutResult =
   | { success: true }
   | { success: false; error: string };
@@ -22,6 +24,7 @@ export type UserProfile = {
   phoneCountryCode?: string | null;
   phoneVerified?: boolean;
   securityReviewRequired?: boolean;
+  accountStatus?: AccountStatus;
   email: string;
 };
 

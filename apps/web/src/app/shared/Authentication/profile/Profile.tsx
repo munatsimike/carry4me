@@ -30,7 +30,6 @@ import { UpdateAuthDetailsUseCase } from "../application/UpdateAuthDetailsUseCas
 import { DeleteAvatarUseCase } from "../application/DeleteAvatarUseCase";
 import ComboBox from "@/app/components/ComboBox";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
-import { useNavigate } from "react-router-dom";
 import {
   UserDetailsScema,
   type UserDetailsFields,
@@ -87,7 +86,6 @@ export default function ProfilePage() {
   const { user, refreshProfile, profile } = useAuth();
   const { toast } = useToast();
   const { showSupabaseError } = useUniversalModal();
-  const navigate = useNavigate();
 
   const {
     control,
@@ -167,12 +165,6 @@ export default function ProfilePage() {
     const url = profile?.avatarUrl ?? null;
     setPreview(url);
   }, [profile?.avatarUrl, file]);
-
-  useEffect(() => {
-    if (!user && !profile) {
-      navigate("/complete-profile");
-    }
-  }, [user, profile]);
 
   if (!user) {
     return (
