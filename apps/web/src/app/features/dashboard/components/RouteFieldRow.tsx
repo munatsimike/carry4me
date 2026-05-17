@@ -32,9 +32,9 @@ export default function RouteFieldRow<T extends FieldValues>({
       : "Zimbabwe";
 
   return (
-    <div className="flex flex-col gap-5 ">
+    <div className="flex min-w-0 flex-col gap-5">
       <div>
-        <div className="grid grid-cols-1 sm:grid-cols-[96px_1fr] gap-2 sm:gap-4 items-center ">
+        <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-[96px_minmax(0,1fr)] sm:items-center sm:gap-4">
           <CustomText
             className="text-left sm:text-right"
             textSize="sm"
@@ -42,7 +42,7 @@ export default function RouteFieldRow<T extends FieldValues>({
           >
             {"Origin"}
           </CustomText>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 ">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
             <Controller
               name={"originCountry" as Path<T>}
               control={control}
@@ -81,8 +81,8 @@ export default function RouteFieldRow<T extends FieldValues>({
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-[96px_1fr] items-center gap-4">
-        <CustomText className="text-right" textSize="sm" textVariant="label">
+      <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-[96px_minmax(0,1fr)] sm:items-center sm:gap-4">
+        <CustomText className="text-left sm:text-right" textSize="sm" textVariant="label">
           {"Destination"}
         </CustomText>
 
@@ -90,7 +90,7 @@ export default function RouteFieldRow<T extends FieldValues>({
           as="span"
           textSize="sm"
           textVariant="primary"
-          className="inline-flex rounded-xl bg-neutral-100 border border-slate-300 px-3 h-9 justify-start items-center max-w-[200px] gap-3"
+          className="inline-flex min-w-0 max-w-full items-center justify-start gap-3 rounded-xl border border-slate-300 bg-neutral-100 px-3 py-2"
         >
           <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
           {destinationLabel}

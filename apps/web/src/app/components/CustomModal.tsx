@@ -54,7 +54,7 @@ export default function CustomModal({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:px-4"
+      className="fixed inset-0 z-50 flex items-end justify-center px-2 py-2 sm:items-center sm:px-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -69,7 +69,7 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-[110] w-[97vw] sm:w-full ${sizes[width]} max-h-[97vh] rounded-t-2xl p-3 sm:rounded-2xl bg-white shadow-xl sm:px-5 pt-4 pb-4 border border-neutral-300 `}
+        className={`relative z-[110] w-full ${sizes[width]} max-h-[calc(100vh-1rem)] overflow-y-auto rounded-t-2xl border border-neutral-300 bg-white p-3 pt-4 pb-4 shadow-xl sm:max-h-[calc(100vh-2rem)] sm:rounded-2xl sm:px-5`}
         initial={modalAnimation.initial}
         animate={modalAnimation.animate}
         exit={modalAnimation.exit}

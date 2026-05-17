@@ -284,7 +284,7 @@ function FormContents({ formProps }: SigupFormProps) {
             />
 
             <FloatingInputField
-              className="max-w-[230px]"
+              className="w-full sm:max-w-[260px]"
               hasValue={!!phoneNumber}
               label="Phone number"
               type="tel"

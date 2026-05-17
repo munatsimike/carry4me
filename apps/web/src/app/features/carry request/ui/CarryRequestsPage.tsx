@@ -653,7 +653,7 @@ function DetailsSection({
   const totalPrice = parcel.price_per_kg * parcel.weight_kg;
 
   return (
-    <div className="grid grid-cols-1 gap-8 md:grid-cols-[0.80fr_1fr_0.50fr]">
+    <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[0.8fr_minmax(0,1fr)_0.5fr] lg:gap-8">
       <TripDetails trip={trip} viewerRole={viewerRole} />
       <ParcelDetails parcel={parcel} viewerRole={viewerRole} />
       <CostSummary parcel={parcel} totalPrice={totalPrice} />
@@ -676,7 +676,7 @@ function TripDetails({
       <CardLabel variant="trip" label={cardLabel} />
 
       <div className="space-y-2">
-        <span className="flex gap-1 items-center">
+        <span className="flex min-w-0 flex-wrap items-center gap-1">
           <SvgIcon size={"xs"} Icon={META_ICONS.ukFlag} />
           <CustomText
             textVariant="primary"
@@ -696,7 +696,7 @@ function TripDetails({
           </CustomText>
         </span>
 
-        <div className="grid grid-cols-[80px_1fr] gap-y-1">
+        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[80px_minmax(0,1fr)]">
           <CustomText textVariant="secondary" textSize="sm">
             Traveler
           </CustomText>
@@ -731,7 +731,7 @@ function ParcelDetails({
       <CardLabel variant="parcel" label={cardLabel} />
 
       <div className="space-y-2">
-        <span className="flex gap-1 items-center">
+        <span className="flex min-w-0 flex-wrap items-center gap-1">
           <SvgIcon size={"xs"} Icon={META_ICONS.ukFlag} />
           <CustomText
             textVariant="primary"
@@ -750,7 +750,7 @@ function ParcelDetails({
             {parcel.destination.country}
           </CustomText>
         </span>
-        <div className="grid grid-cols-[80px_1fr] gap-y-1">
+        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[80px_minmax(0,1fr)]">
           <CustomText textVariant="secondary" textSize="sm">
             Sender
           </CustomText>
@@ -785,7 +785,7 @@ function CostSummary({
         </CustomText>
       </span>
 
-      <div className="grid grid-cols-[1fr_auto] gap-y-1">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1">
         <CustomText textVariant="secondary" textSize="sm">
           Parcel weight
         </CustomText>

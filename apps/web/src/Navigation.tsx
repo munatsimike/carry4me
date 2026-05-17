@@ -54,7 +54,7 @@ export default function DesktopNavigationMenu({
 
 function NavLinks({ children }: { children: React.ReactNode }) {
   return (
-    <nav className="relative flex sm:items-center px-2 sm:px-5 sm:py-1 sm:flex-row gap-5 text-sm sm:justify-center">
+    <nav className="relative flex w-full items-center justify-around gap-1 px-2 text-xs sm:w-auto sm:justify-center sm:gap-5 sm:px-5 sm:py-1 sm:text-sm">
       {children}
     </nav>
   );
@@ -91,11 +91,10 @@ function SignInBtn() {
           openSignInModal({ redirectTo: location.pathname })
         }
         className="
-          whitespace-nowrap
-            flex items-center gap-2
+            flex min-h-10 items-center gap-2
             rounded-full bg-blue-500 text-white
-            px-4 py-1.5
-            text-md font-medium
+            px-3 py-2 sm:px-4
+            text-sm sm:text-md font-medium
             transition-all duration-200
             font-heading
             hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-md
@@ -165,7 +164,7 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
           Requests
         </NavItem>
       </NavLinks>
-      <span className="relative flex flex-col sm:flex-row gap-4 md:items-center mt-4 sm:mt-0">
+      <span className="relative mt-4 flex flex-col gap-4 sm:mt-0 sm:flex-row md:items-center">
         <button
           ref={triggerNotRef}
           type="button"
@@ -292,7 +291,7 @@ function NavItem({ to, children, end = false }: NavItemProps) {
       to={to}
       end={end}
       className={({ isActive }) =>
-        `relative w-full whitespace-nowrap ${
+        `relative flex min-w-0 flex-1 justify-center sm:w-auto sm:flex-none ${
           isActive
             ? "text-primary-600 font-medium"
             : "text-neutral-700 hover:text-primary-600"
@@ -300,10 +299,10 @@ function NavItem({ to, children, end = false }: NavItemProps) {
       }
     >
       {({ isActive }) => (
-        <span className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 whitespace-nowrap">
+        <span className="flex min-w-0 flex-col items-center gap-1 sm:flex-row sm:gap-2">
           <span
             className={`
-          flex flex-col items-center py-1 px-2 rounded-md
+          flex min-h-10 min-w-0 flex-col items-center justify-center rounded-md px-2 py-1 text-center sm:min-h-0
           ${isActive ? "bg-primary-50 sm:bg-transparent" : ""}
         `}
           >
@@ -330,7 +329,7 @@ export function MobileToolBar({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const location = useLocation();
   const style =
-    "flex flex-col text-neutral-800 items-center justify-center gap-0.5 text-[12px] flex-1 py-1 text-sm";
+    "flex min-h-10 flex-col text-neutral-800 items-center justify-center gap-0.5 text-[12px] flex-1 py-1 sm:text-sm";
   const iconColor = "text-neutral-800";
   const HIDE_BACK_ROUTES = ["/", "/dashboard"];
   const showBackButton = !HIDE_BACK_ROUTES.includes(location.pathname);
@@ -344,11 +343,11 @@ export function MobileToolBar({
   };
   return (
     <>
-      <div className="relative flex block sm:hidden items-center justify-between w-full py-1 h-8">
+      <div className="relative flex w-full items-center justify-between gap-2 py-1 sm:hidden">
         {showBackButton ? (
           <button
             onClick={() => handleBack()}
-            className="rounded-full bg-white p-1 text-neutral-600 border border-neutral-200"
+            className="flex min-h-10 min-w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600"
           >
             <ArrowLeft size={18} />
           </button>
@@ -359,11 +358,11 @@ export function MobileToolBar({
           as="h1"
           textSize="lg"
           textVariant="primary"
-          className="font-semibold whitespace-nowrap"
+          className="min-w-0 flex-1 truncate text-center font-semibold"
         >
-          {toHeading(location.pathname)}
+          {toHeading(location.pathname) ?? "Carry4Me"}
         </CustomText>
-        <div className="flex items-center gap-5">
+        <div className="flex min-w-10 items-center justify-end gap-2">
           {showSearchBar && (
             <button onClick={setIsSearchOpen} type="button" className={style}>
               <Search
@@ -373,7 +372,7 @@ export function MobileToolBar({
               />
             </button>
           )}
-          <div className="flex gap-5 sm:hidden items-center">
+          <div className="flex items-center gap-2 sm:hidden">
             <AnimatePresence mode="wait">
               {isAuthed ? (
                 <motion.div

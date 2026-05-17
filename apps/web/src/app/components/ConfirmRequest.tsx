@@ -194,7 +194,7 @@ export function ParcelSummary({
           </CustomText>
         </span>
 
-        <div className="grid gap-y-1 grid-cols-[120px_1fr] sm:items-start">
+        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[120px_minmax(0,1fr)] sm:items-start">
           <CustomText textVariant={variantSecondary} textSize={textSizeLabel}>
             Sender
           </CustomText>
@@ -222,7 +222,7 @@ export function ParcelSummary({
       </div>
       <LineDivider />
       <div className="space-y-2">
-        <div className="grid grid-cols-[1fr_auto] items-center gap-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
           <CustomText as="span" textVariant="secondary" textSize="sm">
             Price per kg
           </CustomText>
@@ -236,7 +236,7 @@ export function ParcelSummary({
           </CustomText>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto] items-center gap-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
           <CustomText
             as="span"
             className="font-semibold"
@@ -294,7 +294,7 @@ export function TripSummary({ trip, isSenderRequesting }: TripSummaryProps) {
             {trip.route.destinationCountry}
           </CustomText>
         </span>
-        <div className="grid gap-y-1 grid-cols-[120px_1fr] sm:items-start">
+        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[120px_minmax(0,1fr)] sm:items-start">
           {trip.user?.fullName && (
             <>
               <CustomText

@@ -8,7 +8,7 @@ type CardProps = {
   enableHover?: boolean;
   paddingClass?: string;
   shadowClass?: string;
-  sizeClass?:string
+  sizeClass?: string;
 };
 
 export function Card({
@@ -28,12 +28,12 @@ export function Card({
       animate={{ scale: 1, opacity: 1 }}
       whileHover={
         enableHover && !shouldReduceMotion
-          ? { scale:1.01, y:-3}
+          ? { scale: 1.01, y: -3 }
           : undefined
       }
       transition={{ duration: 0.18, ease: "easeOut" }}
       className={[
-        "overflow-hidden bg-white",
+        "w-full min-w-0 overflow-hidden bg-white",
         shadowClass,
         paddingClass,
         cornerRadiusClass,

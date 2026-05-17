@@ -9,16 +9,17 @@ type UserProps = {
 
 export default function User({ userName, tag, avatar }: UserProps) {
   return (
-    <div className="flex items-center pl-14 gap-3">
+    <div className="flex min-w-0 items-center gap-3 sm:pl-8 md:pl-14">
       <img
         src={avatar ? avatar : "/user-profile-icon.svg"}
-        className="rounded-full h-12 w-12 border border-neutral-300"
+        className="h-10 w-10 shrink-0 rounded-full border border-neutral-300 sm:h-12 sm:w-12"
+        alt=""
       />
-      <div className="flex flex-col gap-2">
+      <div className="flex min-w-0 flex-col gap-1 sm:gap-2">
         <CustomText
           textVariant="primary"
           textSize="md"
-          className="leading-none font-semimedium"
+          className="truncate leading-none font-semimedium"
         >
           {userName}
         </CustomText>

@@ -149,7 +149,7 @@ function YourActivitySection({
       <CustomText textVariant="primary" textSize="lg" className="font-medium">
         {"Your activities"}
       </CustomText>
-      <div className="flex sm:flex-row flex-col gap-6">
+      <div className="flex min-w-0 flex-col gap-6 lg:flex-row">
         <DeliverySummary activityList={activityList} />
         <RecentActivity recentActivities={recentActivityList} />
       </div>
@@ -167,7 +167,7 @@ function RecentActivity({
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-emerald-200"
+      className="relative w-full max-w-full overflow-hidden rounded-3xl bg-emerald-200 pt-1 lg:max-w-sm"
     >
       <Card enableHover={false} paddingClass="p-3" className="h-full flex-1">
         <div className="flex flex-col px-2 mx-auto">
@@ -187,7 +187,7 @@ function RecentActivity({
             recentActivities.map((activity, index) => (
               <div
                 key={activity.id}
-                className="flex flex-col w-full md:min-w-[350px]"
+                className="flex w-full min-w-0 flex-col"
               >
                 <div className="flex gap-3 hover:bg-neutral-100 p-2 rounded-lg">
                   <span className="inline-flex pt-1">
@@ -196,7 +196,7 @@ function RecentActivity({
 
                   <div
                     key={activity.id}
-                    className="flex flex-col w-full max-w-sm"
+                    className="flex w-full min-w-0 flex-col"
                   >
                     <div className="flex flex-col md:flex-row justify-between md:items-center items-stretch">
                       <CustomText
@@ -241,18 +241,18 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative max-w-sm overflow-hidden rounded-3xl pt-1 bg-slate-200"
+      className="relative w-full max-w-full overflow-hidden rounded-3xl bg-slate-200 pt-1 lg:max-w-sm"
     >
       <Card enableHover={false} className="h-full flex-1">
         <div className="flex flex-col gap-4 sm:pr-6 bg-white">
-          <span className="inline-flex items-center gap-3">
+          <span className="inline-flex min-w-0 items-center gap-3">
             <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
               <Truck className="text-neutral-600 h-5 w-5" strokeWidth={1} />
             </CircleBadge>
             <CustomText
               textVariant="primary"
               textSize="md"
-              className="whitespace-nowrap"
+              className="truncate"
             >
               Delivery Summary
             </CustomText>
@@ -271,13 +271,13 @@ function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
       {activityList.map((item) => (
         <span
           key={item.itemName}
-          className="inline-flex gap-3 items-center whitespace-nowrap"
+          className="inline-flex min-w-0 items-center gap-3"
         >
           <span
             className={`w-2 h-2 rounded-full ${item.status && toColorMapper[item.status]}`}
           />
           <Link to={`${item.count > 0 ? item.link : ""}`}>
-            <span className="inline-flex gap-2 items-center">
+            <span className="inline-flex min-w-0 items-center gap-2">
               <CustomText
                 textVariant={`${item.count > 0 ? "secondary" : "helperText"}`}
                 className={`${item.count > 0 ? "cursor-pointer" : "cursor-text"}`}
@@ -297,11 +297,11 @@ function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
 }
 function StatsSection({ statsList }: StatsProps) {
   return (
-    <div className="px-2 max-w-sm flex flex-col gap-3">
+    <div className="flex w-full max-w-full flex-col gap-3 px-2 lg:max-w-sm">
       <CustomText textVariant="primary" textSize="lg" className="font-medium">
         {"Your Stats"}
       </CustomText>
-      <div className="min-h-[85px] min-w-[200px] mx-auto">
+      <div className="mx-auto min-h-[85px] w-full">
         <div className="grid grid-cols-2 gap-3">
           {statsList.map((item) => (
             <Link key={item.itemName} to={item.link ?? ""}>

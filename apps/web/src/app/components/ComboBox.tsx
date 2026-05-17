@@ -64,7 +64,8 @@ export default function ComboBox({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  const selectedFlagIcon = value && (!searchable || !isOpen) ? toflag(value) : null;
+  const selectedFlagIcon =
+    value && (!searchable || !isOpen) ? toflag(value) : null;
   const baseClasses = cn(
     `${heightClass} w-full min-w-0 bg-white pl-3 pr-10 text-sm`,
     "text-ellipsis whitespace-nowrap border outline-none",
@@ -75,7 +76,7 @@ export default function ComboBox({
 
   if (!searchable) {
     return (
-      <div className="relative max-w-xs w-full min-w-0">
+      <div className="relative w-full min-w-0">
         <select
           disabled={disabled}
           value={value}
@@ -85,7 +86,12 @@ export default function ComboBox({
             onValueChange?.(e.target.value);
             setIsOpen(false);
           }}
-          className={cn(baseClasses, roundedClass, "appearance-none", selectedFlagIcon && "pl-10")}
+          className={cn(
+            baseClasses,
+            roundedClass,
+            "appearance-none",
+            selectedFlagIcon && "pl-10",
+          )}
         >
           <option value="" disabled>
             {placeholder}
@@ -112,7 +118,7 @@ export default function ComboBox({
   }
 
   return (
-    <div ref={wrapperRef} className="relative max-w-xs w-full min-w-0">
+    <div ref={wrapperRef} className="relative w-full min-w-0">
       <input
         type="text"
         disabled={disabled}
@@ -150,7 +156,7 @@ export default function ComboBox({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute z-50 mt-2 max-h-60 w-full min-w-0 overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
           {filteredItems.length > 0 ? (
             filteredItems.map((item) => {
               const isSelected = value === item;
@@ -164,11 +170,11 @@ export default function ComboBox({
                     setQuery(item);
                     setIsOpen(false);
                   }}
-                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
                 >
                   <span className="flex truncate items-center">
                     {flagIcon && <SvgIcon size={"xs"} Icon={flagIcon} />}
-                    <span className="ml-3">{item}</span>
+                    <span className="ml-3 min-w-0 truncate">{item}</span>
                   </span>
                   {isSelected && <Check className="h-4 w-4 text-slate-500" />}
                 </button>

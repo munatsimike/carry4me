@@ -39,7 +39,7 @@ export function DateField<T extends FieldValues>({
   disabledMatchers.push({ before: new Date() });
 
   return (
-    <div className={`flex flex-col gap-2 ${className}`}>
+    <div className={`flex w-full min-w-0 flex-col gap-2 ${className ?? ""}`}>
       {label && (
         <CustomText textSize="sm" textVariant="label">
           {label}
@@ -58,13 +58,13 @@ export function DateField<T extends FieldValues>({
 
           return (
             <ErrorText error={error}>
-              <div className="relative inline-block">
+              <div className="relative w-full sm:w-auto">
                 <button
                   type="button"
                   disabled={disabled}
                   onClick={() => setOpen((v) => !v)}
                   className={[
-                    "w-[180px] h-10 px-3 rounded-xl border border-slate-300 text-left flex items-center justify-between gap-2",
+                    "h-10 w-full min-w-0 rounded-xl border border-slate-300 px-3 text-left sm:w-[180px] flex items-center justify-between gap-2",
                     "focus:outline-none focus:border-primary-500",
                     error
                       ? inputError
@@ -98,7 +98,7 @@ export function DateField<T extends FieldValues>({
                       onClick={() => setOpen(false)}
                     />
 
-                    <div className="absolute -left-2 md:left-0 bottom-full md:bottom-auto md:top-full z-50  w-[300px] rounded-xl border border-neutral-200 bg-white shadow-lg p-2">
+                    <div className="absolute -left-2 bottom-full z-50 w-[min(300px,calc(100vw-2rem))] rounded-xl border border-neutral-200 bg-white p-2 shadow-lg md:bottom-auto md:left-0 md:top-full">
                       <DayPicker
                         mode="single"
                         selected={selectedDate}

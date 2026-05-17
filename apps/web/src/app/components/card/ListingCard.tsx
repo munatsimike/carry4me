@@ -70,18 +70,18 @@ export function ListingCard<T extends Listing>({
       borderClass={borderClass}
       shadowClass={shadowClass}
     >
-      <div className="flex justify-between pb-1">
-        <span className="flex flex-col gap-2">
+      <div className="flex min-w-0 justify-between gap-3 pb-1">
+        <span className="flex min-w-0 flex-col gap-2">
           {!isDisplayMode && (
             <span className="flex justify-center text-sm pb-2 text-neutral-500">
               {`This is how your ${isTripListing ? "trip" : "parcel"} will appear to ${isTripListing ? "senders" : "travelers"}`}
             </span>
           )}
           <span className="flex justify-between gap-2">
-          <CardLabel
-            variant={isTripListing ? "trip" : "parcel"}
-            label={isTripListing ? "Trip" : "Parcel"}
-          />
+            <CardLabel
+              variant={isTripListing ? "trip" : "parcel"}
+              label={isTripListing ? "Trip" : "Parcel"}
+            />
           </span>
         </span>
 
@@ -127,15 +127,15 @@ export function ListingCard<T extends Listing>({
         location={"UK"}
       />
       <LineDivider heightClass="my-2" />
-          <SendRequestBtn
+      <SendRequestBtn
         isActive={!isDisplayMode}
         buttonTextVariant="onDark"
         iconColorVariant="onDark"
         buttonVariant="primary"
-            payLoad={listing}
-            primaryAction={onClick}
+        payLoad={listing}
+        primaryAction={onClick}
         listingType={listing.type}
-          />
+      />
     </Card>
   );
 }
