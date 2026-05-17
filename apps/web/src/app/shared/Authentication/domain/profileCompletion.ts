@@ -11,5 +11,5 @@ export function isProfileIncomplete(profile: UserProfile | null): boolean {
     profile.city,
     profile.phoneNumber,
     profile.email,
-  ].some((value) => !value?.trim());
+  ].some((value) => typeof value !== "string" || value.trim() === "");
 }

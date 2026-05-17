@@ -27,12 +27,12 @@ export class GetDashboardDataUseCase {
         {
           itemName: "Posted Trips",
           count: stats.postedTrips,
-          link: "/my/trips",
+          link: "/travelers",
         },
         {
           itemName: "Posted  Parcels",
           count: stats.postedParcels,
-          link: "/my/parcels",
+          link: "/parcels",
         },
       ],
       activity: [

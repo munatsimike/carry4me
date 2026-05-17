@@ -26,13 +26,5 @@ function toUpdateProfileDto(profile: UserProfile): Partial<UpdateProfileDto> {
     country_code: profile.countryCode ?? "",
   };
 
-  if (profile.phoneCountryCode !== undefined) {
-    dto.phone_country_code = profile.phoneCountryCode;
-  }
-
-  if (profile.securityReviewRequired !== undefined) {
-    dto.security_review_required = profile.securityReviewRequired;
-  }
-
   return dto;
 }

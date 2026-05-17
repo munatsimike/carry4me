@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/supabase/AuthProvider";
 import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
+import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
@@ -55,7 +56,7 @@ export default function DashboardPage() {
   const [createTrip, setCreateTrip] = useState<boolean>(false);
   const navigate = useNavigate();
   const isMobile = useMediaQuery();
-  const { user, profile } = useAuth();
+  const { user, profile, profileIncomplete } = useAuth();
   const { toast } = useToast();
 
   const { data, error } = useDashboard(user?.id);
@@ -68,6 +69,11 @@ export default function DashboardPage() {
 
   const requirePhoneVerification = (action: "trip" | "parcel") => {
     if (!user?.id) return;
+
+    if (profileIncomplete) {
+      navigate(COMPLETE_PROFILE_PATH);
+      return;
+    }
 
     const blockReason = getAccountActionBlockReason(profile, "post_listing");
     if (blockReason) {

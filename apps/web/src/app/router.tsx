@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
       {
         path: "requests",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requireCompleteProfile={false}>
             <CarryRequestsPage />
           </ProtectedRoute>
         ),
@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requireCompleteProfile={false}>
             <DashboardPage />
           </ProtectedRoute>
         ),
@@ -74,7 +74,7 @@ export const router = createBrowserRouter([
       {
         path: "my/trips",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requireCompleteProfile={false}>
             <MyTripsPage />
           </ProtectedRoute>
         ),
@@ -82,7 +82,7 @@ export const router = createBrowserRouter([
       {
         path: "my/parcels",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requireCompleteProfile={false}>
             <MyParcelsPage />
           </ProtectedRoute>
         ),

@@ -36,7 +36,12 @@ import { useAuth } from "../../supabase/AuthProvider";
 import CustomModal from "@/app/components/CustomModal";
 import Spinner from "@/app/components/Spinner";
 import { useToast } from "@/app/components/Toast";
-import { toDialCode, toIsoCountryCode, toflag } from "@/app/Mapper";
+import {
+  toCountryName,
+  toDialCode,
+  toIsoCountryCode,
+  toflag,
+} from "@/app/Mapper";
 import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 import {
   otpCodeSchema,
@@ -51,7 +56,6 @@ import {
   emailSchema,
   firstNameSchema,
   lastNameSchema,
-  phoneNumberSchema,
 } from "@/app/shared/validation/formValidation";
 
 export const UserDetailsScema = z
@@ -59,7 +63,7 @@ export const UserDetailsScema = z
     firstName: firstNameSchema,
     lastName: lastNameSchema,
     emailAddress: emailSchema,
-    phoneNumber: phoneNumberSchema,
+    phoneNumber: z.string().optional(),
     country: countrySchema,
     city: citySchema,
     password: z.string().min(8, "Password must be at least 8 characters"),
@@ -125,6 +129,35 @@ function toE164PhoneNumber(countryCode: string, localPhoneNumber: string) {
   return null;
 }
 
+function formatVerifiedPhoneNumber(
+  phoneNumber: string | null | undefined,
+  countryCode: string | null | undefined,
+) {
+  if (!phoneNumber) return "";
+  if (phoneNumber.trim().startsWith("+")) return phoneNumber;
+
+  const digits = phoneNumber.replace(/\D/g, "");
+  const dialCode = countryCode ? toDialCode(countryCode) : null;
+
+  if (!digits || !dialCode) return phoneNumber;
+
+  const dialDigits = dialCode.replace(/\D/g, "");
+  if (digits.startsWith(dialDigits)) return `+${digits}`;
+
+  return `${dialCode}${digits.replace(/^0+/, "")}`;
+}
+
+function inferCountryFromPhone(phoneNumber: string | null | undefined) {
+  if (!phoneNumber?.trim().startsWith("+")) return null;
+
+  try {
+    const parsed = parsePhoneNumberFromString(phoneNumber);
+    return parsed?.country ?? null;
+  } catch {
+    return null;
+  }
+}
+
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -185,24 +218,28 @@ export default function CompleteProfile() {
     }
 
     const savedPhoneNumber = profile?.phoneNumber ?? user?.phone;
-    const savedCountryCode = profile?.countryCode;
+    const savedCountry =
+      profile?.countryCode ??
+      profile?.country ??
+      inferCountryFromPhone(user?.phone) ??
+      inferCountryFromPhone(profile?.phoneNumber);
 
     if (savedPhoneNumber) {
       setValue("phoneNumber", savedPhoneNumber, {
         shouldDirty: false,
         shouldTouch: false,
-        shouldValidate: true,
+        shouldValidate: false,
       });
     }
 
-    if (savedCountryCode) {
-      setValue("country", savedCountryCode, {
+    if (savedCountry) {
+      setValue("country", savedCountry, {
         shouldDirty: false,
         shouldTouch: false,
         shouldValidate: true,
       });
     }
-  }, [profile?.countryCode, profile?.phoneNumber, setValue, user?.email, user?.phone]);
+  }, [profile?.country, profile?.countryCode, profile?.phoneNumber, setValue, user?.email, user?.phone]);
 
   const { showSupabaseError } = useUniversalModal();
 
@@ -218,9 +255,10 @@ export default function CompleteProfile() {
         email: values.emailAddress,
         fullName: `${values.firstName} ${values.lastName}`.trim(),
         avatarUrl: null,
+        country: profile?.country ?? toCountryName(values.country),
         countryCode: profile?.countryCode ?? values.country,
         city: values.city,
-        phoneNumber: profile?.phoneNumber ?? values.phoneNumber,
+        phoneNumber: profile?.phoneNumber ?? values.phoneNumber ?? null,
       },
     };
 
@@ -331,10 +369,17 @@ function FormContents({ formProps }: SigupFormProps) {
   const lastName = watch("lastName");
   const emailAddress = watch("emailAddress");
   const phoneNumber = watch("phoneNumber");
+  const formattedPhoneNumber = formatVerifiedPhoneNumber(
+    phoneNumber,
+    originCountry,
+  );
+  const displayCountry = originCountry
+    ? (toCountryName(originCountry) ?? originCountry)
+    : "";
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
 
-  const { countryOptions, cityOptions } = useLocations(originCountry);
+  const { cityOptions } = useLocations(originCountry);
   return (
     <>
       <span className="flex flex-col items-center gap-1 pb-2">
@@ -395,14 +440,18 @@ function FormContents({ formProps }: SigupFormProps) {
             <FloatingInputField
               className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[260px]"
               hasValue={!!phoneNumber}
-              label="Phone number"
-              type="tel"
+              label=""
+              type="text"
               readOnly
-              helperText="Verified phone number"
-              error={errors.phoneNumber?.message}
-              isDirty={!!dirtyFields.phoneNumber}
-              isTouched={!!touchedFields.phoneNumber}
-              {...register("phoneNumber")}
+              disabled
+              value={formattedPhoneNumber}
+              trailingIcon={
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                  Verified
+                </span>
+              }
+              isDirty={false}
+              isTouched={false}
             />
             <button
               type="button"
@@ -421,32 +470,23 @@ function FormContents({ formProps }: SigupFormProps) {
           <CustomText textVariant="primary" textSize="md">
             Your location
           </CustomText>
-          <Controller
-            control={control}
-            name="country"
-            render={({ field, fieldState }) => (
-              <ComboBox
-                className="rounded-lg"
-                placeholder="Select country"
-                menuItems={countryOptions}
-                value={field.value}
-                disabled
-                disabledMessage="Your country is set from your verified phone number"
-                onValueChange={field.onChange}
-                error={fieldState.error?.message}
-                isDirty={fieldState.isDirty}
-                isTouched={fieldState.isTouched}
-                searchable
-              />
-            )}
-          ></Controller>
+          <FloatingInputField
+            className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[260px]"
+            hasValue={!!displayCountry}
+            label="Country"
+            readOnly
+            disabled
+            value={displayCountry}
+            isDirty={false}
+            isTouched={false}
+          />
 
           <Controller
             control={control}
             name="city"
             render={({ field, fieldState }) => (
               <ComboBox
-                className="rounded-lg mt-3"
+                className="rounded-lg mt-3 w-full sm:max-w-[260px]"
                 placeholder="Select city"
                 menuItems={cityOptions}
                 disabled={!originCountry}
@@ -609,7 +649,7 @@ function ChangePhoneNumberModal({
   };
 
   return (
-    <CustomModal onClose={onClose} width="md">
+    <CustomModal onClose={onClose} width="lg">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <CustomText
@@ -620,7 +660,7 @@ function ChangePhoneNumberModal({
             Change phone number
           </CustomText>
           <CustomText textVariant="secondary" textSize="sm">
-            Verify your new phone number before it replaces your current one.
+           Enter your new phone number.
           </CustomText>
         </div>
 
@@ -714,16 +754,16 @@ function ChangePhoneNumberModal({
 
           {currentPhoneNumber && (
             <CustomText textVariant="secondary" textSize="xs">
-              Current phone: {currentPhoneNumber}
+              Current phone {"+"}{currentPhoneNumber}
             </CustomText>
           )}
 
           <Button
             type="submit"
-            variant="neutral"
+            variant="primary"
             size="sm"
             disabled={isRequesting || isVerifying}
-            className="w-fit"
+            className="w-full"
           >
             {isRequesting ? (
               <span className="inline-flex items-center gap-2">

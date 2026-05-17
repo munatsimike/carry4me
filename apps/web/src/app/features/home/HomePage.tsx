@@ -12,7 +12,6 @@ import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 import {
   getDefaultAuthedPath,
   isSuspended,
@@ -22,17 +21,15 @@ export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const isSignup = searchParams.get("signup") === "success";
   const navigate = useNavigate();
-  const { user, loading, profile, profileIncomplete } = useAuth();
+  const { user, loading, profile } = useAuth();
 
   useEffect(() => {
     if (isSuspended(profile)) return;
 
     if (user && !loading) {
-      navigate(
-        profileIncomplete ? COMPLETE_PROFILE_PATH : getDefaultAuthedPath(profile),
-      );
+      navigate(getDefaultAuthedPath(profile));
     }
-  }, [user, loading, profile, profileIncomplete, navigate]);
+  }, [user, loading, profile, navigate]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("redirectToast");

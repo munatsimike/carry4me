@@ -124,7 +124,7 @@ function DesktopProfileMenu({
       shadowClass="shadow-md"
       paddingClass="p-3"
       enableHover={false}
-      className="absolute top-full mt-2 right-0 z-10 w-56"
+      className="absolute top-full mt-2 right-0 z-10 w-64"
     >
       <motion.div ref={ref} className="flex flex-col ">
         {profileItems.map((item) => (
@@ -156,13 +156,13 @@ function ProfileItem({ profileItem, onClosePopOver }: ProfileItemProps) {
       onClick={() => onClosePopOver(false)}
       to={profileItem.path ? profileItem.path : "/profile"}
     >
-      <motion.span className="group inline-flex gap-2 items-center p-2 hover:bg-neutral-100 w-full rounded-lg">
+      <motion.span className="group inline-flex gap-3 items-center p-2 hover:bg-neutral-100 w-full rounded-lg">
         {profileItem.icon}
-        <SpaceBetweenRow className="items-center w-full">
+        <SpaceBetweenRow className="items-center w-full min-w-0">
           <CustomText
             as="span"
             textVariant="primary"
-            className={"hover:bg-neutral-100"}
+            className={"whitespace-nowrap hover:bg-neutral-100"}
           >
             {profileItem.name}
           </CustomText>

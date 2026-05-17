@@ -18,12 +18,11 @@ export type UserProfile = {
   id: string | null;
   fullName: string;
   avatarUrl: string | null;
+  country?: string | null;
   countryCode: string | null;
   city: string | null;
   phoneNumber: string | null;
-  phoneCountryCode?: string | null;
   phoneVerified?: boolean;
-  securityReviewRequired?: boolean;
   accountStatus?: AccountStatus;
   email: string;
 };

@@ -49,9 +49,7 @@ returns table (
   city text,
   country_code text,
   phone_number text,
-  phone_country_code text,
   phone_verified boolean,
-  security_review_required boolean,
   account_status text,
   email text
 )
@@ -67,9 +65,7 @@ as $$
     p.city,
     p.country_code,
     p.phone_number,
-    p.phone_country_code,
     p.phone_verified,
-    p.security_review_required,
     p.account_status,
     p.email
   from public.profiles p

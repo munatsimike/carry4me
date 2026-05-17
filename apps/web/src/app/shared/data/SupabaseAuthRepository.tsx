@@ -1,8 +1,5 @@
 import type { AuthRepository } from "../Authentication/domain/AuthRepository";
-import type {
-  AppUser,
-  UserProfile,
-} from "../Authentication/domain/authTypes";
+import type { AppUser, UserProfile } from "../Authentication/domain/authTypes";
 import {
   ACCOUNT_STATUSES,
   type AccountStatus,
@@ -13,67 +10,16 @@ import type { UpdateProfileDto } from "../Authentication/application/updateProfi
 import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
 import type { User } from "@supabase/supabase-js";
 import {
-  parsePhoneNumberFromString,
-  type CountryCode,
-} from "libphonenumber-js";
-import {
   AppError,
   requireData,
   throwIfSupabaseError,
 } from "@/app/shared/domain/AppError";
 import { toCountryName } from "@/app/Mapper";
 
-const profileCountryToIsoCountry: Record<string, CountryCode> = {
-  GB: "GB",
-  UK: "GB",
-  "UNITED KINGDOM": "GB",
-  US: "US",
-  USA: "US",
-  "UNITED STATES": "US",
-  ZW: "ZW",
-  ZIMBABWE: "ZW",
-};
-
-function normalizeProfileCountry(country: string | null): CountryCode | null {
-  if (!country) return null;
-
-  const normalized = country.trim().toUpperCase();
-  return profileCountryToIsoCountry[normalized] ?? null;
-}
-
-function parsePhoneCountry(phoneNumber: string | null | undefined): {
-  phoneCountryCode: string | null;
-  isoCountry: CountryCode | null;
-} {
-  if (!phoneNumber) {
-    return { phoneCountryCode: null, isoCountry: null };
-  }
-
-  try {
-    const parsed = parsePhoneNumberFromString(phoneNumber);
-
-    if (!parsed) {
-      return { phoneCountryCode: null, isoCountry: null };
-    }
-
-    return {
-      phoneCountryCode: parsed.country ?? `+${parsed.countryCallingCode}`,
-      isoCountry: parsed.country ?? null,
-    };
-  } catch {
-    return { phoneCountryCode: null, isoCountry: null };
-  }
-}
-
 function buildVerifiedPhoneProfileUpdate(
   phoneNumber: string,
   countryCode: string,
 ) {
-  const { phoneCountryCode, isoCountry } = parsePhoneCountry(phoneNumber);
-  const profileIsoCountry = normalizeProfileCountry(countryCode);
-  const securityReviewRequired = Boolean(
-    isoCountry && profileIsoCountry && isoCountry !== profileIsoCountry,
-  );
   const country = toCountryName(countryCode);
 
   return {
@@ -81,11 +27,7 @@ function buildVerifiedPhoneProfileUpdate(
     phone_verified: true,
     country_code: countryCode,
     country,
-    phone_country_code: phoneCountryCode,
-    security_review_required: securityReviewRequired,
-    account_status: securityReviewRequired
-      ? ACCOUNT_STATUSES.PENDING_REVIEW
-      : ACCOUNT_STATUSES.ACTIVE,
+    account_status: ACCOUNT_STATUSES.ACTIVE,
   };
 }
 
@@ -135,7 +77,6 @@ function isPermissionDenied(error: unknown): boolean {
 
 function toUserProfile(profile: Record<string, any>): UserProfile {
   const publicUrl = fetchPublicUrl(profile.avatar_url ?? null);
-
   return {
     id: profile.id,
     fullName: profile.full_name,
@@ -143,10 +84,8 @@ function toUserProfile(profile: Record<string, any>): UserProfile {
     countryCode: profile.country_code,
     city: profile.city,
     phoneNumber: profile.phone_number,
-    phoneCountryCode: profile.phone_country_code,
     email: profile.email,
     phoneVerified: profile.phone_verified === true,
-    securityReviewRequired: profile.security_review_required === true,
     accountStatus: toAccountStatus(profile.account_status),
   };
 }
@@ -171,29 +110,23 @@ export class SupabaseAuthRepository implements AuthRepository {
     }
 
     const profilePhoneNumber = user.phone ?? appUser.profile.phoneNumber;
-    const { phoneCountryCode, isoCountry } = parsePhoneCountry(user.phone);
-    const profileIsoCountry = normalizeProfileCountry(appUser.profile.countryCode);
-    const securityReviewRequired = Boolean(
-      isoCountry && profileIsoCountry && isoCountry !== profileIsoCountry,
-    );
 
     const { data, error } = await supabase
       .from("profiles")
-      .upsert({
-        id: user.id,
-        full_name: appUser.profile.fullName,
-        avatar_url: appUser.profile.avatarUrl,
-        country_code: appUser.profile.countryCode,
-        phone_number: profilePhoneNumber,
-        city: appUser.profile.city,
-        email: appUser.profile.email,
-        phone_verified: true,
-        phone_country_code: phoneCountryCode,
-        security_review_required: securityReviewRequired,
-        account_status: securityReviewRequired
-          ? ACCOUNT_STATUSES.PENDING_REVIEW
-          : ACCOUNT_STATUSES.ACTIVE,
-      }, { onConflict: "id" })
+      .upsert(
+        {
+          id: user.id,
+          full_name: appUser.profile.fullName,
+          avatar_url: appUser.profile.avatarUrl,
+          country_code: appUser.profile.countryCode,
+          phone_number: profilePhoneNumber,
+          city: appUser.profile.city,
+          email: appUser.profile.email,
+          phone_verified: true,
+          account_status: ACCOUNT_STATUSES.ACTIVE,
+        },
+        { onConflict: "id" },
+      )
       .select("id")
       .single();
 

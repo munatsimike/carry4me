@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (mountedRef.current) setLoading(false);
     }
   }, [user?.id, fetchProfile]);
-
+  
   return (
     <AuthContext.Provider
       value={{
