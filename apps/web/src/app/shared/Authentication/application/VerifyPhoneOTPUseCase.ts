@@ -8,7 +8,11 @@ export class VerifyPhoneOTPUseCase {
     this.repo = repo;
   }
 
-  async execute(phoneNumber: string, token: string): Promise<User> {
-    return await this.repo.verifyPhoneOTP(phoneNumber, token);
+  async execute(
+    phoneNumber: string,
+    token: string,
+    countryCode: string,
+  ): Promise<User> {
+    return await this.repo.verifyPhoneOTP(phoneNumber, token, countryCode);
   }
 }

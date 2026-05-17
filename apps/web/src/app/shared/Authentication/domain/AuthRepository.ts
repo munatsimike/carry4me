@@ -27,6 +27,7 @@ export interface AuthRepository {
   verifyPhoneOTP(
     phoneNumber: string,
     token: string,
+    countryCode: string,
   ): Promise<User>;
   requestPhoneChange(phoneNumber: string): Promise<string>;
   verifyPhoneChange(

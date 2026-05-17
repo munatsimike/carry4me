@@ -1,6 +1,7 @@
 export type UpdateProfileDto = {
   full_name: string;
   city: string;
+  country: string;
   country_code: string;
   phone_number: string;
   phone_country_code: string | null;

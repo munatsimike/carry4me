@@ -29,18 +29,34 @@ function toE164PhoneNumber(countryCode: string, localPhoneNumber: string) {
 
   if (!isoCountryCode || /^\s*\+/.test(localPhoneNumber)) return null;
 
+  const normalizedLocalNumber = localPhoneNumber.trim();
   const parsed = parsePhoneNumberFromString(
-    localPhoneNumber.trim(),
+    normalizedLocalNumber,
     isoCountryCode as CountryCode,
   );
 
-  return parsed?.isValid() ? parsed.number : null;
+  if (parsed?.isValid() || parsed?.isPossible()) return parsed.number;
+
+  if (!normalizedLocalNumber.startsWith("0")) {
+    const parsedWithTrunkPrefix = parsePhoneNumberFromString(
+      `0${normalizedLocalNumber}`,
+      isoCountryCode as CountryCode,
+    );
+
+    if (parsedWithTrunkPrefix?.isValid()) return parsedWithTrunkPrefix.number;
+  }
+
+  return null;
 }
 
 const phoneSchema = z
   .object({
     countryCode: z.string().min(1, "Select a country code"),
-    phoneNumber: z.string().trim().min(1, "Enter your phone number"),
+    phoneNumber: z
+      .string()
+      .trim()
+      .min(1, "Enter your phone number")
+      .regex(/^\d+$/, "Enter numbers only, without the country code"),
   })
   .superRefine((value, ctx) => {
     if (toE164PhoneNumber(value.countryCode, value.phoneNumber)) return;
@@ -48,7 +64,7 @@ const phoneSchema = z
     ctx.addIssue({
       code: "custom",
       path: ["phoneNumber"],
-      message: "Enter a valid phone number",
+      message: "Invalid phone number",
     });
   });
 
@@ -89,8 +105,13 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
   const [countryMenuOpen, setCountryMenuOpen] = useState(false);
   const countryMenuRef = useRef<HTMLDivElement | null>(null);
 
-  const { setPhoneNumber, setStep, setLoading, setError } =
-    usePhoneVerification();
+  const {
+    setPhoneNumber,
+    setSelectedCountryCode,
+    setStep,
+    setLoading,
+    setError,
+  } = usePhoneVerification();
   const { showSupabaseError } = useUniversalModal();
 
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
@@ -131,7 +152,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
     );
     if (!e164PhoneNumber) {
       setFieldError("phoneNumber", {
-        message: "Enter a valid phone number",
+        message: "Enter a valid local phone number",
       });
       return;
     }
@@ -140,6 +161,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
     try {
       await sendOTPUseCase.execute(e164PhoneNumber);
       setPhoneNumber(e164PhoneNumber);
+      setSelectedCountryCode(values.countryCode);
       setStep("otp-verification");
       onPhoneSubmitted();
     } catch (err) {
@@ -254,6 +276,8 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
                 <FloatingInputField
                   hasValue={!!phoneNumber}
                   placeholder="Phone number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   {...register("phoneNumber")}
                   disabled={isSubmitting}
                   error={errors.phoneNumber?.message}

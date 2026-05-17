@@ -20,6 +20,7 @@ import {
   requireData,
   throwIfSupabaseError,
 } from "@/app/shared/domain/AppError";
+import { toCountryName } from "@/app/Mapper";
 
 const profileCountryToIsoCountry: Record<string, CountryCode> = {
   GB: "GB",
@@ -281,7 +282,11 @@ export class SupabaseAuthRepository implements AuthRepository {
     return "Verification code sent";
   }
 
-  async verifyPhoneOTP(phoneNumber: string, token: string): Promise<User> {
+  async verifyPhoneOTP(
+    phoneNumber: string,
+    token: string,
+    countryCode: string,
+  ): Promise<User> {
     const { data, error } = await supabase.auth.verifyOtp({
       phone: phoneNumber,
       token,
@@ -295,22 +300,38 @@ export class SupabaseAuthRepository implements AuthRepository {
       "No user returned after phone verification",
     );
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
+    const verifiedPhoneNumber = user.phone;
 
-    throwIfSupabaseError(profileError);
-
-    if (profile) {
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ phone_verified: true })
-        .eq("id", user.id);
-
-      throwIfSupabaseError(updateError);
+    if (!verifiedPhoneNumber) {
+      throw new AppError({
+        code: "PHONE_NOT_VERIFIED",
+        message: "No verified phone number returned after verification",
+      });
     }
+
+    const country = toCountryName(countryCode);
+
+    if (!country) {
+      throw new AppError({
+        code: "UNSUPPORTED_COUNTRY",
+        message: "Select a supported country code",
+      });
+    }
+
+    const { error: profileError, status } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          phone_number: verifiedPhoneNumber,
+          phone_verified: true,
+          country_code: countryCode,
+          country,
+        },
+        { onConflict: "id" },
+      );
+
+    throwIfSupabaseError(profileError, status);
 
     return user;
   }

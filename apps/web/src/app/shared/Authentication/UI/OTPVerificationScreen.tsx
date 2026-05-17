@@ -53,7 +53,13 @@ export function OTPVerificationScreen({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState<number>(0);
   const [resendLoading, setResendLoading] = useState<boolean>(false);
-  const { phoneNumber, setStep, setLoading, setError } = usePhoneVerification();
+  const {
+    phoneNumber,
+    selectedCountryCode,
+    setStep,
+    setLoading,
+    setError,
+  } = usePhoneVerification();
   const { showSupabaseError } = useUniversalModal();
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const verifyOTPUseCase = useMemo(
@@ -78,9 +84,19 @@ export function OTPVerificationScreen({
   }, [resendTimer]);
 
   const handleVerifyOTP = async (values: OTPFormValues) => {
+    if (!selectedCountryCode) {
+      setError("Select a country code before verifying your phone number.");
+      setStep("phone-entry");
+      return;
+    }
+
     setLoading(true);
     try {
-      await verifyOTPUseCase.execute(phoneNumber, values.otpCode);
+      await verifyOTPUseCase.execute(
+        phoneNumber,
+        values.otpCode,
+        selectedCountryCode,
+      );
       setStep("completed");
       onVerificationComplete();
     } catch (err) {

@@ -4,11 +4,13 @@ type PhoneVerificationStep = "phone-entry" | "otp-verification" | "completed";
 
 type PhoneVerificationContextValue = {
   phoneNumber: string;
+  selectedCountryCode: string | null;
   step: PhoneVerificationStep;
   isLoading: boolean;
   error: string | null;
 
   setPhoneNumber: (phone: string) => void;
+  setSelectedCountryCode: (countryCode: string | null) => void;
   setStep: (step: PhoneVerificationStep) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -25,12 +27,16 @@ export function PhoneVerificationProvider({
   children: React.ReactNode;
 }) {
   const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(
+    null,
+  );
   const [step, setStep] = useState<PhoneVerificationStep>("phone-entry");
   const [isLoading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const resetPhoneVerification = () => {
     setPhoneNumber("");
+    setSelectedCountryCode(null);
     setStep("phone-entry");
     setLoading(false);
     setError(null);
@@ -40,10 +46,12 @@ export function PhoneVerificationProvider({
     <PhoneVerificationContext.Provider
       value={{
         phoneNumber,
+        selectedCountryCode,
         step,
         isLoading,
         error,
         setPhoneNumber,
+        setSelectedCountryCode,
         setStep,
         setLoading,
         setError,

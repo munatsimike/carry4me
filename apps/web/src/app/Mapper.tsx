@@ -26,7 +26,7 @@ export function toDialCode(country: string): string | null {
   switch (country) {
     case "UK":
     case "GB":
-      return "+44";
+      return "+31";
     case "USA":
     case "US":
       return "+1";
@@ -49,6 +49,22 @@ export function toIsoCountryCode(country: string) {
     case "Zimbabwe":
     case "ZW":
       return "ZW";
+    default:
+      return null;
+  }
+}
+
+export function toCountryName(country: string): string | null {
+  switch (country) {
+    case "UK":
+    case "GB":
+      return "United Kingdom";
+    case "USA":
+    case "US":
+      return "United States";
+    case "Zimbabwe":
+    case "ZW":
+      return "Zimbabwe";
     default:
       return null;
   }
