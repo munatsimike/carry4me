@@ -188,34 +188,30 @@ export class SupabaseAuthRepository implements AuthRepository {
   }
 
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
-    const { data, status, error } = await supabase
-      .from("profiles")
-      .select(
-        "id,full_name,avatar_url,city,country_code,phone_number,phone_country_code,phone_verified,security_review_required,account_status,email",
-      )
-      .eq("id", userId)
-      .maybeSingle();
+    const { data, status, error } = await supabase.rpc("get_current_profile");
 
     throwIfSupabaseError(error, status);
 
-    if (!data) {
+    const profile = data?.[0];
+
+    if (!profile || profile.id !== userId) {
       return null;
     }
 
-    const publicUrl = fetchPublicUrl(data.avatar_url);
+    const publicUrl = fetchPublicUrl(profile.avatar_url);
 
     return {
-      id: data.id,
-      fullName: data.full_name,
+      id: profile.id,
+      fullName: profile.full_name,
       avatarUrl: publicUrl,
-      countryCode: data.country_code,
-      city: data.city,
-      phoneNumber: data.phone_number,
-      phoneCountryCode: data.phone_country_code,
-      email: data.email,
-      phoneVerified: data.phone_verified === true,
-      securityReviewRequired: data.security_review_required === true,
-      accountStatus: toAccountStatus(data.account_status),
+      countryCode: profile.country_code,
+      city: profile.city,
+      phoneNumber: profile.phone_number,
+      phoneCountryCode: profile.phone_country_code,
+      email: profile.email,
+      phoneVerified: profile.phone_verified === true,
+      securityReviewRequired: profile.security_review_required === true,
+      accountStatus: toAccountStatus(profile.account_status),
     };
   }
 
