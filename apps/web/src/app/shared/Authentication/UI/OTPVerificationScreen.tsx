@@ -15,7 +15,7 @@ import { VerifyPhoneOTPUseCase } from "../application/VerifyPhoneOTPUseCase";
 import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
-import { AppError } from "@/app/shared/domain/AppError";
+import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
 import { ShieldCheck } from "lucide-react";
 import { otpCodeSchema } from "@/app/shared/validation/formValidation";
 
@@ -84,7 +84,7 @@ export function OTPVerificationScreen({
       setStep("completed");
       onVerificationComplete();
     } catch (err) {
-      setError(AppError.fromUnknown(err).message);
+      setError(toFriendlyErrorMessage(err));
       showSupabaseError(err);
     } finally {
       setLoading(false);

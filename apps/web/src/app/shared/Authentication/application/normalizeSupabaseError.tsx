@@ -12,7 +12,7 @@ export type ErrorCategory =
   | "SERVER"
   | "UNKNOWN";
 
-export type ModalAction = "retry" | "login" | "close" |"signin";
+export type ModalAction = "retry" | "signIn" | "close";
 
 export interface NormalizedError {
   category: ErrorCategory;
@@ -29,14 +29,6 @@ function isRecord(value: unknown): value is AnyRecord {
   return typeof value === "object" && value !== null;
 }
 
-function getErrorMessage(error: unknown): string | undefined {
-  if (typeof error === "string") return error;
-  if (!isRecord(error)) return undefined;
-
-  const msg = error["message"];
-  return typeof msg === "string" ? msg : undefined;
-}
-
 function getErrorCode(error: unknown): string | undefined {
   // direct code
   if (typeof error === "string") {
@@ -49,20 +41,185 @@ function getErrorCode(error: unknown): string | undefined {
   return typeof code === "string" ? code : undefined;
 }
 
+function normalizeText(value: string | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function includesAny(value: string, terms: string[]): boolean {
+  return terms.some((term) => value.includes(term));
+}
+
 export function normalizeSupabaseError(
   error: AppError | AppErrorShape,
 ): NormalizedError {
   const appError = error instanceof AppError ? error : AppError.fromUnknown(error);
-  const message = getErrorMessage(appError.message);
+  const message = appError.message;
   const code = getErrorCode(appError.code);
+  const normalizedMessage = normalizeText(message);
+  const normalizedCode = normalizeText(code);
 
-  if (!error || (message && message.includes("Failed to fetch"))) {
+  if (
+    !error ||
+    includesAny(normalizedMessage, [
+      "failed to fetch",
+      "networkerror",
+      "authretryablefetcherror",
+      "request timed out",
+      "load failed",
+    ])
+  ) {
     return {
       category: "NETWORK",
       title: "Connection problem",
       message:
         "We couldn't reach the server. Check your internet connection and try again.",
       action: "retry",
+    };
+  }
+
+  if (
+    includesAny(normalizedCode, [
+      "otp_expired",
+      "otp_invalid",
+      "invalid_otp",
+      "invalid_token",
+      "token_expired",
+      "bad_jwt",
+    ]) ||
+    includesAny(normalizedMessage, [
+      "otp expired",
+      "otp has expired",
+      "token has expired",
+      "invalid otp",
+      "invalid token",
+      "token is invalid",
+      "email link is invalid",
+      "phone change token",
+    ])
+  ) {
+    return {
+      category: "AUTH",
+      title: "Verification code issue",
+      message: "The verification code is invalid or has expired. Request a new code and try again.",
+      action: "retry",
+    };
+  }
+
+  if (
+    includesAny(normalizedCode, [
+      "sms_send_failed",
+      "phone_provider_disabled",
+      "phone_not_confirmed",
+    ]) ||
+    includesAny(normalizedMessage, [
+      "sms",
+      "phone provider",
+      "unable to send",
+      "failed to send",
+    ])
+  ) {
+    return {
+      category: "AUTH",
+      title: "Couldn’t send code",
+      message: "We couldn’t send a verification code right now. Check the phone number and try again.",
+      action: "retry",
+    };
+  }
+
+  if (
+    includesAny(normalizedCode, [
+      "user_already_exists",
+      "email_exists",
+      "email_address_already_exists",
+      "phone_exists",
+      "phone_number_already_exists",
+      "identity_already_exists",
+      "23505",
+    ]) ||
+    includesAny(normalizedMessage, [
+      "already registered",
+      "already exists",
+      "duplicate key",
+      "unique constraint",
+      "duplicate phone",
+      "duplicate email",
+    ])
+  ) {
+    if (includesAny(normalizedMessage, ["phone", "phone_number"])) {
+      return {
+        category: "CONFLICT",
+        title: "Phone number already used",
+        message: "This phone number is already linked to an account. Use a different number or sign in.",
+        action: "signIn",
+      };
+    }
+
+    return {
+      category: "CONFLICT",
+      title: "Account already exists",
+      message: "These details are already linked to an account. Please sign in instead.",
+      action: "signIn",
+    };
+  }
+
+  if (
+    includesAny(normalizedCode, ["42501", "403", "rls"]) ||
+    includesAny(normalizedMessage, [
+      "row-level security",
+      "violates row-level security",
+      "permission denied",
+      "not authorized",
+      "forbidden",
+      "account suspended",
+      "account_suspended",
+    ])
+  ) {
+    return {
+      category: "FORBIDDEN",
+      title: "Action not allowed",
+      message: "You don’t have permission to complete this action.",
+      action: "close",
+    };
+  }
+
+  if (
+    includesAny(normalizedCode, [
+      "over_request_rate_limit",
+      "over_email_send_rate_limit",
+      "over_sms_send_rate_limit",
+      "too_many_requests",
+      "429",
+    ]) ||
+    includesAny(normalizedMessage, [
+      "rate limit",
+      "too many requests",
+      "too many attempts",
+      "for security purposes",
+    ])
+  ) {
+    return {
+      category: "RATE_LIMIT",
+      title: "Too many attempts",
+      message: "Please wait a moment before trying again.",
+      action: "retry",
+    };
+  }
+
+  if (
+    includesAny(normalizedMessage, [
+      "invalid phone",
+      "phone number is invalid",
+      "invalid email",
+      "email address is invalid",
+      "invalid input",
+      "invalid format",
+    ])
+  ) {
+    return {
+      category: "VALIDATION",
+      title: "Check your details",
+      message: "Some information doesn’t look right. Please check it and try again.",
+      action: "close",
     };
   }
 
@@ -73,7 +230,7 @@ export function normalizeSupabaseError(
         category: "AUTH",
         title: "Session expired",
         message: "Please sign in again.",
-        action: "login",
+        action: "signIn",
       };
     case 403:
       return {
@@ -100,8 +257,8 @@ export function normalizeSupabaseError(
     case 422:
       return {
         category: "VALIDATION",
-        title: "Invalid request",
-        message: "Some information was invalid. Please try again.",
+        title: "Check your details",
+        message: "Some information doesn’t look right. Please check it and try again.",
         action: "close",
       };
     case 500:
@@ -122,8 +279,8 @@ export function normalizeSupabaseError(
       return {
         category: "CONFLICT",
         title: "Already exists",
-        message: "This already exists. Try using a different value.",
-        action: "close",
+        message: "These details are already in use. Try using a different value.",
+        action: "signIn",
       };
 
     case "23503":
@@ -143,6 +300,7 @@ export function normalizeSupabaseError(
       };
 
     case "23514":
+    case "23000":
       return {
         category: "VALIDATION",
         title: "Invalid input",
@@ -169,20 +327,12 @@ export function normalizeSupabaseError(
     case "42501":
       return {
         category: "FORBIDDEN",
-        title: "Not allowed",
+        title: "Action not allowed",
         message: "You don’t have permission to do this.",
         action: "close",
       };
 
     // Auth / user errors
-    case "same_password":
-      return {
-        category: "VALIDATION",
-        title: "Choose a new password",
-        message: "Your new password must be different from your current one.",
-        action: "close",
-      };
-
     case "weak_password":
       return {
         category: "VALIDATION",
@@ -203,8 +353,8 @@ export function normalizeSupabaseError(
     case "invalid_credentials":
       return {
         category: "AUTH",
-        title: "Incorrect email or password",
-        message: "Please check your details and try again.",
+        title: "Couldn’t sign in",
+        message: "We couldn’t verify those details. Please check them and try again.",
         action: "retry",
       };
 
@@ -242,27 +392,44 @@ export function normalizeSupabaseError(
       };
 
     case "otp_expired":
+    case "otp_invalid":
+    case "invalid_otp":
+    case "invalid_token":
       return {
         category: "AUTH",
-        title: "Link expired",
-        message: "This link has expired. Request a new one to continue.",
+        title: "Verification code issue",
+        message: "The verification code is invalid or has expired. Request a new code and try again.",
         action: "retry",
       };
 
     case "over_request_rate_limit":
+    case "over_sms_send_rate_limit":
+    case "over_email_send_rate_limit":
       return {
         category: "RATE_LIMIT",
         title: "Too many attempts",
         message: "Please wait a moment before trying again.",
-        action: "close",
+        action: "retry",
       };
 
     case "user_already_exists":
+    case "email_exists":
+    case "email_address_already_exists":
+    case "identity_already_exists":
       return {
-        category: "VALIDATION",
-        title: "User already exists",
-        message: "This email is already registered. Please sign in instead.",
-        action: "signin",
+        category: "CONFLICT",
+        title: "Account already exists",
+        message: "These details are already linked to an account. Please sign in instead.",
+        action: "signIn",
+      };
+
+    case "phone_exists":
+    case "phone_number_already_exists":
+      return {
+        category: "CONFLICT",
+        title: "Phone number already used",
+        message: "This phone number is already linked to an account. Use a different number or sign in.",
+        action: "signIn",
       };
 
     default:
@@ -273,4 +440,8 @@ export function normalizeSupabaseError(
         action: "retry",
       };
   }
+}
+
+export function toFriendlyErrorMessage(error: unknown): string {
+  return normalizeSupabaseError(AppError.fromUnknown(error)).message;
 }

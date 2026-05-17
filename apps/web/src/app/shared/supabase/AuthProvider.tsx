@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import type { UserProfile } from "../Authentication/domain/authTypes";
+import { toFriendlyErrorMessage } from "../Authentication/application/normalizeSupabaseError";
 import { isProfileIncomplete } from "../Authentication/domain/profileCompletion";
 import { SupabaseAuthRepository } from "../data/SupabaseAuthRepository";
 import {
@@ -25,11 +26,7 @@ const authRepository = new SupabaseAuthRepository();
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function toErrorMessage(err: unknown) {
-  if (!err) return "Unknown error";
-  if (typeof err === "string") return err;
-  if (typeof err === "object" && "message" in (err as any))
-    return String((err as any).message);
-  return String(err);
+  return toFriendlyErrorMessage(err);
 }
 
 async function withTimeout<T>(promise: Promise<T>, ms = 10_000): Promise<T> {
@@ -93,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mountedRef.current) return;
 
         if (error) {
-          setError(error.message);
+          setError(toFriendlyErrorMessage(error));
           setUser(null);
           setProfile(null);
           return;

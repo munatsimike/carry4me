@@ -13,7 +13,7 @@ import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
-import { AppError } from "@/app/shared/domain/AppError";
+import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { phoneNumberSchema } from "@/app/shared/validation/formValidation";
@@ -69,7 +69,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
       setStep("otp-verification");
       onPhoneSubmitted();
     } catch (err) {
-      setError(AppError.fromUnknown(err).message);
+      setError(toFriendlyErrorMessage(err));
       showSupabaseError(err);
     } finally {
       setLoading(false);

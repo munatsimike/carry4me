@@ -1,4 +1,5 @@
 import { supabase } from "@/app/shared/supabase/client";
+import { requireData, throwIfSupabaseError } from "@/app/shared/domain/AppError";
 import type { CarryRequestEvent } from "../domain/CarryRequestEvent";
 import type { CarryRequestEventRepository } from "../domain/CarryRequestEvents";
 
@@ -6,7 +7,7 @@ export class SupabaseCarryRequestEventRepository implements CarryRequestEventRep
   async createCarryRequestEvent(
     requestEvent: CarryRequestEvent,
   ): Promise<string> {
-    const { data } = await supabase
+    const { data, error, status } = await supabase
       .from("carry_request_events")
       .insert({
         carry_request_id: requestEvent.carryRequestId,
@@ -15,9 +16,10 @@ export class SupabaseCarryRequestEventRepository implements CarryRequestEventRep
         metadata: requestEvent.metadata,
       })
       .select("id")
-      .single()
-      .throwOnError();
+      .single();
 
-    return data.id;
+    throwIfSupabaseError(error, status);
+
+    return requireData(data).id;
   }
 }
