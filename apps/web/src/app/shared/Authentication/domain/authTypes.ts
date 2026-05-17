@@ -19,7 +19,9 @@ export type UserProfile = {
   countryCode: string | null;
   city: string | null;
   phoneNumber: string | null;
+  phoneCountryCode?: string | null;
   phoneVerified?: boolean;
+  securityReviewRequired?: boolean;
   email: string;
 };
 

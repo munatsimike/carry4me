@@ -20,10 +20,20 @@ export class UpdateProfileUseCase {
 }
 
 function toUpdateProfileDto(profile: UserProfile): Partial<UpdateProfileDto> {
-  return {
+  const dto: Partial<UpdateProfileDto> = {
     full_name: profile.fullName ?? "",
     city: profile.city ?? "",
     country_code: profile.countryCode ?? "",
     phone_number: profile.phoneNumber ?? "",
   };
+
+  if (profile.phoneCountryCode !== undefined) {
+    dto.phone_country_code = profile.phoneCountryCode;
+  }
+
+  if (profile.securityReviewRequired !== undefined) {
+    dto.security_review_required = profile.securityReviewRequired;
+  }
+
+  return dto;
 }

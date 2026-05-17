@@ -5,6 +5,10 @@ import type { UpdateProfileDto } from "../Authentication/application/updateProfi
 import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
 import type { User } from "@supabase/supabase-js";
 import {
+  parsePhoneNumberFromString,
+  type CountryCode,
+} from "libphonenumber-js";
+import {
   AppError,
   requireData,
   throwIfSupabaseError,
@@ -13,6 +17,48 @@ import {
 const redirectUrl = import.meta.env.DEV
   ? "http://localhost:5173/new-password"
   : "https://www.carry4me.uk/new-password";
+
+const profileCountryToIsoCountry: Record<string, CountryCode> = {
+  GB: "GB",
+  UK: "GB",
+  "UNITED KINGDOM": "GB",
+  US: "US",
+  USA: "US",
+  "UNITED STATES": "US",
+  ZW: "ZW",
+  ZIMBABWE: "ZW",
+};
+
+function normalizeProfileCountry(country: string | null): CountryCode | null {
+  if (!country) return null;
+
+  const normalized = country.trim().toUpperCase();
+  return profileCountryToIsoCountry[normalized] ?? null;
+}
+
+function parsePhoneCountry(phoneNumber: string | null | undefined): {
+  phoneCountryCode: string | null;
+  isoCountry: CountryCode | null;
+} {
+  if (!phoneNumber) {
+    return { phoneCountryCode: null, isoCountry: null };
+  }
+
+  try {
+    const parsed = parsePhoneNumberFromString(phoneNumber);
+
+    if (!parsed) {
+      return { phoneCountryCode: null, isoCountry: null };
+    }
+
+    return {
+      phoneCountryCode: parsed.country ?? `+${parsed.countryCallingCode}`,
+      isoCountry: parsed.country ?? null,
+    };
+  } catch {
+    return { phoneCountryCode: null, isoCountry: null };
+  }
+}
 
 export class SupabaseAuthRepository implements AuthRepository {
   async newPassword(newPassword: string): Promise<string> {
@@ -68,6 +114,12 @@ export class SupabaseAuthRepository implements AuthRepository {
       });
     }
 
+    const { phoneCountryCode, isoCountry } = parsePhoneCountry(user.phone);
+    const profileIsoCountry = normalizeProfileCountry(appUser.profile.countryCode);
+    const securityReviewRequired = Boolean(
+      isoCountry && profileIsoCountry && isoCountry !== profileIsoCountry,
+    );
+
     const { data, error } = await supabase
       .from("profiles")
       .insert({
@@ -79,6 +131,8 @@ export class SupabaseAuthRepository implements AuthRepository {
         city: appUser.profile.city,
         email: appUser.profile.email,
         phone_verified: true,
+        phone_country_code: phoneCountryCode,
+        security_review_required: securityReviewRequired,
       })
       .select("id")
       .single();
@@ -133,7 +187,7 @@ export class SupabaseAuthRepository implements AuthRepository {
     const { data, status, error } = await supabase
       .from("profiles")
       .select(
-        "id,full_name,avatar_url,city,country_code,phone_number,phone_verified,email",
+        "id,full_name,avatar_url,city,country_code,phone_number,phone_country_code,phone_verified,security_review_required,email",
       )
       .eq("id", userId)
       .maybeSingle();
@@ -153,8 +207,10 @@ export class SupabaseAuthRepository implements AuthRepository {
       countryCode: data.country_code,
       city: data.city,
       phoneNumber: data.phone_number,
+      phoneCountryCode: data.phone_country_code,
       email: data.email,
       phoneVerified: data.phone_verified === true,
+      securityReviewRequired: data.security_review_required === true,
     };
   }
 
