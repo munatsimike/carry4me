@@ -13,16 +13,10 @@ import { dateFormat, type CardMode } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import User from "./User";
 import { format } from "date-fns";
-import type { Location } from "@/types/Ui";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "../Toast";
 import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
 
-function toLocation(country: string): Location {
-  if (country === "UK" || country.includes("United Kingdom")) return "UK";
-  if (country === "USA" || country.includes("United States")) return "USA";
-  return "Zimbabwe";
-}
 
 interface ListingCardProps<T extends Listing> {
   mode?: CardMode;
