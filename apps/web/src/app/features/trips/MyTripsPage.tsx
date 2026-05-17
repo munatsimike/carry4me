@@ -19,10 +19,11 @@ import { useNavigate } from "react-router-dom";
 import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { useDeleteTripMutation } from "@/app/hooks/mutations/useTripMutations";
+import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 
 export function MyTripsPage() {
   const isMobile = useMediaQuery();
-  const { user, profile } = useAuth();
+  const { user, profileIncomplete } = useAuth();
   const { openSignInModal } = useSignInModal();
   const navigate = useNavigate();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
@@ -54,8 +55,8 @@ export function MyTripsPage() {
       return;
     }
 
-    if (!profile) {
-      navigate("/complete-profile");
+    if (profileIncomplete) {
+      navigate(COMPLETE_PROFILE_PATH);
       return;
     }
 

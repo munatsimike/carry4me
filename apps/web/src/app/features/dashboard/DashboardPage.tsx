@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/supabase/AuthProvider";
+import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
@@ -53,7 +54,7 @@ export default function DashboardPage() {
   const [createTrip, setCreateTrip] = useState<boolean>(false);
   const navigate = useNavigate();
   const isMobile = useMediaQuery();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, profileIncomplete } = useAuth();
 
   const { data, error } = useDashboard(user?.id);
   useQueryErrorEffect(error, !!user?.id);
@@ -74,8 +75,8 @@ export default function DashboardPage() {
   const requirePhoneVerification = (action: "trip" | "parcel") => {
     if (!user?.id) return;
 
-    if (!profile) {
-      navigate("/complete-profile");
+    if (profileIncomplete) {
+      navigate(COMPLETE_PROFILE_PATH);
       return;
     }
     if (action === "trip") {

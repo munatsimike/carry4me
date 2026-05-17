@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import type { UserProfile } from "../Authentication/domain/authTypes";
+import { isProfileIncomplete } from "../Authentication/domain/profileCompletion";
 import { SupabaseAuthRepository } from "../data/SupabaseAuthRepository";
 import {
   createContext,
@@ -16,6 +17,7 @@ type AuthContextValue = {
   loading: boolean;
   error: string | null;
   profile: UserProfile | null;
+  profileIncomplete: boolean;
   refreshProfile: () => Promise<void>;
 };
 
@@ -157,7 +159,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, profile, refreshProfile }}
+      value={{
+        user,
+        loading,
+        error,
+        profile,
+        profileIncomplete: !!user && isProfileIncomplete(profile),
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

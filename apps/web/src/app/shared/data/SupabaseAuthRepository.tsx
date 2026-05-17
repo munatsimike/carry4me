@@ -14,10 +14,6 @@ import {
   throwIfSupabaseError,
 } from "@/app/shared/domain/AppError";
 
-const redirectUrl = import.meta.env.DEV
-  ? "http://localhost:5173/new-password"
-  : "https://www.carry4me.uk/new-password";
-
 const profileCountryToIsoCountry: Record<string, CountryCode> = {
   GB: "GB",
   UK: "GB",
@@ -61,41 +57,6 @@ function parsePhoneCountry(phoneNumber: string | null | undefined): {
 }
 
 export class SupabaseAuthRepository implements AuthRepository {
-  async newPassword(newPassword: string): Promise<string> {
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    throwIfSupabaseError(sessionError);
-
-    if (!session) {
-      throw new AppError({
-        code: "NO_SESSION",
-        message:
-          "No recovery session found. Open the reset link from your email first.",
-      });
-    }
-
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-
-    throwIfSupabaseError(error);
-
-    return "success";
-  }
-
-  async resetPassword(email: string): Promise<string> {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl,
-    });
-
-    throwIfSupabaseError(error);
-
-    return "success";
-  }
-
   async updateAuthDetails(updateAuthDto: UpdateAuthDto): Promise<string> {
     const { data, error } = await supabase.auth.updateUser(updateAuthDto);
     throwIfSupabaseError(error);
@@ -114,6 +75,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       });
     }
 
+    const profilePhoneNumber = user.phone ?? appUser.profile.phoneNumber;
     const { phoneCountryCode, isoCountry } = parsePhoneCountry(user.phone);
     const profileIsoCountry = normalizeProfileCountry(appUser.profile.countryCode);
     const securityReviewRequired = Boolean(
@@ -122,18 +84,18 @@ export class SupabaseAuthRepository implements AuthRepository {
 
     const { data, error } = await supabase
       .from("profiles")
-      .insert({
+      .upsert({
         id: user.id,
         full_name: appUser.profile.fullName,
         avatar_url: appUser.profile.avatarUrl,
         country_code: appUser.profile.countryCode,
-        phone_number: user.phone,
+        phone_number: profilePhoneNumber,
         city: appUser.profile.city,
         email: appUser.profile.email,
         phone_verified: true,
         phone_country_code: phoneCountryCode,
         security_review_required: securityReviewRequired,
-      })
+      }, { onConflict: "id" })
       .select("id")
       .single();
 

@@ -8,26 +8,23 @@ import { useEffect } from "react";
 import { useToast } from "@/app/components/Toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CustomModal from "@/app/components/CustomModal";
-import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { openSignInModal } = useSignInModal();
-  const isPassReset = searchParams.get("reset") === "success";
   const isSignup = searchParams.get("signup") === "success";
   const navigate = useNavigate();
-  const isResetLink = searchParams.get("reset-sent")?.trim() === "success";
-  const { user, loading } = useAuth();
+  const { user, loading, profileIncomplete } = useAuth();
 
   useEffect(() => {
     if (user && !loading) {
-      navigate("/dashboard");
+      navigate(profileIncomplete ? COMPLETE_PROFILE_PATH : "/dashboard");
     }
-  }, [user, navigate]);
+  }, [user, loading, profileIncomplete, navigate]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("redirectToast");
@@ -45,17 +42,6 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  useEffect(() => {
-    if (!isResetLink) return;
-    const timer = setTimeout(() => {
-      toast("Password reset link sent. Check your email.", {
-        variant: "success",
-      });
-      handleClose("reset-sent");
-    }, 700);
-    return () => clearTimeout(timer);
-  }, [isResetLink]);
-
   const handleClose = (param: string) => {
     const next = new URLSearchParams(searchParams);
     next.delete(param); // THIS is what matters
@@ -69,27 +55,17 @@ export default function HomePage() {
       <Benefits items={benefits} />
       <FaqSection items={questions} />
       <AnimatePresence>
-        {isPassReset && (
-          <Modal
-            onClose={() => handleClose("reset")}
-            onSignIn={() => openSignInModal()}
-          />
-        )}
-
         {isSignup && <Modal onClose={() => handleClose("signup")} />}
       </AnimatePresence>
     </>
   );
 }
 
-type Param = "reset" | "signup";
 type ModalProps = {
-  onSignIn?: () => void;
   onClose: () => void;
-  param?: Param;
 };
 
-function Modal({ onSignIn, onClose, param = "signup" }: ModalProps) {
+function Modal({ onClose }: ModalProps) {
   return (
     <CustomModal onClose={onClose} width="lg">
       <div className="flex flex-col gap-3 p-4">
@@ -99,37 +75,22 @@ function Modal({ onSignIn, onClose, param = "signup" }: ModalProps) {
           className="font-medium"
           textVariant="primary"
         >
-          {param === "signup"
-            ? "Account created successfully"
-            : "Password updated successfully"}
+          Account created successfully
         </CustomText>
 
         <CustomText as="p" className="mb-3" textVariant="secondary">
-          {param === "signup"
-            ? "Activate your account by clicking the link in the email we sent you and start using Carry4Me!"
-            : "Your password was reset successfully"}
+          Activate your account by clicking the link in the email we sent you
+          and start using Carry4Me!
         </CustomText>
 
         <div className="flex justify-end gap-4">
           <Button
             onClick={onClose}
-            variant={param === "signup" ? "primary" : "outline"}
+            variant="primary"
             size="sm"
           >
             Close
           </Button>
-          {onSignIn && (
-            <Button
-              onClick={() => {
-                onSignIn?.();
-                onClose();
-              }}
-              variant="primary"
-              size="sm"
-            >
-              Sign In
-            </Button>
-          )}
         </div>
       </div>
     </CustomModal>

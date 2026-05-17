@@ -5,6 +5,8 @@ import CustomText, { type TextVariant } from "@/components/ui/CustomText";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
+import { useNavigate } from "react-router-dom";
+import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 
 type SendRequestBtnProps<T> = {
   listingType?: ListingType;
@@ -25,8 +27,9 @@ export default function SendRequestBtn<T>({
   iconColorVariant = "onDark",
   isActive = false,
 }: SendRequestBtnProps<T>) {
-  const { user } = useAuth();
+  const { user, profileIncomplete } = useAuth();
   const { openSignInModal } = useSignInModal();
+  const navigate = useNavigate();
   const page = listingType === "trip" ? "/travelers" : "/parcels";
   const base = "flex items-center w-full mb-0";
 
@@ -37,6 +40,11 @@ export default function SendRequestBtn<T>({
         onClick={() => {
           if (!user?.id) {
             openSignInModal({ redirectTo: page });
+            return;
+          }
+
+          if (profileIncomplete) {
+            navigate(COMPLETE_PROFILE_PATH);
             return;
           }
 

@@ -20,13 +20,14 @@ import { useNavigate } from "react-router-dom";
 import { useMyParcels } from "@/app/hooks/queries/useParcelsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { useDeleteParcelMutation } from "@/app/hooks/mutations/useParcelMutations";
+import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 
 export function MyParcelsPage() {
   const [editParcel, setFormValues] = useState<FormValues | null>(null);
   const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
     null,
   );
-  const { user, profile } = useAuth();
+  const { user, profileIncomplete } = useAuth();
   const { openSignInModal } = useSignInModal();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -58,8 +59,8 @@ export function MyParcelsPage() {
       return;
     }
 
-    if (!profile) {
-      navigate("/complete-profile");
+    if (profileIncomplete) {
+      navigate(COMPLETE_PROFILE_PATH);
       return;
     }
 

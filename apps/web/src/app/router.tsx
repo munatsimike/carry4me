@@ -10,8 +10,6 @@ import { MyFavouritesPage } from "./features/my favourites/UI/MyFavouritesPage";
 import ProfilePage from "./shared/Authentication/profile/Profile";
 import { MyParcelsPage } from "./features/parcels/MyParcelsPage";
 import { MyTripsPage } from "./features/trips/MyTripsPage";
-import ResetPassword from "./shared/Authentication/UI/ResetPassword";
-import NewPassword from "./shared/Authentication/UI/HandleNewPassword";
 import MobileTripShell from "./features/trips/ui/MobileTripShell";
 import MobileParcelShaell from "./features/parcels/ui/MobileParcelShell";
 import { RootLayout } from "./shared/Authentication/application/RootLayout";
@@ -36,8 +34,6 @@ export const router = createBrowserRouter([
       { path: "favourites", element: <MyFavouritesPage /> },
       { path: "my/trips", element: <MyTripsPage /> },
       { path: "my/parcels", element: <MyParcelsPage /> },
-      { path: "update-password", element: <ResetPassword /> },
-      { path: "new-password", element: <NewPassword /> },
       { path: "create-trip", element: <MobileTripShell /> },
       { path: "create-parcel", element: <MobileParcelShaell /> },
     ],

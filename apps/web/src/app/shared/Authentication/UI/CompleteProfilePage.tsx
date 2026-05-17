@@ -31,6 +31,7 @@ import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import MobileForm from "@/app/features/dashboard/components/MobileForm";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import { useLocations } from "@/app/hookes/useLocation";
+import { useAuth } from "../../supabase/AuthProvider";
 
 export const UserDetailsScema = z
   .object({
@@ -75,6 +76,7 @@ const item = {
 export default function CompleteProfile() {
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { openSignInModal } = useSignInModal();
   const isMobile = useMediaQuery();
@@ -96,8 +98,8 @@ export default function CompleteProfile() {
     defaultValues: {
       firstName: "",
       lastName: "",
-      emailAddress: "",
-      phoneNumber: "",
+      emailAddress: user?.email ?? "",
+      phoneNumber: user?.phone ?? "",
       country: "",
       city: "",
       password: "",
@@ -128,6 +130,7 @@ export default function CompleteProfile() {
 
     try {
       await signupUseCase.execute(newUser);
+      await refreshProfile();
       navigate("/?signup=success", {
         replace: true,
       });
@@ -237,7 +240,8 @@ function FormContents({ formProps }: SigupFormProps) {
           Complete your profile
         </CustomText>
         <CustomText as="p" textVariant="label" textSize="sm">
-          Complete your profile to start sending and receiving parcels.
+          You are almost there. Add a few details so we can help you send and
+          carry parcels safely.
         </CustomText>
       </span>
       <LineDivider heightClass="my-0" />

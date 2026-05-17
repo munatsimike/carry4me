@@ -35,11 +35,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { getParcelUseCase } from "@/app/lib/useCases";
 import type { ListingPageParams } from "@/types/Pagination";
+import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 
 const PAGE_SIZE = 9;
 
 export default function TravelersPage() {
-  const { user, profile } = useAuth();
+  const { user, profileIncomplete } = useAuth();
   const { openSignInModal } = useSignInModal();
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
@@ -215,8 +216,8 @@ export default function TravelersPage() {
       return;
     }
 
-    if (!profile) {
-      navigate("/complete-profile");
+    if (profileIncomplete) {
+      navigate(COMPLETE_PROFILE_PATH);
       return;
     }
 

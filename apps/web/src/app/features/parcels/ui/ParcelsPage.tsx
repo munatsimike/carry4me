@@ -35,13 +35,14 @@ import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
 import type { ListingPageParams } from "@/types/Pagination";
+import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
 
 const PAGE_SIZE = 9;
 
 export default function ParcelsPage() {
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
-  const { user, profile } = useAuth();
+  const { user, profileIncomplete } = useAuth();
   const { openSignInModal } = useSignInModal();
 
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
@@ -208,8 +209,8 @@ export default function ParcelsPage() {
       return;
     }
 
-    if (!profile) {
-      navigate("/complete-profile");
+    if (profileIncomplete) {
+      navigate(COMPLETE_PROFILE_PATH);
       return;
     }
 
