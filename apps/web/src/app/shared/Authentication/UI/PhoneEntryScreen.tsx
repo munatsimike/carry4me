@@ -108,7 +108,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
         className="w-full flex flex-col gap-5"
       >
         <div className="flex justify-center">
-          <div className="flex flex-col gap-2">
+          <div className="flex w-[min(100%,300px)] flex-col gap-2 sm:w-[320px]">
             <CustomText as="label" textVariant="label" textSize="xs">
               Phone number
             </CustomText>
