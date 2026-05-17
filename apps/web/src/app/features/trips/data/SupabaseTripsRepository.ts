@@ -9,6 +9,21 @@ import {
   getFavListingIds,
 } from "@/app/shared/Authentication/domain/SupabaseHelper";
 import type { TripDto } from "../application/TripDto";
+import {
+  emptyPaginatedResult,
+  type ListingPageParams,
+  type PaginatedResult,
+} from "@/types/Pagination";
+
+type BrowseQuery = {
+  ilike(column: string, pattern: string): unknown;
+  eq(column: string, value: string | number): unknown;
+  gte(column: string, value: number): unknown;
+  lte(column: string, value: number): unknown;
+  in(column: string, values: string[]): unknown;
+  order(column: string, options: { ascending: boolean }): unknown;
+  range(from: number, to: number): unknown;
+};
 
 export class SupabaseTripsRepository implements TripsRepository {
   async editTrip(editTrip: Partial<TripDto>): Promise<string> {
@@ -77,9 +92,32 @@ export class SupabaseTripsRepository implements TripsRepository {
   async listTrips(
     userId?: string,
     tripId?: string,
+    shouldFilter?: boolean,
+  ): Promise<TripListing[]>;
+  async listTrips(
+    userId: string | undefined,
+    params: ListingPageParams,
+  ): Promise<PaginatedResult<TripListing>>;
+  async listTrips(
+    userId?: string,
+    tripIdOrParams?: string | ListingPageParams,
     shouldFilter: boolean = false,
-  ): Promise<TripListing[]> {
-    let query = supabase.from("trips").select(`
+  ): Promise<TripListing[] | PaginatedResult<TripListing>> {
+    const params =
+      typeof tripIdOrParams === "object" ? tripIdOrParams : undefined;
+    const tripId =
+      typeof tripIdOrParams === "string" ? tripIdOrParams : undefined;
+
+    const categoryTripIds = await this.getTripIdsForCategories(
+      params?.filters.goodsCategories ?? [],
+    );
+
+    if (params && categoryTripIds && categoryTripIds.length === 0) {
+      return emptyPaginatedResult<TripListing>(params.page, params.pageSize);
+    }
+
+    const query = supabase.from("trips").select(
+      `
       *,
       traveler:profiles(id, full_name, avatar_url),
       trip_accepted_categories(
@@ -89,7 +127,9 @@ export class SupabaseTripsRepository implements TripsRepository {
           name
         )
       )
-    `);
+    `,
+      params ? { count: "exact" } : undefined,
+    );
 
     if (tripId) {
       query.eq("id", tripId);
@@ -100,14 +140,32 @@ export class SupabaseTripsRepository implements TripsRepository {
     }
     query.eq("status", TRIPSTATUSES.ACTIVE);
 
-    const { data, error, status } = await query;
+    if (params) {
+      this.applyTripBrowseFilters(query, params, categoryTripIds);
+    }
+
+    const { data, error, status, count } = await query;
 
     throwIfSupabaseError(error, status);
 
     const favTripIds = await getFavListingIds(userId ?? "", "trip_id");
     const favTripIdSet = new Set(favTripIds);
+    const items = (data ?? []).map((row) => mapTripRowToTrip(row, favTripIdSet));
 
-    return (data ?? []).map((row) => mapTripRowToTrip(row, favTripIdSet));
+    if (params) {
+      const total = count ?? 0;
+
+      return {
+        items,
+        total,
+        page: params.page,
+        pageSize: params.pageSize,
+        hasNextPage: params.page * params.pageSize < total,
+        hasPreviousPage: params.page > 1,
+      };
+    }
+
+    return items;
   }
 
   async createTrip(userId: string, input: CreateTripListing): Promise<string> {
@@ -131,5 +189,78 @@ export class SupabaseTripsRepository implements TripsRepository {
     throwIfSupabaseError(error, status);
 
     return requireData(data).id;
+  }
+
+  private async getTripIdsForCategories(
+    categories: string[],
+  ): Promise<string[] | null> {
+    if (categories.length === 0) return null;
+
+    const { data, error, status } = await supabase
+      .from("trip_accepted_categories")
+      .select("trip_id, category:goods_categories!inner(name)")
+      .in("category.name", categories);
+
+    throwIfSupabaseError(error, status);
+
+    return [...new Set((data ?? []).map((row) => row.trip_id))];
+  }
+
+  private applyTripBrowseFilters(
+    query: BrowseQuery,
+    params: ListingPageParams,
+    categoryTripIds: string[] | null,
+  ) {
+    const { filters, page, pageSize } = params;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    if (filters.searchCountry.trim()) {
+      query.ilike("origin_country", filters.searchCountry.trim());
+    }
+
+    if (filters.searchCity.trim()) {
+      query.ilike("origin_city", filters.searchCity.trim());
+    }
+
+    if (filters.departDate) {
+      query.eq("depart_date", filters.departDate);
+    }
+
+    if (filters.priceRange.min > 0) {
+      query.gte("price_per_kg", filters.priceRange.min);
+    }
+
+    if (filters.priceRange.max > 0) {
+      query.lte("price_per_kg", filters.priceRange.max);
+    }
+
+    if (filters.weightRange.max > 0) {
+      query.gte("capacity_kg", filters.weightRange.min);
+      query.lte("capacity_kg", filters.weightRange.max);
+    }
+
+    if (categoryTripIds) {
+      query.in("id", categoryTripIds);
+    }
+
+    switch (filters.sortOption) {
+      case "date-asc":
+        query.order("depart_date", { ascending: true });
+        break;
+      case "price-asc":
+        query.order("price_per_kg", { ascending: true });
+        break;
+      case "price-desc":
+        query.order("price_per_kg", { ascending: false });
+        break;
+      case "weight-desc":
+        query.order("capacity_kg", { ascending: false });
+        break;
+      default:
+        query.order("depart_date", { ascending: true });
+    }
+
+    query.range(from, to);
   }
 }

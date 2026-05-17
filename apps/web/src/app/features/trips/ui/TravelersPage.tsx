@@ -1,6 +1,6 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import Travelers from "./Travelers";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import PageSection from "@/app/components/PageSection";
@@ -12,19 +12,13 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { useToast } from "@/app/components/Toast";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { FilterOptionsRow, sortTrips } from "@/app/components/FilterOptionsRow";
+import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
-import {
-  filterByCountryCity,
-  filterByDepartDate,
-  filterByGoodsCategory,
-  filterByPriceRange,
-  filterByWeightRange,
-} from "@/app/util/filters";
 import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
+import PaginationControls from "@/app/components/PaginationControls";
 import CreateTripModal from "./CreateTripModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
@@ -40,21 +34,15 @@ import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { getParcelUseCase } from "@/app/lib/useCases";
+import type { ListingPageParams } from "@/types/Pagination";
+
+const PAGE_SIZE = 9;
 
 export default function TravelersPage() {
   const { user, profile } = useAuth();
   const { openSignInModal } = useSignInModal();
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
-
-  const {
-    data: tripList = [],
-    isFetched,
-    error,
-  } = useTripsList(user?.id);
-  useQueryErrorEffect(error);
-
-  const toggleTripLike = useToggleTripListLike(user?.id);
 
   const [selectedTrip, setTrip] = useState<TripListing | null>(null);
   const [parcels, setParcel] = useState<ParcelListing[]>([]);
@@ -85,38 +73,47 @@ export default function TravelersPage() {
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [tripModalState, setTripModalState] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
 
-  const displayedTrips = useMemo(() => {
-    let result = tripList;
+  const listingParams = useMemo<ListingPageParams>(() => ({
+    page,
+    pageSize: PAGE_SIZE,
+    filters: {
+      searchCountry,
+      searchCity,
+      departDate: filterByDate,
+      priceRange,
+      weightRange,
+      goodsCategories: goodsCategory,
+      sortOption,
+    },
+  }), [
+    page,
+    searchCity,
+    searchCountry,
+    filterByDate,
+    priceRange,
+    weightRange,
+    goodsCategory,
+    sortOption,
+  ]);
 
-    if (isSearchActive) {
-      result = filterByCountryCity(searchCity, searchCountry, result);
-    }
+  const {
+    data: tripPage,
+    isFetched,
+    error,
+    isFetching,
+  } = useTripsList(user?.id, listingParams);
+  useQueryErrorEffect(error);
 
-    if (filterByDate) {
-      result = filterByDepartDate(filterByDate, result);
-    }
+  const tripList = tripPage?.items ?? [];
+  const displayedTrips = tripList;
+  const totalTrips = tripPage?.total ?? 0;
+  const toggleTripLike = useToggleTripListLike(user?.id, listingParams);
 
-    if (priceRange.max > 0 || priceRange.min > 0) {
-      result = filterByPriceRange(priceRange, result);
-    }
-
-    if (weightRange.max > 0 || weightRange.min > 0) {
-      result = filterByWeightRange(weightRange, result);
-    }
-
-    if (goodsCategory.length > 0) {
-      result = filterByGoodsCategory(goodsCategory, result);
-    }
-
-    if (sortOption) {
-      result = sortTrips(result, sortOption);
-    }
-
-    return result;
+  useEffect(() => {
+    setPage(1);
   }, [
-    tripList,
-    isSearchActive,
     searchCity,
     searchCountry,
     filterByDate,
@@ -267,7 +264,7 @@ export default function TravelersPage() {
         </AnimatePresence>
         <SearchResults
           isSearchActive={isSearchActive}
-          searchResults={displayedTrips.length}
+          searchResults={totalTrips}
           onClick={() => setClearResults(true)}
         />
       </PageSection>
@@ -277,7 +274,13 @@ export default function TravelersPage() {
             <CreateTripModal setModalState={() => setTripModalState(false)} />
           )}
         </AnimatePresence>
-        {tripList.length === 0 && isFetched && (
+        {isFetching && isFetched && (
+          <CustomText textVariant="secondary" textSize="sm">
+            Updating trips...
+          </CustomText>
+        )}
+
+        {displayedTrips.length === 0 && isFetched && !hasFilter && !isSearchActive && (
           <EmptyState
             title="No trips available"
             description="No trips found. Post your trip to start receiving parcel requests from senders."
@@ -297,7 +300,7 @@ export default function TravelersPage() {
           />
         )}
 
-        {tripList && (
+        {displayedTrips.length > 0 && (
           <Travelers
             trips={displayedTrips}
             onClick={handleRequest}
@@ -305,10 +308,23 @@ export default function TravelersPage() {
           />
         )}
 
-        {hasFilter && displayedTrips.length === 0 && (
+        {(hasFilter || isSearchActive) && displayedTrips.length === 0 && isFetched && (
           <EmptyState
             title="No matching travelers"
             description="Try adjusting your search or changing filters. Clear filters or search to see all travelers."
+          />
+        )}
+
+        {tripPage && displayedTrips.length > 0 && (
+          <PaginationControls
+            page={tripPage.page}
+            total={tripPage.total}
+            pageSize={tripPage.pageSize}
+            hasPreviousPage={tripPage.hasPreviousPage}
+            hasNextPage={tripPage.hasNextPage}
+            isFetching={isFetching}
+            onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+            onNext={() => setPage((current) => current + 1)}
           />
         )}
 

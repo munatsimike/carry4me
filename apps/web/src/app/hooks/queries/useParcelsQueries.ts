@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/app/lib/queryKeys";
 import {
   getParcelsUseCase,
@@ -6,11 +6,16 @@ import {
   myParcelsUseCase,
 } from "@/app/lib/useCases";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
+import type { ListingPageParams, PaginatedResult } from "@/types/Pagination";
 
-export function useParcelsList(userId?: string) {
+export function useParcelsList(
+  userId: string | undefined,
+  params: ListingPageParams,
+) {
   return useQuery({
-    queryKey: queryKeys.parcels.list(userId),
-    queryFn: () => getParcelsUseCase.execute(userId),
+    queryKey: queryKeys.parcels.browse(userId, params),
+    queryFn: () => getParcelsUseCase.executePaged(userId, params),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -30,15 +35,26 @@ export function useUserParcels(userId: string | undefined) {
   });
 }
 
-export function useToggleParcelListLike(userId?: string) {
+export function useToggleParcelListLike(
+  userId: string | undefined,
+  params: ListingPageParams,
+) {
   const queryClient = useQueryClient();
-  const queryKey = queryKeys.parcels.list(userId);
+  const queryKey = queryKeys.parcels.browse(userId, params);
 
   return (listingId: string) => {
-    queryClient.setQueryData<ParcelListing[]>(queryKey, (prev) =>
-      (prev ?? []).map((item) =>
-        item.id === listingId ? { ...item, isLiked: !item.isLiked } : item,
-      ),
+    queryClient.setQueryData<PaginatedResult<ParcelListing>>(
+      queryKey,
+      (prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          items: prev.items.map((item) =>
+            item.id === listingId ? { ...item, isLiked: !item.isLiked } : item,
+          ),
+        };
+      },
     );
   };
 }

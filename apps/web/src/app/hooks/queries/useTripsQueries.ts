@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/app/lib/queryKeys";
 import {
   getTripsUseCase,
@@ -6,11 +6,13 @@ import {
   myTripsUseCase,
 } from "@/app/lib/useCases";
 import type { TripListing } from "@/app/features/trips/domain/Trip";
+import type { ListingPageParams, PaginatedResult } from "@/types/Pagination";
 
-export function useTripsList(userId?: string) {
+export function useTripsList(userId: string | undefined, params: ListingPageParams) {
   return useQuery({
-    queryKey: queryKeys.trips.list(userId),
-    queryFn: () => getTripsUseCase.execute(userId),
+    queryKey: queryKeys.trips.browse(userId, params),
+    queryFn: () => getTripsUseCase.executePaged(userId, params),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -30,15 +32,23 @@ export function useUserTrips(userId: string | undefined) {
   });
 }
 
-export function useToggleTripListLike(userId?: string) {
+export function useToggleTripListLike(
+  userId: string | undefined,
+  params: ListingPageParams,
+) {
   const queryClient = useQueryClient();
-  const queryKey = queryKeys.trips.list(userId);
+  const queryKey = queryKeys.trips.browse(userId, params);
 
   return (listingId: string) => {
-    queryClient.setQueryData<TripListing[]>(queryKey, (prev) =>
-      (prev ?? []).map((item) =>
-        item.id === listingId ? { ...item, isLiked: !item.isLiked } : item,
-      ),
-    );
+    queryClient.setQueryData<PaginatedResult<TripListing>>(queryKey, (prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        items: prev.items.map((item) =>
+          item.id === listingId ? { ...item, isLiked: !item.isLiked } : item,
+        ),
+      };
+    });
   };
 }

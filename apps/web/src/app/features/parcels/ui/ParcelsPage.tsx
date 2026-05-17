@@ -1,6 +1,6 @@
 import CustomModal from "@/app/components/CustomModal";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Parcels from "./Parcels";
 import Search, { SearchResults } from "@/app/components/Search";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
@@ -20,18 +20,13 @@ import PageSection from "@/app/components/PageSection";
 import { AnimatePresence, motion } from "framer-motion";
 import ConfirmRequest from "@/app/components/ConfirmRequest";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { FilterOptionsRow, sortTrips } from "@/app/components/FilterOptionsRow";
+import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
-import {
-  filterByCountryCity,
-  filterByGoodsCategory,
-  filterByPriceRange,
-  filterByWeightRange,
-} from "@/app/util/filters";
 import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
 import EmptyState from "@/app/components/EmptyState";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
+import PaginationControls from "@/app/components/PaginationControls";
 import CreateParcelModal from "./CreateParcelModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
@@ -39,20 +34,15 @@ import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScro
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
+import type { ListingPageParams } from "@/types/Pagination";
+
+const PAGE_SIZE = 9;
 
 export default function ParcelsPage() {
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
   const { openSignInModal } = useSignInModal();
-
-  const {
-    data: parcelsList = [],
-    isFetched,
-    error,
-  } = useParcelsList(user?.id);
-  useQueryErrorEffect(error);
-  const toggleParcelLike = useToggleParcelListLike(user?.id);
 
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
   const [modalState, setModalState] = useState<boolean>(false);
@@ -79,41 +69,50 @@ export default function ParcelsPage() {
     min: 0,
     max: 0,
   });
-  const [filterByDate, setFilterByDate] = useState<string>("");
+  const [, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
   const [parcelModalState, setParcelModalState] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
 
-  const displayedParcels = useMemo(() => {
-    let result = parcelsList;
-
-    if (isSearchActive) {
-      result = filterByCountryCity(searchCity, searchCountry, result);
-    }
-
-    if (priceRange.max > 0 || priceRange.min > 0) {
-      result = filterByPriceRange(priceRange, result);
-    }
-
-    if (weightRange.max > 0 || weightRange.min > 0) {
-      result = filterByWeightRange(weightRange, result);
-    }
-
-    if (goodsCategory.length > 0) {
-      result = filterByGoodsCategory(goodsCategory, result);
-    }
-
-    if (sortOption) {
-      result = sortTrips(result, sortOption);
-    }
-
-    return result;
-  }, [
-    parcelsList,
-    isSearchActive,
+  const listingParams = useMemo<ListingPageParams>(() => ({
+    page,
+    pageSize: PAGE_SIZE,
+    filters: {
+      searchCountry,
+      searchCity,
+      priceRange,
+      weightRange,
+      goodsCategories: goodsCategory,
+      sortOption,
+    },
+  }), [
+    page,
     searchCity,
     searchCountry,
-    filterByDate,
+    priceRange,
+    weightRange,
+    goodsCategory,
+    sortOption,
+  ]);
+  const {
+    data: parcelPage,
+    isFetched,
+    error,
+    isFetching,
+  } = useParcelsList(user?.id, listingParams);
+  useQueryErrorEffect(error);
+
+  const parcelsList = parcelPage?.items ?? [];
+  const displayedParcels = parcelsList;
+  const totalParcels = parcelPage?.total ?? 0;
+  const toggleParcelLike = useToggleParcelListLike(user?.id, listingParams);
+
+  useEffect(() => {
+    setPage(1);
+  }, [
+    searchCity,
+    searchCountry,
     priceRange,
     weightRange,
     goodsCategory,
@@ -258,7 +257,7 @@ export default function ParcelsPage() {
 
         <SearchResults
           isSearchActive={isSearchActive}
-          searchResults={displayedParcels.length}
+          searchResults={totalParcels}
           onClick={() => setClearResults(true)}
         />
       </PageSection>
@@ -270,20 +269,26 @@ export default function ParcelsPage() {
             />
           )}
         </AnimatePresence>
-        {parcelsList.length > 0 && (
+        {isFetching && isFetched && (
+          <CustomText textVariant="secondary" textSize="sm">
+            Updating parcels...
+          </CustomText>
+        )}
+
+        {displayedParcels.length > 0 && (
           <Parcels
             parcels={displayedParcels}
             onClick={handleRequest}
             toggleLike={handleLikeUpdate}
           />
         )}
-        {hasFilter && displayedParcels.length === 0 && (
+        {(hasFilter || isSearchActive) && displayedParcels.length === 0 && isFetched && (
           <EmptyState
             title="No matching parcels"
             description="Try adjusting your search or changing filters. Clear filters or search to see all parcels."
           />
         )}
-        {displayedParcels.length === 0 && isFetched && !hasFilter && (
+        {displayedParcels.length === 0 && isFetched && !hasFilter && !isSearchActive && (
           <EmptyState
             title="No parcels available"
             description="No parcels found. Post your parcels to start receiving trip requests from travelers."
@@ -300,6 +305,18 @@ export default function ParcelsPage() {
                 </CustomText>
               </Button>
             }
+          />
+        )}
+        {parcelPage && displayedParcels.length > 0 && (
+          <PaginationControls
+            page={parcelPage.page}
+            total={parcelPage.total}
+            pageSize={parcelPage.pageSize}
+            hasPreviousPage={parcelPage.hasPreviousPage}
+            hasNextPage={parcelPage.hasNextPage}
+            isFetching={isFetching}
+            onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+            onNext={() => setPage((current) => current + 1)}
           />
         )}
         <Link to="/create-parcel?mode=create">

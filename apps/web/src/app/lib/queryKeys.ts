@@ -6,6 +6,8 @@ export const queryKeys = {
     all: ["trips"] as const,
     list: (userId?: string) =>
       [...queryKeys.trips.all, "list", userId ?? "guest"] as const,
+    browse: (userId: string | undefined, params: unknown) =>
+      [...queryKeys.trips.all, "browse", userId ?? "guest", params] as const,
     mine: (userId: string) => [...queryKeys.trips.all, "mine", userId] as const,
     byUser: (userId: string) =>
       [...queryKeys.trips.all, "byUser", userId] as const,
@@ -14,6 +16,8 @@ export const queryKeys = {
     all: ["parcels"] as const,
     list: (userId?: string) =>
       [...queryKeys.parcels.all, "list", userId ?? "guest"] as const,
+    browse: (userId: string | undefined, params: unknown) =>
+      [...queryKeys.parcels.all, "browse", userId ?? "guest", params] as const,
     mine: (userId: string) =>
       [...queryKeys.parcels.all, "mine", userId] as const,
     byUser: (userId: string) =>
