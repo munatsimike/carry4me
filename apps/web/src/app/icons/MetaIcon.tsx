@@ -20,6 +20,7 @@ import TravelerIcon from "@/assets/travelerIcon.svg?react";
 import AddIcon from "@/assets/plus-icon.svg?react";
 import ZimFlag from "@/assets/zim-flag.svg?react";
 import UkFlag from "@/assets/uk-flag.svg?react";
+import NlFlag from "@/assets/nl-flag.svg?react";
 import ShakingHands from "@/assets/shaking-hands.svg?react";
 import ClockFilled from "@/assets/clock-filled.svg?react";
 import UserIconOutlined from "@/assets/user-icon-outlined.svg?react";
@@ -67,5 +68,6 @@ export const META_ICONS = {
   uSFlagIcon: USFlagIcon,
   heartfilled: HeartFilled,
   eyeOff: EyeOffIcon,
-  eyeOn: EyeOnIcon
+  eyeOn: EyeOnIcon,
+  nlFlag: NlFlag,
 }

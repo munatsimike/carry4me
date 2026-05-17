@@ -7,6 +7,7 @@ import {
   ACCOUNT_STATUSES,
   type AccountStatus,
 } from "../Authentication/domain/accountStatus";
+import { isProfileIncomplete } from "../Authentication/domain/profileCompletion";
 import { supabase } from "@/app/shared/supabase/client";
 import type { UpdateProfileDto } from "../Authentication/application/updateProfileDTO";
 import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
@@ -97,6 +98,57 @@ function toAccountStatus(value: unknown): AccountStatus {
   }
 
   return ACCOUNT_STATUSES.ACTIVE;
+}
+
+function isMissingProfileCountryColumn(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as { code?: unknown; message?: unknown };
+  const message =
+    typeof candidate.message === "string"
+      ? candidate.message.toLowerCase()
+      : "";
+
+  return (
+    candidate.code === "PGRST204" ||
+    (message.includes("country") && message.includes("schema cache")) ||
+    (message.includes("country") && message.includes("column"))
+  );
+}
+
+function isPermissionDenied(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as { code?: unknown; message?: unknown };
+  const message =
+    typeof candidate.message === "string"
+      ? candidate.message.toLowerCase()
+      : "";
+
+  return (
+    candidate.code === "42501" ||
+    message.includes("permission denied") ||
+    message.includes("row-level security") ||
+    message.includes("not allowed")
+  );
+}
+
+function toUserProfile(profile: Record<string, any>): UserProfile {
+  const publicUrl = fetchPublicUrl(profile.avatar_url ?? null);
+
+  return {
+    id: profile.id,
+    fullName: profile.full_name,
+    avatarUrl: publicUrl,
+    countryCode: profile.country_code,
+    city: profile.city,
+    phoneNumber: profile.phone_number,
+    phoneCountryCode: profile.phone_country_code,
+    email: profile.email,
+    phoneVerified: profile.phone_verified === true,
+    securityReviewRequired: profile.security_review_required === true,
+    accountStatus: toAccountStatus(profile.account_status),
+  };
 }
 
 export class SupabaseAuthRepository implements AuthRepository {
@@ -202,21 +254,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       return null;
     }
 
-    const publicUrl = fetchPublicUrl(profile.avatar_url);
-
-    return {
-      id: profile.id,
-      fullName: profile.full_name,
-      avatarUrl: publicUrl,
-      countryCode: profile.country_code,
-      city: profile.city,
-      phoneNumber: profile.phone_number,
-      phoneCountryCode: profile.phone_country_code,
-      email: profile.email,
-      phoneVerified: profile.phone_verified === true,
-      securityReviewRequired: profile.security_review_required === true,
-      accountStatus: toAccountStatus(profile.account_status),
-    };
+    return toUserProfile(profile);
   }
 
   async updateProfile(
@@ -303,7 +341,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       "No user returned after phone verification",
     );
 
-    const verifiedPhoneNumber = user.phone;
+    const verifiedPhoneNumber = user.phone ?? phoneNumber;
 
     if (!verifiedPhoneNumber) {
       throw new AppError({
@@ -321,20 +359,47 @@ export class SupabaseAuthRepository implements AuthRepository {
       });
     }
 
-    const { error: profileError, status } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: user.id,
-          phone_number: verifiedPhoneNumber,
-          phone_verified: true,
-          country_code: countryCode,
-          country,
-        },
-        { onConflict: "id" },
-      );
+    try {
+      const existingProfile = await this.fetchUserProfile(user.id);
 
-    throwIfSupabaseError(profileError, status);
+      if (existingProfile && !isProfileIncomplete(existingProfile)) {
+        return user;
+      }
+    } catch {
+      // Login has already succeeded; profile sync below is a best-effort repair.
+    }
+
+    const profilePayload = {
+      id: user.id,
+      phone_number: verifiedPhoneNumber,
+      phone_verified: true,
+      country_code: countryCode,
+      country,
+    };
+
+    try {
+      const { error: profileError, status } = await supabase
+        .from("profiles")
+        .upsert(profilePayload, { onConflict: "id" });
+
+      if (profileError && isMissingProfileCountryColumn(profileError)) {
+        const { country: _country, ...fallbackPayload } = profilePayload;
+        const { error: fallbackError, status: fallbackStatus } = await supabase
+          .from("profiles")
+          .upsert(fallbackPayload, { onConflict: "id" });
+
+        throwIfSupabaseError(fallbackError, fallbackStatus);
+        return user;
+      }
+
+      throwIfSupabaseError(profileError, status);
+    } catch (err) {
+      if (isPermissionDenied(err)) {
+        return user;
+      }
+
+      throw err;
+    }
 
     return user;
   }

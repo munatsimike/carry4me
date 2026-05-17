@@ -17,6 +17,9 @@ export function toflag(country: string) {
     case "Zimbabwe":
     case "ZW":
       return META_ICONS.zimFlag;
+    case "NL":
+    case "Netherlands":
+      return META_ICONS.nlFlag;
     default:
       return null;
   }
@@ -26,13 +29,16 @@ export function toDialCode(country: string): string | null {
   switch (country) {
     case "UK":
     case "GB":
-      return "+31";
+      return "+44";
     case "USA":
     case "US":
       return "+1";
     case "Zimbabwe":
     case "ZW":
       return "+263";
+    case "NL":
+    case "Netherlands":
+      return "+31";
     default:
       return null;
   }
@@ -49,6 +55,10 @@ export function toIsoCountryCode(country: string) {
     case "Zimbabwe":
     case "ZW":
       return "ZW";
+    case "NL":
+    case "Netherlands":
+      return "NL";
+
     default:
       return null;
   }
@@ -65,6 +75,9 @@ export function toCountryName(country: string): string | null {
     case "Zimbabwe":
     case "ZW":
       return "Zimbabwe";
+    case "NL":
+    case "Netherlands":
+      return "Netherlands";
     default:
       return null;
   }
