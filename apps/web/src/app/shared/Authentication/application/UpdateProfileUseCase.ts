@@ -24,7 +24,6 @@ function toUpdateProfileDto(profile: UserProfile): Partial<UpdateProfileDto> {
     full_name: profile.fullName ?? "",
     city: profile.city ?? "",
     country_code: profile.countryCode ?? "",
-    phone_number: profile.phoneNumber ?? "",
   };
 
   if (profile.phoneCountryCode !== undefined) {

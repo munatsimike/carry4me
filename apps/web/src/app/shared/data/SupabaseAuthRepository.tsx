@@ -56,6 +56,24 @@ function parsePhoneCountry(phoneNumber: string | null | undefined): {
   }
 }
 
+function buildVerifiedPhoneProfileUpdate(
+  phoneNumber: string,
+  profileCountry: string | null,
+) {
+  const { phoneCountryCode, isoCountry } = parsePhoneCountry(phoneNumber);
+  const profileIsoCountry = normalizeProfileCountry(profileCountry);
+  const securityReviewRequired = Boolean(
+    isoCountry && profileIsoCountry && isoCountry !== profileIsoCountry,
+  );
+
+  return {
+    phone_number: phoneNumber,
+    phone_verified: true,
+    phone_country_code: phoneCountryCode,
+    security_review_required: securityReviewRequired,
+  };
+}
+
 export class SupabaseAuthRepository implements AuthRepository {
   async updateAuthDetails(updateAuthDto: UpdateAuthDto): Promise<string> {
     const { data, error } = await supabase.auth.updateUser(updateAuthDto);
@@ -274,6 +292,51 @@ export class SupabaseAuthRepository implements AuthRepository {
     }
 
     return user;
+  }
+
+  async requestPhoneChange(phoneNumber: string): Promise<string> {
+    const { error } = await supabase.auth.updateUser({
+      phone: phoneNumber,
+    });
+
+    throwIfSupabaseError(error);
+
+    return "Verification code sent";
+  }
+
+  async verifyPhoneChange(
+    userId: string,
+    phoneNumber: string,
+    token: string,
+    profileCountry: string | null,
+  ): Promise<string> {
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: phoneNumber,
+      token,
+      type: "phone_change",
+    });
+
+    throwIfSupabaseError(error);
+    const verifiedUser = requireData(
+      data.user,
+      "No user returned after phone verification",
+    );
+
+    if (verifiedUser.id !== userId) {
+      throw new AppError({
+        code: "PHONE_VERIFICATION_USER_MISMATCH",
+        message: "Phone verification did not match the signed-in user",
+      });
+    }
+
+    const { error: profileError, status } = await supabase
+      .from("profiles")
+      .update(buildVerifiedPhoneProfileUpdate(phoneNumber, profileCountry))
+      .eq("id", userId);
+
+    throwIfSupabaseError(profileError, status);
+
+    return userId;
   }
 }
 

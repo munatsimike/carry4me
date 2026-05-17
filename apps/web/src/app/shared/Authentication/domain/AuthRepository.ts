@@ -28,4 +28,11 @@ export interface AuthRepository {
     phoneNumber: string,
     token: string,
   ): Promise<User>;
+  requestPhoneChange(phoneNumber: string): Promise<string>;
+  verifyPhoneChange(
+    userId: string,
+    phoneNumber: string,
+    token: string,
+    profileCountry: string | null,
+  ): Promise<string>;
 }

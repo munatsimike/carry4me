@@ -1,5 +1,5 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SignUpUseCase } from "../application/SignUpUseCase";
 import type { AppUser } from "../domain/authTypes";
@@ -86,6 +86,7 @@ export default function CompleteProfile() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: {
       errors,
       isSubmitting,
@@ -108,6 +109,24 @@ export default function CompleteProfile() {
     },
     mode: "onTouched",
   });
+
+  useEffect(() => {
+    if (user?.email) {
+      setValue("emailAddress", user.email, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: true,
+      });
+    }
+
+    if (user?.phone) {
+      setValue("phoneNumber", user.phone, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: true,
+      });
+    }
+  }, [setValue, user?.email, user?.phone]);
 
   const { showSupabaseError } = useUniversalModal();
 
@@ -284,10 +303,12 @@ function FormContents({ formProps }: SigupFormProps) {
             />
 
             <FloatingInputField
-              className="w-full sm:max-w-[260px]"
+              className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[260px]"
               hasValue={!!phoneNumber}
               label="Phone number"
               type="tel"
+              readOnly
+              helperText="Verified phone number"
               error={errors.phoneNumber?.message}
               isDirty={!!dirtyFields.phoneNumber}
               isTouched={!!touchedFields.phoneNumber}

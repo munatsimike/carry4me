@@ -35,6 +35,17 @@ import {
   type UserDetailsFields,
 } from "../UI/CompleteProfilePage";
 import { useLocations } from "@/app/hookes/useLocation";
+import CustomModal from "@/app/components/CustomModal";
+import { z } from "zod";
+import {
+  otpCodeSchema,
+  phoneNumberSchema,
+} from "@/app/shared/validation/formValidation";
+import {
+  useRequestPhoneChangeMutation,
+  useVerifyPhoneChangeMutation,
+} from "@/app/hooks/mutations/useAuthMutations";
+import Spinner from "@/app/components/Spinner";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -43,6 +54,17 @@ type AvatarProps = {
 };
 
 type ProfileSection = "personal" | "location" | "security";
+
+const changePhoneSchema = z.object({
+  phoneNumber: phoneNumberSchema,
+});
+
+const verifyPhoneChangeSchema = z.object({
+  otpCode: otpCodeSchema,
+});
+
+type ChangePhoneFields = z.infer<typeof changePhoneSchema>;
+type VerifyPhoneChangeFields = z.infer<typeof verifyPhoneChangeSchema>;
 
 type FormProps = {
   register: UseFormRegister<UserDetailsFields>;
@@ -60,6 +82,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState<ProfileSection | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [changePhoneOpen, setChangePhoneOpen] = useState(false);
   const { user, refreshProfile, profile } = useAuth();
   const { toast } = useToast();
   const { showSupabaseError } = useUniversalModal();
@@ -208,12 +231,8 @@ export default function ProfilePage() {
     if (editing === "security") {
       const values = getValues();
       const wantsEmailChange = !!dirtyFields.emailAddress;
-      const wantsPhoneChange =
-        !!dirtyFields.phoneNumber 
 
-      const isDirty = wantsEmailChange || wantsPhoneChange;
-
-      if (!isDirty) {
+      if (!wantsEmailChange) {
         toast("Make changes to update profile", { variant: "warning" });
         return;
       }
@@ -223,16 +242,10 @@ export default function ProfilePage() {
         if (!ok) return;
       }
 
-      if (wantsPhoneChange) {
-        const ok = await trigger("phoneNumber");
-        if (!ok) return;
-      }
-
       const email = dirtyFields.emailAddress ? values.emailAddress : undefined;
-      const phoneNumber = dirtyFields.phoneNumber ? values.phoneNumber : undefined;
 
       try {
-        await updateAuthDetails.excute(user.id, email, phoneNumber);
+        await updateAuthDetails.excute(user.id, email);
         toast("Profile updated successfully.", { variant: "success" });
         reset(getValues());
         await refreshProfile();
@@ -247,7 +260,6 @@ export default function ProfilePage() {
         "lastName",
         "city",
         "country",
-        "phoneNumber",
       ];
 
       if (!isPersonalDirty(dirtyFields)) {
@@ -267,7 +279,7 @@ export default function ProfilePage() {
           countryCode: values.country,
           city: values.city,
           email: values.emailAddress,
-          phoneNumber: values.phoneNumber,
+          phoneNumber: profile.phoneNumber,
         });
         reset(getValues());
         setFile(null);
@@ -341,6 +353,7 @@ export default function ProfilePage() {
                 onClick: () => onUpdateProfile(),
                 onCancel: () => setEditing(null),
               }}
+              onChangePhone={() => setChangePhoneOpen(true)}
             />
             <LineDivider heightClass="my-0" />
             <LocationSection
@@ -364,6 +377,20 @@ export default function ProfilePage() {
             />
           </motion.div>
         </form>
+        <AnimatePresence>
+          {changePhoneOpen && (
+            <ChangePhoneNumberModal
+              userId={user.id}
+              currentPhoneNumber={profile.phoneNumber}
+              profileCountry={profile.countryCode}
+              onClose={() => setChangePhoneOpen(false)}
+              onVerified={async () => {
+                await refreshProfile();
+                reset(getValues(), { keepDirty: false, keepTouched: false });
+              }}
+            />
+          )}
+        </AnimatePresence>
       </Card>
     </DefaultContainer>
   );
@@ -442,6 +469,7 @@ type securityProps = {
   touchedFields: FieldNamesMarkedBoolean<UserDetailsFields>;
   register: UseFormRegister<UserDetailsFields>;
   onClick: () => void;
+  onChangePhone: () => void;
 };
 
 function SecurityDetailsCard({
@@ -453,6 +481,7 @@ function SecurityDetailsCard({
   profile,
   iconSpecs,
   onClick,
+  onChangePhone,
   dirtyFields,
   touchedFields,
 }: securityProps) {
@@ -476,6 +505,13 @@ function SecurityDetailsCard({
           <div className="flex flex-col gap-2">
             <InfCol label="Email address" value={profile.email} />
             <InfoRow label="Phone" value={profile.phoneNumber} />
+            <button
+              type="button"
+              onClick={onChangePhone}
+              className="w-fit text-sm font-medium text-primary-600 hover:underline"
+            >
+              Change phone number
+            </button>
           </div>
         </div>
       ) : (
@@ -491,13 +527,22 @@ function SecurityDetailsCard({
               {...register("emailAddress")}
             />
             <FloatingInputField
-              className="w-full sm:max-w-[220px]"
-              hasValue={!!watch("phoneNumber")}
+              className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[260px]"
+              hasValue={!!profile.phoneNumber}
               label="Phone number"
-              isDirty={!!dirtyFields.phoneNumber}
-              isTouched={!!touchedFields.phoneNumber}
-              {...register("phoneNumber")}
+              value={profile.phoneNumber ?? ""}
+              readOnly
+              helperText="Verified phone number"
+              isDirty={false}
+              isTouched={false}
             />
+            <button
+              type="button"
+              onClick={onChangePhone}
+              className="w-fit text-sm font-medium text-primary-600 hover:underline"
+            >
+              Change phone number
+            </button>
           </div>
           <ActionButton onClick={onClick} onCancel={actionBtns.onCancel} />
         </>
@@ -708,6 +753,214 @@ function PersonalEditForm({
       </span>
       <ActionButton onClick={onClick} onCancel={onCancel} />
     </div>
+  );
+}
+
+type ChangePhoneNumberModalProps = {
+  userId: string;
+  currentPhoneNumber: string | null;
+  profileCountry: string | null;
+  onClose: () => void;
+  onVerified: () => Promise<void>;
+};
+
+function ChangePhoneNumberModal({
+  userId,
+  currentPhoneNumber,
+  profileCountry,
+  onClose,
+  onVerified,
+}: ChangePhoneNumberModalProps) {
+  const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(
+    null,
+  );
+  const requestPhoneChange = useRequestPhoneChangeMutation();
+  const verifyPhoneChange = useVerifyPhoneChangeMutation();
+  const { toast } = useToast();
+  const { showSupabaseError } = useUniversalModal();
+
+  const {
+    register: registerPhone,
+    handleSubmit: handlePhoneSubmit,
+    watch: watchPhone,
+    formState: {
+      errors: phoneErrors,
+      dirtyFields: phoneDirtyFields,
+      touchedFields: phoneTouchedFields,
+    },
+  } = useForm<ChangePhoneFields>({
+    resolver: zodResolver(changePhoneSchema),
+    defaultValues: {
+      phoneNumber: "",
+    },
+    mode: "onTouched",
+  });
+
+  const {
+    register: registerOtp,
+    handleSubmit: handleOtpSubmit,
+    watch: watchOtp,
+    reset: resetOtp,
+    formState: {
+      errors: otpErrors,
+      dirtyFields: otpDirtyFields,
+      touchedFields: otpTouchedFields,
+    },
+  } = useForm<VerifyPhoneChangeFields>({
+    resolver: zodResolver(verifyPhoneChangeSchema),
+    defaultValues: {
+      otpCode: "",
+    },
+    mode: "onTouched",
+  });
+
+  const watchedPhoneNumber = watchPhone("phoneNumber");
+  const watchedOtpCode = watchOtp("otpCode");
+  const isRequesting = requestPhoneChange.isPending;
+  const isVerifying = verifyPhoneChange.isPending;
+
+  const requestCode = async (values: ChangePhoneFields) => {
+    try {
+      await requestPhoneChange.mutateAsync(values.phoneNumber);
+      setPendingPhoneNumber(values.phoneNumber);
+      resetOtp();
+      toast("Verification code sent.", { variant: "success" });
+    } catch (err) {
+      showSupabaseError(err);
+    }
+  };
+
+  const verifyCode = async (values: VerifyPhoneChangeFields) => {
+    if (!pendingPhoneNumber) return;
+
+    try {
+      await verifyPhoneChange.mutateAsync({
+        userId,
+        phoneNumber: pendingPhoneNumber,
+        token: values.otpCode,
+        profileCountry,
+      });
+      toast("Phone number updated successfully.", { variant: "success" });
+      await onVerified();
+      onClose();
+    } catch (err) {
+      showSupabaseError(err);
+    }
+  };
+
+  return (
+    <CustomModal onClose={onClose} width="md">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <CustomText
+            textVariant="primary"
+            textSize="lg"
+            className="font-medium"
+          >
+            Change phone number
+          </CustomText>
+          <CustomText textVariant="secondary" textSize="sm">
+            Verify your new phone number before it replaces your current one.
+          </CustomText>
+        </div>
+
+        <LineDivider heightClass="my-0" />
+
+        <form
+          onSubmit={handlePhoneSubmit(requestCode)}
+          className="flex flex-col gap-3"
+        >
+          <FloatingInputField
+            className="w-full sm:max-w-[320px]"
+            hasValue={!!watchedPhoneNumber}
+            label="New phone number"
+            type="tel"
+            helperText={
+              pendingPhoneNumber
+                ? `Code sent to ${pendingPhoneNumber}`
+                : "Include your country code, for example +44..."
+            }
+            error={phoneErrors.phoneNumber?.message}
+            isDirty={!!phoneDirtyFields.phoneNumber}
+            isTouched={!!phoneTouchedFields.phoneNumber}
+            disabled={isRequesting || isVerifying}
+            {...registerPhone("phoneNumber")}
+          />
+          {currentPhoneNumber && (
+            <CustomText textVariant="secondary" textSize="xs">
+              Current phone: {currentPhoneNumber}
+            </CustomText>
+          )}
+          <Button
+            type="submit"
+            variant="neutral"
+            size="sm"
+            disabled={isRequesting || isVerifying}
+            className="w-fit"
+          >
+            {isRequesting ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner />
+                Sending code...
+              </span>
+            ) : pendingPhoneNumber ? (
+              "Resend code"
+            ) : (
+              "Send verification code"
+            )}
+          </Button>
+        </form>
+
+        {pendingPhoneNumber && (
+          <>
+            <LineDivider heightClass="my-0" />
+            <form
+              onSubmit={handleOtpSubmit(verifyCode)}
+              className="flex flex-col gap-3"
+            >
+              <FloatingInputField
+                className="w-full sm:max-w-[220px]"
+                hasValue={!!watchedOtpCode}
+                label="Verification code"
+                inputMode="numeric"
+                maxLength={6}
+                error={otpErrors.otpCode?.message}
+                isDirty={!!otpDirtyFields.otpCode}
+                isTouched={!!otpTouchedFields.otpCode}
+                disabled={isVerifying}
+                {...registerOtp("otpCode")}
+              />
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  onClick={onClose}
+                  disabled={isVerifying}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  disabled={isVerifying}
+                >
+                  {isVerifying ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Spinner />
+                      Verifying...
+                    </span>
+                  ) : (
+                    "Verify and update"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </CustomModal>
   );
 }
 
@@ -930,7 +1183,6 @@ function isPersonalDirty(
   return [
     dirtyFields.firstName,
     dirtyFields.lastName,
-    dirtyFields.phoneNumber,
     dirtyFields.city,
     dirtyFields.country,
   ].some(Boolean);

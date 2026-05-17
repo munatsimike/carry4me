@@ -1,4 +1,3 @@
-export type UpdateAuthDto ={
-    email?: string,
-    phone_number?: string
-}
+export type UpdateAuthDto = {
+  email?: string;
+};

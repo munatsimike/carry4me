@@ -1,6 +1,5 @@
 import { AppError } from "@/app/shared/domain/AppError";
 import type { AuthRepository } from "../domain/AuthRepository";
-import type { UpdateProfileDto } from "./updateProfileDTO";
 
 export class UpdateAuthDetailsUseCase {
   repo: AuthRepository;
@@ -8,32 +7,19 @@ export class UpdateAuthDetailsUseCase {
     this.repo = repo;
   }
 
-  async excute(
-    userId: string,
-    email?: string,
-    phoneNumber?: string,
-  ): Promise<string> {
-    return await this.repo.updateProfile(
-      userId,
-      this.toUpdateAuthDto(email, phoneNumber),
-    );
+  async excute(userId: string, email?: string): Promise<string> {
+    return await this.repo.updateProfile(userId, this.toUpdateAuthDto(email));
   }
 
-  toUpdateAuthDto(
-    email: string | undefined,
-    phoneNumber: string | undefined,
-  ): Partial<UpdateProfileDto> {
-    const dto: Partial<UpdateProfileDto> = {};
+  toUpdateAuthDto(email: string | undefined) {
+    const dto: { email?: string } = {};
     if (email) {
       dto.email = email;
-    }
-    if (phoneNumber) {
-      dto.phone_number = phoneNumber;
     }
 
     if (Object.keys(dto).length === 0) {
       throw new AppError({
-        message: "Email or phone number is required",
+        message: "Email is required",
         code: "VALIDATION_ERROR",
       });
     }
