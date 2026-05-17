@@ -4,7 +4,7 @@ export type VerifyPhoneChangeInput = {
   userId: string;
   phoneNumber: string;
   token: string;
-  profileCountry: string | null;
+  countryCode: string;
 };
 
 export class ChangeVerifiedPhoneNumberUseCase {
@@ -23,7 +23,7 @@ export class ChangeVerifiedPhoneNumberUseCase {
       input.userId,
       input.phoneNumber,
       input.token,
-      input.profileCountry,
+      input.countryCode,
     );
   }
 }

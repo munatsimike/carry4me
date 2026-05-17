@@ -66,17 +66,20 @@ function parsePhoneCountry(phoneNumber: string | null | undefined): {
 
 function buildVerifiedPhoneProfileUpdate(
   phoneNumber: string,
-  profileCountry: string | null,
+  countryCode: string,
 ) {
   const { phoneCountryCode, isoCountry } = parsePhoneCountry(phoneNumber);
-  const profileIsoCountry = normalizeProfileCountry(profileCountry);
+  const profileIsoCountry = normalizeProfileCountry(countryCode);
   const securityReviewRequired = Boolean(
     isoCountry && profileIsoCountry && isoCountry !== profileIsoCountry,
   );
+  const country = toCountryName(countryCode);
 
   return {
     phone_number: phoneNumber,
     phone_verified: true,
+    country_code: countryCode,
+    country,
     phone_country_code: phoneCountryCode,
     security_review_required: securityReviewRequired,
     account_status: securityReviewRequired
@@ -350,7 +353,7 @@ export class SupabaseAuthRepository implements AuthRepository {
     userId: string,
     phoneNumber: string,
     token: string,
-    profileCountry: string | null,
+    countryCode: string,
   ): Promise<string> {
     const { data, error } = await supabase.auth.verifyOtp({
       phone: phoneNumber,
@@ -371,9 +374,18 @@ export class SupabaseAuthRepository implements AuthRepository {
       });
     }
 
+    const verifiedPhoneNumber = verifiedUser.phone;
+
+    if (!verifiedPhoneNumber) {
+      throw new AppError({
+        code: "PHONE_NOT_VERIFIED",
+        message: "No verified phone number returned after verification",
+      });
+    }
+
     const { error: profileError, status } = await supabase
       .from("profiles")
-      .update(buildVerifiedPhoneProfileUpdate(phoneNumber, profileCountry))
+      .update(buildVerifiedPhoneProfileUpdate(verifiedPhoneNumber, countryCode))
       .eq("id", userId);
 
     throwIfSupabaseError(profileError, status);

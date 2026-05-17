@@ -857,7 +857,7 @@ function ChangePhoneNumberModal({
         userId,
         phoneNumber: pendingPhoneNumber,
         token: values.otpCode,
-        profileCountry,
+        countryCode: profileCountry ?? "",
       });
       toast("Phone number updated successfully.", { variant: "success" });
       await onVerified();

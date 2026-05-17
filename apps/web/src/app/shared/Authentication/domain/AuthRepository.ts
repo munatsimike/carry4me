@@ -34,6 +34,6 @@ export interface AuthRepository {
     userId: string,
     phoneNumber: string,
     token: string,
-    profileCountry: string | null,
+    countryCode: string,
   ): Promise<string>;
 }
