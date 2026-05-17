@@ -608,7 +608,7 @@ function InfoBlockInput({
           leadingIcon={undefined}
         >
           <CustomText textVariant="primary" className="text-white">
-            Payout
+            Release payout
           </CustomText>
         </Button>
       </div>

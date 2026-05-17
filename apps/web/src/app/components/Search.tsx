@@ -82,7 +82,7 @@ export default function Search({
               <ComboBox
                 heightClass="py-1.5"
                 className="w-full rounded-xl"
-                placeholder="Select Country"
+                placeholder="Select country"
                 menuItems={countryOptions}
                 value={field.value}
                 onValueChange={(nextCountry) => {
@@ -110,7 +110,7 @@ export default function Search({
               <ComboBox
                 heightClass="py-1.5"
                 className="w-full rounded-xl"
-                placeholder="Select City"
+                placeholder="Select city"
                 menuItems={cityOptions}
                 disabled={!countryValue}
                 disabledMessage="Select a country first"

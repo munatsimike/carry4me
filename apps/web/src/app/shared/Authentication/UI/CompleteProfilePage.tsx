@@ -359,7 +359,7 @@ function FormContents({ formProps }: SigupFormProps) {
             render={({ field, fieldState }) => (
               <ComboBox
                 className="rounded-lg mt-3"
-                placeholder="Select City"
+                placeholder="Select city"
                 menuItems={cityOptions}
                 disabled={!originCountry}
                 disabledMessage="Select a country first"

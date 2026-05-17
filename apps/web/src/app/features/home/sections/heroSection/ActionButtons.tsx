@@ -67,7 +67,7 @@ export default function ActionButtons() {
               textVariant="onDark"
               className="whitespace-nowrap"
             >
-              Browse Parcels
+              Browse parcels
             </CustomText>
           </Button>
         </Link>
@@ -105,7 +105,7 @@ export default function ActionButtons() {
               textVariant="primary"
               className="whitespace-nowrap"
             >
-              Browse Trips
+              Browse trips
             </CustomText>
           </Button>
         </Link>

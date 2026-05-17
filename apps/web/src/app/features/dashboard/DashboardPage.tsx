@@ -254,7 +254,7 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
               textSize="md"
               className="truncate"
             >
-              Delivery Summary
+              Delivery summary
             </CustomText>
           </span>
 
@@ -299,7 +299,7 @@ function StatsSection({ statsList }: StatsProps) {
   return (
     <div className="flex w-full max-w-full flex-col gap-3 px-2 lg:max-w-sm">
       <CustomText textVariant="primary" textSize="lg" className="font-medium">
-        {"Your Stats"}
+        {"Your stats"}
       </CustomText>
       <div className="mx-auto min-h-[85px] w-full">
         <div className="grid grid-cols-2 gap-3">

@@ -73,7 +73,7 @@ export default function HowItWorks({ steps }: StepsPros) {
                 />
               }
             >
-              <CustomText textVariant="primary">Get Started</CustomText>
+              <CustomText textVariant="primary">Get started</CustomText>
             </Button>
           </motion.div>
         </motion.div>

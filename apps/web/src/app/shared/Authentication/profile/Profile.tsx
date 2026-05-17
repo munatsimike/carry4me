@@ -194,7 +194,7 @@ export default function ProfilePage() {
             </Button>
 
             <Button variant={"primary"} size={"md"}>
-              Sign
+              Sign in
             </Button>
           </div>
         </div>
@@ -235,7 +235,9 @@ export default function ProfilePage() {
       const wantsEmailChange = !!dirtyFields.emailAddress;
 
       if (!wantsEmailChange) {
-        toast("Make changes to update profile", { variant: "warning" });
+        toast("Make a change before updating your profile.", {
+          variant: "warning",
+        });
         return;
       }
 
@@ -265,7 +267,9 @@ export default function ProfilePage() {
       ];
 
       if (!isPersonalDirty(dirtyFields)) {
-        toast("Make changes to update profile", { variant: "warning" });
+        toast("Make a change before updating your profile.", {
+          variant: "warning",
+        });
         return;
       }
       const ok = await trigger(personalDetails);
@@ -722,7 +726,7 @@ function LocationEditForm({
           control={control}
           render={({ field, fieldState }) => (
             <ComboBox
-              placeholder="Select City"
+              placeholder="Select city"
               menuItems={cities}
               disabled={!selectedCountry}
               disabledMessage="Select a country first"
@@ -768,7 +772,7 @@ function PersonalEditForm({
         />
         <FloatingInputField
           hasValue={!!watch("lastName")}
-          label="last name"
+          label="Last name"
           isDirty={!!dirtyFields.lastName}
           isTouched={!!touchedFields.lastName}
           {...register("lastName")}

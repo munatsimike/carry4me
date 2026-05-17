@@ -204,7 +204,7 @@ function pendingPayout(viewerRole: Role): UIActions {
       primary: {
         kind: ACTIONKINDS.PAYOUT,
         variant: VARIANTS.PRIMARY,
-        label: "Pay out",
+        label: "Release payout",
         key: "RELEASE_PAYMENT",
       },
     };

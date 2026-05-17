@@ -73,7 +73,7 @@ function Brand({ isAuthed }: { isAuthed: boolean }) {
           `mt-4 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500"`,
         )}
       >
-        Trusted connections • Smarter delivery • Community powered
+        Trusted connections • Smarter delivery • Community-powered
       </p>
     </div>
   );
@@ -92,7 +92,7 @@ function Product() {
             href="/browse/trips"
             className="transition-colors duration-200 hover:text-slate-900"
           >
-            Find Travelers
+            Find travelers
           </a>
         </li>
         <li>
@@ -100,7 +100,7 @@ function Product() {
             href="/browse/parcels"
             className="transition-colors duration-200 hover:text-slate-900"
           >
-            Send a Parcel
+            Send a parcel
           </a>
         </li>
         <li>
@@ -108,7 +108,7 @@ function Product() {
             href="/how-it-works"
             className="transition-colors duration-200 hover:text-slate-900"
           >
-            How it Works
+            How it works
           </a>
         </li>
       </ul>
@@ -133,7 +133,7 @@ function OurLocation() {
           </span>
 
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            London <span className="text-[12px]">(Head Office)</span>
+            London <span className="text-[12px]">(Head office)</span>
           </p>
         </li>
 
@@ -148,7 +148,7 @@ function OurLocation() {
           <p className="mt-1 text-sm leading-6 text-slate-500">
             New York / Atlanta
             <br />
-            <span className="text-[12px]">Local Representative</span>
+            <span className="text-[12px]">Local representative</span>
           </p>
         </li>
         <li>
@@ -159,13 +159,13 @@ function OurLocation() {
           <p className="mt-1 text-sm leading-6 text-slate-500">
             Harare / Bulawayo
             <br />
-            <span className="text-[12px]">Local Representative</span>
+            <span className="text-[12px]">Local representative</span>
           </p>
         </li>
       </ul>
 
       <p className="mt-5 text-xs font-medium text-slate-500">
-        Operating across Europe, UK & USA
+        Operating across Europe, the UK, and the USA.
       </p>
     </div>
   );
@@ -184,7 +184,7 @@ function Company() {
             href="/about"
             className="transition-colors duration-200 hover:text-slate-900"
           >
-            About Us
+            About us
           </a>
         </li>
         <li>

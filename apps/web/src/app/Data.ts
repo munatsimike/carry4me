@@ -19,13 +19,13 @@ export const steps = [
     step: 1,
     title: "Post a parcel or a trip",
     description:
-      "Senders list what they want to send.Travelers share their upcoming trips and available space.",
+      "Senders list what they want to send. Travelers share their upcoming trips and available space.",
   },
   {
     step: 2,
     title: "Get matched",
     description:
-      "Senders or travelers send a carry request based on listed details and price. Both sides confirm before proceeding",
+      "Senders or travelers send a carry request based on listed details and price. Both sides confirm before proceeding.",
   },
 
   {
@@ -37,9 +37,9 @@ export const steps = [
 
   {
     step: 4,
-    title: "Deliver & Get Paid",
+    title: "Deliver and get paid",
     description:
-      "The traveler delivers the parcel.Payment is released after successful delivery.",
+      "The traveler delivers the parcel. Payment is released after successful delivery.",
   },
 ];
 
@@ -70,7 +70,7 @@ export const safetyRules: InfoItem[] = [
   {
     Icon: Hands,
     label: "No prohibited items",
-    value: "Illegal drugs, weapons, cash, and hazardous goods are not allowed",
+    value: "Illegal drugs, weapons, cash, and hazardous goods are not allowed.",
   },
   {
     Icon: User,
@@ -91,12 +91,12 @@ export const benefits: InfoItem[] = [
     Icon: Wallet,
     label: "Save money",
     value:
-      "Much cheaper than traditional shipping. You negotiate the delivery fee.",
+      "More affordable than traditional shipping. You negotiate the delivery fee.",
     tag: "sender",
   },
   {
     Icon: Plane,
-    label: "Travel for free or less ",
+    label: "Travel for less",
     value: "Parcels you carry can help lower your travel expenses.",
     tag: "traveler",
   },

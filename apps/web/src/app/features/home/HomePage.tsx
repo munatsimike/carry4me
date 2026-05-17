@@ -80,7 +80,7 @@ function Modal({ onClose }: ModalProps) {
 
         <CustomText as="p" className="mb-3" textVariant="secondary">
           Activate your account by clicking the link in the email we sent you
-          and start using Carry4Me!
+          and start using Carry4Me.
         </CustomText>
 
         <div className="flex justify-end gap-4">

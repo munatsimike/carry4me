@@ -52,7 +52,7 @@ export default function RouteFieldRow<T extends FieldValues>({
               render={({ field, fieldState }) => (
                 <ComboBox
                   className="rounded-lg"
-                  placeholder="Select Country"
+                  placeholder="Select country"
                   menuItems={countryOptions}
                   value={field.value}
                   onValueChange={(nextCountry) => {
@@ -77,7 +77,7 @@ export default function RouteFieldRow<T extends FieldValues>({
               render={({ field, fieldState }) => (
                 <ComboBox
                   className="rounded-lg"
-                  placeholder="Select City"
+                  placeholder="Select city"
                   menuItems={cityOptions}
                   disabled={!originCountry}
                   disabledMessage="Select a country first"
