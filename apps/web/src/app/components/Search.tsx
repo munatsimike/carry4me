@@ -35,7 +35,8 @@ export default function Search({
   clearResults,
   setClearResults,
 }: SearchProps) {
-  const { control, watch, handleSubmit, reset } = useForm<SearchFields>({
+  const { control, watch, handleSubmit, reset, setValue } =
+    useForm<SearchFields>({
     resolver: zodResolver(searchScema),
     defaultValues: {
       country: "",
@@ -43,7 +44,7 @@ export default function Search({
     },
     mode: "onChange",
     reValidateMode: "onChange",
-  });
+    });
 
   useEffect(() => {
     if (clearResults) {
@@ -84,7 +85,14 @@ export default function Search({
                 placeholder="Select Country"
                 menuItems={countryOptions}
                 value={field.value}
-                onValueChange={field.onChange}
+                onValueChange={(nextCountry) => {
+                  field.onChange(nextCountry);
+                  setValue("city", "", {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  });
+                }}
                 isDirty={fieldState.isDirty}
                 isTouched={fieldState.isTouched}
                 error={fieldState.error?.message}
@@ -102,8 +110,10 @@ export default function Search({
               <ComboBox
                 heightClass="py-1.5"
                 className="w-full rounded-xl"
-                placeholder="Select city"
+                placeholder="Select City"
                 menuItems={cityOptions}
+                disabled={!countryValue}
+                disabledMessage="Select a country first"
                 value={field.value}
                 onValueChange={field.onChange}
                 isDirty={fieldState.isDirty}

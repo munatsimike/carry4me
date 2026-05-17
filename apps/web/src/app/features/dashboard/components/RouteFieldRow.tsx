@@ -8,16 +8,19 @@ import {
   type Control,
   type FieldValues,
   type Path,
+  type UseFormSetValue,
 } from "react-hook-form";
 import { useLocation } from "react-router-dom";
 
 type RouteRowProps<T extends FieldValues> = {
   control: Control<T>;
+  setValue: UseFormSetValue<T>;
   watch: (field: Path<T>) => string;
 };
 
 export default function RouteFieldRow<T extends FieldValues>({
   control,
+  setValue,
   watch,
 }: RouteRowProps<T>) {
   const location = useLocation();
@@ -52,7 +55,14 @@ export default function RouteFieldRow<T extends FieldValues>({
                   placeholder="Select Country"
                   menuItems={countryOptions}
                   value={field.value}
-                  onValueChange={field.onChange}
+                  onValueChange={(nextCountry) => {
+                    field.onChange(nextCountry);
+                    setValue("originCity" as Path<T>, "" as any, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                      shouldTouch: true,
+                    });
+                  }}
                   isDirty={fieldState.isDirty}
                   isTouched={fieldState.isTouched}
                   error={fieldState.error?.message}
@@ -69,6 +79,8 @@ export default function RouteFieldRow<T extends FieldValues>({
                   className="rounded-lg"
                   placeholder="Select City"
                   menuItems={cityOptions}
+                  disabled={!originCountry}
+                  disabledMessage="Select a country first"
                   value={field.value}
                   onValueChange={field.onChange}
                   isDirty={fieldState.isDirty}

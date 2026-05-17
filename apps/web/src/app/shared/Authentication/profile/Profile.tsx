@@ -17,6 +17,7 @@ import {
   type UseFormWatch,
   Controller,
   type Control,
+  type UseFormSetValue,
 } from "react-hook-form";
 import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
@@ -95,6 +96,7 @@ export default function ProfilePage() {
     watch,
     trigger,
     getValues,
+    setValue,
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<UserDetailsFields>({
     resolver: zodResolver(UserDetailsScema),
@@ -358,6 +360,7 @@ export default function ProfilePage() {
             <LineDivider heightClass="my-0" />
             <LocationSection
               control={control}
+              setValue={setValue}
               iconSpecs={iconSpecs}
               editing={editing}
               cities={cityOptions}
@@ -398,6 +401,7 @@ export default function ProfilePage() {
 type LocationSectionProps = {
   iconSpecs: IconSpecs;
   control: Control<UserDetailsFields>;
+  setValue: UseFormSetValue<UserDetailsFields>;
   formProps: FormProps;
   formBtn: ActionButtonProps;
   editing: ProfileSection | null;
@@ -410,6 +414,7 @@ function LocationSection({
   formProps,
   formBtn,
   control,
+  setValue,
   iconSpecs,
   editing,
   cities,
@@ -447,9 +452,11 @@ function LocationSection({
         >
           <LocationEditForm
             control={control}
+            setValue={setValue}
             formBtns={formBtn}
             cities={cities}
             countries={countries}
+            selectedCountry={formProps.watch("country")}
           />
         </motion.div>
       )}
@@ -668,15 +675,22 @@ function EditBtn({
 
 type LocationEditFormProps = {
   control: Control<UserDetailsFields>;
+  setValue: UseFormSetValue<UserDetailsFields>;
   formBtns: ActionButtonProps;
 };
 
 function LocationEditForm({
   control,
+  setValue,
   formBtns,
   cities,
   countries,
-}: LocationEditFormProps & { cities: string[]; countries: string[] }) {
+  selectedCountry,
+}: LocationEditFormProps & {
+  cities: string[];
+  countries: string[];
+  selectedCountry: string;
+}) {
   return (
     <span className="flex flex-col  gap-3">
       <span className="flex flex-col gap-2 sm:gap-3">
@@ -688,7 +702,14 @@ function LocationEditForm({
               placeholder={"Select country"}
               menuItems={countries}
               value={field.value}
-              onValueChange={field.onChange}
+              onValueChange={(nextCountry) => {
+                field.onChange(nextCountry);
+                setValue("city", "", {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                  shouldTouch: true,
+                });
+              }}
               error={fieldState.error?.message}
               isDirty={fieldState.isDirty}
               isTouched={fieldState.isTouched}
@@ -701,8 +722,10 @@ function LocationEditForm({
           control={control}
           render={({ field, fieldState }) => (
             <ComboBox
-              placeholder={"Select city"}
+              placeholder="Select City"
               menuItems={cities}
+              disabled={!selectedCountry}
+              disabledMessage="Select a country first"
               value={field.value}
               onValueChange={field.onChange}
               error={fieldState.error?.message}

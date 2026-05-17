@@ -18,6 +18,7 @@ type ComboBoxProps = {
   textSize?: string;
   searchable?: boolean;
   roundedClass?: string;
+  disabledMessage?: string;
 };
 
 export default function ComboBox({
@@ -34,9 +35,11 @@ export default function ComboBox({
   isTouched,
   error,
   searchable = false,
+  disabledMessage,
 }: ComboBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState(value);
+  const [showDisabledMessage, setShowDisabledMessage] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const isPlaceholder = !value;
@@ -58,12 +61,45 @@ export default function ComboBox({
     function handleClickOutside(e: MouseEvent) {
       if (!wrapperRef.current?.contains(e.target as Node)) {
         setIsOpen(false);
+        setShowDisabledMessage(false);
       }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!showDisabledMessage) return;
+
+    const timer = window.setTimeout(() => {
+      setShowDisabledMessage(false);
+    }, 1800);
+
+    return () => window.clearTimeout(timer);
+  }, [showDisabledMessage]);
+
+  const handleDisabledInteraction = () => {
+    if (!disabled || !disabledMessage) return;
+    setIsOpen(false);
+    setShowDisabledMessage(true);
+  };
+
+  const disabledFeedback = showDisabledMessage && disabledMessage && (
+    <div className="absolute z-50 mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-lg">
+      {disabledMessage}
+    </div>
+  );
+
+  const disabledOverlay = disabled && disabledMessage && (
+    <button
+      type="button"
+      aria-label={disabledMessage}
+      onClick={handleDisabledInteraction}
+      className="absolute inset-0 z-10 cursor-not-allowed bg-transparent"
+    />
+  );
+
   const selectedFlagIcon =
     value && (!searchable || !isOpen) ? toflag(value) : null;
   const baseClasses = cn(
@@ -72,11 +108,16 @@ export default function ComboBox({
     className,
     textVariant,
     error ? inputError : showSuccess ? inputSuccess : inputNeutral,
+    disabled && "cursor-not-allowed bg-neutral-50 text-neutral-400",
   );
 
   if (!searchable) {
     return (
-      <div className="relative w-full min-w-0">
+      <div
+        ref={wrapperRef}
+        className="relative w-full min-w-0"
+        onMouseDown={handleDisabledInteraction}
+      >
         <select
           disabled={disabled}
           value={value}
@@ -113,12 +154,18 @@ export default function ComboBox({
         <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
           <ChevronDown className="h-4 w-4 text-gray-500" />
         </div>
+        {disabledOverlay}
+        {disabledFeedback}
       </div>
     );
   }
 
   return (
-    <div ref={wrapperRef} className="relative w-full min-w-0">
+    <div
+      ref={wrapperRef}
+      className="relative w-full min-w-0"
+      onMouseDown={handleDisabledInteraction}
+    >
       <input
         type="text"
         disabled={disabled}
@@ -154,6 +201,7 @@ export default function ComboBox({
           )}
         />
       </button>
+      {disabledOverlay}
 
       {isOpen && (
         <div className="absolute z-50 mt-2 max-h-60 w-full min-w-0 overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
@@ -187,6 +235,7 @@ export default function ComboBox({
           )}
         </div>
       )}
+      {disabledFeedback}
     </div>
   );
 }

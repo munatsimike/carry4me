@@ -18,6 +18,7 @@ import {
   type Control,
   type FieldErrors,
   type FieldNamesMarkedBoolean,
+  type UseFormSetValue,
   type UseFormRegister,
   type UseFormWatch,
 } from "react-hook-form";
@@ -171,6 +172,7 @@ export default function CompleteProfile() {
       formProps={{
         register: register,
         watch: watch,
+        setValue: setValue,
         control: control,
         dirtyFields: dirtyFields,
         errors: errors,
@@ -211,6 +213,7 @@ export default function CompleteProfile() {
 type FormProps = {
   register: UseFormRegister<UserDetailsFields>;
   watch: UseFormWatch<UserDetailsFields>;
+  setValue: UseFormSetValue<UserDetailsFields>;
   control: Control<UserDetailsFields>;
   dirtyFields: FieldNamesMarkedBoolean<UserDetailsFields>;
   errors: FieldErrors<UserDetailsFields>;
@@ -227,6 +230,7 @@ function FormContents({ formProps }: SigupFormProps) {
   const {
     register,
     watch,
+    setValue,
     dirtyFields,
     isSubmitting,
     submitCount,
@@ -333,7 +337,14 @@ function FormContents({ formProps }: SigupFormProps) {
                 placeholder="Select country"
                 menuItems={countryOptions}
                 value={field.value}
-                onValueChange={field.onChange}
+                onValueChange={(nextCountry) => {
+                  field.onChange(nextCountry);
+                  setValue("city", "", {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  });
+                }}
                 error={fieldState.error?.message}
                 isDirty={fieldState.isDirty}
                 isTouched={fieldState.isTouched}
@@ -348,8 +359,10 @@ function FormContents({ formProps }: SigupFormProps) {
             render={({ field, fieldState }) => (
               <ComboBox
                 className="rounded-lg mt-3"
-                placeholder="Select city"
+                placeholder="Select City"
                 menuItems={cityOptions}
+                disabled={!originCountry}
+                disabledMessage="Select a country first"
                 value={field.value}
                 onValueChange={field.onChange}
                 error={fieldState.error?.message}
