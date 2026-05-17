@@ -32,22 +32,23 @@ import MobileForm from "@/app/features/dashboard/components/MobileForm";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import { useLocations } from "@/app/hookes/useLocation";
 import { useAuth } from "../../supabase/AuthProvider";
+import {
+  citySchema,
+  countrySchema,
+  emailSchema,
+  firstNameSchema,
+  lastNameSchema,
+  phoneNumberSchema,
+} from "@/app/shared/validation/formValidation";
 
 export const UserDetailsScema = z
   .object({
-    firstName: z.string().trim().min(2, "First name is required"),
-    lastName: z.string().trim().min(2, "Last name is required"),
-    emailAddress: z.string().trim().email("Enter a valid email"),
-    phoneNumber: z
-      .string()
-      .trim()
-      .min(7, "Enter a valid phone number")
-      .regex(
-        /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/im,
-        "Enter a valid phone number format",
-      ),
-    country: z.string().trim().min(1, "Country is required"),
-    city: z.string().trim().min(2, "City is required"),
+    firstName: firstNameSchema,
+    lastName: lastNameSchema,
+    emailAddress: emailSchema,
+    phoneNumber: phoneNumberSchema,
+    country: countrySchema,
+    city: citySchema,
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z
       .string()

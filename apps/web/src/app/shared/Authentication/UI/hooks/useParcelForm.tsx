@@ -21,26 +21,28 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { parcelStep2Fields } from "@/app/features/parcels/ui/CreateParcelForm";
 import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import { useNavigate } from "react-router-dom";
-export const parcelItemSchema = z.object({
-  quantity: z.number().min(1, "Quantity must be at least 1"),
-  description: z.string().trim().min(1, "Item description is required"),
-});
+import {
+  agreeToRulesSchema,
+  citySchema,
+  countrySchema,
+  goodsCategoriesSchema,
+  listingWeightSchema,
+  parcelItemSchema,
+  pricePerKgSchema,
+} from "@/app/shared/validation/formValidation";
 
 const parcelSchema = z.object({
-  originCountry: z.string().min(2, "Country is required"),
-  originCity: z.string().min(1, "city is required"),
-  destinationCountry: z.string().min(2, "Country is required"),
-  destinationCity: z.string().min(1, "City is required"),
-  goodsCategoryIds: z.array(z.string()).min(1, "Select at least one category"),
+  originCountry: countrySchema,
+  originCity: citySchema,
+  destinationCountry: countrySchema,
+  destinationCity: citySchema,
+  goodsCategoryIds: goodsCategoriesSchema,
   itemDescriptions: z
     .array(parcelItemSchema)
     .min(1, "Enter item quantity and description"),
-  weight: z.number().min(1, "Quantity should be 1 or more"),
-  pricePerKg: z.number().min(1, "Price should be 1 or more"),
-
-  agreeToRules: z
-    .boolean()
-    .refine((v) => v === true, { message: "You must agree to the rules" }),
+  weight: listingWeightSchema,
+  pricePerKg: pricePerKgSchema,
+  agreeToRules: agreeToRulesSchema,
 });
 
 export type ParcelFormFields = z.infer<typeof parcelSchema>;

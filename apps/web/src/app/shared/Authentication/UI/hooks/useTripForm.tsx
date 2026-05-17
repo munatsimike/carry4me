@@ -20,20 +20,26 @@ import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
 import toCreateTrip from "@/app/features/goods/domain/toCreateTripMapper";
 import { step2Fields } from "@/app/features/trips/ui/CreateTripForm";
 import { useNavigate } from "react-router-dom";
+import {
+  agreeToRulesSchema,
+  citySchema,
+  countrySchema,
+  departureDateSchema,
+  goodsCategoriesSchema,
+  listingWeightSchema,
+  pricePerKgSchema,
+} from "@/app/shared/validation/formValidation";
 
-// --- your schema (keep as-is, but fix message typo if you want) ---
 export const tripSchema = z.object({
-  originCountry: z.string().min(2, "Country is required"),
-  originCity: z.string().min(1, "City is required"),
-  destinationCountry: z.string().min(2, "Minimum of three letters is required"),
-  destinationCity: z.string().min(1, "Destination city is required"),
-  departureDate: z.string().min(1, "Departure date is required"),
-  weight: z.number().min(1, "Must be at least 1kg").max(200, "Too large"),
-  pricePerKg: z.number().min(0, "Price must be 0 or more"),
-  goodsCategoryIds: z.array(z.string()).min(1, "Select at least one category"),
-  agreeToRules: z.boolean().refine((v) => v === true, {
-    message: "You must agree to the rules",
-  }),
+  originCountry: countrySchema,
+  originCity: citySchema,
+  destinationCountry: countrySchema,
+  destinationCity: citySchema,
+  departureDate: departureDateSchema,
+  weight: listingWeightSchema,
+  pricePerKg: pricePerKgSchema,
+  goodsCategoryIds: goodsCategoriesSchema,
+  agreeToRules: agreeToRulesSchema,
 });
 export type TripFormFields = z.infer<typeof tripSchema>;
 

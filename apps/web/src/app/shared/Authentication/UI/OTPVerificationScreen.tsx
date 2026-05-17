@@ -17,13 +17,10 @@ import { usePhoneVerification } from "../PhoneVerificationContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import { AppError } from "@/app/shared/domain/AppError";
 import { ShieldCheck } from "lucide-react";
+import { otpCodeSchema } from "@/app/shared/validation/formValidation";
 
 const otpSchema = z.object({
-  otpCode: z
-    .string()
-    .trim()
-    .length(6, "OTP must be exactly 6 digits")
-    .regex(/^\d+$/, "OTP must contain only numbers"),
+  otpCode: otpCodeSchema,
 });
 
 type OTPFormValues = z.infer<typeof otpSchema>;

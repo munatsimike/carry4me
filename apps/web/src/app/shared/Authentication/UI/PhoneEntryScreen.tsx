@@ -16,16 +16,10 @@ import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import { AppError } from "@/app/shared/domain/AppError";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import SvgIcon from "@/components/ui/SvgIcon";
+import { phoneNumberSchema } from "@/app/shared/validation/formValidation";
 
 const phoneSchema = z.object({
-  phoneNumber: z
-    .string()
-    .trim()
-    .min(7, "Enter a valid phone number")
-    .regex(
-      /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/im,
-      "Enter a valid phone number format",
-    ),
+  phoneNumber: phoneNumberSchema,
 });
 
 type PhoneFormValues = z.infer<typeof phoneSchema>;

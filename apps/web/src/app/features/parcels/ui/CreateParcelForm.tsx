@@ -270,8 +270,12 @@ function PackageDescriptionField({
       </CustomText>
 
       <textarea
-        {...register("itemDescriptions.0.description")}
+        {...register("itemDescriptions.0.description", {
+          setValueAs: (value) =>
+            typeof value === "string" ? value.trimStart() : value,
+        })}
         placeholder="e.g clothes, shoes, documents, small electronics"
+        maxLength={160}
         className={`
           min-h-[120px]
           w-full

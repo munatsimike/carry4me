@@ -10,10 +10,14 @@ import { useEffect } from "react";
 import ComboBox from "./ComboBox";
 import { cn } from "../lib/cn";
 import { useLocations } from "../hookes/useLocation";
+import {
+  citySchema,
+  countrySchema,
+} from "@/app/shared/validation/formValidation";
 
 const searchScema = z.object({
-  country: z.string().min(1, "Select country"),
-  city: z.string().min(1, "Select city"),
+  country: countrySchema,
+  city: citySchema,
 });
 
 type SearchFields = z.infer<typeof searchScema>;
