@@ -42,10 +42,11 @@ import {
   toIsoCountryCode,
   toflag,
 } from "@/app/Mapper";
-import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 import {
-  otpCodeSchema,
-} from "@/app/shared/validation/formValidation";
+  parsePhoneNumberFromString,
+  type CountryCode,
+} from "libphonenumber-js";
+import { otpCodeSchema } from "@/app/shared/validation/formValidation";
 import {
   useRequestPhoneChangeMutation,
   useVerifyPhoneChangeMutation,
@@ -239,7 +240,14 @@ export default function CompleteProfile() {
         shouldValidate: true,
       });
     }
-  }, [profile?.country, profile?.countryCode, profile?.phoneNumber, setValue, user?.email, user?.phone]);
+  }, [
+    profile?.country,
+    profile?.countryCode,
+    profile?.phoneNumber,
+    setValue,
+    user?.email,
+    user?.phone,
+  ]);
 
   const { showSupabaseError } = useUniversalModal();
 
@@ -396,7 +404,7 @@ function FormContents({ formProps }: SigupFormProps) {
           Complete your profile
         </CustomText>
         <CustomText as="p" textVariant="label" textSize="sm">
-         Complete your details to get started with Carry4Me
+          Complete your details to send or carry parcels.
         </CustomText>
       </span>
       <LineDivider heightClass="my-0" />
@@ -666,7 +674,7 @@ function ChangePhoneNumberModal({
             Change phone number
           </CustomText>
           <CustomText textVariant="secondary" textSize="sm">
-           Enter your new phone number.
+            Enter your new phone number.
           </CustomText>
         </div>
 
@@ -760,7 +768,8 @@ function ChangePhoneNumberModal({
 
           {currentPhoneNumber && (
             <CustomText textVariant="secondary" textSize="xs">
-              Current phone {"+"}{currentPhoneNumber}
+              Current phone {"+"}
+              {currentPhoneNumber}
             </CustomText>
           )}
 

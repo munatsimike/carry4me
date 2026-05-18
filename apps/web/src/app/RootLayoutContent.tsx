@@ -2,26 +2,46 @@ import DesktopNavigationMenu, {
   BottomNavBar,
   MobileToolBar,
 } from "@/Navigation";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./shared/supabase/AuthProvider";
 import Footer from "./shared/Authentication/UI/Footer";
 import type { UserProfile } from "./shared/Authentication/domain/authTypes";
 import { useMediaQuery } from "./shared/Authentication/UI/hooks/useMediaQuery";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "./lib/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUI } from "./shared/Authentication/UI/hooks/useUI";
 import { PhoneVerificationModal } from "./shared/Authentication/UI/PhoneVerificationModal";
+import { COMPLETE_PROFILE_PATH } from "./shared/Authentication/domain/profileCompletion";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
 
 export default function RootLayoutContent() {
-  const { loading, user, profile } = useAuth();
+  const { loading, user, profile, profileIncomplete } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const previousUserIdRef = useRef<string | null | undefined>(undefined);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { showBottomNavBar } = useUI();
   const isAuthed = !!user;
 
   // Show phone verification modal if user is logged in and phone is not verified
+
+  useEffect(() => {
+    if (loading) return;
+
+    const previousUserId = previousUserIdRef.current;
+    const currentUserId = user?.id ?? null;
+    previousUserIdRef.current = currentUserId;
+
+    if (
+      previousUserId === null &&
+      currentUserId &&
+      profileIncomplete &&
+      location.pathname !== COMPLETE_PROFILE_PATH
+    ) {
+      navigate(COMPLETE_PROFILE_PATH, { replace: true });
+    }
+  }, [loading, user?.id, profileIncomplete, location.pathname, navigate]);
 
   if (loading) {
     return (

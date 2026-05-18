@@ -123,10 +123,11 @@ function DesktopProfileMenu({
       borderClass="border border-neutral-200"
       shadowClass="shadow-md"
       paddingClass="p-3"
+      sizeClass="max-w-none"
       enableHover={false}
-      className="absolute top-full mt-2 right-0 z-10 w-64"
+      className="absolute right-0 top-full z-10 mt-2 w-[16rem] min-w-[16rem]"
     >
-      <motion.div ref={ref} className="flex flex-col ">
+      <motion.div ref={ref} className="flex w-full flex-col">
         {profileItems.map((item) => (
           <ProfileItem
             key={item.name}
