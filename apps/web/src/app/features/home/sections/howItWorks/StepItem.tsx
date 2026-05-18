@@ -1,4 +1,3 @@
-import { CircleBadge } from "@/components/ui/CircleBadge";
 import CustomText from "@/components/ui/CustomText";
 import type { Step } from "@/types/Ui";
 
@@ -7,7 +6,10 @@ type StepProps = {
   isLast?: boolean;
 };
 
-export default function StepItem({ step, isLast = false }: StepProps) {
+export default function StepItem({
+  step,
+  isLast = false,
+}: StepProps) {
   return (
     <div className="relative flex gap-4 rounded-3xl bg-white/80 p-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md lg:h-full lg:flex-col lg:gap-5 lg:rounded-none lg:bg-transparent lg:p-5 lg:shadow-none lg:ring-0 lg:hover:bg-transparent lg:hover:shadow-none">
       {!isLast && (
@@ -18,11 +20,9 @@ export default function StepItem({ step, isLast = false }: StepProps) {
       )}
 
       <div className="relative z-10 shrink-0">
-        <CircleBadge bgColor="primary" size="lg">
-          <CustomText as="h3" textSize="md" textVariant="primary">
-            {step.step}
-          </CustomText>
-        </CircleBadge>
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary-200 bg-white text-lg font-semibold text-primary-600 shadow-sm">
+          {step.step}
+        </div>
       </div>
 
       <div className="flex min-w-0 flex-col gap-1 lg:pt-1">

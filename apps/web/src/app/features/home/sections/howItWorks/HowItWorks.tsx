@@ -48,7 +48,10 @@ export default function HowItWorks({ steps }: StepsPros) {
         >
           {steps.map((step, index) => (
             <motion.div key={index} variants={howItWorksItem}>
-              <StepItem step={step} isLast={index === steps.length - 1} />
+              <StepItem
+                step={step}
+                isLast={index === steps.length - 1}
+              />
             </motion.div>
           ))}
         </motion.section>
