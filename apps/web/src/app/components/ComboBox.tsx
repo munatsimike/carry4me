@@ -9,6 +9,7 @@ type ComboBoxProps = {
   menuItems: string[];
   disabled?: boolean;
   className?: string;
+  wrapperClassName?: string;
   value?: string;
   onValueChange?: (value: string) => void;
   isDirty: boolean;
@@ -26,6 +27,7 @@ export default function ComboBox({
   placeholder,
   disabled = false,
   className,
+  wrapperClassName,
   roundedClass = "rounded-xl",
   value = "",
   onValueChange,
@@ -115,7 +117,7 @@ export default function ComboBox({
     return (
       <div
         ref={wrapperRef}
-        className="relative w-full min-w-0"
+        className={cn("relative w-full min-w-0", wrapperClassName)}
         onMouseDown={handleDisabledInteraction}
       >
         <select
@@ -163,7 +165,7 @@ export default function ComboBox({
   return (
     <div
       ref={wrapperRef}
-      className="relative w-full min-w-0"
+      className={cn("relative w-full min-w-0", wrapperClassName)}
       onMouseDown={handleDisabledInteraction}
     >
       <input

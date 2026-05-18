@@ -286,16 +286,13 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
                 />
               </div>
             </div>
-            <CustomText textVariant="helperText" textSize="xs">
-              Use a phone number that can receive SMS messages.
-            </CustomText>
           </div>
         </div>
 
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full relative mb-1"
+          className="w-full relative mb-1 mt-2"
           variant={"primary"}
           size={"sm"}
         >

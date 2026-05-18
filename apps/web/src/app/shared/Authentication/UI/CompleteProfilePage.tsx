@@ -376,6 +376,7 @@ function FormContents({ formProps }: SigupFormProps) {
   const displayCountry = originCountry
     ? (toCountryName(originCountry) ?? originCountry)
     : "";
+  const countryFlagIcon = originCountry ? toflag(originCountry) : null;
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
 
@@ -395,8 +396,7 @@ function FormContents({ formProps }: SigupFormProps) {
           Complete your profile
         </CustomText>
         <CustomText as="p" textVariant="label" textSize="sm">
-          You are almost there. Add a few details so we can help you send and
-          carry parcels safely.
+         Complete your details to get started with Carry4Me
         </CustomText>
       </span>
       <LineDivider heightClass="my-0" />
@@ -473,10 +473,15 @@ function FormContents({ formProps }: SigupFormProps) {
           <FloatingInputField
             className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[260px]"
             hasValue={!!displayCountry}
-            label="Country"
+            label=""
             readOnly
             disabled
             value={displayCountry}
+            leadingIcon={
+              countryFlagIcon ? (
+                <SvgIcon size="xs" Icon={countryFlagIcon} />
+              ) : undefined
+            }
             isDirty={false}
             isTouched={false}
           />
@@ -486,7 +491,7 @@ function FormContents({ formProps }: SigupFormProps) {
             name="city"
             render={({ field, fieldState }) => (
               <ComboBox
-                className="rounded-lg mt-3 w-full sm:max-w-[260px]"
+                wrapperClassName="w-full sm:max-w-[260px]"
                 placeholder="Select city"
                 menuItems={cityOptions}
                 disabled={!originCountry}
@@ -496,6 +501,7 @@ function FormContents({ formProps }: SigupFormProps) {
                 error={fieldState.error?.message}
                 isDirty={fieldState.isDirty}
                 isTouched={fieldState.isTouched}
+                heightClass="h-10 py-0"
                 searchable
               />
             )}
@@ -514,7 +520,7 @@ function FormContents({ formProps }: SigupFormProps) {
           disabled={isSubmitting || (submitCount > 0 && !isValid)}
         >
           <CustomText textVariant="onDark" textSize="sm">
-            {isSubmitting ? "Creating account..." : "Join Carry4Me"}
+            {isSubmitting ? "Saving profile..." : "Save profile"}
           </CustomText>
         </Button>
       </span>
