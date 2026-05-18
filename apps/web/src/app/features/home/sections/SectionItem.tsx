@@ -12,8 +12,8 @@ export default function SectionItem({
   className = "pl-[52px]",
 }: sectionItemProps) {
   return (
-    <div className="flex flex-col sm:gap-2 pb-4">
-      <span className="flex items-center gap-4">
+    <div className="flex flex-col gap-1 pb-4 last:pb-0 sm:gap-2">
+      <span className="flex min-w-0 items-center gap-4">
         {icon}
         {label}
       </span>

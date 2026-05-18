@@ -30,7 +30,7 @@ export default function HowItWorks({ steps }: StepsPros) {
   };
 
   return (
-    <DefaultContainer outerClassName="bg-canvas" className="flex flex-col">
+    <DefaultContainer outerClassName="bg-canvas" className="flex flex-col py-8 sm:py-10">
       <motion.div
         variants={howItWorksContainer}
         initial="hidden"
@@ -41,21 +41,21 @@ export default function HowItWorks({ steps }: StepsPros) {
           <SectionTitle title="How it works" />
         </motion.div>
 
-        {/* Steps grid */}
+        {/* Steps timeline */}
         <motion.section
           variants={howItWorksContainer}
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-5 "
+          className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-0"
         >
           {steps.map((step, index) => (
             <motion.div key={index} variants={howItWorksItem}>
-              <StepItem step={step} />
+              <StepItem step={step} isLast={index === steps.length - 1} />
             </motion.div>
           ))}
         </motion.section>
 
         {/* CTA */}
         <motion.div
-          className="flex justify-center pt-6"
+          className="flex justify-center pt-6 sm:pt-8"
           variants={howItWorksItem}
         >
           <motion.div>

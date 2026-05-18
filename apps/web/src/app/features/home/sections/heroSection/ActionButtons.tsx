@@ -32,7 +32,7 @@ export default function ActionButtons() {
 
   return (
     <motion.section
-      className="flex w-full flex-col md:flex-row md:justify-center gap-5 sm:gap-5 py-5 sm:p-20 md:max-w-4xl"
+      className="mx-auto flex w-full max-w-3xl flex-col gap-3 py-6 sm:gap-4 sm:py-8 md:flex-row md:justify-center md:py-10"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -41,11 +41,11 @@ export default function ActionButtons() {
       <motion.div variants={itemVariants} className="w-full">
         <Link to={"/parcels"} className="w-full">
           <Button
-            className="w-full"
+            className="w-full min-w-0 px-4"
             subtitle={
               <CustomText
                 textVariant="onDark"
-                className="whitespace-nowrap"
+                className="text-center leading-snug"
                 as="span"
                 textSize={subtitleSize}
               >
@@ -65,7 +65,7 @@ export default function ActionButtons() {
               as="span"
               textSize={titleSize}
               textVariant="onDark"
-              className="whitespace-nowrap"
+              className="leading-snug"
             >
               Browse parcels
             </CustomText>
@@ -77,10 +77,10 @@ export default function ActionButtons() {
       <motion.div variants={itemVariants} className="w-full">
         <Link to={"/travelers"} className="w-full">
           <Button
-            className="w-full"
+            className="w-full min-w-0 px-4"
             subtitle={
               <CustomText
-                className="whitespace-nowrap"
+                className="text-center leading-snug"
                 textVariant="secondary"
                 as="span"
                 textSize={subtitleSize}
@@ -103,7 +103,7 @@ export default function ActionButtons() {
               as="span"
               textSize={titleSize}
               textVariant="primary"
-              className="whitespace-nowrap"
+              className="leading-snug"
             >
               Browse trips
             </CustomText>

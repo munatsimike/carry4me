@@ -21,16 +21,19 @@ export default function InfoList({ items }: InfoItemsProps) {
 
 function InfoItems({ items, tag }: { items: InfoItem[]; tag: Tag }) {
   const variant = tag ? tagToVariant[tag] : DEFAULT_VARIANT;
+  const title = tag.substring(0, 1).toLocaleUpperCase() + tag.substring(1);
   return (
     <div>
-      <CustomText
-        as="h2"
-        textVariant="primary"
-        textSize="xl"
-        className="font-medium pb-6"
-      >
-        {tag.substring(0, 1).toLocaleUpperCase() + tag.substring(1)}
-      </CustomText>
+      <div className="mb-5">
+        <CustomText
+          as="h3"
+          textVariant="primary"
+          textSize="xl"
+          className="font-medium"
+        >
+          {title}
+        </CustomText>
+      </div>
 
       {items.map((item, index) => {
         return (

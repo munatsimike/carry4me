@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 export function HeroSection() {
   const heading = "We match travelers with parcels that need to go home.";
   const subHeading =
-    "List your parcel or trip and get matched with a trusted sender or traveler. Travelers earn, senders save.";
+    "List a parcel or trip and get matched. Travelers earn extra, and senders save on delivery.";
 
   const container = {
     hidden: {},
@@ -32,14 +32,24 @@ export function HeroSection() {
   };
 
   return (
-    <DefualtContianer className=" flex flex-col items-center mt-6 sm:mt-14">
-      <motion.div variants={container} initial="hidden" animate="show">
+    <DefualtContianer
+      outerClassName="bg-gradient-to-b from-primary-50 via-white to-white"
+      className="pt-8 sm:pt-12 lg:pt-16"
+    >
+      <div className="flex flex-col items-center px-4 py-8 text-center sm:px-6 sm:py-10 lg:px-8">
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="max-w-5xl"
+      >
         <Heading
           textSize="display"
           textVariant="primary"
-          className="leading-tight pb-2 sm:pb-0 font-medium"
+          className="pb-1 font-medium leading-[1.08] sm:pb-2"
         >
-          {String(heading)
+          {heading
+            .replace("go home.", "go\u00A0home.")
             .split(" ")
             .map((w, i) => (
               <motion.span
@@ -52,10 +62,16 @@ export function HeroSection() {
             ))}
         </Heading>
       </motion.div>
-      <SubHeading textSize="md" as="p">
+      <SubHeading
+        textSize="md"
+        as="p"
+        textVariant="secondary"
+        className="max-w-3xl text-left leading-relaxed sm:text-center"
+      >
         {subHeading}
       </SubHeading>
       <ActionButtons />
+      </div>
     </DefualtContianer>
   );
 }

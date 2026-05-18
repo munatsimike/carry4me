@@ -11,6 +11,7 @@ import Plane from "@/assets/plane-filled.svg?react";
 import LoveHands from "@/assets/lovehands.svg?react";
 import User from "@/assets/userwithtick.svg?react";
 import Lock from "@/assets/lock.svg?react";
+import ShakingHands from "@/assets/shaking-hands.svg?react";
 import type { InfoItem } from "@/types/Ui";
 
 
@@ -80,7 +81,7 @@ export const safetyRules: InfoItem[] = [
   },
 
   {
-    Icon: Hands,
+    Icon: ShakingHands,
     label: "Clear responsibility",
     value: "Both sender and traveler confirm handover.",
   },
