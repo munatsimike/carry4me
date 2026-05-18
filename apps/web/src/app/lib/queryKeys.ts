@@ -37,6 +37,8 @@ export const queryKeys = {
     all: ["dashboard"] as const,
     detail: (userId: string) =>
       [...queryKeys.dashboard.all, "detail", userId] as const,
+    suggestedMatches: (userId: string) =>
+      [...queryKeys.dashboard.all, "suggestedMatches", userId] as const,
   },
   goods: {
     all: ["goods"] as const,

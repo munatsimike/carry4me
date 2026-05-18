@@ -3,7 +3,12 @@ import { queryKeys } from "@/app/lib/queryKeys";
 import {
   getDashboardDataUseCase,
   getNotificationUseCase,
+  getParcelsUseCase,
+  getTripsUseCase,
+  myParcelsUseCase,
+  myTripsUseCase,
 } from "@/app/lib/useCases";
+import { buildDashboardSuggestedMatches } from "@/app/features/dashboard/application/suggestedMatches";
 
 export function useDashboard(userId: string | undefined) {
   return useQuery({
@@ -19,5 +24,30 @@ export function useDashboard(userId: string | undefined) {
       };
     },
     enabled: !!userId,
+  });
+}
+
+export function useDashboardSuggestedMatches(userId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.dashboard.suggestedMatches(userId ?? ""),
+    queryFn: async () => {
+      const [activeParcels, activeTrips, allParcels, allTrips] =
+        await Promise.all([
+          myParcelsUseCase.execute(userId!),
+          myTripsUseCase.execute(userId!),
+          getParcelsUseCase.execute(userId!),
+          getTripsUseCase.execute(userId!),
+        ]);
+
+      return buildDashboardSuggestedMatches({
+        userId: userId!,
+        activeParcels,
+        activeTrips,
+        allParcels,
+        allTrips,
+      });
+    },
+    enabled: !!userId,
+    retry: 1,
   });
 }

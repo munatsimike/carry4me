@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 export function HeroSection() {
   const heading = "We match travelers with parcels that need to go home.";
   const subHeading =
-    "List a parcel or trip and get matched. Travelers earn extra, and senders save on delivery.";
+    "List a parcel or trip and connect with travelers or senders";
 
   const container = {
     hidden: {},
@@ -32,10 +32,7 @@ export function HeroSection() {
   };
 
   return (
-    <DefualtContianer
-      outerClassName="bg-gradient-to-b from-primary-50 via-white to-white"
-      className="pt-8 sm:pt-12 lg:pt-16"
-    >
+    <DefualtContianer className="pt-8 sm:pt-12 lg:pt-16">
       <div className="flex flex-col items-center px-4 py-8 text-center sm:px-6 sm:py-10 lg:px-8">
       <motion.div
         variants={container}
