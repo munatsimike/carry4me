@@ -11,6 +11,10 @@ type TokenRow = {
   expires_at: string;
 };
 
+type ProfileVerificationRow = {
+  email_verified: boolean;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -25,15 +29,16 @@ Deno.serve(async (req) => {
     try {
       body = await req.json();
     } catch {
-      return jsonResponse({ error: "Invalid JSON body" }, 400);
+      return jsonResponse({ ok: false, verified: false, error: "invalid_body" }, 200);
     }
 
     const token = body.token?.trim();
     if (!token) {
-      return jsonResponse({ error: "token is required" }, 400);
+      return jsonResponse({ ok: false, verified: false, error: "token_required" }, 200);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !serviceRoleKey) {
@@ -54,7 +59,26 @@ Deno.serve(async (req) => {
     }
 
     if (!tokenRow) {
-      return jsonResponse({ error: "Invalid or expired verification link" }, 404);
+      const alreadyVerified = await resolveAlreadyVerifiedUser(
+        supabaseUrl,
+        supabaseAnonKey,
+        req.headers.get("Authorization"),
+        supabaseAdmin,
+      );
+
+      if (alreadyVerified) {
+        return jsonResponse({
+          ok: true,
+          verified: true,
+          alreadyVerified: true,
+        });
+      }
+
+      return jsonResponse({
+        ok: false,
+        verified: false,
+        error: "link_already_used",
+      }, 200);
     }
 
     if (new Date(tokenRow.expires_at).getTime() < Date.now()) {
@@ -63,7 +87,42 @@ Deno.serve(async (req) => {
         .delete()
         .eq("token", token);
 
-      return jsonResponse({ error: "Invalid or expired verification link" }, 404);
+      const alreadyVerified = await isProfileEmailVerified(
+        supabaseAdmin,
+        tokenRow.user_id,
+      );
+
+      if (alreadyVerified) {
+        return jsonResponse({
+          ok: true,
+          verified: true,
+          alreadyVerified: true,
+        });
+      }
+
+      return jsonResponse({
+        ok: false,
+        verified: false,
+        error: "link_expired",
+      }, 200);
+    }
+
+    const alreadyVerified = await isProfileEmailVerified(
+      supabaseAdmin,
+      tokenRow.user_id,
+    );
+
+    if (alreadyVerified) {
+      await supabaseAdmin
+        .from("email_verification_tokens")
+        .delete()
+        .eq("user_id", tokenRow.user_id);
+
+      return jsonResponse({
+        ok: true,
+        verified: true,
+        alreadyVerified: true,
+      });
     }
 
     const { error: updateError } = await supabaseAdmin
@@ -81,12 +140,47 @@ Deno.serve(async (req) => {
       .delete()
       .eq("user_id", tokenRow.user_id);
 
-    return jsonResponse({ ok: true, verified: true });
+    return jsonResponse({ ok: true, verified: true, alreadyVerified: false });
   } catch (error) {
     console.error("verify-email error:", error);
     return jsonResponse({ error: "Internal server error" }, 500);
   }
 });
+
+async function isProfileEmailVerified(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userId: string,
+) {
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("email_verified")
+    .eq("id", userId)
+    .maybeSingle<ProfileVerificationRow>();
+
+  return profile?.email_verified === true;
+}
+
+async function resolveAlreadyVerifiedUser(
+  supabaseUrl: string,
+  supabaseAnonKey: string | undefined,
+  authHeader: string | null,
+  supabaseAdmin: ReturnType<typeof createClient>,
+) {
+  if (!authHeader || !supabaseAnonKey) {
+    return false;
+  }
+
+  const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data: authData, error: authError } = await supabaseUser.auth.getUser();
+  if (authError || !authData.user) {
+    return false;
+  }
+
+  return isProfileEmailVerified(supabaseAdmin, authData.user.id);
+}
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

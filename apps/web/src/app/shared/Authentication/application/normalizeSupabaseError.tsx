@@ -445,3 +445,76 @@ export function normalizeSupabaseError(
 export function toFriendlyErrorMessage(error: unknown): string {
   return normalizeSupabaseError(AppError.fromUnknown(error)).message;
 }
+
+/** Carry4Me email verification edge-function / verify-email page codes */
+export function normalizeEmailVerificationError(
+  code?: string,
+): NormalizedError {
+  const normalizedCode = normalizeText(code);
+
+  switch (normalizedCode) {
+    case "email_verified":
+      return {
+        category: "AUTH",
+        title: "Email verified",
+        message:
+          "Your email has been verified. Taking you to the dashboard…",
+        action: "close",
+      };
+
+    case "already_verified":
+      return {
+        category: "AUTH",
+        title: "Email already verified",
+        message:
+          "Your email is already verified. Taking you to the dashboard…",
+        action: "close",
+      };
+
+    case "link_already_used":
+      return {
+        category: "AUTH",
+        title: "Link already used",
+        message:
+          "This verification link has already been used. If your email is verified, sign in and go to the dashboard. Otherwise request a new verification email from your profile.",
+        action: "signIn",
+      };
+
+    case "link_expired":
+      return {
+        category: "AUTH",
+        title: "Link expired",
+        message:
+          "This verification link has expired. Sign in and request a new verification email from your dashboard.",
+        action: "signIn",
+      };
+
+    case "token_required":
+    case "invalid_body":
+      return {
+        category: "VALIDATION",
+        title: "Invalid link",
+        message:
+          "This verification link is not valid. Request a new verification email and try again.",
+        action: "close",
+      };
+
+    case "email_verify_failed":
+      return {
+        category: "SERVER",
+        title: "Verification problem",
+        message:
+          "We could not verify your email right now. Please try again in a moment.",
+        action: "retry",
+      };
+
+    default:
+      return {
+        category: "UNKNOWN",
+        title: "Verification problem",
+        message:
+          "We could not verify your email. Request a new verification email and try again.",
+        action: "close",
+      };
+  }
+}

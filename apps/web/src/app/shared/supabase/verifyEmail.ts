@@ -4,6 +4,7 @@ import { supabase } from "@/app/shared/supabase/client";
 export type VerifyEmailResult = {
   ok: boolean;
   verified: boolean;
+  alreadyVerified?: boolean;
   error?: string;
 };
 
@@ -22,9 +23,18 @@ export async function verifyEmail(token: string): Promise<VerifyEmailResult> {
   }
 
   const result = data as VerifyEmailResult | null;
-  if (result?.error) {
-    throw new AppError({ message: result.error, code: "EMAIL_VERIFY_FAILED" });
+
+  if (!result) {
+    return { ok: false, verified: false };
   }
 
-  return result ?? { ok: false, verified: false };
+  if (result.verified) {
+    return result;
+  }
+
+  if (result.error) {
+    return result;
+  }
+
+  return result;
 }
