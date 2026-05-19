@@ -17,7 +17,7 @@ export default function FaqDesktopPanel({
   const selectedItem = items[openIndex] ?? items[0];
 
   return (
-    <div className="hidden w-full max-w-5xl gap-5 lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:gap-8">
+    <div className="grid w-full max-w-5xl grid-cols-[0.9fr_1.1fr] gap-8">
       <div className="flex flex-col gap-2">
         {items.map((item, index) => {
           const isOpen = openIndex === index;

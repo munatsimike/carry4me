@@ -16,7 +16,7 @@ export default function FaqMobileAccordion({
   onToggle,
 }: FaqMobileAccordionProps) {
   return (
-    <div className="flex w-full flex-col gap-3 lg:hidden">
+    <div className="flex w-full flex-col gap-3">
       {items.map((item, index) => {
         const isOpen = openIndex === index;
 
