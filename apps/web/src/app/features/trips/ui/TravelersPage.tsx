@@ -23,7 +23,7 @@ import CreateTripModal from "./CreateTripModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
 import {
@@ -35,13 +35,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { getParcelUseCase } from "@/app/lib/useCases";
 import type { ListingPageParams } from "@/types/Pagination";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
-import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
+import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 
 const PAGE_SIZE = 9;
 
 export default function TravelersPage() {
-  const { user, profile, profileIncomplete } = useAuth();
+  const { user } = useAuth();
+  const { guardAction } = useMarketplaceActionGuard();
   const { openSignInModal } = useSignInModal();
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
@@ -130,12 +130,7 @@ export default function TravelersPage() {
       return;
     }
 
-    const blockReason = getAccountActionBlockReason(profile, "send_request");
-    if (blockReason) {
-      toast(blockReason, { variant: "warning" });
-      return;
-    }
-
+    guardAction(async () => {
     if (trip.user.id === user?.id) {
       toast(
         "You can’t match with your own trip. Browse available parcels instead.",
@@ -180,6 +175,7 @@ export default function TravelersPage() {
 
     setTrip(trip);
     setModalState(true);
+    }, "send_request");
   };
 
   const handleLikeUpdate = (id: string) => {
@@ -190,7 +186,6 @@ export default function TravelersPage() {
   const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
   const isMobile = useMediaQuery();
   const scrollDirection = useScrollDirection();
-  const navigate = useNavigate();
   const filterForm = useFiltersForm({
     setSelectedDate: setFilterByDate,
     setPriceRange,
@@ -223,18 +218,9 @@ export default function TravelersPage() {
       return;
     }
 
-    if (profileIncomplete) {
-      navigate(COMPLETE_PROFILE_PATH);
-      return;
-    }
-
-    const blockReason = getAccountActionBlockReason(profile, "post_listing");
-    if (blockReason) {
-      toast(blockReason, { variant: "warning" });
-      return;
-    }
-
-    setTripModalState(true);
+    guardAction(() => {
+      setTripModalState(true);
+    });
   };
 
   return (
@@ -288,12 +274,6 @@ export default function TravelersPage() {
             <CreateTripModal setModalState={() => setTripModalState(false)} />
           )}
         </AnimatePresence>
-        {isFetching && isFetched && (
-          <CustomText textVariant="secondary" textSize="sm">
-            Updating trips...
-          </CustomText>
-        )}
-
         {displayedTrips.length === 0 && isFetched && !hasFilter && !isSearchActive && (
           <EmptyState
             title="No trips available"

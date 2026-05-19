@@ -19,6 +19,7 @@ import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import statusColor from "./StatustColorMapper";
 import actionsMapper, { UIACTIONKEYS, type UIActions } from "./ActionsMapper";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import type { CarryRequest } from "../domain/CarryRequest";
 import {
   CARRY_REQUEST_STATUSES,
@@ -68,6 +69,7 @@ const statusToTab: Record<CarryRequestStatus, SelectedTab> = {
 
 export default function CarryRequestsPage() {
   const { user, refreshProfile } = useAuth();
+  const { guardAction } = useMarketplaceActionGuard();
   const [selectedTab, setSelectedTab] = useState<SelectedTab | null>(null);
   const queryClient = useQueryClient();
   const performRequestActions = performCarryRequestActionUseCase;
@@ -235,6 +237,9 @@ export default function CarryRequestsPage() {
 
     // check weight and parcel availability before accepting a request
     if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
+      if (!guardAction(() => undefined, "send_request")) {
+        return;
+      }
       const weightResult = await checkTravelersWeight(carryRequest);
       if (!weightResult) return;
 

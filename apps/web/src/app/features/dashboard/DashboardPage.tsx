@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/supabase/AuthProvider";
-import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
@@ -15,6 +14,7 @@ import CreatParcelModal from "../parcels/ui/CreateParcelModal";
 import CreateTripModal from "../trips/ui/CreateTripModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
+import { SuggestedMatchCard } from "./components/SuggestedMatchCard";
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";
 import type { DashboardData } from "./domain/DashboardData";
@@ -30,7 +30,6 @@ import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
 import Greeting from "@/app/components/Greeting";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
-import { useToast } from "@/app/components/Toast";
 import type { TripListing } from "../trips/domain/Trip";
 import type { ParcelListing } from "../parcels/domain/Parcel";
 import type { ListingSource } from "@/app/shared/Authentication/domain/Listing";
@@ -62,8 +61,8 @@ export default function DashboardPage() {
   const [createTrip, setCreateTrip] = useState<boolean>(false);
   const navigate = useNavigate();
   const isMobile = useMediaQuery();
-  const { user, profile, profileIncomplete } = useAuth();
-  const { toast } = useToast();
+  const { user, profile } = useAuth();
+  const { guardAction } = useMarketplaceActionGuard();
 
   const { data, error } = useDashboard(user?.id);
   const {
@@ -81,24 +80,15 @@ export default function DashboardPage() {
   const requirePhoneVerification = (action: "trip" | "parcel") => {
     if (!user?.id) return;
 
-    if (profileIncomplete) {
-      navigate(COMPLETE_PROFILE_PATH);
-      return;
-    }
+    guardAction(() => {
+      if (action === "trip") {
+        setCreateTrip(true);
+      }
 
-    const blockReason = getAccountActionBlockReason(profile, "post_listing");
-    if (blockReason) {
-      toast(blockReason, { variant: "warning" });
-      return;
-    }
-
-    if (action === "trip") {
-      setCreateTrip(true);
-    }
-
-    if (action === "parcel") {
-      setCreateParcel(true);
-    }
+      if (action === "parcel") {
+        setCreateParcel(true);
+      }
+    });
   };
 
   useEffect(() => {
@@ -241,7 +231,7 @@ function SuggestedMatchGroup({
       </CustomText>
 
       {listings.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-500">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-500">
           {emptyMessage}
         </div>
       ) : (
@@ -257,55 +247,6 @@ function SuggestedMatchGroup({
         </div>
       )}
     </div>
-  );
-}
-
-function SuggestedMatchCard({
-  listing,
-  ctaLabel,
-  href,
-}: {
-  listing: ListingSource;
-  ctaLabel: string;
-  href: string;
-}) {
-  const categories = listing.goodsCategory.map((category) => category.name);
-  const route = `${listing.route.originCity}, ${listing.route.originCountry} → ${listing.route.destinationCity}, ${listing.route.destinationCountry}`;
-
-  return (
-    <Card
-      enableHover={false}
-      paddingClass="p-4"
-      className="flex h-full flex-col gap-3 rounded-3xl border border-slate-200 bg-white shadow-sm"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium capitalize text-slate-600">
-          {listing.type}
-        </span>
-        <span className="text-xs text-slate-400">{listing.status}</span>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <CustomText textVariant="primary" textSize="md" className="font-medium">
-          {route}
-        </CustomText>
-        <CustomText textVariant="secondary" textSize="xs">
-          {categories.length > 0 ? categories.join(", ") : "Any category"}
-        </CustomText>
-      </div>
-
-      <div className="mt-auto flex items-center justify-between gap-3">
-        <span className="text-sm text-slate-500">
-          {listing.weightKg}kg · {listing.pricePerKg}/kg
-        </span>
-        <Link
-          to={href}
-          className="rounded-full bg-primary-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary-600"
-        >
-          {ctaLabel}
-        </Link>
-      </div>
-    </Card>
   );
 }
 

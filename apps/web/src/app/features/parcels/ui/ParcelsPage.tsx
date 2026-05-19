@@ -31,20 +31,20 @@ import CreateParcelModal from "./CreateParcelModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
 import type { ListingPageParams } from "@/types/Pagination";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
-import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
+import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 
 const PAGE_SIZE = 9;
 
 export default function ParcelsPage() {
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
-  const { user, profile, profileIncomplete } = useAuth();
+  const { user } = useAuth();
   const { openSignInModal } = useSignInModal();
+  const { guardAction } = useMarketplaceActionGuard();
 
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
   const [modalState, setModalState] = useState<boolean>(false);
@@ -126,12 +126,7 @@ export default function ParcelsPage() {
       return;
     }
 
-    const blockReason = getAccountActionBlockReason(profile, "send_request");
-    if (blockReason) {
-      toast(blockReason, { variant: "warning" });
-      return;
-    }
-
+    guardAction(async () => {
     // check if parcel to be matched to a trip does not belong to the logged in user
     if (parcel.user.id === user.id) {
       toast(
@@ -174,6 +169,7 @@ export default function ParcelsPage() {
     }
     setParcel(parcel);
     setModalState(true);
+    }, "send_request");
   };
 
   const handleLikeUpdate = (id: string) => {
@@ -183,7 +179,6 @@ export default function ParcelsPage() {
   const [mobileFilter, setMobileFilter] = useState<boolean>(false);
   const scrollDirection = useScrollDirection();
   const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
-  const navigate = useNavigate();
   const filterForm = useFiltersForm({
     setSelectedDate: setFilterByDate,
     setPriceRange,
@@ -216,18 +211,9 @@ export default function ParcelsPage() {
       return;
     }
 
-    if (profileIncomplete) {
-      navigate(COMPLETE_PROFILE_PATH);
-      return;
-    }
-
-    const blockReason = getAccountActionBlockReason(profile, "post_listing");
-    if (blockReason) {
-      toast(blockReason, { variant: "warning" });
-      return;
-    }
-
-    setParcelModalState(true);
+    guardAction(() => {
+      setParcelModalState(true);
+    });
   };
 
   return (
@@ -283,12 +269,6 @@ export default function ParcelsPage() {
             />
           )}
         </AnimatePresence>
-        {isFetching && isFetched && (
-          <CustomText textVariant="secondary" textSize="sm">
-            Updating parcels...
-          </CustomText>
-        )}
-
         {displayedParcels.length > 0 && (
           <Parcels
             parcels={displayedParcels}

@@ -19,6 +19,7 @@ import {
   CompleteProfileRoute,
   ProtectedRoute,
 } from "./shared/Authentication/application/RouteGuards";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "about", element: <AboutPage /> },
       { path: "signin", element: <PhoneVerificationModal /> },
+      { path: "verify-email", element: <VerifyEmailPage /> },
       {
         path: "complete-profile",
         element: (
@@ -103,6 +105,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

@@ -21,6 +21,7 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { parcelStep2Fields } from "@/app/features/parcels/ui/CreateParcelForm";
 import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import { useNavigate } from "react-router-dom";
+import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
 import {
   agreeToRulesSchema,
   citySchema,
@@ -89,6 +90,7 @@ export default function useParcelForm({
   const { toast } = useToast();
 
   const { user, refreshProfile } = useAuth();
+  const { guardAction } = useMarketplaceActionGuard();
   const selectedIds = watch("goodsCategoryIds");
   const [toDasshboard, setToDashBoard] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -137,6 +139,8 @@ export default function useParcelForm({
 
   const onCreate = async (values: ParcelFormFields) => {
     if (!user) return;
+    if (!guardAction(() => undefined, "post_listing")) return;
+
     const ok = await trigger(parcelStep2Fields, { shouldFocus: true });
     if (!ok) return;
 

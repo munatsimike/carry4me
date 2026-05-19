@@ -14,8 +14,6 @@ export function useToggleFavouriteMutation() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.favourites.list(variables.userId),
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.trips.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.parcels.all });
     },
     onError: (err) => showSupabaseError(err),
   });

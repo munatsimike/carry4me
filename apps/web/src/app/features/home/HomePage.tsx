@@ -16,23 +16,23 @@ import {
   getDefaultAuthedPath,
   isSuspended,
 } from "@/app/shared/Authentication/domain/accountStatus";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
+import { COMPLETE_PROFILE_PATH, needsCompleteProfile } from "@/app/shared/Authentication/domain/profileCompletion";
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSignup = searchParams.get("signup") === "success";
   const navigate = useNavigate();
-  const { user, loading, profile, profileIncomplete } = useAuth();
+  const { user, loading, profile } = useAuth();
 
   useEffect(() => {
     if (isSuspended(profile)) return;
 
     if (user && !loading) {
       navigate(
-        profileIncomplete ? COMPLETE_PROFILE_PATH : getDefaultAuthedPath(profile),
+        needsCompleteProfile(profile) ? COMPLETE_PROFILE_PATH : getDefaultAuthedPath(profile),
       );
     }
-  }, [user, loading, profile, profileIncomplete, navigate]);
+  }, [user, loading, profile, navigate]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("redirectToast");

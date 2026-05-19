@@ -85,6 +85,7 @@ function toUserProfile(profile: Record<string, any>): UserProfile {
     city: profile.city,
     phoneNumber: profile.phone_number,
     email: profile.email,
+    emailVerified: profile.email_verified === true,
     phoneVerified: profile.phone_verified === true,
     accountStatus: toAccountStatus(profile.account_status),
   };

@@ -2,6 +2,10 @@ import type { UserProfile } from "./authTypes";
 
 export const COMPLETE_PROFILE_PATH = "/complete-profile";
 
+export function needsCompleteProfile(profile: UserProfile | null): boolean {
+  return !profile || isProfileIncomplete(profile);
+}
+
 export function isProfileIncomplete(profile: UserProfile | null): boolean {
   if (!profile) return true;
 

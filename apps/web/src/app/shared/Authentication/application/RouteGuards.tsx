@@ -8,7 +8,11 @@ import {
   getDefaultAuthedPath,
   isSuspended,
 } from "../domain/accountStatus";
-import { COMPLETE_PROFILE_PATH } from "../domain/profileCompletion";
+import {
+  COMPLETE_PROFILE_PATH,
+  isProfileIncomplete,
+  needsCompleteProfile,
+} from "../domain/profileCompletion";
 
 type GuardProps = {
   children: ReactNode;
@@ -43,7 +47,7 @@ export function ProtectedRoute({
   blockSuspended = true,
   blockPendingReviewActions = false,
 }: ProtectedRouteProps) {
-  const { loading, user, profile, profileIncomplete } = useAuth();
+  const { loading, user, profile } = useAuth();
   const location = useLocation();
 
   if (loading) return null;
@@ -54,7 +58,7 @@ export function ProtectedRoute({
 
   if (
     requireCompleteProfile &&
-    profileIncomplete &&
+    needsCompleteProfile(profile) &&
     location.pathname !== COMPLETE_PROFILE_PATH
   ) {
     return (
@@ -87,7 +91,7 @@ export function ProtectedRoute({
 }
 
 export function CompleteProfileRoute({ children }: GuardProps) {
-  const { loading, user, profile, profileIncomplete } = useAuth();
+  const { loading, user, profile } = useAuth();
 
   if (loading) return null;
 
@@ -95,7 +99,7 @@ export function CompleteProfileRoute({ children }: GuardProps) {
     return <Navigate to="/" replace />;
   }
 
-  if (!profileIncomplete) {
+  if (profile && !isProfileIncomplete(profile)) {
     return <Navigate to={getDefaultAuthedPath(profile)} replace />;
   }
 

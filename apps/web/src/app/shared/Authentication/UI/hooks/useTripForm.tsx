@@ -20,6 +20,7 @@ import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
 import toCreateTrip from "@/app/features/goods/domain/toCreateTripMapper";
 import { step2Fields } from "@/app/features/trips/ui/CreateTripForm";
 import { useNavigate } from "react-router-dom";
+import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
 import {
   agreeToRulesSchema,
   citySchema,
@@ -70,6 +71,7 @@ export function useTripForm({
   const [toDasshboard, setToDashBoard] = useState<boolean>(false);
   const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
+  const { guardAction } = useMarketplaceActionGuard();
   const { toast } = useToast();
 
   const { showSupabaseError } = useUniversalModal();
@@ -142,6 +144,7 @@ export function useTripForm({
 
   const onCreate = async (values: TripFormFields) => {
     if (!user) return;
+    if (!guardAction(() => undefined, "post_listing")) return;
 
     const ok = await trigger(step2Fields, { shouldFocus: true });
     if (!ok) return;

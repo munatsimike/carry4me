@@ -18,14 +18,15 @@ import FAB from "@/app/components/FAB";
 import { useMyParcels } from "@/app/hooks/queries/useParcelsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { useDeleteParcelMutation } from "@/app/hooks/mutations/useParcelMutations";
-import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
+import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 
 export function MyParcelsPage() {
   const [editParcel, setFormValues] = useState<FormValues | null>(null);
   const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
     null,
   );
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { guardAction } = useMarketplaceActionGuard();
   const { toast } = useToast();
   const isMobile = useMediaQuery();
   const [showParcelModal, setParcelModalState] = useState<boolean>(false);
@@ -50,13 +51,9 @@ export function MyParcelsPage() {
   };
 
   const handleOnClick = () => {
-    const blockReason = getAccountActionBlockReason(profile, "post_listing");
-    if (blockReason) {
-      toast(blockReason, { variant: "warning" });
-      return;
-    }
-
-    setParcelModalState(true);
+    guardAction(() => {
+      setParcelModalState(true);
+    });
   };
 
   return (

@@ -17,11 +17,12 @@ import FAB from "@/app/components/FAB";
 import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { useDeleteTripMutation } from "@/app/hooks/mutations/useTripMutations";
-import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
+import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 
 export function MyTripsPage() {
   const isMobile = useMediaQuery();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { guardAction } = useMarketplaceActionGuard();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
   const [showCreateTripModal, setCreatTripModalState] =
     useState<boolean>(false);
@@ -46,13 +47,9 @@ export function MyTripsPage() {
   };
 
   const handleOnClick = () => {
-    const blockReason = getAccountActionBlockReason(profile, "post_listing");
-    if (blockReason) {
-      toast(blockReason, { variant: "warning" });
-      return;
-    }
-
-    setCreatTripModalState(true);
+    guardAction(() => {
+      setCreatTripModalState(true);
+    });
   };
 
   return (

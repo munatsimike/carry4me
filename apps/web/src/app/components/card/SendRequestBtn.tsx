@@ -5,10 +5,7 @@ import CustomText, { type TextVariant } from "@/components/ui/CustomText";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
-import { useNavigate } from "react-router-dom";
-import { COMPLETE_PROFILE_PATH } from "@/app/shared/Authentication/domain/profileCompletion";
-import { getAccountActionBlockReason } from "@/app/shared/Authentication/domain/accountStatus";
-import { useToast } from "@/app/components/Toast";
+import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 
 type SendRequestBtnProps<T> = {
   listingType?: ListingType;
@@ -29,10 +26,9 @@ export default function SendRequestBtn<T>({
   iconColorVariant = "onDark",
   isActive = false,
 }: SendRequestBtnProps<T>) {
-  const { user, profile, profileIncomplete } = useAuth();
+  const { user } = useAuth();
   const { openSignInModal } = useSignInModal();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { guardAction } = useMarketplaceActionGuard();
   const page = listingType === "trip" ? "/travelers" : "/parcels";
   const base = "flex items-center w-full mb-0";
 
@@ -46,18 +42,9 @@ export default function SendRequestBtn<T>({
             return;
           }
 
-          if (profileIncomplete) {
-            navigate(COMPLETE_PROFILE_PATH);
-            return;
-          }
-
-          const blockReason = getAccountActionBlockReason(profile, "send_request");
-          if (blockReason) {
-            toast(blockReason, { variant: "warning" });
-            return;
-          }
-
-          primaryAction(payLoad);
+          guardAction(() => {
+            primaryAction(payLoad);
+          }, "send_request");
         }}
         variant={buttonVariant}
         className="shadow-sm w-full"

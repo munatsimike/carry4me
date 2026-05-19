@@ -2,6 +2,7 @@ import { UniversalModalProvider } from "./DialogBoxModalProvider";
 import { SignInModalProvider } from "../SignInModalContext";
 import { UIProvider } from "../UI/hooks/useUI";
 import { PhoneVerificationProvider } from "../PhoneVerificationContext";
+import { EmailVerificationProvider } from "../UI/EmailVerificationContext";
 import RootLayoutContent from "@/app/RootLayoutContent";
 
 export function RootLayout() {
@@ -10,7 +11,9 @@ export function RootLayout() {
       <UniversalModalProvider>
         <SignInModalProvider>
           <PhoneVerificationProvider>
-            <RootLayoutContent />
+            <EmailVerificationProvider>
+              <RootLayoutContent />
+            </EmailVerificationProvider>
           </PhoneVerificationProvider>
         </SignInModalProvider>
       </UniversalModalProvider>

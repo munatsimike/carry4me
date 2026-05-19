@@ -25,6 +25,7 @@ export type UserProfile = {
   phoneVerified?: boolean;
   accountStatus?: AccountStatus;
   email: string;
+  emailVerified?: boolean;
 };
 
 export type AppUser = {

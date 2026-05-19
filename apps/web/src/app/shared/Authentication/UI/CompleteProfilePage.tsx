@@ -22,7 +22,6 @@ import {
   type UseFormRegister,
   type UseFormWatch,
 } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
@@ -33,6 +32,8 @@ import MobileForm from "@/app/features/dashboard/components/MobileForm";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import { useLocations } from "@/app/hookes/useLocation";
 import { useAuth } from "../../supabase/AuthProvider";
+import { sendEmailVerification } from "@/app/shared/supabase/sendEmailVerification";
+import { useEmailVerification } from "./EmailVerificationContext";
 import CustomModal from "@/app/components/CustomModal";
 import Spinner from "@/app/components/Spinner";
 import { useToast } from "@/app/components/Toast";
@@ -177,8 +178,8 @@ export default function CompleteProfile() {
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
   const { user, profile, refreshProfile } = useAuth();
-  const navigate = useNavigate();
   const { openSignInModal } = useSignInModal();
+  const { openCheckEmailModal } = useEmailVerification();
   const isMobile = useMediaQuery();
   const {
     control,
@@ -273,9 +274,14 @@ export default function CompleteProfile() {
     try {
       await signupUseCase.execute(newUser);
       await refreshProfile();
-      navigate("/?signup=success", {
-        replace: true,
-      });
+
+      try {
+        await sendEmailVerification();
+      } catch (verificationError) {
+        console.error("Failed to send verification email:", verificationError);
+      }
+
+      openCheckEmailModal();
     } catch (err) {
       const appError = AppError.fromUnknown(err);
       if (appError.code === "user_already_exists") {
