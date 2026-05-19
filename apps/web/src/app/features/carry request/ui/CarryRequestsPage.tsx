@@ -16,6 +16,7 @@ import { queryKeys } from "@/app/lib/queryKeys";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
+import { processActionEmailQueue } from "../application/processActionEmailQueue";
 import statusColor from "./StatustColorMapper";
 import actionsMapper, { UIACTIONKEYS, type UIActions } from "./ActionsMapper";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
@@ -281,6 +282,8 @@ export default function CarryRequestsPage() {
       return;
     }
 
+    processActionEmailQueue(response);
+
     if (response.ok) {
       try {
         await performRequestActions.reserveWeight(
@@ -317,6 +320,8 @@ export default function CarryRequestsPage() {
     if (!response.ok) {
       return;
     }
+
+    processActionEmailQueue(response);
 
     if (response.ok) {
       void queryClient.invalidateQueries({

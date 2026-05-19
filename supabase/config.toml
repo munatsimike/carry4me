@@ -356,6 +356,9 @@ allow_dynamic_registration = false
 [functions.send-notification-email]
 verify_jwt = true
 
+[functions.process-email-queue]
+verify_jwt = true
+
 [functions.send-email-verification]
 verify_jwt = true
 

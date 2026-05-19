@@ -3,7 +3,11 @@ import type { UIActionKey } from "../ui/ActionsMapper";
 
 export type PerformActionResponse = {
   ok: boolean;
-  action: UIActionKey;
-  progressed: boolean;
-  waiting_for: Role;
+  action?: UIActionKey;
+  progressed?: boolean;
+  waiting_for?: Role;
+  reason?: string;
+  notification_id?: string;
+  event_type?: string;
+  new_status?: string;
 };
