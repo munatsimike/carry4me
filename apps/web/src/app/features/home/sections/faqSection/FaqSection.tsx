@@ -2,7 +2,10 @@ import type { InfoItemsProps } from "@/types/Ui";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import SectionTitle from "../SectionTitle";
 import CustomText from "@/components/ui/CustomText";
+import { cn } from "@/app/lib/cn";
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function FaqSection({ items }: InfoItemsProps) {
   const [openIndex, setOpenIndex] = useState(0);
@@ -72,12 +75,28 @@ export default function FaqSection({ items }: InfoItemsProps) {
               {selectedItem.value}
             </CustomText>
 
-            <div className="mt-6 rounded-2xl bg-primary-50 px-4 py-3">
-              <p className="text-sm text-primary-700">
-                Still unsure? Start by browsing current parcels and trips to see
-                how requests work.
-              </p>
-            </div>
+            <Link
+              to="/travelers"
+              className={cn(
+                "mt-6 flex items-center justify-between gap-3 rounded-2xl border border-primary-100/50",
+                "bg-primary-50/40 px-4 py-3 text-left transition-colors",
+                "hover:border-primary-100 hover:bg-primary-50/65",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30",
+              )}
+            >
+              <CustomText
+                as="span"
+                textSize="sm"
+                className="leading-relaxed text-primary-700/90"
+              >
+                Browse current trips and parcel requests to see how Carry4Me
+                works.
+              </CustomText>
+              <ChevronRight
+                className="h-4 w-4 shrink-0 text-primary-500/60"
+                aria-hidden
+              />
+            </Link>
           </div>
         )}
       </div>
