@@ -2,7 +2,6 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import { FIXED_DESTINATION_COUNTRY } from "@/app/shared/locations/fixedDestination";
 import SvgIcon from "@/components/ui/SvgIcon";
-import CustomText from "@/components/ui/CustomText";
 import { format, isValid, parseISO } from "date-fns";
 import { ArrowRight, Calendar } from "lucide-react";
 

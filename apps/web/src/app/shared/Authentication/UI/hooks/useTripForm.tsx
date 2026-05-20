@@ -96,7 +96,7 @@ export function useTripForm({
   const invalidateTrips = useInvalidateTrips();
   const [toDasshboard, setToDashBoard] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const createDefaultValues = useMemo(
     () => ({
       ...emptyDefaultsValues,

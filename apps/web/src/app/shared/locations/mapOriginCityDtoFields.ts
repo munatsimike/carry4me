@@ -1,5 +1,4 @@
 import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useParcelForm";
-import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { resolveOriginCityForSave } from "./cityOptions";
 
 type OriginCityFormValues = Pick<
@@ -22,11 +21,13 @@ export function mapOriginCityDtoFields(values: OriginCityFormValues): {
   };
 }
 
-export function hasOriginCityChanges(
-  dirtyFields: Partial<
-    Record<keyof TripFormFields | keyof ParcelFormFields, boolean>
-  >,
-): boolean {
+type OriginRouteDirtyFields = {
+  originCountry?: boolean;
+  originCity?: boolean;
+  originCustomCity?: boolean;
+};
+
+export function hasOriginCityChanges(dirtyFields: OriginRouteDirtyFields): boolean {
   return Boolean(
     dirtyFields.originCountry ||
       dirtyFields.originCity ||

@@ -1,0 +1,238 @@
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Package, Plane } from "lucide-react";
+import CustomText from "@/components/ui/CustomText";
+import { SuggestedMatchCard } from "./SuggestedMatchCard";
+import type { ListingSource } from "@/app/shared/Authentication/domain/Listing";
+import type { ParcelListing } from "../../parcels/domain/Parcel";
+import type { TripListing } from "../../trips/domain/Trip";
+import { cn } from "@/app/lib/cn";
+
+export type SuggestedMatchesData = {
+  activeParcels: ParcelListing[];
+  activeTrips: TripListing[];
+  suggestedTrips: TripListing[];
+  suggestedParcels: ParcelListing[];
+};
+
+type TabId = "trips" | "parcels";
+
+type SuggestedMatchesTabsProps = {
+  data: SuggestedMatchesData;
+};
+
+const tabMotion = {
+  initial: { opacity: 0, y: 4 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+  transition: { duration: 0.2, ease: "easeOut" as const },
+};
+
+export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps) {
+  const tripCount = data.suggestedTrips.length;
+  const parcelCount = data.suggestedParcels.length;
+  const hasActiveParcels = data.activeParcels.length > 0;
+  const hasActiveTrips = data.activeTrips.length > 0;
+
+  const defaultTab: TabId = hasActiveParcels ? "trips" : "parcels";
+  const [activeTab, setActiveTab] = useState<TabId>(defaultTab);
+
+  useEffect(() => {
+    if (activeTab === "trips" && !hasActiveParcels && hasActiveTrips) {
+      setActiveTab("parcels");
+    } else if (activeTab === "parcels" && !hasActiveTrips && hasActiveParcels) {
+      setActiveTab("trips");
+    }
+  }, [activeTab, hasActiveParcels, hasActiveTrips]);
+
+  return (
+    <section className="flex w-full min-w-0 flex-col gap-2">
+      <CustomText
+        textVariant="primary"
+        textSize="lg"
+        className="text-center font-medium"
+      >
+        Suggested matches
+      </CustomText>
+
+      <div className="flex w-full min-w-0 flex-col items-center rounded-xl border border-neutral-200/80 bg-neutral-50/60 p-3 text-center shadow-sm sm:p-4">
+        <div className="flex w-full justify-center">
+          <div
+            className="inline-flex w-fit gap-1 rounded-lg bg-neutral-100/80 p-1"
+            role="tablist"
+            aria-label="Suggested matches"
+          >
+            <TabButton
+              id="trips"
+              label="Trips"
+              icon={Plane}
+              count={tripCount}
+              isActive={activeTab === "trips"}
+              onSelect={() => setActiveTab("trips")}
+            />
+            <TabButton
+              id="parcels"
+              label="Parcels"
+              icon={Package}
+              count={parcelCount}
+              isActive={activeTab === "parcels"}
+              onSelect={() => setActiveTab("parcels")}
+            />
+          </div>
+        </div>
+
+        <div className="mt-2.5 flex min-h-[5.5rem] w-full min-w-0 flex-col items-center">
+          <AnimatePresence mode="wait">
+            {activeTab === "trips" ? (
+              <TabPanel
+                key="trips"
+                panelId="trips"
+                listings={data.suggestedTrips}
+                ctaLabel="View trip"
+                listingHref="/travelers"
+                emptyTitle="No matching trips yet."
+              />
+            ) : (
+              <TabPanel
+                key="parcels"
+                panelId="parcels"
+                listings={data.suggestedParcels}
+                ctaLabel="View parcel"
+                listingHref="/parcels"
+                emptyTitle="No matching parcels yet."
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TabButton({
+  id,
+  label,
+  icon: Icon,
+  count,
+  isActive,
+  onSelect,
+}: {
+  id: string;
+  label: string;
+  icon: typeof Plane;
+  count: number;
+  isActive: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      id={`tab-${id}`}
+      aria-selected={isActive}
+      aria-controls={`panel-${id}`}
+      onClick={onSelect}
+      className={cn(
+        "relative inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors duration-200 sm:gap-2 sm:px-3 sm:text-sm",
+        isActive
+          ? "text-white"
+          : "text-neutral-600 hover:bg-neutral-200/70 hover:text-neutral-800",
+      )}
+    >
+      {isActive && (
+        <motion.span
+          layoutId="suggested-matches-tab-indicator"
+          className="absolute inset-0 rounded-md bg-primary-500 shadow-sm"
+          transition={{ type: "spring", stiffness: 420, damping: 32 }}
+        />
+      )}
+      <Icon
+        className={cn(
+          "relative z-[1] h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4",
+          isActive ? "text-white" : "text-neutral-500",
+        )}
+        strokeWidth={2}
+        aria-hidden
+      />
+      <span className="relative z-[1]">{label}</span>
+      <CountBadge count={count} isActive={isActive} />
+    </button>
+  );
+}
+
+function CountBadge({ count, isActive }: { count: number; isActive: boolean }) {
+  return (
+    <span
+      className={cn(
+        "relative z-[1] inline-flex min-w-[1.125rem] items-center justify-center rounded-full px-1 py-px text-[10px] font-semibold leading-none tabular-nums sm:text-[11px]",
+        isActive
+          ? "bg-white/25 text-white"
+          : "border border-neutral-200/90 bg-white text-neutral-600",
+      )}
+    >
+      {count}
+    </span>
+  );
+}
+
+function TabPanel({
+  panelId,
+  listings,
+  ctaLabel,
+  listingHref,
+  emptyTitle,
+}: {
+  panelId: string;
+  listings: ListingSource[];
+  ctaLabel: string;
+  listingHref: string;
+  emptyTitle: string;
+}) {
+  if (listings.length === 0) {
+    return (
+      <motion.div
+        role="tabpanel"
+        id={`panel-${panelId}`}
+        aria-labelledby={`tab-${panelId}`}
+        className="flex w-full min-w-0 flex-col items-center py-1"
+        {...tabMotion}
+      >
+        <EmptyMatchesState title={emptyTitle} />
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      role="tabpanel"
+      id={`panel-${panelId}`}
+      aria-labelledby={`tab-${panelId}`}
+      className="flex w-full min-w-0 flex-col items-center"
+      {...tabMotion}
+    >
+      <div className="grid w-full min-w-0 grid-cols-1 justify-items-center gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+        {listings.map((listing) => (
+          <SuggestedMatchCard
+            key={`${listing.type}-${listing.id}`}
+            listing={listing}
+            ctaLabel={ctaLabel}
+            href={listingHref}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+function EmptyMatchesState({ title }: { title: string }) {
+  return (
+    <div className="space-y-0.5 py-1 text-center">
+      <CustomText as="p" textSize="sm" className="font-medium text-neutral-700">
+        {title}
+      </CustomText>
+      <CustomText as="p" textSize="sm" className="text-neutral-500">
+        We&apos;ll notify you when matches appear.
+      </CustomText>
+    </div>
+  );
+}

@@ -14,7 +14,10 @@ import CreatParcelModal from "../parcels/ui/CreateParcelModal";
 import CreateTripModal from "../trips/ui/CreateTripModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
-import { SuggestedMatchCard } from "./components/SuggestedMatchCard";
+import StatsSection from "./components/StatsSection";
+import SuggestedMatchesTabs, {
+  type SuggestedMatchesData,
+} from "./components/SuggestedMatchesTabs";
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";
 import type { DashboardData } from "./domain/DashboardData";
@@ -30,9 +33,6 @@ import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
 import Greeting from "@/app/components/Greeting";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
-import type { TripListing } from "../trips/domain/Trip";
-import type { ParcelListing } from "../parcels/domain/Parcel";
-import type { ListingSource } from "@/app/shared/Authentication/domain/Listing";
 
 /**
  * Dashboard Page
@@ -105,13 +105,13 @@ export default function DashboardPage() {
     <DefaultContainer outerClassName="min-h-screen">
       <PageSection align="left">{<Greeting user={fullName} />}</PageSection>
 
-      <div className="flex flex-col gap-12 pt-2 sm:pt-4">
+      <div className="flex min-w-0 flex-col gap-6 pt-2 sm:gap-8 sm:pt-3">
         <ActionButtonRow
           onPostTrip={() => requirePhoneVerification("trip")}
           onPostParcel={() => requirePhoneVerification("parcel")}
         />
 
-        <div className="flex flex-col sm:justify-center md:flex-row gap-6">
+        <div className="flex flex-col gap-6 sm:justify-center md:flex-row md:gap-6">
           <StatsSection statsList={dashboardData ? dashboardData.stats : []} />
           <YourActivitySection
             recentActivityList={notifications}
@@ -119,11 +119,13 @@ export default function DashboardPage() {
           />
         </div>
 
-        <DashboardSuggestedMatchesSection
-          data={suggestedMatches}
-          isLoading={suggestionsLoading}
-          error={suggestionsError}
-        />
+        <div className="px-2 sm:px-5 lg:px-6">
+          <DashboardSuggestedMatchesSection
+            data={suggestedMatches}
+            isLoading={suggestionsLoading}
+            error={suggestionsError}
+          />
+        </div>
       </div>
 
       <AnimatePresence>
@@ -140,20 +142,9 @@ export default function DashboardPage() {
   );
 }
 
-type StatsProps = {
-  statsList: StatsItem[];
-};
-
 type ActivityProps = {
   activityList: StatsItem[];
   recentActivityList: CarryRequestNotification[];
-};
-
-type SuggestedMatchesData = {
-  activeParcels: ParcelListing[];
-  activeTrips: TripListing[];
-  suggestedTrips: TripListing[];
-  suggestedParcels: ParcelListing[];
 };
 
 function DashboardSuggestedMatchesSection({
@@ -170,7 +161,7 @@ function DashboardSuggestedMatchesSection({
 
   if (isLoading) {
     return (
-      <section className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow-sm">
+      <section className="w-full min-w-0 text-sm text-neutral-500">
         Loading suggested matches...
       </section>
     );
@@ -178,76 +169,15 @@ function DashboardSuggestedMatchesSection({
 
   if (error) {
     return (
-      <section className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow-sm">
+      <section className="w-full min-w-0 text-sm text-neutral-500">
         Suggested matches are unavailable right now.
       </section>
     );
   }
 
-  if (!hasActiveParcels && !hasActiveTrips) return null;
+  if ((!hasActiveParcels && !hasActiveTrips) || !data) return null;
 
-  return (
-    <section className="flex flex-col gap-4">
-      {hasActiveParcels && (
-        <SuggestedMatchGroup
-          title="Suggested trips for your parcel"
-          emptyMessage="No matches yet. We’ll notify you when suitable matches appear."
-          listings={data?.suggestedTrips ?? []}
-          ctaLabel="View trip"
-          href="/travelers"
-        />
-      )}
-
-      {hasActiveTrips && (
-        <SuggestedMatchGroup
-          title="Suggested parcels for your trip"
-          emptyMessage="No matches yet. We’ll notify you when suitable matches appear."
-          listings={data?.suggestedParcels ?? []}
-          ctaLabel="View parcel"
-          href="/parcels"
-        />
-      )}
-    </section>
-  );
-}
-
-function SuggestedMatchGroup({
-  title,
-  emptyMessage,
-  listings,
-  ctaLabel,
-  href,
-}: {
-  title: string;
-  emptyMessage: string;
-  listings: ListingSource[];
-  ctaLabel: string;
-  href: string;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <CustomText textVariant="primary" textSize="lg" className="font-medium">
-        {title}
-      </CustomText>
-
-      {listings.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-500">
-          {emptyMessage}
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {listings.map((listing) => (
-            <SuggestedMatchCard
-              key={`${listing.type}-${listing.id}`}
-              listing={listing}
-              ctaLabel={ctaLabel}
-              href={href}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <SuggestedMatchesTabs data={data} />;
 }
 
 function YourActivitySection({
@@ -308,7 +238,7 @@ function RecentActivity({
                     key={activity.id}
                     className="flex w-full min-w-0 flex-col"
                   >
-                    <div className="flex flex-col md:flex-row justify-between md:items-center items-stretch">
+                    <div className="flex flex-col items-stretch justify-between md:flex-row md:items-center">
                       <CustomText
                         textVariant="secondary"
                         className="whitespace-nowrap"
@@ -405,40 +335,6 @@ function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
     </span>
   );
 }
-function StatsSection({ statsList }: StatsProps) {
-  return (
-    <div className="flex w-full max-w-full flex-col gap-3 px-2 lg:max-w-sm">
-      <CustomText textVariant="primary" textSize="lg" className="font-medium">
-        {"Your stats"}
-      </CustomText>
-      <div className="mx-auto min-h-[85px] w-full">
-        <div className="grid grid-cols-2 gap-3">
-          {statsList.map((item) => (
-            <Link key={item.itemName} to={item.link ?? ""}>
-              <Card
-                enableHover={false}
-                key={item.itemName}
-                className="flex min-h-[110px] flex-col items-center justify-center rounded-2xl border border-neutral-200 bg-white px-3 py-4 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <CustomText className="sm:whitespace-nowrap">
-                  {item.itemName}
-                </CustomText>
-                <CustomText
-                  textVariant="primary"
-                  textSize={"lg"}
-                  className="font-medium"
-                >
-                  {item.count}
-                </CustomText>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // row with dashboard action buttons- post parcel, post trip, browse trip and browse parcel
 type ActionButtonRowProps = {
   onPostTrip: () => void;
@@ -464,7 +360,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
 
   return (
     <motion.div
-      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 items-stretch gap-4 px-5 mx-auto"
+      className="mx-auto grid grid-cols-1 items-stretch gap-4 px-5 sm:grid-cols-2 md:grid-cols-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -500,8 +396,8 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
         </Link>
       </motion.div>
 
-      <motion.div variants={itemVariants}>
-        <Link to={"/parcels"}>
+      <motion.div variants={itemVariants} className="flex justify-center">
+        <Link to={"/parcels"} className="inline-flex justify-center">
           <ActionButton
             showArrow
             btnText="Browse parcels"
@@ -535,27 +431,30 @@ function ActionButton({
   onClick,
 }: ActionButtonsProps) {
   return (
-    <Button
-      onClick={onClick ? () => onClick() : () => {}}
-      variant={btnVariant}
-      size={"xxl"}
-      trailingIcon={
-        showArrow && (
-          <SvgIcon size={"sm"} Icon={META_ICONS.arrowSmall} color="primary" />
-        )
-      }
-    >
-      <span className="flex flex-col gap-1.5 items-center">
-        <SvgIcon color={iconColor} size={"xl"} Icon={icon} />
-        <CustomText
-          as="span"
-          textVariant={textVariant}
-          textSize="lg"
-          className="whitespace-nowrap pr-3"
-        >
-          {btnText}
-        </CustomText>
-      </span>
-    </Button>
+    <div className="w-[230px] max-w-full">
+      <Button
+        onClick={onClick ? () => onClick() : () => {}}
+        variant={btnVariant}
+        size={"xxl"}
+        className="!w-full"
+        trailingIcon={
+          showArrow && (
+            <SvgIcon size={"sm"} Icon={META_ICONS.arrowSmall} color="primary" />
+          )
+        }
+      >
+        <span className="flex flex-col gap-1.5 items-center">
+          <SvgIcon color={iconColor} size={"xl"} Icon={icon} />
+          <CustomText
+            as="span"
+            textVariant={textVariant}
+            textSize="lg"
+            className="whitespace-nowrap pr-3"
+          >
+            {btnText}
+          </CustomText>
+        </span>
+      </Button>
+    </div>
   );
 }

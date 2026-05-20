@@ -100,7 +100,7 @@ export default function useParcelForm({
   const invalidateParcels = useInvalidateParcels();
   const { showSupabaseError } = useUniversalModal();
   const { toast } = useToast();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const createDefaultValues = useMemo(
     () => ({
       ...emptyDefaultsValues,

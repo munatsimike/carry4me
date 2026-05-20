@@ -502,13 +502,10 @@ function SecurityDetailsCard({
   actionBtns,
   watch,
   control,
-  register,
   profile,
   iconSpecs,
   onClick,
   onChangePhone,
-  dirtyFields,
-  touchedFields,
 }: securityProps) {
   const isEditing = editing === "security";
   return (
@@ -1044,17 +1041,6 @@ function ActionButton({ onClick, onCancel }: ActionButtonProps) {
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="grid grid-cols-[130px_auto] sm:grid-cols-[150px_auto] gap-y-1 sm:gap-x-6">
-      <CustomText textVariant="label" textSize="sm">
-        {label}
-      </CustomText>
-      <CustomText textVariant="primary">{value ?? "—"}</CustomText>
-    </div>
-  );
-}
-
-function InfCol({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-[150px_auto] gap-y-1 sm:gap-x-6">
       <CustomText textVariant="label" textSize="sm">
         {label}
       </CustomText>
