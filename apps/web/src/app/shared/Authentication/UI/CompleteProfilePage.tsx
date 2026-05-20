@@ -59,6 +59,7 @@ import {
   firstNameSchema,
   lastNameSchema,
 } from "@/app/shared/validation/formValidation";
+import EmailVerificationBadge from "./EmailVerificationBadge";
 
 export const UserDetailsScema = z
   .object({
@@ -377,6 +378,8 @@ function FormContents({ formProps }: SigupFormProps) {
     touchedFields,
     control,
   } = formProps;
+  const { profile } = useAuth();
+  const emailVerified = profile?.emailVerified === true;
 
   const firstName = watch("firstName");
   const originCountry = watch("country");
@@ -448,6 +451,9 @@ function FormContents({ formProps }: SigupFormProps) {
               error={errors.emailAddress?.message}
               isDirty={!!dirtyFields.emailAddress}
               isTouched={!!touchedFields.emailAddress}
+              trailingIcon={
+                <EmailVerificationBadge verified={emailVerified} />
+              }
               {...register("emailAddress")}
             />
 

@@ -1,0 +1,25 @@
+import { cn } from "@/app/lib/cn";
+
+type EmailVerificationBadgeProps = {
+  verified: boolean;
+  className?: string;
+};
+
+export default function EmailVerificationBadge({
+  verified,
+  className,
+}: EmailVerificationBadgeProps) {
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-medium",
+        verified
+          ? "bg-emerald-50 text-emerald-700"
+          : "bg-amber-50 text-amber-800",
+        className,
+      )}
+    >
+      {verified ? "Verified" : "Not verified"}
+    </span>
+  );
+}

@@ -34,6 +34,7 @@ import {
   UserDetailsScema,
   type UserDetailsFields,
 } from "../UI/CompleteProfilePage";
+import EmailVerificationBadge from "../UI/EmailVerificationBadge";
 import { useLocations } from "@/app/hookes/useLocation";
 import CustomModal from "@/app/components/CustomModal";
 import { z } from "zod";
@@ -506,8 +507,11 @@ function SecurityDetailsCard({
       {!isEditing ? (
         <div className="flex items-center">
           <div className="flex flex-col gap-2">
-            <InfCol label="Email address" value={profile.email} />
-            <InfoRow label="Phone" value={profile.phoneNumber} />
+            <EmailInfoRow
+              email={profile.email}
+              emailVerified={profile.emailVerified === true}
+            />
+            <PhoneInfoRow phone={profile.phoneNumber} />
             <button
               type="button"
               onClick={onChangePhone}
@@ -527,15 +531,20 @@ function SecurityDetailsCard({
               label="Email address"
               isDirty={!!dirtyFields.emailAddress}
               isTouched={!!touchedFields.emailAddress}
+              trailingIcon={
+                <EmailVerificationBadge
+                  verified={profile.emailVerified === true}
+                />
+              }
               {...register("emailAddress")}
             />
             <FloatingInputField
-              className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[260px]"
+              className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[350px]"
               hasValue={!!profile.phoneNumber}
               label="Phone number"
               value={profile.phoneNumber ?? ""}
               readOnly
-              helperText="Verified phone number"
+              trailingIcon={<EmailVerificationBadge verified />}
               isDirty={false}
               isTouched={false}
             />
@@ -1021,6 +1030,42 @@ function InfCol({ label, value }: { label: string; value?: string | null }) {
     </div>
   );
 }
+
+function EmailInfoRow({
+  email,
+  emailVerified,
+}: {
+  email?: string | null;
+  emailVerified: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-[130px_auto] sm:grid-cols-[150px_auto] gap-y-1 sm:gap-x-6">
+      <CustomText textVariant="label" textSize="sm">
+        Email address
+      </CustomText>
+      <span className="flex min-w-0 flex-wrap items-center gap-2">
+        <CustomText textVariant="primary" className="break-all">
+          {email ?? "—"}
+        </CustomText>
+        <EmailVerificationBadge verified={emailVerified} />
+      </span>
+    </div>
+  );
+}
+
+function PhoneInfoRow({ phone }: { phone?: string | null }) {
+  return (
+    <div className="grid grid-cols-[130px_auto] sm:grid-cols-[150px_auto] gap-y-1 sm:gap-x-6">
+      <CustomText textVariant="label" textSize="sm">
+        Phone
+      </CustomText>
+      <span className="flex min-w-0 flex-wrap items-center gap-2">
+        <CustomText textVariant="primary">{phone ?? "—"}</CustomText>
+        <EmailVerificationBadge verified />
+      </span>
+    </div>
+  );
+}
 export function AvatarPicker({
   onDelete,
   preview,
@@ -1155,7 +1200,7 @@ function CardHeaderSection({
           >
             {fullName}
           </CustomText>
-          <CustomText textSize="xs" textVariant="secondary">
+          <CustomText textSize="xs" textVariant="secondary" className="break-all">
             {email}
           </CustomText>
         </span>
