@@ -9,6 +9,10 @@ type WeightFieldProps<T extends FieldValues> = NumberInputFieldProps<T>;
 
 export function WeightField<T extends FieldValues>(props: WeightFieldProps<T>) {
   return (
-    <NumberInputField {...props} label={props.label ?? "Available weight"} />
+    <NumberInputField
+      {...props}
+      label={props.label ?? "Available weight"}
+      suffix={props.suffix ?? "Kg"}
+    />
   );
 }

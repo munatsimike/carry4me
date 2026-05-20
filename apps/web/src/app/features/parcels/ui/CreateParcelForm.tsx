@@ -181,6 +181,7 @@ export default function CreateParcelForm({
             {/* Price Field */}
             <PriceField<ParcelFormFields>
               id="price"
+              country={originCountry}
               error={errors.pricePerKg?.message}
               register={register("pricePerKg", { valueAsNumber: true })}
               isTouched={!!touchedFields.pricePerKg}

@@ -22,6 +22,8 @@ export type NumberInputFieldProps<TFieldValues extends FieldValues> = {
   register: UseFormRegisterReturn;
   error?: string;
   label?: string;
+  prefix?: string;
+  suffix?: string;
   setValue: UseFormSetValue<TFieldValues>;
   value: number;
   name: Path<TFieldValues>;
@@ -34,6 +36,8 @@ export function NumberInputField<TFieldValues extends FieldValues>({
   isDirty,
   isTouched,
   label = "",
+  prefix,
+  suffix,
   value,
   setValue,
   name,
@@ -47,7 +51,13 @@ export function NumberInputField<TFieldValues extends FieldValues>({
         <CustomText textSize="sm" textVariant="label">
           {label}
         </CustomText>
-        <div className="relative w-[80px] ">
+        <div className="flex items-center gap-2">
+        {prefix ? (
+          <CustomText as="span" textSize="sm" className="text-neutral-600">
+            {prefix}
+          </CustomText>
+        ) : null}
+        <div className="relative w-[80px]">
           <input
             type="number"
             min={0}
@@ -98,6 +108,12 @@ export function NumberInputField<TFieldValues extends FieldValues>({
               ▼
             </button>
           </div>
+        </div>
+        {suffix ? (
+          <CustomText as="span" textSize="sm" className="text-neutral-600">
+            {suffix}
+          </CustomText>
+        ) : null}
         </div>
       </div>
     </ErrorText>

@@ -1,3 +1,4 @@
+import { addMonths } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 
@@ -59,6 +60,15 @@ export const departureDateSchema = z
       return selected >= today();
     },
     { message: "Departure date cannot be in the past" },
+  )
+  .refine(
+    (value) => {
+      const selected = new Date(value);
+      selected.setHours(0, 0, 0, 0);
+      const maxDate = addMonths(today(), 12);
+      return selected <= maxDate;
+    },
+    { message: "Departure must be within 12 months" },
   );
 
 export const listingWeightSchema = z

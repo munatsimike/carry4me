@@ -1,6 +1,10 @@
 import type { FormMode, FormValues } from "@/types/Ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
+import {
+  FIXED_DESTINATION_CITY,
+  FIXED_DESTINATION_COUNTRY,
+} from "@/app/shared/locations/fixedDestination";
 import { getDestinationDefaultsFromProfile } from "@/app/shared/locations/profileDestinationDefaults";
 import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import z from "zod";
@@ -19,7 +23,11 @@ import { useUniversalModal } from "../../application/DialogBoxModalProvider";
 import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
 import toCreateTrip from "@/app/features/goods/domain/toCreateTripMapper";
-import { step2Fields } from "@/app/features/trips/ui/CreateTripForm";
+import {
+  tripStep1Fields,
+  tripStep2Fields,
+  tripStep3Fields,
+} from "@/app/features/trips/ui/tripFormSteps";
 import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
@@ -65,11 +73,11 @@ const emptyDefaultsValues = {
   originCountry: "",
   originCity: "",
   originCustomCity: "",
-  destinationCountry: "",
-  destinationCity: "",
+  destinationCountry: FIXED_DESTINATION_COUNTRY,
+  destinationCity: FIXED_DESTINATION_CITY,
   departureDate: "",
   pricePerKg: 10,
-  weight: 1,
+  weight: 0,
   goodsCategoryIds: [],
   agreeToRules: false,
 };
@@ -92,9 +100,9 @@ export function useTripForm({
   const createDefaultValues = useMemo(
     () => ({
       ...emptyDefaultsValues,
-      ...getDestinationDefaultsFromProfile(profile),
+      ...getDestinationDefaultsFromProfile(),
     }),
-    [profile?.city, profile?.country, profile?.countryCode],
+    [],
   );
   const { guardAction } = useMarketplaceActionGuard();
   const { toast } = useToast();
@@ -174,7 +182,14 @@ export function useTripForm({
     if (!user) return;
     if (!guardAction(() => undefined, "post_listing")) return;
 
-    const ok = await trigger(step2Fields, { shouldFocus: true });
+    const ok = await trigger(
+      [
+        ...tripStep1Fields,
+        ...tripStep2Fields,
+        ...tripStep3Fields,
+      ] as (keyof TripFormFields)[],
+      { shouldFocus: true },
+    );
     if (!ok) return;
 
     try {

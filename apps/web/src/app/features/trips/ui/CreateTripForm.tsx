@@ -10,8 +10,13 @@ import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
 import { DateField } from "../../dashboard/components/DateField";
 import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
 import { ArrowLeft } from "lucide-react";
-import { StepHeader, type Step } from "@/app/components/forms/formStepper";
+import {
+  ReviewDetailsHeader,
+  StepHeader,
+  type Step,
+} from "@/app/components/forms/formStepper";
 import FormHeader from "../../dashboard/components/FormHeader";
+import { META_ICONS } from "@/app/icons/MetaIcon";
 import type {
   Control,
   FieldErrors,
@@ -25,23 +30,15 @@ import type {
 import type { FormMode } from "@/types/Ui";
 import { useState } from "react";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
-import { formatCurrencyByCountry } from "@/app/lib/currency";
+import TripFormReview from "./TripFormReview";
+import { tripStep1Fields, tripStep2Fields } from "./tripFormSteps";
 
-export const step1Fields: Array<keyof TripFormFields> = [
-  "originCountry",
-  "originCity",
-  "originCustomCity",
-  "destinationCountry",
-  "destinationCity",
-  "departureDate",
-];
-
-export const step2Fields: Array<keyof TripFormFields> = [
-  "goodsCategoryIds",
-  "weight",
-  "pricePerKg",
-  "agreeToRules",
-];
+const stepMotion = {
+  initial: { opacity: 0, x: 12 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -12 },
+  transition: { duration: 0.2 },
+};
 
 type FormProps = {
   control: Control<TripFormFields>;
@@ -75,182 +72,252 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
   } = formProps;
 
   const [step, setStep] = useState<Step>(1);
-  const goNext = async () => {
-    // validate only step 1 fields
-    const ok = await trigger(step1Fields, { shouldFocus: true });
-    if (!ok) return;
-    setStep(2);
-  };
-
-  const goBack = () => setStep(1);
   const { goodsCategory } = useGoodsCategory();
+
   const weightValue = watch("weight");
   const priceValue = watch("pricePerKg");
   const originCountry = watch("originCountry");
+  const originCity = watch("originCity");
+  const originCustomCity = watch("originCustomCity");
+  const destinationCountry = watch("destinationCountry");
+  const departureDate = watch("departureDate");
 
-  const dividerHeight = "";
+  const dividerHeight = "my-0";
+  const isEditMode = mode === "edit";
+
+  const goToStep = (next: Step) => setStep(next);
+
+  const goNextFromStep1 = async () => {
+    const ok = await trigger([...tripStep1Fields], { shouldFocus: true });
+    if (!ok) return;
+    goToStep(2);
+  };
+
+  const goNextFromStep2 = async () => {
+    const ok = await trigger([...tripStep2Fields], { shouldFocus: true });
+    if (!ok) return;
+    goToStep(3);
+  };
+
+  const goBack = () => {
+    if (step === 3) goToStep(2);
+    else if (step === 2) goToStep(1);
+  };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="relative flex flex-col gap-4">
-        <FormHeader
-          heading={mode === "edit" ? "Edit trip" : "Post your trip"}
-          subHeading="Share your trip details and get matched with senders."
-        />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
+        {step !== 3 && (
+          <FormHeader
+            heading={mode === "edit" ? "Edit trip" : "Post your trip"}
+            subHeading="Share your trip details and get matched with senders."
+            icon={META_ICONS.planeIcon}
+          />
+        )}
 
-        <StepHeader currentStep={step} />
-
-        {step === 2 && (
-          <span className="hidden sm:block inline-flex absolute left-5 top-4">
-            <Button
-              type="button"
-              variant="neutral"
-              onClick={goBack}
-              size={"sm"}
-            >
-              <span className="inline-flex gap-1 items-center text-black">
-                <ArrowLeft className="w-4" /> {"Step 1"}
-              </span>
-            </Button>
-          </span>
+        {step === 3 ? (
+          <ReviewDetailsHeader />
+        ) : (
+          <StepHeader currentStep={step} formType="trip" />
         )}
       </div>
 
-      {step === 1 ? (
-        <div className="flex flex-col gap-5">
-          <LineDivider heightClass={dividerHeight} />
-          <RouteFieldRow control={control} setValue={setValue} watch={watch} />
-          <LineDivider heightClass={dividerHeight} />
-          <DateField<TripFormFields>
-            error={errors.departureDate?.message}
-            control={control}
-            name={"departureDate"}
-            placeholder="dd/mm/yyyy"
-          />
-
-          <LineDivider heightClass={dividerHeight} />
-
-          {/* Step actions */}
-          <div className="flex justify-end">
-            <Button
-              className="w-full"
-              type="button"
-              variant="primary"
-              onClick={goNext}
-              size={"md"}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-5">
-          <LineDivider heightClass={dividerHeight} />
-          <GoodsCategoryGrid
-            label="What items do you prefer to carry?"
-            error={errors.goodsCategoryIds?.message}
-            goods={goodsCategory}
-            selectedIds={selectedIds}
-            onChange={(next) =>
-              setValue("goodsCategoryIds", next, {
-                shouldValidate: true,
-                shouldDirty: true,
-                shouldTouch: true,
-              })
-            }
-          />
-
-          <LineDivider heightClass={dividerHeight} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-[20px]">
-            {/* Available Space */}
-            <WeightField<TripFormFields>
-              id="weight"
-              register={register("weight", { valueAsNumber: true })}
-              error={errors.weight?.message}
-              isDirty={!!dirtyFields.weight}
-              isTouched={!!touchedFields.weight}
-              name="weight"
-              setValue={setValue}
-              value={weightValue}
+      <AnimatePresence mode="wait">
+        {step === 1 && (
+          <motion.div
+            key="trip-step-1"
+            className="flex flex-col gap-4"
+            {...stepMotion}
+          >
+            <LineDivider heightClass={dividerHeight} />
+            <RouteFieldRow control={control} setValue={setValue} watch={watch} />
+            <LineDivider heightClass={dividerHeight} />
+            <DateField<TripFormFields>
+              error={errors.departureDate?.message}
+              control={control}
+              name={"departureDate"}
+              placeholder="dd/mm/yyyy"
+              maxFutureMonths={12}
             />
-
-            {/* Price Per Kg */}
-            <PriceField<TripFormFields>
-              id="price"
-              register={register("pricePerKg", { valueAsNumber: true })}
-              error={errors.pricePerKg?.message}
-              isDirty={!!dirtyFields.pricePerKg}
-              isTouched={!!touchedFields.pricePerKg}
-              name="pricePerKg"
-              setValue={setValue}
-              value={priceValue}
-            />
-
-            {/* Empty column for alignment */}
-            <div />
-
-            {/* You'll Earn aligned under Price */}
-            <div className="flex">
-              <span className="inline-flex items-center gap-3 bg-green-50 px-4 py-2 rounded-lg border border-green-100 w-fit shadow-sm">
-                <CustomText as="span" textSize="xs" textVariant="label">
-                  You’ll earn
-                </CustomText>
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={priceValue * weightValue}
-                    initial={{ scale: 0.95, opacity: 0.8 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="inline-flex"
-                  >
-                    <CustomText
-                      as="span"
-                      textSize="sm"
-                      textVariant="success"
-                      className={`font-semibold ${
-                        priceValue * weightValue > 0 ? "text-green-600" : ""
-                      }`}
-                    >
-                      {formatCurrencyByCountry(
-                        originCountry,
-                        priceValue * weightValue,
-                      )}
-                    </CustomText>
-                  </motion.span>
-                </AnimatePresence>
-              </span>
+            <LineDivider heightClass={dividerHeight} />
+            <div className="flex justify-end">
+              <Button
+                className="w-full"
+                type="button"
+                variant="primary"
+                onClick={goNextFromStep1}
+                size={"md"}
+              >
+                Next
+              </Button>
             </div>
-          </div>
+          </motion.div>
+        )}
 
-          <LineDivider heightClass={dividerHeight} />
+        {step === 2 && (
+          <motion.div
+            key="trip-step-2"
+            className="flex flex-col gap-4"
+            {...stepMotion}
+          >
+            <LineDivider heightClass={dividerHeight} />
+            <GoodsCategoryGrid
+              label="What items do you prefer to carry?"
+              error={errors.goodsCategoryIds?.message}
+              goods={goodsCategory}
+              selectedIds={selectedIds}
+              onChange={(next) =>
+                setValue("goodsCategoryIds", next, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                  shouldTouch: true,
+                })
+              }
+            />
+            <LineDivider heightClass={dividerHeight} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-[20px]">
+              <WeightField<TripFormFields>
+                id="weight"
+                register={register("weight", { valueAsNumber: true })}
+                error={errors.weight?.message}
+                isDirty={!!dirtyFields.weight}
+                isTouched={!!touchedFields.weight}
+                name="weight"
+                setValue={setValue}
+                value={weightValue}
+              />
+              <div className="flex flex-col gap-2">
+                <PriceField<TripFormFields>
+                  id="price"
+                  country={originCountry}
+                  register={register("pricePerKg", { valueAsNumber: true })}
+                  error={errors.pricePerKg?.message}
+                  isDirty={!!dirtyFields.pricePerKg}
+                  isTouched={!!touchedFields.pricePerKg}
+                  name="pricePerKg"
+                  setValue={setValue}
+                  value={priceValue}
+                />
+                <CustomText as="p" textSize="xs" className="text-neutral-500">
+                  Most travelers charge $8–15 per kg.
+                </CustomText>
+              </div>
+            </div>
+            {isEditMode && (
+              <>
+                <LineDivider heightClass={dividerHeight} />
+                <AgreeToTermsRow
+                  register={register("agreeToRules")}
+                  id={"terms"}
+                  error={errors.agreeToRules?.message}
+                />
+              </>
+            )}
+            <LineDivider heightClass={dividerHeight} />
+            <StepActions
+              onBack={goBack}
+              primaryLabel={isEditMode ? undefined : "Review"}
+              onPrimary={goNextFromStep2}
+              submitLabel={
+                isEditMode
+                  ? isSubmitting
+                    ? "Saving..."
+                    : "Save changes"
+                  : undefined
+              }
+              isSubmitting={isSubmitting}
+              showSubmit={isEditMode}
+            />
+          </motion.div>
+        )}
 
-          <AgreeToTermsRow
-            register={register("agreeToRules")}
-            id={"terms"}
-            error={errors.agreeToRules?.message}
-          />
+        {step === 3 && !isEditMode && (
+          <motion.div
+            key="trip-step-3"
+            className="flex flex-col gap-3"
+            {...stepMotion}
+          >
+            <TripFormReview
+              originCountry={originCountry}
+              originCity={originCity}
+              originCustomCity={originCustomCity}
+              destinationCountry={destinationCountry}
+              departureDate={departureDate}
+              selectedIds={selectedIds}
+              goodsCategory={goodsCategory}
+              weight={weightValue}
+              pricePerKg={priceValue}
+            />
+            <AgreeToTermsRow
+              register={register("agreeToRules")}
+              id={"terms"}
+              error={errors.agreeToRules?.message}
+            />
+            <LineDivider heightClass={dividerHeight} />
+            <StepActions
+              onBack={goBack}
+              submitLabel={isSubmitting ? "Posting..." : "Post trip"}
+              isSubmitting={isSubmitting}
+              showSubmit
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
-          <LineDivider heightClass={dividerHeight} />
-
-          {/* Step actions */}
-          <div className="flex items-center justify-between gap-4">
-            <Button
-              className="w-full"
-              type="submit"
-              variant="primary"
-              disabled={isSubmitting}
-              size={"md"}
-            >
-              {mode === "create"
-                ? isSubmitting
-                  ? "Posting..."
-                  : "Post trip"
-                : isSubmitting
-                  ? "Saving..."
-                  : "Save changes"}
-            </Button>
-          </div>
-        </div>
+function StepActions({
+  onBack,
+  primaryLabel,
+  onPrimary,
+  submitLabel,
+  isSubmitting,
+  showSubmit,
+}: {
+  onBack: () => void;
+  primaryLabel?: string;
+  onPrimary?: () => void;
+  submitLabel?: string;
+  isSubmitting?: boolean;
+  showSubmit?: boolean;
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row gap-3">
+      <Button
+        className="w-full sm:w-auto sm:min-w-[120px]"
+        type="button"
+        variant="neutral"
+        onClick={onBack}
+        size={"md"}
+      >
+        <span className="inline-flex gap-1 items-center justify-center">
+          <ArrowLeft className="w-4" /> Back
+        </span>
+      </Button>
+      {showSubmit ? (
+        <Button
+          className="w-full flex-1"
+          type="submit"
+          variant="primary"
+          disabled={isSubmitting}
+          size={"md"}
+        >
+          {submitLabel}
+        </Button>
+      ) : (
+        primaryLabel &&
+        onPrimary && (
+          <Button
+            className="w-full flex-1"
+            type="button"
+            variant="primary"
+            onClick={onPrimary}
+            size={"md"}
+          >
+            {primaryLabel}
+          </Button>
+        )
       )}
     </div>
   );

@@ -3,6 +3,10 @@ import { useUniversalModal } from "../../application/DialogBoxModalProvider";
 import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
+import {
+  FIXED_DESTINATION_CITY,
+  FIXED_DESTINATION_COUNTRY,
+} from "@/app/shared/locations/fixedDestination";
 import { getDestinationDefaultsFromProfile } from "@/app/shared/locations/profileDestinationDefaults";
 import {
   createParcelUseCase,
@@ -69,8 +73,8 @@ const emptyDefaultsValues = {
   originCountry: "",
   originCity: "",
   originCustomCity: "",
-  destinationCountry: "",
-  destinationCity: "",
+  destinationCountry: FIXED_DESTINATION_COUNTRY,
+  destinationCity: FIXED_DESTINATION_CITY,
   goodsCategoryIds: [],
   itemDescriptions: [{ quantity: 1, description: "" }],
   weight: 1,
@@ -96,9 +100,9 @@ export default function useParcelForm({
   const createDefaultValues = useMemo(
     () => ({
       ...emptyDefaultsValues,
-      ...getDestinationDefaultsFromProfile(profile),
+      ...getDestinationDefaultsFromProfile(),
     }),
-    [profile?.city, profile?.country, profile?.countryCode],
+    [],
   );
   const {
     register,

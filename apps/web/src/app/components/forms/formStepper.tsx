@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus } from "lucide-react";
+import CustomText from "@/components/ui/CustomText";
 
-export type Step = 1 | 2;
+export type Step = 1 | 2 | 3;
 export type FormType = "trip" | "parcel";
 const tripSteps = [
   { id: 1, title: "Route & date" },
@@ -12,6 +13,18 @@ const parcelSteps = [
   { id: 1, title: "Route & goods" },
   { id: 2, title: "Goods & price" },
 ];
+export function ReviewDetailsHeader() {
+  return (
+    <CustomText
+      as="h2"
+      textSize="lg"
+      className="font-medium text-ink-primary"
+    >
+      Review details
+    </CustomText>
+  );
+}
+
 export function StepHeader({
   currentStep,
   formType = "trip",
@@ -19,17 +32,15 @@ export function StepHeader({
   currentStep: 1 | 2;
   formType?: FormType;
 }) {
-  const step =
-    formType === "trip"
-      ? tripSteps[currentStep - 1]
-      : parcelSteps[currentStep - 1];
+  const steps = formType === "trip" ? tripSteps : parcelSteps;
+  const step = steps[currentStep - 1];
 
   return (
     <div className="flex sm:justify-between items-center overflow-x-auto">
       {/* Left: Step text */}
       <div className="flex items-center gap-1 min-w-0">
         <span className="inline-flex text-sm  sm:text-base h-6 items-center justify-center text-neutral-600 whitespace-nowrap">
-          Step {currentStep} of {tripSteps.length}
+          Step {currentStep} of {steps.length}
         </span>
         <Minus className="text-neutral-400" />
         <div className="relative overflow-hidden min-w-0">
@@ -51,7 +62,7 @@ export function StepHeader({
       {/* Right: optional little “2 dots” indicator */}
 
       <div className="hidden sm:flex sm:flex-row items-center gap-2 shrink-0">
-        {[1, 2].map((n) => (
+        {steps.map((s) => s.id).map((n) => (
           <motion.span
             animate={{
               scale: n === currentStep ? 1.15 : 1,
