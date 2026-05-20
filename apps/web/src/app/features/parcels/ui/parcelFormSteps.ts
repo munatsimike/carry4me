@@ -1,0 +1,17 @@
+/** Step field groups — kept separate to avoid circular imports with useParcelForm. */
+export const parcelStep1Fields = [
+  "originCountry",
+  "originCity",
+  "originCustomCity",
+  "destinationCountry",
+  "destinationCity",
+  "goodsCategoryIds",
+] as const;
+
+export const parcelStep2Fields = [
+  "itemDescriptions",
+  "weight",
+  "pricePerKg",
+] as const;
+
+export const parcelStep3Fields = ["agreeToRules"] as const;

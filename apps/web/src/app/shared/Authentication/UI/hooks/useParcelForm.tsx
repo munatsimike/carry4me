@@ -23,7 +23,11 @@ import type { FormMode, FormValues } from "@/types/Ui";
 import { toParcelDtoMapper } from "@/app/features/parcels/application/toParcelDtoMapper";
 import { useToast } from "@/app/components/Toast";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import { parcelStep2Fields } from "@/app/features/parcels/ui/CreateParcelForm";
+import {
+  parcelStep1Fields,
+  parcelStep2Fields,
+  parcelStep3Fields,
+} from "@/app/features/parcels/ui/parcelFormSteps";
 import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
@@ -77,7 +81,7 @@ const emptyDefaultsValues = {
   destinationCity: FIXED_DESTINATION_CITY,
   goodsCategoryIds: [],
   itemDescriptions: [{ quantity: 1, description: "" }],
-  weight: 1,
+  weight: 0,
   pricePerKg: 0,
   agreeToRules: false,
 };
@@ -169,7 +173,14 @@ export default function useParcelForm({
     if (!user) return;
     if (!guardAction(() => undefined, "post_listing")) return;
 
-    const ok = await trigger(parcelStep2Fields, { shouldFocus: true });
+    const ok = await trigger(
+      [
+        ...parcelStep1Fields,
+        ...parcelStep2Fields,
+        ...parcelStep3Fields,
+      ] as (keyof ParcelFormFields)[],
+      { shouldFocus: true },
+    );
     if (!ok) return;
 
     try {
