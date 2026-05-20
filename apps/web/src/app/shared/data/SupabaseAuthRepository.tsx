@@ -81,6 +81,7 @@ function toUserProfile(profile: Record<string, any>): UserProfile {
     id: profile.id,
     fullName: profile.full_name,
     avatarUrl: publicUrl,
+    country: profile.country ?? null,
     countryCode: profile.country_code,
     city: profile.city,
     phoneNumber: profile.phone_number,

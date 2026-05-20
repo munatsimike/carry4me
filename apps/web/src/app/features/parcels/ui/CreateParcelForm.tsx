@@ -35,6 +35,8 @@ const parcelStep1Fields = [
   "originCountry",
   "originCity",
   "originCustomCity",
+  "destinationCountry",
+  "destinationCity",
   "goodsCategoryIds",
 ] as const;
 

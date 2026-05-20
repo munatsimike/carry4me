@@ -59,17 +59,27 @@ export default function ComboBox({
     setQuery(value);
   }, [value]);
 
+  const openDropdown = () => {
+    setIsOpen(true);
+    setQuery("");
+  };
+
+  const closeDropdown = () => {
+    setIsOpen(false);
+    setQuery(value);
+    setShowDisabledMessage(false);
+  };
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (!wrapperRef.current?.contains(e.target as Node)) {
-        setIsOpen(false);
-        setShowDisabledMessage(false);
+        closeDropdown();
       }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [value]);
 
   useEffect(() => {
     if (!showDisabledMessage) return;
@@ -173,10 +183,7 @@ export default function ComboBox({
         disabled={disabled}
         value={isOpen ? query : value}
         placeholder={placeholder}
-        onFocus={() => {
-          setIsOpen(true);
-          setQuery("");
-        }}
+        onFocus={openDropdown}
         onChange={(e) => {
           setQuery(e.target.value);
           setIsOpen(true);
@@ -193,7 +200,14 @@ export default function ComboBox({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          if (isOpen) {
+            closeDropdown();
+          } else {
+            openDropdown();
+          }
+        }}
         className="absolute right-3 top-1/2 -translate-y-1/2"
       >
         <ChevronDown
@@ -215,6 +229,7 @@ export default function ComboBox({
                 <button
                   key={item}
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
                     onValueChange?.(item);
                     setQuery(item);

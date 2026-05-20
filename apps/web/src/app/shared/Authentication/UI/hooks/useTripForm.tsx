@@ -1,6 +1,7 @@
 import type { FormMode, FormValues } from "@/types/Ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getDestinationDefaultsFromProfile } from "@/app/shared/locations/profileDestinationDefaults";
 import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import z from "zod";
 import { toTripDtoMapper } from "@/app/features/trips/application/toTripDtoMapper";
@@ -64,8 +65,8 @@ const emptyDefaultsValues = {
   originCountry: "",
   originCity: "",
   originCustomCity: "",
-  destinationCity: "Harare",
-  destinationCountry: "Zimbabwe",
+  destinationCountry: "",
+  destinationCity: "",
   departureDate: "",
   pricePerKg: 10,
   weight: 1,
@@ -87,7 +88,14 @@ export function useTripForm({
   const invalidateTrips = useInvalidateTrips();
   const [toDasshboard, setToDashBoard] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const createDefaultValues = useMemo(
+    () => ({
+      ...emptyDefaultsValues,
+      ...getDestinationDefaultsFromProfile(profile),
+    }),
+    [profile?.city, profile?.country, profile?.countryCode],
+  );
   const { guardAction } = useMarketplaceActionGuard();
   const { toast } = useToast();
 
@@ -103,7 +111,7 @@ export function useTripForm({
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<TripFormFields>({
     resolver: zodResolver(tripSchema),
-    defaultValues: initialFormValues ?? emptyDefaultsValues,
+    defaultValues: initialFormValues ?? createDefaultValues,
     mode: "onTouched",
   });
 
@@ -119,9 +127,12 @@ export function useTripForm({
   useEffect(() => {
     if (isEditMode && initialFormValues) {
       reset(initialFormValues);
+      return;
     }
-    if (mode === "create") reset(emptyDefaultsValues);
-  }, [isEditMode, initialFormValues, reset]);
+    if (mode === "create") {
+      reset(createDefaultValues);
+    }
+  }, [createDefaultValues, initialFormValues, isEditMode, mode, reset]);
 
   const onSubmit = async (values: TripFormFields) => {
     if (mode === "create") {

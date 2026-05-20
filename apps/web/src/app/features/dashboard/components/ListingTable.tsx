@@ -167,8 +167,8 @@ export function ListingTable<T extends Listing>({
                           row.route.originCity,
                           row.route.originCityIsCustom,
                         ),
-                        destinationCountry: "Zimbabwe",
-                        destinationCity: "Harare",
+                        destinationCountry: row.route.destinationCountry,
+                        destinationCity: row.route.destinationCity,
                         goodsCategoryIds: row.goodsCategory.map(
                           (x: GoodsCategory) => x.id,
                         ),

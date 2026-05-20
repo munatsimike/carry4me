@@ -2,7 +2,8 @@ import z from "zod";
 import { useUniversalModal } from "../../application/DialogBoxModalProvider";
 import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getDestinationDefaultsFromProfile } from "@/app/shared/locations/profileDestinationDefaults";
 import {
   createParcelUseCase,
   editParcelUseCase,
@@ -68,8 +69,8 @@ const emptyDefaultsValues = {
   originCountry: "",
   originCity: "",
   originCustomCity: "",
-  destinationCountry: "Zimbabwe",
-  destinationCity: "Harare",
+  destinationCountry: "",
+  destinationCity: "",
   goodsCategoryIds: [],
   itemDescriptions: [{ quantity: 1, description: "" }],
   weight: 1,
@@ -90,6 +91,15 @@ export default function useParcelForm({
 }: UseParcelFormProps) {
   const invalidateParcels = useInvalidateParcels();
   const { showSupabaseError } = useUniversalModal();
+  const { toast } = useToast();
+  const { user, profile, refreshProfile } = useAuth();
+  const createDefaultValues = useMemo(
+    () => ({
+      ...emptyDefaultsValues,
+      ...getDestinationDefaultsFromProfile(profile),
+    }),
+    [profile?.city, profile?.country, profile?.countryCode],
+  );
   const {
     register,
     handleSubmit,
@@ -101,12 +111,9 @@ export default function useParcelForm({
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<ParcelFormFields>({
     resolver: zodResolver(parcelSchema),
-    defaultValues: initialFormValues ?? emptyDefaultsValues,
+    defaultValues: initialFormValues ?? createDefaultValues,
     mode: "onTouched",
   });
-  const { toast } = useToast();
-
-  const { user, refreshProfile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const selectedIds = watch("goodsCategoryIds");
   const [toDasshboard, setToDashBoard] = useState<boolean>(false);
@@ -188,9 +195,14 @@ export default function useParcelForm({
   };
 
   useEffect(() => {
-    if (mode === "edit" && initialFormValues) reset(initialFormValues);
-    if (mode === "create") reset(emptyDefaultsValues);
-  }, [mode, initialFormValues, emptyDefaultsValues]);
+    if (mode === "edit" && initialFormValues) {
+      reset(initialFormValues);
+      return;
+    }
+    if (mode === "create") {
+      reset(createDefaultValues);
+    }
+  }, [createDefaultValues, initialFormValues, mode, reset]);
 
   return {
     selectedIds,
