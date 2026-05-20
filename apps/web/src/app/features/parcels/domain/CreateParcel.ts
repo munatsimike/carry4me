@@ -5,6 +5,7 @@ export type CreateParcel = {
   senderUserId: string;
   originCountry: string;
   originCity: string;
+  originCityIsCustom: boolean;
   destinationCountry: string;
   destinationCity: string;
   weightKg: number;

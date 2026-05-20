@@ -7,6 +7,7 @@ import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
 import { MyTripsUseCase } from "../application/MyTripsUseCase";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import MobileForm from "../../dashboard/components/MobileForm";
+import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 
 export default function MobileTripShell() {
   const [searchParams] = useSearchParams();
@@ -34,7 +35,10 @@ export default function MobileTripShell() {
           setInitialFormValues({
             id: data.id,
             originCountry: data.route.originCountry,
-            originCity: data.route.originCity,
+            ...toOriginCityFormFields(
+              data.route.originCity,
+              data.route.originCityIsCustom,
+            ),
             destinationCountry: data.route.destinationCountry,
             destinationCity: data.route.destinationCity,
             goodsCategoryIds: [],

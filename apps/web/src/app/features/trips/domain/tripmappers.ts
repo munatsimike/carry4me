@@ -10,6 +10,7 @@ export type TripRow = {
   };
   origin_country: string;
   origin_city: string;
+  origin_city_is_custom: boolean;
   destination_country: string;
   destination_city: string;
   price_per_kg: number;
@@ -51,6 +52,7 @@ export function mapTripRowToTrip(
     route: {
       originCountry: row.origin_country,
       originCity: row.origin_city,
+      originCityIsCustom: row.origin_city_is_custom === true,
       destinationCountry: row.destination_country,
       destinationCity: row.destination_city,
     },

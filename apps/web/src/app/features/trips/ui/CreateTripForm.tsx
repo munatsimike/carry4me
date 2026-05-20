@@ -30,6 +30,7 @@ import { formatCurrencyByCountry } from "@/app/lib/currency";
 export const step1Fields: Array<keyof TripFormFields> = [
   "originCountry",
   "originCity",
+  "originCustomCity",
   "destinationCountry",
   "destinationCity",
   "departureDate",

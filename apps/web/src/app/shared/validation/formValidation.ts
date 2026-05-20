@@ -43,6 +43,8 @@ export const countrySchema = z.string().trim().min(1, "Select a country");
 
 export const citySchema = z.string().trim().min(1, "Select a city");
 
+export const customCitySchema = z.string().trim();
+
 export const departureDateSchema = z
   .string()
   .trim()

@@ -16,6 +16,7 @@ type ParcelRow = {
   }[];
   origin_city: string;
   origin_country: string;
+  origin_city_is_custom: boolean;
   destination_city: string;
   destination_country: string;
   weight_kg: number;
@@ -51,6 +52,7 @@ export function toParcelMapper(row: ParcelRow,  likedTripIds: Set<string> = new 
     route: {
       originCity: row.origin_city,
       originCountry: row.origin_country,
+      originCityIsCustom: row.origin_city_is_custom === true,
       destinationCity: row.destination_city,
       destinationCountry: row.destination_country,
     },

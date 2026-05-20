@@ -21,32 +21,49 @@ import toCreateTrip from "@/app/features/goods/domain/toCreateTripMapper";
 import { step2Fields } from "@/app/features/trips/ui/CreateTripForm";
 import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
+import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import {
   agreeToRulesSchema,
   citySchema,
   countrySchema,
+  customCitySchema,
   departureDateSchema,
   goodsCategoriesSchema,
   listingWeightSchema,
   pricePerKgSchema,
 } from "@/app/shared/validation/formValidation";
 
-export const tripSchema = z.object({
-  originCountry: countrySchema,
-  originCity: citySchema,
-  destinationCountry: countrySchema,
-  destinationCity: citySchema,
-  departureDate: departureDateSchema,
-  weight: listingWeightSchema,
-  pricePerKg: pricePerKgSchema,
-  goodsCategoryIds: goodsCategoriesSchema,
-  agreeToRules: agreeToRulesSchema,
-});
+export const tripSchema = z
+  .object({
+    originCountry: countrySchema,
+    originCity: citySchema,
+    originCustomCity: customCitySchema,
+    destinationCountry: countrySchema,
+    destinationCity: citySchema,
+    departureDate: departureDateSchema,
+    weight: listingWeightSchema,
+    pricePerKg: pricePerKgSchema,
+    goodsCategoryIds: goodsCategoriesSchema,
+    agreeToRules: agreeToRulesSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (
+      isOtherCitySelection(data.originCity) &&
+      !data.originCustomCity.trim()
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["originCustomCity"],
+        message: "Enter your city",
+      });
+    }
+  });
 export type TripFormFields = z.infer<typeof tripSchema>;
 
 const emptyDefaultsValues = {
   originCountry: "",
   originCity: "",
+  originCustomCity: "",
   destinationCity: "Harare",
   destinationCountry: "Zimbabwe",
   departureDate: "",
@@ -221,6 +238,7 @@ function isEdited(
     dirtyFields.weight,
     dirtyFields.goodsCategoryIds,
     dirtyFields.originCity,
+    dirtyFields.originCustomCity,
     dirtyFields.originCountry,
     dirtyFields.pricePerKg,
     dirtyFields.departureDate,

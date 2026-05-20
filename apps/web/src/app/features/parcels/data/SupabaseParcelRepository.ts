@@ -148,6 +148,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
         sender_user_id: parcel.senderUserId,
         origin_country: parcel.originCountry,
         origin_city: parcel.originCity,
+        origin_city_is_custom: parcel.originCityIsCustom,
         destination_country: parcel.destinationCountry,
         destination_city: parcel.destinationCity,
         weight_kg: parcel.weightKg,

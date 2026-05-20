@@ -175,6 +175,7 @@ export class SupabaseTripsRepository implements TripsRepository {
         traveler_user_id: userId,
         origin_country: input.originCountry,
         origin_city: input.originCity,
+        origin_city_is_custom: input.originCityIsCustom,
         destination_country: input.destinationCountry,
         destination_city: input.destinationCity,
         depart_date: input.departureDate,

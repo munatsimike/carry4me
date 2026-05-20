@@ -22,35 +22,52 @@ import { parcelStep2Fields } from "@/app/features/parcels/ui/CreateParcelForm";
 import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
+import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import {
   agreeToRulesSchema,
   citySchema,
   countrySchema,
+  customCitySchema,
   goodsCategoriesSchema,
   listingWeightSchema,
   parcelItemSchema,
   pricePerKgSchema,
 } from "@/app/shared/validation/formValidation";
 
-const parcelSchema = z.object({
-  originCountry: countrySchema,
-  originCity: citySchema,
-  destinationCountry: countrySchema,
-  destinationCity: citySchema,
-  goodsCategoryIds: goodsCategoriesSchema,
-  itemDescriptions: z
-    .array(parcelItemSchema)
-    .min(1, "Enter item quantity and description"),
-  weight: listingWeightSchema,
-  pricePerKg: pricePerKgSchema,
-  agreeToRules: agreeToRulesSchema,
-});
+const parcelSchema = z
+  .object({
+    originCountry: countrySchema,
+    originCity: citySchema,
+    originCustomCity: customCitySchema,
+    destinationCountry: countrySchema,
+    destinationCity: citySchema,
+    goodsCategoryIds: goodsCategoriesSchema,
+    itemDescriptions: z
+      .array(parcelItemSchema)
+      .min(1, "Enter item quantity and description"),
+    weight: listingWeightSchema,
+    pricePerKg: pricePerKgSchema,
+    agreeToRules: agreeToRulesSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (
+      isOtherCitySelection(data.originCity) &&
+      !data.originCustomCity.trim()
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["originCustomCity"],
+        message: "Enter your city",
+      });
+    }
+  });
 
 export type ParcelFormFields = z.infer<typeof parcelSchema>;
 
 const emptyDefaultsValues = {
   originCountry: "",
   originCity: "",
+  originCustomCity: "",
   destinationCountry: "Zimbabwe",
   destinationCity: "Harare",
   goodsCategoryIds: [],
@@ -221,6 +238,7 @@ function isEdited(
     dirtyFields.goodsCategoryIds,
     dirtyFields.itemDescriptions,
     dirtyFields.originCity,
+    dirtyFields.originCustomCity,
     dirtyFields.originCountry,
     dirtyFields.pricePerKg,
     dirtyFields.weight,

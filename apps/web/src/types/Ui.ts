@@ -51,6 +51,7 @@ export type FormValues = {
   id: string;
   originCountry: string;
   originCity: string;
+  originCustomCity: string;
   destinationCountry: string;
   destinationCity: string;
   goodsCategoryIds: string[];

@@ -7,6 +7,7 @@ import { useSearchParams } from "react-router-dom";
 import { SupabaseParcelRepository } from "../data/SupabaseParcelRepository";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { MyParcelsIdUseCase } from "../application/MyParcelsUseCase";
+import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 
  
  
@@ -36,7 +37,10 @@ import { MyParcelsIdUseCase } from "../application/MyParcelsUseCase";
           setInitialFormValues({
             id: data.id,
             originCountry: data.route.originCountry,
-            originCity: data.route.originCity,
+            ...toOriginCityFormFields(
+              data.route.originCity,
+              data.route.originCityIsCustom,
+            ),
             destinationCountry: data.route.destinationCountry,
             destinationCity: data.route.destinationCity,
             goodsCategoryIds: [],

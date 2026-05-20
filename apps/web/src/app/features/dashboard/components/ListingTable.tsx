@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import type { FormValues } from "@/types/Ui";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
+import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 
 // 1) Variants
 const tableWrap = {
@@ -162,7 +163,10 @@ export function ListingTable<T extends Listing>({
                       onEdit({
                         id: row.id,
                         originCountry: row.route.originCountry,
-                        originCity: row.route.originCity,
+                        ...toOriginCityFormFields(
+                          row.route.originCity,
+                          row.route.originCityIsCustom,
+                        ),
                         destinationCountry: "Zimbabwe",
                         destinationCity: "Harare",
                         goodsCategoryIds: row.goodsCategory.map(

@@ -5,6 +5,7 @@ import type { TripStatuses } from "./Trip";
 export type CreateTripListing = {
   originCountry: string;
   originCity: string;
+  originCityIsCustom: boolean;
   destinationCountry: string;
   destinationCity: string;
   departureDate: string;

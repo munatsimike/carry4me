@@ -24,6 +24,7 @@ export interface Listing {
   route: {
     originCountry: string;
     originCity: string;
+    originCityIsCustom: boolean;
     destinationCountry: string;
     destinationCity: string;
   };

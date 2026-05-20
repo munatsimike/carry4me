@@ -9,6 +9,7 @@ import { Card } from "@/app/components/card/Card";
 import LineDivider from "@/app/components/LineDivider";
 import CategoryRow from "@/app/components/CategoryRow";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
+import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 
 export function MobileListingCard<T extends Listing>({
   data,
@@ -132,7 +133,10 @@ export function MobileListingCard<T extends Listing>({
                   onEdit({
                     id: row.id,
                     originCountry: row.route.originCountry,
-                    originCity: row.route.originCity,
+                    ...toOriginCityFormFields(
+                      row.route.originCity,
+                      row.route.originCityIsCustom,
+                    ),
                     destinationCountry: "Zimbabwe",
                     destinationCity: "Harare",
                     goodsCategoryIds: row.goodsCategory.map(
