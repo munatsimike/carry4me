@@ -79,6 +79,31 @@ type IconSpecs = {
   strokeWidth: number;
 };
 
+function getProfileEmail(
+  profile: UserProfile | null,
+  userEmail?: string | null,
+): string {
+  return profile?.email?.trim() || userEmail?.trim() || "";
+}
+
+function getProfileFormValues(
+  profile: UserProfile,
+  userEmail?: string | null,
+): UserDetailsFields {
+  const fullName = profile.fullName?.trim() ?? "";
+  const parts = fullName.split(/\s+/);
+  return {
+    firstName: parts[0] ?? "",
+    lastName: parts.slice(1).join(" "),
+    emailAddress: getProfileEmail(profile, userEmail),
+    phoneNumber: profile.phoneNumber ?? "",
+    country: profile.countryCode ?? "",
+    city: profile.city ?? "",
+    password: "",
+    confirmPassword: "",
+  };
+}
+
 export default function ProfilePage() {
   const [editing, setEditing] = useState<ProfileSection | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -117,28 +142,21 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user || !profile) return;
 
-    const fullName = profile.fullName?.trim() ?? "";
-    const parts = fullName.split(/\s+/);
-    const firstName = parts[0] ?? "";
-    const lastName = parts.slice(1).join(" ");
-
-    reset(
-      {
-        firstName,
-        lastName,
-        emailAddress: user.email ?? "",
-        phoneNumber: profile.phoneNumber ?? "",
-        country: profile.countryCode ?? "",
-        city: profile.city ?? "",
-        password: "",
-        confirmPassword: "",
-      },
-      {
-        keepDirty: true, // don’t wipe user edits if profile updates
-        keepTouched: true,
-      },
-    );
+    reset(getProfileFormValues(profile, user.email), {
+      keepDirty: true,
+      keepTouched: true,
+    });
   }, [user?.id, user?.email, profile, reset]);
+
+  const openSecurityEdit = () => {
+    if (!profile) return;
+    setValue("emailAddress", getProfileEmail(profile, user?.email), {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    setEditing("security");
+  };
 
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const updateAuthDetails = useMemo(
@@ -310,7 +328,7 @@ export default function ProfilePage() {
           file={file}
           preview={preview}
           fullName={profile.fullName ?? ""}
-          email={user.email ?? ""}
+          email={getProfileEmail(profile, user.email)}
           setFile={setFile}
           setPreview={setPreview}
           updateAvatar={updateAvatar}
@@ -341,7 +359,8 @@ export default function ProfilePage() {
               profile={profile}
               iconSpecs={iconSpecs}
               editing={editing}
-              setEditing={() => setEditing("security")}
+              setEditing={openSecurityEdit}
+              control={control}
               watch={watch}
               error={errors}
               register={register}
@@ -467,6 +486,7 @@ type securityProps = {
   setEditing: () => void;
   actionBtns: ActionButtonProps;
   iconSpecs: IconSpecs;
+  control: Control<UserDetailsFields>;
   watch: UseFormWatch<UserDetailsFields>;
   error: FieldErrors<UserDetailsFields>;
   dirtyFields: FieldNamesMarkedBoolean<UserDetailsFields>;
@@ -481,6 +501,7 @@ function SecurityDetailsCard({
   setEditing,
   actionBtns,
   watch,
+  control,
   register,
   profile,
   iconSpecs,
@@ -508,7 +529,7 @@ function SecurityDetailsCard({
         <div className="flex items-center">
           <div className="flex flex-col gap-2">
             <EmailInfoRow
-              email={profile.email}
+              email={profile.email ?? watch("emailAddress")}
               emailVerified={profile.emailVerified === true}
             />
             <PhoneInfoRow phone={profile.phoneNumber} />
@@ -524,19 +545,30 @@ function SecurityDetailsCard({
       ) : (
         <>
           <div className="flex flex-col gap-4">
-            <FloatingInputField
-              autoComplete="email"
-              className="w-full sm:max-w-[350px]"
-              hasValue={!!watch("emailAddress")}
-              label="Email address"
-              isDirty={!!dirtyFields.emailAddress}
-              isTouched={!!touchedFields.emailAddress}
-              trailingIcon={
-                <EmailVerificationBadge
-                  verified={profile.emailVerified === true}
+            <Controller
+              name="emailAddress"
+              control={control}
+              render={({ field, fieldState }) => (
+                <FloatingInputField
+                  autoComplete="email"
+                  className="w-full sm:max-w-[350px]"
+                  label="Email address"
+                  type="email"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  hasValue={Boolean(field.value?.trim())}
+                  isDirty={fieldState.isDirty}
+                  isTouched={fieldState.isTouched}
+                  error={fieldState.error?.message}
+                  trailingIcon={
+                    <EmailVerificationBadge
+                      verified={profile.emailVerified === true}
+                    />
+                  }
                 />
-              }
-              {...register("emailAddress")}
+              )}
             />
             <FloatingInputField
               className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[350px]"
