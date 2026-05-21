@@ -322,9 +322,11 @@ export default function TravelersPage() {
           />
         )}
 
-        <Link to="/create-trip?mode=create">
-          <FAB isAuthed={!!user?.id} variant="trip" />
-        </Link>
+        <FAB
+          isAuthed={!!user?.id}
+          variant="trip"
+          to="/create-trip?mode=create"
+        />
       </DefaultContainer>
 
       <ListingSelectionModal

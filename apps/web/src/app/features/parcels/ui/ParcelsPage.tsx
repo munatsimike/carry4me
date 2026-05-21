@@ -313,9 +313,11 @@ export default function ParcelsPage() {
             onNext={() => setPage((current) => current + 1)}
           />
         )}
-        <Link to="/create-parcel?mode=create">
-          <FAB isAuthed={!!user?.id} variant="parcel" />
-        </Link>{" "}
+        <FAB
+          isAuthed={!!user?.id}
+          variant="parcel"
+          to="/create-parcel?mode=create"
+        />
       </DefaultContainer>
 
       <ListingSelectionModal
