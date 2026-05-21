@@ -105,25 +105,26 @@ export default function DashboardPage() {
     <DefaultContainer outerClassName="min-h-screen">
       <PageSection align="left">{<Greeting user={fullName} />}</PageSection>
 
-      <div className="flex min-w-0 flex-col gap-6 pt-2 sm:gap-8 sm:pt-3">
+      <div className="flex flex-col gap-12 pt-2 sm:pt-4">
         <ActionButtonRow
           onPostTrip={() => requirePhoneVerification("trip")}
           onPostParcel={() => requirePhoneVerification("parcel")}
         />
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[min(100%,24rem)_minmax(0,1fr)] md:items-start md:gap-x-6">
+        <div className="flex flex-col gap-6 sm:justify-center md:flex-row md:items-start">
           <StatsSection statsList={dashboardData ? dashboardData.stats : []} />
           <YourActivitySection
             recentActivityList={notifications}
             activityList={dashboardData ? dashboardData.activity : []}
           />
-          <div className="min-w-0 md:col-span-2">
-            <DashboardSuggestedMatchesSection
-              data={suggestedMatches}
-              isLoading={suggestionsLoading}
-              error={suggestionsError}
-            />
-          </div>
+        </div>
+
+        <div className="w-full min-w-0 px-2">
+          <DashboardSuggestedMatchesSection
+            data={suggestedMatches}
+            isLoading={suggestionsLoading}
+            error={suggestionsError}
+          />
         </div>
       </div>
 
@@ -184,11 +185,11 @@ function YourActivitySection({
   recentActivityList,
 }: ActivityProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-1 flex-col gap-3">
       <CustomText textVariant="primary" textSize="lg" className="font-medium">
         {"Your activities"}
       </CustomText>
-      <div className="flex min-w-0 flex-col gap-6 lg:flex-row">
+      <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:items-start">
         <DeliverySummary activityList={activityList} />
         <RecentActivity recentActivities={recentActivityList} />
       </div>
@@ -283,7 +284,7 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       className="relative w-full max-w-full overflow-hidden rounded-3xl bg-slate-200 pt-1 lg:max-w-sm"
     >
       <Card enableHover={false} className="h-full flex-1">
-        <div className="flex flex-col gap-4 sm:pr-6 bg-white">
+        <div className="flex flex-col gap-4 bg-white p-3 sm:p-4">
           <span className="inline-flex min-w-0 items-center gap-3">
             <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
               <Truck className="text-neutral-600 h-5 w-5" strokeWidth={1} />
@@ -359,7 +360,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
 
   return (
     <motion.div
-      className="mx-auto grid max-w-[calc(4*230px+3*1rem)] grid-cols-1 items-center justify-items-center gap-4 px-5 sm:grid-cols-2 md:grid-cols-4"
+      className="mx-auto grid grid-cols-1 items-stretch gap-4 px-5 sm:grid-cols-2 md:grid-cols-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -369,7 +370,8 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           onClick={onPostTrip}
           btnText="Post a trip"
           iconColor="onDark"
-          icon={META_ICONS.travelerIcon}
+            iconSize="lg"
+          icon={META_ICONS.planeFilled}
         />
       </motion.div>
 
@@ -388,7 +390,8 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
             btnText="Browse trips"
             btnVariant="outline"
             iconColor="primary"
-            icon={META_ICONS.travelerIcon}
+            iconSize="lg"
+            icon={META_ICONS.planeFilled}
             showArrow
             textVariant="primary"
           />
@@ -401,6 +404,8 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
             showArrow
             btnText="Browse parcels"
             btnVariant="outline"
+            icon={META_ICONS.parcelBox}
+            iconColor="primary"
             textVariant="primary"
           />
         </Link>
@@ -416,6 +421,7 @@ type ActionButtonsProps = {
   textVariant?: TextVariant;
   iconColor?: IconColor;
   btnText: string;
+  iconSize?:  "lg" | "xl";
   icon?: SvgIconComponent;
   onClick?: () => void;
 };
@@ -425,6 +431,7 @@ function ActionButton({
   btnVariant = "primary",
   textVariant = "onDark",
   iconColor = "primary",
+  iconSize = "xl",
   btnText,
   icon = META_ICONS.parcelBox,
   onClick,
@@ -434,15 +441,14 @@ function ActionButton({
       onClick={onClick ? () => onClick() : () => {}}
       variant={btnVariant}
       size={"xxl"}
-      className="!w-[230px] !max-w-full sm:!w-[230px]"
-        trailingIcon={
+      trailingIcon={
           showArrow && (
             <SvgIcon size={"sm"} Icon={META_ICONS.arrowSmall} color="primary" />
           )
         }
       >
         <span className="flex flex-col gap-1.5 items-center">
-          <SvgIcon color={iconColor} size={"xl"} Icon={icon} />
+          <SvgIcon color={iconColor} size={iconSize} Icon={icon} />
           <CustomText
             as="span"
             textVariant={textVariant}

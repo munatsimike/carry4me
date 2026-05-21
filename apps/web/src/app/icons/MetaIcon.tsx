@@ -1,4 +1,5 @@
 import PlaneIcon from "@/assets/plane.svg?react";
+import PlaneFilledIcon from "@/assets/plane-filled.svg?react";
 import CalenderIcon from "@/assets/calender.svg?react";
 import ArrowIcon from "@/assets/arrowLongIcons.svg?react";
 import ArrowSmall from "@/assets/arrow.svg?react";
@@ -36,6 +37,7 @@ import EyeOffIcon from "@/assets/eye-off.svg?react";
 
 export const META_ICONS = {
   planeIcon: PlaneIcon,
+  planeFilled: PlaneFilledIcon,
   calender: CalenderIcon,
   arrow: ArrowIcon,
   parcelBox: ParcelBoxIcon,

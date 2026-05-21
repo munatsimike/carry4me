@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/Button";
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
-import TravelerIcon from "@/assets/travelerIcon.svg?react";
+import { META_ICONS } from "@/app/icons/MetaIcon";
 import ArrowIcon from "@/assets/arrow.svg?react";
-import ParcelIcon from "@/assets/parcelIcon.svg?react";
 import CustomText from "@/components/ui/CustomText";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -56,7 +55,7 @@ export default function ActionButtons() {
             size={size}
             leadingIcon={
               <CircleBadge size={size} bgColor="transparent">
-                <SvgIcon size="xxl" Icon={ParcelIcon} color="onDark" />
+                <SvgIcon size="xxl" Icon={META_ICONS.parcelBox} color="onDark" />
               </CircleBadge>
             }
             trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} color="grey" />}
@@ -92,7 +91,11 @@ export default function ActionButtons() {
             size={size}
             leadingIcon={
               <CircleBadge size={size} bgColor="transparent">
-                <SvgIcon size="xxl" Icon={TravelerIcon} color="primary" />
+                <SvgIcon
+                  size="xxl"
+                  Icon={META_ICONS.planeFilled}
+                  color="primary"
+                />
               </CircleBadge>
             }
             trailingIcon={
