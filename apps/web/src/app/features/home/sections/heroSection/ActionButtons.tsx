@@ -92,7 +92,7 @@ export default function ActionButtons() {
             leadingIcon={
               <CircleBadge size={size} bgColor="transparent">
                 <SvgIcon
-                  size="xxl"
+                  size="lg"
                   Icon={META_ICONS.planeFilled}
                   color="primary"
                 />

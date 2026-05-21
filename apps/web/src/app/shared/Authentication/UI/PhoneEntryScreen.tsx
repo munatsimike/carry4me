@@ -3,9 +3,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, UserRound } from "lucide-react";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
+import { CircleBadge } from "@/components/ui/CircleBadge";
 import FloatingInputField from "@/app/components/CustomInputField";
 import LineDivider from "@/app/components/LineDivider";
 import ErrorText from "@/app/components/text/ErrorText";
@@ -15,14 +16,13 @@ import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
-import { META_ICONS } from "@/app/icons/MetaIcon";
-import SvgIcon from "@/components/ui/SvgIcon";
 import {
   parsePhoneNumberFromString,
   type CountryCode,
 } from "libphonenumber-js";
 import { useLocations } from "@/app/hookes/useLocation";
 import { toDialCode, toIsoCountryCode, toflag } from "@/app/Mapper";
+import SvgIcon from "@/components/ui/SvgIcon";
 
 function toE164PhoneNumber(countryCode: string, localPhoneNumber: string) {
   const isoCountryCode = toIsoCountryCode(countryCode);
@@ -176,8 +176,14 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
     <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-4 px-4 sm:px-0">
       <motion.div variants={item} className="flex items-center justify-center">
         <ErrorText error={submitError?.toString()}>
-          <span className="inline-flex flex-col gap-1 items-center">
-            <SvgIcon size={"xl"} Icon={META_ICONS.loginIcon} color="primary" />
+          <span className="inline-flex flex-col items-center gap-2">
+            <CircleBadge size="lg" bgColor="secondary" paddingClassName="p-2.5">
+              <UserRound
+                className="h-6 w-6 text-primary-500"
+                strokeWidth={1.75}
+                aria-hidden
+              />
+            </CircleBadge>
 
             <CustomText
               as="h1"
