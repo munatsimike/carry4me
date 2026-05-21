@@ -1,7 +1,7 @@
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { Package, Plane, Plus, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useScrollDirection } from "../shared/Authentication/UI/hooks/useScrollDirection";
 import { useUI } from "../shared/Authentication/UI/hooks/useUI";
 import { cn } from "@/app/lib/cn";
 
@@ -45,10 +45,9 @@ function FabIcon({ Icon }: { Icon: LucideIcon }) {
 }
 
 export default function FAB({ onClick, to, isAuthed, variant }: FABProps) {
-  const scrollDirection = useScrollDirection();
   const { openOverlayCount } = useUI();
 
-  const isVisible = scrollDirection === "up" && openOverlayCount === 0;
+  const isVisible = isAuthed && openOverlayCount === 0;
   const config = variant ? variantConfig[variant] : null;
   const label = config?.label ?? "Create";
 
@@ -58,14 +57,14 @@ export default function FAB({ onClick, to, isAuthed, variant }: FABProps) {
     <Plus className="h-7 w-7" strokeWidth={2.5} aria-hidden />
   );
 
-  return (
+  const fab = (
     <AnimatePresence>
-      {isVisible && isAuthed && (
+      {isVisible && (
         <motion.div
           key="fab"
           role="presentation"
           className={cn(
-            "fixed z-50 sm:hidden",
+            "fixed z-[60] sm:hidden",
             "bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-4",
           )}
           {...fabMotion}
@@ -89,4 +88,6 @@ export default function FAB({ onClick, to, isAuthed, variant }: FABProps) {
       )}
     </AnimatePresence>
   );
+
+  return createPortal(fab, document.body);
 }

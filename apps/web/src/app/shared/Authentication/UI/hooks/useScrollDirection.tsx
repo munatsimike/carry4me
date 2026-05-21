@@ -6,15 +6,15 @@ export function useScrollDirection() {
   useEffect(() => {
     let lastScrollY = window.scrollY;
 
+    const threshold = 8;
+
     const updateScrollDirection = () => {
       const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY;
 
-      if (currentScrollY > lastScrollY) {
-        setScrollDirection("down");
-      } else {
-        setScrollDirection("up");
-      }
+      if (Math.abs(delta) < threshold) return;
 
+      setScrollDirection(delta > 0 ? "down" : "up");
       lastScrollY = currentScrollY;
     };
 

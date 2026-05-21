@@ -328,8 +328,6 @@ export function MobileToolBar({
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const location = useLocation();
-  const style =
-    "flex min-h-10 flex-col text-neutral-800 items-center justify-center gap-0.5 text-[12px] flex-1 py-1 sm:text-sm";
   const iconColor = "text-neutral-800";
   const HIDE_BACK_ROUTES = ["/", "/dashboard"];
   const showBackButton = !HIDE_BACK_ROUTES.includes(location.pathname);
@@ -362,9 +360,14 @@ export function MobileToolBar({
         >
           {toHeading(location.pathname) ?? "Carry4Me"}
         </CustomText>
-        <div className="flex min-w-10 items-center justify-end gap-2">
+        <div className="flex shrink-0 items-center justify-end gap-3">
           {showSearchBar && (
-            <button onClick={setIsSearchOpen} type="button" className={style}>
+            <button
+              onClick={setIsSearchOpen}
+              type="button"
+              aria-label="Search"
+              className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-full text-neutral-800"
+            >
               <Search
                 size={21}
                 strokeWidth={strokeWidth}
@@ -372,7 +375,7 @@ export function MobileToolBar({
               />
             </button>
           )}
-          <div className="flex items-center gap-2 sm:hidden">
+          <div className="flex shrink-0 items-center sm:hidden">
             <AnimatePresence mode="wait">
               {isAuthed ? (
                 <motion.div
