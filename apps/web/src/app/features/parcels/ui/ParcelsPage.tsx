@@ -31,7 +31,7 @@ import CreateParcelModal from "./CreateParcelModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { Link, useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
 import type { ListingPageParams } from "@/types/Pagination";

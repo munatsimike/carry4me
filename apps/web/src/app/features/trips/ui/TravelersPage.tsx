@@ -23,7 +23,7 @@ import CreateTripModal from "./CreateTripModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { Link, useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
 import {
@@ -77,28 +77,31 @@ export default function TravelersPage() {
   const [tripModalState, setTripModalState] = useState<boolean>(false);
   const [page, setPage] = useState(1);
 
-  const listingParams = useMemo<ListingPageParams>(() => ({
-    page,
-    pageSize: PAGE_SIZE,
-    filters: {
-      searchCountry,
+  const listingParams = useMemo<ListingPageParams>(
+    () => ({
+      page,
+      pageSize: PAGE_SIZE,
+      filters: {
+        searchCountry,
+        searchCity,
+        departDate: filterByDate,
+        priceRange,
+        weightRange,
+        goodsCategories: goodsCategory,
+        sortOption,
+      },
+    }),
+    [
+      page,
       searchCity,
-      departDate: filterByDate,
+      searchCountry,
+      filterByDate,
       priceRange,
       weightRange,
-      goodsCategories: goodsCategory,
+      goodsCategory,
       sortOption,
-    },
-  }), [
-    page,
-    searchCity,
-    searchCountry,
-    filterByDate,
-    priceRange,
-    weightRange,
-    goodsCategory,
-    sortOption,
-  ]);
+    ],
+  );
 
   const {
     data: tripPage,
@@ -131,50 +134,50 @@ export default function TravelersPage() {
     }
 
     guardAction(async () => {
-    if (trip.user.id === user?.id) {
-      toast(
-        "You can’t match with your own trip. Browse available parcels instead.",
-        {
-          variant: "warning",
-        },
-      );
-      return;
-    }
-
-    if (parcels.length === 0) {
-      try {
-        const data = await queryClient.fetchQuery({
-          queryKey: queryKeys.parcels.byUser(user.id),
-          queryFn: () => getParcelUseCase.execute(user.id),
-        });
-
-        if (data.length === 0) {
-          toast("Post a parcel first to match with a traveler.", {
+      if (trip.user.id === user?.id) {
+        toast(
+          "You can’t match with your own trip. Browse available parcels instead.",
+          {
             variant: "warning",
-          });
-          return;
-        }
-
-        if (data.length === 1) {
-          setSelectedParcel(data[0]);
-        }
-
-        if (data.length > 1) {
-          setParcel(data);
-          setParcelSelectionOpen(true);
-        }
-      } catch (err) {
-        showSupabaseError(err);
+          },
+        );
         return;
       }
-    }
 
-    if (parcels.length > 1 && !parcelSelectionOpen) {
-      setParcelSelectionOpen(true);
-    }
+      if (parcels.length === 0) {
+        try {
+          const data = await queryClient.fetchQuery({
+            queryKey: queryKeys.parcels.byUser(user.id),
+            queryFn: () => getParcelUseCase.execute(user.id),
+          });
 
-    setTrip(trip);
-    setModalState(true);
+          if (data.length === 0) {
+            toast("Post a parcel first to match with a traveler.", {
+              variant: "warning",
+            });
+            return;
+          }
+
+          if (data.length === 1) {
+            setSelectedParcel(data[0]);
+          }
+
+          if (data.length > 1) {
+            setParcel(data);
+            setParcelSelectionOpen(true);
+          }
+        } catch (err) {
+          showSupabaseError(err);
+          return;
+        }
+      }
+
+      if (parcels.length > 1 && !parcelSelectionOpen) {
+        setParcelSelectionOpen(true);
+      }
+
+      setTrip(trip);
+      setModalState(true);
     }, "send_request");
   };
 
@@ -274,25 +277,28 @@ export default function TravelersPage() {
             <CreateTripModal setModalState={() => setTripModalState(false)} />
           )}
         </AnimatePresence>
-        {displayedTrips.length === 0 && isFetched && !hasFilter && !isSearchActive && (
-          <EmptyState
-            title="No trips available"
-            description="No trips are available yet. Post your trip to start receiving parcel requests."
-            action={
-              <Button
-                onClick={() => handleOnClick()}
-                type="button"
-                variant="primary"
-                size="sm"
-                className="w-full mt-1"
-              >
-                <CustomText textVariant="onDark" textSize="sm">
-                  {"Post trip"}
-                </CustomText>
-              </Button>
-            }
-          />
-        )}
+        {displayedTrips.length === 0 &&
+          isFetched &&
+          !hasFilter &&
+          !isSearchActive && (
+            <EmptyState
+              title="No trips available"
+              description="No trips are available yet. Post your trip to start receiving parcel requests."
+              action={
+                <Button
+                  onClick={() => handleOnClick()}
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  className="w-full mt-1"
+                >
+                  <CustomText textVariant="onDark" textSize="sm">
+                    {"Post trip"}
+                  </CustomText>
+                </Button>
+              }
+            />
+          )}
 
         {displayedTrips.length > 0 && (
           <Travelers
@@ -302,12 +308,14 @@ export default function TravelersPage() {
           />
         )}
 
-        {(hasFilter || isSearchActive) && displayedTrips.length === 0 && isFetched && (
-          <EmptyState
-            title="No matching travelers"
-            description="Try adjusting your search or filters to find more travelers."
-          />
-        )}
+        {(hasFilter || isSearchActive) &&
+          displayedTrips.length === 0 &&
+          isFetched && (
+            <EmptyState
+              title="No matching travelers"
+              description="Try adjusting your search or filters to find more travelers."
+            />
+          )}
 
         {tripPage && displayedTrips.length > 0 && (
           <PaginationControls

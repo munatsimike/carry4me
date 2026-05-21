@@ -50,7 +50,7 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
       <CustomText
         textVariant="primary"
         textSize="lg"
-        className="font-medium"
+        className="text-left font-medium"
       >
         Suggested matches
       </CustomText>

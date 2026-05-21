@@ -111,20 +111,19 @@ export default function DashboardPage() {
           onPostParcel={() => requirePhoneVerification("parcel")}
         />
 
-        <div className="flex flex-col gap-6 sm:justify-center md:flex-row md:gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[min(100%,24rem)_minmax(0,1fr)] md:items-start md:gap-x-6">
           <StatsSection statsList={dashboardData ? dashboardData.stats : []} />
           <YourActivitySection
             recentActivityList={notifications}
             activityList={dashboardData ? dashboardData.activity : []}
           />
-        </div>
-
-        <div className="px-2 sm:px-5 lg:px-6">
-          <DashboardSuggestedMatchesSection
-            data={suggestedMatches}
-            isLoading={suggestionsLoading}
-            error={suggestionsError}
-          />
+          <div className="min-w-0 md:col-span-2">
+            <DashboardSuggestedMatchesSection
+              data={suggestedMatches}
+              isLoading={suggestionsLoading}
+              error={suggestionsError}
+            />
+          </div>
         </div>
       </div>
 
@@ -360,7 +359,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
 
   return (
     <motion.div
-      className="mx-auto grid grid-cols-1 items-stretch gap-4 px-5 sm:grid-cols-2 md:grid-cols-4"
+      className="mx-auto grid max-w-[calc(4*230px+3*1rem)] grid-cols-1 items-center justify-items-center gap-4 px-5 sm:grid-cols-2 md:grid-cols-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -396,8 +395,8 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
         </Link>
       </motion.div>
 
-      <motion.div variants={itemVariants} className="flex justify-center">
-        <Link to={"/parcels"} className="inline-flex justify-center">
+      <motion.div variants={itemVariants}>
+        <Link to={"/parcels"}>
           <ActionButton
             showArrow
             btnText="Browse parcels"
@@ -431,12 +430,11 @@ function ActionButton({
   onClick,
 }: ActionButtonsProps) {
   return (
-    <div className="w-[230px] max-w-full">
-      <Button
-        onClick={onClick ? () => onClick() : () => {}}
-        variant={btnVariant}
-        size={"xxl"}
-        className="!w-full"
+    <Button
+      onClick={onClick ? () => onClick() : () => {}}
+      variant={btnVariant}
+      size={"xxl"}
+      className="!w-[230px] !max-w-full sm:!w-[230px]"
         trailingIcon={
           showArrow && (
             <SvgIcon size={"sm"} Icon={META_ICONS.arrowSmall} color="primary" />
@@ -454,7 +452,6 @@ function ActionButton({
             {btnText}
           </CustomText>
         </span>
-      </Button>
-    </div>
+    </Button>
   );
 }
