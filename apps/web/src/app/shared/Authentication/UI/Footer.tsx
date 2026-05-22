@@ -224,7 +224,7 @@ function ContactSection() {
               href="mailto:support@carry4me.com"
               className="text-slate-600 transition hover:text-slate-900"
             >
-              support@carry4me.com
+              info@carry4me.Uk
             </a>
           </div>
         </li>
@@ -237,7 +237,7 @@ function ContactSection() {
               href="tel:+31612345678"
               className="text-slate-600 transition hover:text-slate-900"
             >
-              +31 6 1234 5678
+              +31 622528250
             </a>
           </div>
         </li>
@@ -247,7 +247,7 @@ function ContactSection() {
           <div>
             <p className="font-semibold text-slate-800">WhatsApp</p>
             <a
-              href="https://wa.me/31612345678"
+              href="https://wa.me/31622528250"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-600 transition hover:text-slate-900"
