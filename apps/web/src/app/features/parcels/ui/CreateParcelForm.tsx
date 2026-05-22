@@ -10,7 +10,7 @@ import {
   type UseFormWatch,
 } from "react-hook-form";
 import FormHeader from "../../dashboard/components/FormHeader";
-import { META_ICONS } from "@/app/icons/MetaIcon";
+
 import {
   ReviewDetailsHeader,
   StepHeader,
@@ -18,7 +18,7 @@ import {
 } from "@/app/components/forms/formStepper";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Package } from "lucide-react";
 import LineDivider from "@/app/components/LineDivider";
 import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
@@ -116,7 +116,7 @@ export default function CreateParcelForm({
           <FormHeader
             heading={mode === "edit" ? "Edit parcel" : "Post parcel"}
             subHeading="Share your parcel details and get matched with travelers."
-            icon={META_ICONS.parcelBox}
+            icon={<Package size={32} className=" text-primary-500"/>}
           />
         )}
 

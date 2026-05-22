@@ -9,14 +9,14 @@ import { WeightField } from "../../dashboard/components/WeightField";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
 import { DateField } from "../../dashboard/components/DateField";
 import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plane } from "lucide-react";
 import {
   ReviewDetailsHeader,
   StepHeader,
   type Step,
 } from "@/app/components/forms/formStepper";
 import FormHeader from "../../dashboard/components/FormHeader";
-import { META_ICONS } from "@/app/icons/MetaIcon";
+
 import type {
   Control,
   FieldErrors,
@@ -109,9 +109,10 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
       <div className="flex flex-col gap-4">
         {step !== 3 && (
           <FormHeader
+          size="sm"
             heading={mode === "edit" ? "Edit trip" : "Post your trip"}
             subHeading="Share your trip details and get matched with senders."
-            icon={META_ICONS.planeIcon}
+            icon={<Plane size={32} className=" text-primary-500"/>}
           />
         )}
 

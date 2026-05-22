@@ -179,8 +179,10 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
           <span className="inline-flex flex-col items-center gap-2">
             <CircleBadge size="lg" bgColor="secondary" paddingClassName="p-2.5">
               <UserRound
-                className="h-6 w-6 text-primary-500"
-                strokeWidth={1.75}
+                className=" text-primary-500"
+                size={24}
+                strokeWidth={2}
+
                 aria-hidden
               />
             </CircleBadge>
