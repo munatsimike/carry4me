@@ -14,7 +14,7 @@ export default function TrustAndSafety({ items }: InfoItemsProps) {
 
       <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[0.65fr_1.35fr] lg:gap-10">
         <div className="flex flex-col gap-3">
-          <span className="w-fit rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700">
+          <span className="w-fit rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 border border-primary-100">
             Safety first
           </span>
           <CustomText

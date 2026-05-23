@@ -29,7 +29,7 @@ export function PhoneVerificationModal() {
   return (
     <AnimatePresence>
       {state.isOpen && (
-        <CustomModal onClose={handleClose} width="xl">
+        <CustomModal onClose={handleClose} width="xl" scrollable={false}>
           {step === "phone-entry" && (
             <PhoneEntryScreen onPhoneSubmitted={handlePhoneSubmitted} />
           )}

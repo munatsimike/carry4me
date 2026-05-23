@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -103,7 +104,23 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
   const selectedFlagIcon = selectedCountry ? toflag(selectedCountry) : null;
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [countryMenuOpen, setCountryMenuOpen] = useState(false);
+  const [countryMenuPosition, setCountryMenuPosition] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
   const countryMenuRef = useRef<HTMLDivElement | null>(null);
+  const countryMenuListRef = useRef<HTMLDivElement | null>(null);
+
+  const updateCountryMenuPosition = useCallback(() => {
+    if (!countryMenuRef.current) return;
+    const rect = countryMenuRef.current.getBoundingClientRect();
+    setCountryMenuPosition({
+      top: rect.bottom + 8,
+      left: rect.left,
+      width: rect.width,
+    });
+  }, []);
 
   const {
     setPhoneNumber,
@@ -135,10 +152,27 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
   }, [countryOptions, selectedCountry, setValue]);
 
   useEffect(() => {
+    if (!countryMenuOpen) {
+      setCountryMenuPosition(null);
+      return;
+    }
+
+    updateCountryMenuPosition();
+    window.addEventListener("resize", updateCountryMenuPosition);
+
+    return () => window.removeEventListener("resize", updateCountryMenuPosition);
+  }, [countryMenuOpen, updateCountryMenuPosition]);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (!countryMenuRef.current?.contains(event.target as Node)) {
-        setCountryMenuOpen(false);
+      const target = event.target as Node;
+      if (
+        countryMenuRef.current?.contains(target) ||
+        countryMenuListRef.current?.contains(target)
+      ) {
+        return;
       }
+      setCountryMenuOpen(false);
     }
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -172,17 +206,59 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
     }
   };
 
+  const countryMenuPortal =
+    countryMenuOpen &&
+    countryMenuPosition &&
+    createPortal(
+      <div
+        ref={countryMenuListRef}
+        role="listbox"
+        aria-label="Country codes"
+        className="fixed z-[120] max-h-[min(50vh,16rem)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
+        style={{
+          top: countryMenuPosition.top,
+          left: countryMenuPosition.left,
+          width: countryMenuPosition.width,
+        }}
+      >
+        {countryOptions.map((option) => {
+          const flagIcon = toflag(option);
+          return (
+            <button
+              key={option}
+              type="button"
+              role="option"
+              onClick={() => {
+                setValue("countryCode", option, {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: true,
+                });
+                setCountryMenuOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+            >
+              {flagIcon && <SvgIcon size="xs" Icon={flagIcon} />}
+              <span className="truncate">
+                {option} {toDialCode(option) ?? ""}
+              </span>
+            </button>
+          );
+        })}
+      </div>,
+      document.body,
+    );
+
   return (
     <div className="flex flex-col w-full max-w-[500px] mx-auto items-center gap-4 px-4 sm:px-0">
+      {countryMenuPortal}
       <motion.div variants={item} className="flex items-center justify-center">
         <ErrorText error={submitError?.toString()}>
           <span className="inline-flex flex-col items-center gap-2">
             <CircleBadge size="lg" bgColor="secondary" paddingClassName="p-2.5">
               <UserRound
                 className=" text-primary-500"
-                size={24}
-                strokeWidth={2}
-
+                size={32}
                 aria-hidden
               />
             </CircleBadge>
@@ -225,7 +301,15 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
                     disabled={isSubmitting}
                     aria-expanded={countryMenuOpen}
                     aria-label="Select country code"
-                    onClick={() => setCountryMenuOpen((open) => !open)}
+                    onClick={() => {
+                      setCountryMenuOpen((open) => {
+                        const next = !open;
+                        if (next) {
+                          requestAnimationFrame(updateCountryMenuPosition);
+                        }
+                        return next;
+                      });
+                    }}
                     className="flex w-full items-center justify-between gap-2 rounded-xl border border-neutral-300 bg-white py-2 pl-3 pr-3 text-left text-sm text-ink-primary outline-none transition-colors focus:border-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
                   >
                     <span className="flex min-w-0 items-center gap-2">
@@ -241,33 +325,6 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
                     <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
                   </button>
 
-                  {countryMenuOpen && (
-                    <div className="absolute z-50 mt-2 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
-                      {countryOptions.map((option) => {
-                        const flagIcon = toflag(option);
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => {
-                              setValue("countryCode", option, {
-                                shouldDirty: true,
-                                shouldTouch: true,
-                                shouldValidate: true,
-                              });
-                              setCountryMenuOpen(false);
-                            }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                          >
-                            {flagIcon && <SvgIcon size="xs" Icon={flagIcon} />}
-                            <span className="truncate">
-                              {option} {toDialCode(option) ?? ""}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
 
                 {errors.countryCode?.message && (

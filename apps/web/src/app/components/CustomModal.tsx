@@ -10,6 +10,8 @@ type Props = {
   width?: Width;
   children: React.ReactNode;
   onClose: () => void;
+  /** When false, the modal panel does not scroll (e.g. sign-in). */
+  scrollable?: boolean;
 };
 
 const sizes: Record<Width, string> = {
@@ -23,6 +25,7 @@ export default function CustomModal({
   children,
   onClose,
   width = "2xl",
+  scrollable = true,
 }: Props) {
   const isMobile = useMediaQuery();
 
@@ -69,7 +72,9 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-[110] w-full ${sizes[width]} max-h-[calc(100vh-1rem)] overflow-y-auto rounded-t-2xl border border-neutral-300 bg-white p-3 pt-4 pb-4 shadow-xl sm:max-h-[calc(100vh-2rem)] sm:rounded-2xl sm:px-5`}
+        className={`relative z-[110] w-full ${sizes[width]} max-h-[calc(100vh-1rem)] rounded-t-2xl border border-neutral-300 bg-white p-3 pt-4 pb-4 shadow-xl sm:max-h-[calc(100vh-2rem)] sm:rounded-2xl sm:px-5 ${
+          scrollable ? "overflow-y-auto" : "overflow-hidden"
+        }`}
         initial={modalAnimation.initial}
         animate={modalAnimation.animate}
         exit={modalAnimation.exit}
