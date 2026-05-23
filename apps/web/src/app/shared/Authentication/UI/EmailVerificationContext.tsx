@@ -27,7 +27,11 @@ type EmailVerificationContextValue = {
 const EmailVerificationContext =
   createContext<EmailVerificationContextValue | null>(null);
 
-export function EmailVerificationProvider({ children }: { children: ReactNode }) {
+export function EmailVerificationProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [mode, setMode] = useState<EmailVerificationModalMode>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const { toast } = useToast();
@@ -77,8 +81,12 @@ export function EmailVerificationProvider({ children }: { children: ReactNode })
       <AnimatePresence>
         {mode && (
           <CustomModal width="lg" onClose={closeEmailVerificationModal}>
-            <div className="flex flex-col gap-4 p-4">
-              <CustomText textVariant="primary" textSize="lg" className="font-medium">
+            <div className="flex flex-col gap-2 p-4">
+              <CustomText
+                textVariant="primary"
+                textSize="lg"
+                className="font-medium"
+              >
                 {isCheckEmail ? "Check your email" : "Verify your email"}
               </CustomText>
 
@@ -88,9 +96,9 @@ export function EmailVerificationProvider({ children }: { children: ReactNode })
                   : "Please verify your email before posting parcels or trips on Carry4Me."}
               </CustomText>
 
-              <LineDivider />
+              <LineDivider heightClass="my-2" />
 
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end gap-3  mt-1">
                 {isVerifyRequired && (
                   <Button
                     type="button"
@@ -110,7 +118,7 @@ export function EmailVerificationProvider({ children }: { children: ReactNode })
                     size="sm"
                     onClick={() => void handleResend()}
                     disabled={resendLoading}
-                    className="min-w-[11rem]"
+                    className="min-w-[11rem] !px-6"
                   >
                     {resendLoading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -131,6 +139,7 @@ export function EmailVerificationProvider({ children }: { children: ReactNode })
                     variant="primary"
                     size="sm"
                     onClick={closeEmailVerificationModal}
+                    className="!px-6"
                   >
                     <CustomText textVariant="onDark">Got it</CustomText>
                   </Button>

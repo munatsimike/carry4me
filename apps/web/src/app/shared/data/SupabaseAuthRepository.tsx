@@ -111,30 +111,17 @@ export class SupabaseAuthRepository implements AuthRepository {
       });
     }
 
-    const profilePhoneNumber = user.phone ?? appUser.profile.phoneNumber;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: user.id,
-          full_name: appUser.profile.fullName,
-          avatar_url: appUser.profile.avatarUrl,
-          country_code: appUser.profile.countryCode,
-          phone_number: profilePhoneNumber,
-          city: appUser.profile.city,
-          email: appUser.profile.email,
-          phone_verified: true,
-          account_status: ACCOUNT_STATUSES.ACTIVE,
-        },
-        { onConflict: "id" },
-      )
-      .select("id")
-      .single();
+    const { data, error } = await supabase.rpc("complete_current_profile", {
+      p_full_name: appUser.profile.fullName,
+      p_city: appUser.profile.city,
+      p_country_code: appUser.profile.countryCode,
+      p_country: appUser.profile.country ?? null,
+      p_email: appUser.profile.email,
+    });
 
     throwIfSupabaseError(error);
 
-    return requireData(data).id;
+    return requireData(data) as string;
   }
 
   async uploadAvatar(file: File, userId: string): Promise<string> {

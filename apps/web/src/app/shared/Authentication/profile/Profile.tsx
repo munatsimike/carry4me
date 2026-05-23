@@ -103,8 +103,6 @@ function getProfileFormValues(
     phoneNumber: profile.phoneNumber ?? "",
     country: profile.countryCode ?? "",
     city: profile.city ?? "",
-    password: "",
-    confirmPassword: "",
   };
 }
 
@@ -135,7 +133,6 @@ export default function ProfilePage() {
       phoneNumber: "",
       country: "",
       city: "",
-      password: "",
     },
     mode: "onTouched",
   });

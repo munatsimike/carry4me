@@ -61,25 +61,27 @@ import {
 } from "@/app/shared/validation/formValidation";
 import EmailVerificationBadge from "./EmailVerificationBadge";
 
-export const UserDetailsScema = z
-  .object({
-    firstName: firstNameSchema,
-    lastName: lastNameSchema,
-    emailAddress: emailSchema,
-    phoneNumber: z.string().optional(),
-    country: countrySchema,
-    city: citySchema,
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z
-      .string()
-      .min(8, "Password must be at least 8 characters"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"], //  attaches error to confirmPassword
-  });
+export const profileDetailsSchema = z.object({
+  firstName: firstNameSchema,
+  lastName: lastNameSchema,
+  emailAddress: emailSchema,
+  phoneNumber: z.string().optional(),
+  country: countrySchema,
+  city: citySchema,
+});
 
-export type UserDetailsFields = z.infer<typeof UserDetailsScema>;
+export type ProfileDetailsFields = z.infer<typeof profileDetailsSchema>;
+
+/** @alias profileDetailsSchema — used on /complete-profile and profile settings */
+export const completeProfileSchema = profileDetailsSchema;
+
+export type CompleteProfileFields = ProfileDetailsFields;
+
+/** @deprecated Use profileDetailsSchema */
+export const UserDetailsScema = profileDetailsSchema;
+
+/** @deprecated Use ProfileDetailsFields */
+export type UserDetailsFields = ProfileDetailsFields;
 
 const changePhoneSchema = z
   .object({
@@ -182,11 +184,9 @@ export default function CompleteProfile() {
       isSubmitting,
       dirtyFields,
       touchedFields,
-      isValid,
-      submitCount,
     },
-  } = useForm<UserDetailsFields>({
-    resolver: zodResolver(UserDetailsScema),
+  } = useForm<CompleteProfileFields>({
+    resolver: zodResolver(completeProfileSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -194,8 +194,6 @@ export default function CompleteProfile() {
       phoneNumber: user?.phone ?? "",
       country: "",
       city: "",
-      password: "",
-      confirmPassword: "",
     },
     mode: "onTouched",
   });
@@ -271,12 +269,12 @@ export default function CompleteProfile() {
 
   const { showSupabaseError } = useUniversalModal();
 
-  const onSubmit = async (values: UserDetailsFields) => {
+  const onSubmit = async (values: CompleteProfileFields) => {
     const newUser: AppUser = {
       auth: {
         id: null,
         email: values.emailAddress,
-        password: values.password,
+        password: "",
       },
       profile: {
         id: null,
@@ -296,13 +294,21 @@ export default function CompleteProfile() {
       await signupUseCase.execute(newUser);
       await refreshProfile();
 
-      try {
-        await sendEmailVerification();
-      } catch (verificationError) {
-        console.error("Failed to send verification email:", verificationError);
-      }
+      const shouldSendVerification =
+        values.emailAddress.trim().length > 0 &&
+        profile?.emailVerified !== true;
 
-      openCheckEmailModal();
+      if (shouldSendVerification) {
+        try {
+          await sendEmailVerification();
+          openCheckEmailModal();
+        } catch (verificationError) {
+          console.error(
+            "Failed to send verification email:",
+            verificationError,
+          );
+        }
+      }
     } catch (err) {
       const appError = AppError.fromUnknown(err);
       if (appError.code === "user_already_exists") {
@@ -325,8 +331,6 @@ export default function CompleteProfile() {
         errors: errors,
         touchedFields: touchedFields,
         isSubmitting: isSubmitting,
-        submitCount: submitCount,
-        isValid: isValid,
         onChangePhone: () => setChangePhoneOpen(true),
       }}
       locationProps={{
@@ -380,15 +384,13 @@ export default function CompleteProfile() {
 }
 
 type FormProps = {
-  register: UseFormRegister<UserDetailsFields>;
-  watch: UseFormWatch<UserDetailsFields>;
-  control: Control<UserDetailsFields>;
-  dirtyFields: FieldNamesMarkedBoolean<UserDetailsFields>;
-  errors: FieldErrors<UserDetailsFields>;
-  touchedFields: Partial<FieldNamesMarkedBoolean<UserDetailsFields>>;
+  register: UseFormRegister<CompleteProfileFields>;
+  watch: UseFormWatch<CompleteProfileFields>;
+  control: Control<CompleteProfileFields>;
+  dirtyFields: FieldNamesMarkedBoolean<CompleteProfileFields>;
+  errors: FieldErrors<CompleteProfileFields>;
+  touchedFields: Partial<FieldNamesMarkedBoolean<CompleteProfileFields>>;
   isSubmitting: boolean;
-  submitCount: number;
-  isValid: boolean;
   onChangePhone: () => void;
 };
 
@@ -411,8 +413,6 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
     watch,
     dirtyFields,
     isSubmitting,
-    submitCount,
-    isValid,
     onChangePhone,
     errors,
     touchedFields,
@@ -584,7 +584,7 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
           variant="primary"
           size="sm"
           className="w-full"
-          disabled={isSubmitting || (submitCount > 0 && !isValid)}
+          disabled={isSubmitting}
         >
           <CustomText textVariant="onDark" textSize="sm">
             {isSubmitting ? "Saving profile..." : "Save profile"}
