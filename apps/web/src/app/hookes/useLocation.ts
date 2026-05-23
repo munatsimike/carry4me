@@ -3,6 +3,20 @@ import { useMemo } from "react";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { getLocationUseCase } from "@/app/lib/useCases";
 
+function matchesSelectedCountry(
+  country: { code: string; name: string },
+  selectedCountry: string,
+) {
+  const value = selectedCountry.trim();
+  if (!value) return false;
+
+  const normalized = value.toLowerCase();
+  return (
+    country.code.toLowerCase() === normalized ||
+    country.name.toLowerCase() === normalized
+  );
+}
+
 export function useLocations(selectedCountry?: string) {
   const query = useQuery({
     queryKey: queryKeys.locations.all,
@@ -24,7 +38,7 @@ export function useLocations(selectedCountry?: string) {
     }
     return (
       query.data
-        ?.find((loc) => loc.country.code === selectedCountry)
+        ?.find((loc) => matchesSelectedCountry(loc.country, selectedCountry))
         ?.cities.map((city) => city.name) ?? []
     );
   }, [selectedCountry, query.data, query.isLoading, query.error]);

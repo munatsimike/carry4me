@@ -38,8 +38,8 @@ import Spinner from "@/app/components/Spinner";
 import { useToast } from "@/app/components/Toast";
 import {
   countryCodeFromPhone,
-  countryLocationFromPhone,
   countryNameFromPhone,
+  normalizeCountryCode,
   toCountryName,
   toDialCode,
   toIsoCountryCode,
@@ -225,8 +225,10 @@ export default function CompleteProfile() {
   }, [profile?.phoneNumber, setValue, user?.email, user?.phone]);
 
   useEffect(() => {
-    const countryFromPhone = countryCodeFromPhone(formPhoneNumber);
-    const countryToSet = countryFromPhone ?? profile?.countryCode;
+    const countryToSet =
+      countryNameFromPhone(formPhoneNumber) ??
+      profile?.country ??
+      (profile?.countryCode ? toCountryName(profile.countryCode) : null);
     if (!countryToSet) return;
 
     setValue("country", countryToSet, {
@@ -234,7 +236,7 @@ export default function CompleteProfile() {
       shouldTouch: false,
       shouldValidate: true,
     });
-  }, [formPhoneNumber, profile?.countryCode, setValue]);
+  }, [formPhoneNumber, profile?.country, profile?.countryCode, setValue]);
 
   useEffect(() => {
     if (!profile?.city) return;
@@ -261,10 +263,10 @@ export default function CompleteProfile() {
         fullName: `${values.firstName} ${values.lastName}`.trim(),
         avatarUrl: null,
         country:
-          countryNameFromPhone(values.phoneNumber) ??
-          toCountryName(values.country),
+          countryNameFromPhone(values.phoneNumber) ?? values.country,
         countryCode:
-          countryCodeFromPhone(values.phoneNumber) ?? values.country,
+          countryCodeFromPhone(values.phoneNumber) ??
+          normalizeCountryCode(values.country),
         city: values.city,
         phoneNumber: profile?.phoneNumber ?? values.phoneNumber ?? null,
       },
@@ -387,15 +389,13 @@ function FormContents({ formProps }: SigupFormProps) {
   const phoneNumber = watch("phoneNumber");
   const selectedCountry = watch("country");
   const phoneCountryCode = countryCodeFromPhone(phoneNumber);
-  const locationCountryCode = selectedCountry || phoneCountryCode;
   const formattedPhoneNumber = formatVerifiedPhoneNumber(
     phoneNumber,
-    locationCountryCode,
+    phoneCountryCode,
   );
-  const displayCountry = countryLocationFromPhone(phoneNumber) ?? "";
-  const countryFlagIcon = locationCountryCode
-    ? toflag(locationCountryCode)
-    : null;
+  const displayCountry =
+    selectedCountry || countryNameFromPhone(phoneNumber) || "";
+  const countryFlagIcon = phoneCountryCode ? toflag(phoneCountryCode) : null;
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
 
