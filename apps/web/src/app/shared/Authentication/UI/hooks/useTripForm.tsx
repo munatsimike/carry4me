@@ -5,7 +5,11 @@ import {
   FIXED_DESTINATION_CITY,
   FIXED_DESTINATION_COUNTRY,
 } from "@/app/shared/locations/fixedDestination";
-import { getDestinationDefaultsFromProfile } from "@/app/shared/locations/profileDestinationDefaults";
+import {
+  getDestinationDefaultsFromProfile,
+  getOriginDefaultsFromProfile,
+} from "@/app/shared/locations/profileDestinationDefaults";
+import { useLocations } from "@/app/hookes/useLocation";
 import { useForm, type FieldNamesMarkedBoolean } from "react-hook-form";
 import z from "zod";
 import { toTripDtoMapper } from "@/app/features/trips/application/toTripDtoMapper";
@@ -96,13 +100,15 @@ export function useTripForm({
   const invalidateTrips = useInvalidateTrips();
   const [toDasshboard, setToDashBoard] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const { data: locations } = useLocations();
   const createDefaultValues = useMemo(
     () => ({
       ...emptyDefaultsValues,
       ...getDestinationDefaultsFromProfile(),
+      ...getOriginDefaultsFromProfile(profile, locations),
     }),
-    [],
+    [profile, locations],
   );
   const { guardAction } = useMarketplaceActionGuard();
   const { toast } = useToast();
@@ -138,7 +144,7 @@ export function useTripForm({
       return;
     }
     if (mode === "create") {
-      reset(createDefaultValues);
+      reset(createDefaultValues, { keepDirtyValues: true });
     }
   }, [createDefaultValues, initialFormValues, isEditMode, mode, reset]);
 

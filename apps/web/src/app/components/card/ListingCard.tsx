@@ -40,9 +40,12 @@ export function ListingCard<T extends Listing>({
   const toggleFavourite = useToggleFavouriteMutation();
 
   const isDisplayMode = mode === "display";
-  const borderClass = isDisplayMode ? "border border-neutral-200" : "";
-  const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
   const isTripListing = listing.type === "trip";
+  const listingSurface = isTripListing
+    ? { bg: "!bg-primary-50/50", border: "border-primary-100" }
+    : { bg: "!bg-purple-50/50", border: "border-purple-100" };
+  const borderClass = `border ${listingSurface.border}`;
+  const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
 
   const handleToggleLike = () => {
     if (!user?.id) {
@@ -67,6 +70,7 @@ export function ListingCard<T extends Listing>({
   return (
     <Card
       enableHover={isDisplayMode}
+      className={listingSurface.bg}
       borderClass={borderClass}
       shadowClass={shadowClass}
     >

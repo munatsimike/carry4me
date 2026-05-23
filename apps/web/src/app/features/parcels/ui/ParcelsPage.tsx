@@ -332,7 +332,8 @@ export default function ParcelsPage() {
       <AnimatePresence>
         {selectedParcel && user && selectedTrip && modalState && (
           <CustomModal
-            width="xl"
+            width="2xl"
+            scrollable={false}
             onClose={() => {
               setModalState(false);
               setSelectedTrip(null);

@@ -7,7 +7,11 @@ import {
   FIXED_DESTINATION_CITY,
   FIXED_DESTINATION_COUNTRY,
 } from "@/app/shared/locations/fixedDestination";
-import { getDestinationDefaultsFromProfile } from "@/app/shared/locations/profileDestinationDefaults";
+import {
+  getDestinationDefaultsFromProfile,
+  getOriginDefaultsFromProfile,
+} from "@/app/shared/locations/profileDestinationDefaults";
+import { useLocations } from "@/app/hookes/useLocation";
 import {
   createParcelUseCase,
   editParcelUseCase,
@@ -100,13 +104,15 @@ export default function useParcelForm({
   const invalidateParcels = useInvalidateParcels();
   const { showSupabaseError } = useUniversalModal();
   const { toast } = useToast();
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const { data: locations } = useLocations();
   const createDefaultValues = useMemo(
     () => ({
       ...emptyDefaultsValues,
       ...getDestinationDefaultsFromProfile(),
+      ...getOriginDefaultsFromProfile(profile, locations),
     }),
-    [],
+    [profile, locations],
   );
   const {
     register,
@@ -215,7 +221,7 @@ export default function useParcelForm({
       return;
     }
     if (mode === "create") {
-      reset(createDefaultValues);
+      reset(createDefaultValues, { keepDirtyValues: true });
     }
   }, [createDefaultValues, initialFormValues, mode, reset]);
 
