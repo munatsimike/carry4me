@@ -1,6 +1,17 @@
 import { META_ICONS } from "./icons/MetaIcon";
 export const DEFAULT_VARIANT = "primary" as const;
 
+const SUPPORTED_PHONE_COUNTRIES = [
+  { countryCode: "UK", dialCode: "+44", name: "United Kingdom" },
+  { countryCode: "USA", dialCode: "+1", name: "United States of America" },
+  { countryCode: "NL", dialCode: "+31", name: "Netherlands" },
+  { countryCode: "Zimbabwe", dialCode: "+263", name: "Zimbabwe" },
+] as const;
+
+const DIAL_CODES_LONGEST_FIRST = [...SUPPORTED_PHONE_COUNTRIES].sort(
+  (a, b) => b.dialCode.length - a.dialCode.length,
+);
+
 export const tagToVariant = {
   sender: "primary",
   traveler: "success",
@@ -71,7 +82,7 @@ export function toCountryName(country: string): string | null {
       return "United Kingdom";
     case "USA":
     case "US":
-      return "United States";
+      return "United States of America";
     case "Zimbabwe":
     case "ZW":
       return "Zimbabwe";
@@ -81,4 +92,86 @@ export function toCountryName(country: string): string | null {
     default:
       return null;
   }
+}
+
+/** Maps profile DB values, ISO codes, and display names to app country codes. */
+export function normalizeCountryCode(
+  country: string | null | undefined,
+): string | null {
+  if (!country?.trim()) return null;
+
+  const value = country.trim();
+
+  if (toCountryName(value)) return value;
+
+  switch (value) {
+    case "GB":
+      return "UK";
+    case "US":
+      return "USA";
+    case "United Kingdom":
+      return "UK";
+    case "United States":
+    case "United States of America":
+      return "USA";
+    case "Netherlands":
+      return "NL";
+    default:
+      return value;
+  }
+}
+
+/** Reads the international dial prefix from a phone number (e.g. +44, +31, +1). */
+export function dialCodeFromPhone(
+  phoneNumber: string | null | undefined,
+): string | null {
+  if (!phoneNumber?.trim()) return null;
+
+  const digits = phoneNumber.replace(/\D/g, "");
+  if (!digits) return null;
+
+  const e164 = `+${digits}`;
+
+  for (const { dialCode } of DIAL_CODES_LONGEST_FIRST) {
+    if (e164.startsWith(dialCode)) return dialCode;
+  }
+
+  return null;
+}
+
+/** Maps a dial code to the app country code (e.g. +44 → UK, +31 → NL). */
+export function countryCodeFromDialCode(
+  dialCode: string | null | undefined,
+): string | null {
+  if (!dialCode) return null;
+  return (
+    SUPPORTED_PHONE_COUNTRIES.find((entry) => entry.dialCode === dialCode)
+      ?.countryCode ?? null
+  );
+}
+
+/** Derives the app country code from the phone number's dial prefix. */
+export function countryCodeFromPhone(
+  phoneNumber: string | null | undefined,
+): string | null {
+  return countryCodeFromDialCode(dialCodeFromPhone(phoneNumber));
+}
+
+/** Derives the display country name from a phone number's dial prefix. */
+export function countryNameFromPhone(
+  phoneNumber: string | null | undefined,
+): string | null {
+  const countryCode = countryCodeFromPhone(phoneNumber);
+  if (!countryCode) return null;
+  return toCountryName(countryCode) ?? countryCode;
+}
+
+/** Location label for forms: dial code + country name (e.g. +44 United Kingdom). */
+export function countryLocationFromPhone(
+  phoneNumber: string | null | undefined,
+): string | null {
+  const dialCode = dialCodeFromPhone(phoneNumber);
+  const name = countryNameFromPhone(phoneNumber);
+  if (!dialCode || !name) return null;
+  return `${dialCode} ${name}`;
 }

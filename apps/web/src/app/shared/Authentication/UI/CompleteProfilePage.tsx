@@ -10,7 +10,7 @@ import FloatingInputField from "@/app/components/CustomInputField";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, UserRound } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -24,7 +24,6 @@ import {
 } from "react-hook-form";
 import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { META_ICONS } from "@/app/icons/MetaIcon";
 import { useSignInModal } from "../SignInModalContext";
 import ComboBox from "@/app/components/ComboBox";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
@@ -38,6 +37,9 @@ import CustomModal from "@/app/components/CustomModal";
 import Spinner from "@/app/components/Spinner";
 import { useToast } from "@/app/components/Toast";
 import {
+  countryCodeFromPhone,
+  countryLocationFromPhone,
+  countryNameFromPhone,
   toCountryName,
   toDialCode,
   toIsoCountryCode,
@@ -150,17 +152,6 @@ function formatVerifiedPhoneNumber(
   return `${dialCode}${digits.replace(/^0+/, "")}`;
 }
 
-function inferCountryFromPhone(phoneNumber: string | null | undefined) {
-  if (!phoneNumber?.trim().startsWith("+")) return null;
-
-  try {
-    const parsed = parsePhoneNumberFromString(phoneNumber);
-    return parsed?.country ?? null;
-  } catch {
-    return null;
-  }
-}
-
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -211,6 +202,8 @@ export default function CompleteProfile() {
     mode: "onTouched",
   });
 
+  const formPhoneNumber = watch("phoneNumber");
+
   useEffect(() => {
     if (user?.email) {
       setValue("emailAddress", user.email, {
@@ -221,11 +214,6 @@ export default function CompleteProfile() {
     }
 
     const savedPhoneNumber = profile?.phoneNumber ?? user?.phone;
-    const savedCountry =
-      profile?.countryCode ??
-      profile?.country ??
-      inferCountryFromPhone(user?.phone) ??
-      inferCountryFromPhone(profile?.phoneNumber);
 
     if (savedPhoneNumber) {
       setValue("phoneNumber", savedPhoneNumber, {
@@ -234,22 +222,18 @@ export default function CompleteProfile() {
         shouldValidate: false,
       });
     }
+  }, [profile?.phoneNumber, setValue, user?.email, user?.phone]);
 
-    if (savedCountry) {
-      setValue("country", savedCountry, {
-        shouldDirty: false,
-        shouldTouch: false,
-        shouldValidate: true,
-      });
-    }
-  }, [
-    profile?.country,
-    profile?.countryCode,
-    profile?.phoneNumber,
-    setValue,
-    user?.email,
-    user?.phone,
-  ]);
+  useEffect(() => {
+    const countryFromPhone = countryCodeFromPhone(formPhoneNumber);
+    if (!countryFromPhone) return;
+
+    setValue("country", countryFromPhone, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: true,
+    });
+  }, [formPhoneNumber, setValue]);
 
   const { showSupabaseError } = useUniversalModal();
 
@@ -265,8 +249,11 @@ export default function CompleteProfile() {
         email: values.emailAddress,
         fullName: `${values.firstName} ${values.lastName}`.trim(),
         avatarUrl: null,
-        country: profile?.country ?? toCountryName(values.country),
-        countryCode: profile?.countryCode ?? values.country,
+        country:
+          countryNameFromPhone(values.phoneNumber) ??
+          toCountryName(values.country),
+        countryCode:
+          countryCodeFromPhone(values.phoneNumber) ?? values.country,
         city: values.city,
         phoneNumber: profile?.phoneNumber ?? values.phoneNumber ?? null,
       },
@@ -337,7 +324,9 @@ export default function CompleteProfile() {
           <ChangePhoneNumberModal
             userId={user.id}
             currentPhoneNumber={profile?.phoneNumber ?? user.phone ?? null}
-            currentCountryCode={profile?.countryCode ?? null}
+            currentCountryCode={
+              countryCodeFromPhone(profile?.phoneNumber ?? user.phone) ?? null
+            }
             onClose={() => setChangePhoneOpen(false)}
             onVerified={async () => {
               await refreshProfile();
@@ -382,27 +371,31 @@ function FormContents({ formProps }: SigupFormProps) {
   const emailVerified = profile?.emailVerified === true;
 
   const firstName = watch("firstName");
-  const originCountry = watch("country");
   const lastName = watch("lastName");
   const emailAddress = watch("emailAddress");
   const phoneNumber = watch("phoneNumber");
+  const locationCountryCode = countryCodeFromPhone(phoneNumber);
   const formattedPhoneNumber = formatVerifiedPhoneNumber(
     phoneNumber,
-    originCountry,
+    locationCountryCode,
   );
-  const displayCountry = originCountry
-    ? (toCountryName(originCountry) ?? originCountry)
-    : "";
-  const countryFlagIcon = originCountry ? toflag(originCountry) : null;
+  const displayCountry = countryLocationFromPhone(phoneNumber) ?? "";
+  const countryFlagIcon = locationCountryCode
+    ? toflag(locationCountryCode)
+    : null;
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
 
-  const { cityOptions } = useLocations(originCountry);
+  const { cityOptions } = useLocations(locationCountryCode ?? undefined);
   return (
     <>
       <span className="flex flex-col items-center gap-1 pb-2">
-        <CircleBadge size="lg">
-          <SvgIcon size={"lg"} Icon={META_ICONS.addAccount} color="primary" />
+        <CircleBadge size="lg" bgColor="secondary" paddingClassName="p-2.5">
+          <UserRound
+            className="text-primary-500"
+            size={32}
+            aria-hidden
+          />
         </CircleBadge>
         <CustomText
           as="h1"
@@ -452,7 +445,9 @@ function FormContents({ formProps }: SigupFormProps) {
               isDirty={!!dirtyFields.emailAddress}
               isTouched={!!touchedFields.emailAddress}
               trailingIcon={
-                <EmailVerificationBadge verified={emailVerified} />
+                emailAddress?.trim() ? (
+                  <EmailVerificationBadge verified={emailVerified} />
+                ) : undefined
               }
               {...register("emailAddress")}
             />
@@ -514,7 +509,7 @@ function FormContents({ formProps }: SigupFormProps) {
                 wrapperClassName="w-full sm:max-w-[260px]"
                 placeholder="Select city"
                 menuItems={cityOptions}
-                disabled={!originCountry}
+                disabled={!locationCountryCode}
                 disabledMessage="Select a country first"
                 value={field.value}
                 onValueChange={field.onChange}
