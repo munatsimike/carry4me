@@ -226,14 +226,25 @@ export default function CompleteProfile() {
 
   useEffect(() => {
     const countryFromPhone = countryCodeFromPhone(formPhoneNumber);
-    if (!countryFromPhone) return;
+    const countryToSet = countryFromPhone ?? profile?.countryCode;
+    if (!countryToSet) return;
 
-    setValue("country", countryFromPhone, {
+    setValue("country", countryToSet, {
       shouldDirty: false,
       shouldTouch: false,
       shouldValidate: true,
     });
-  }, [formPhoneNumber, setValue]);
+  }, [formPhoneNumber, profile?.countryCode, setValue]);
+
+  useEffect(() => {
+    if (!profile?.city) return;
+
+    setValue("city", profile.city, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: true,
+    });
+  }, [profile?.city, setValue]);
 
   const { showSupabaseError } = useUniversalModal();
 
@@ -374,7 +385,9 @@ function FormContents({ formProps }: SigupFormProps) {
   const lastName = watch("lastName");
   const emailAddress = watch("emailAddress");
   const phoneNumber = watch("phoneNumber");
-  const locationCountryCode = countryCodeFromPhone(phoneNumber);
+  const selectedCountry = watch("country");
+  const phoneCountryCode = countryCodeFromPhone(phoneNumber);
+  const locationCountryCode = selectedCountry || phoneCountryCode;
   const formattedPhoneNumber = formatVerifiedPhoneNumber(
     phoneNumber,
     locationCountryCode,
@@ -386,7 +399,7 @@ function FormContents({ formProps }: SigupFormProps) {
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
 
-  const { cityOptions } = useLocations(locationCountryCode ?? undefined);
+  const { cityOptions } = useLocations(selectedCountry || undefined);
   return (
     <>
       <span className="flex flex-col items-center gap-1 pb-2">
@@ -509,7 +522,7 @@ function FormContents({ formProps }: SigupFormProps) {
                 wrapperClassName="w-full sm:max-w-[260px]"
                 placeholder="Select city"
                 menuItems={cityOptions}
-                disabled={!locationCountryCode}
+                disabled={!selectedCountry}
                 disabledMessage="Select a country first"
                 value={field.value}
                 onValueChange={field.onChange}

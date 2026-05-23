@@ -173,5 +173,5 @@ export function countryLocationFromPhone(
   const dialCode = dialCodeFromPhone(phoneNumber);
   const name = countryNameFromPhone(phoneNumber);
   if (!dialCode || !name) return null;
-  return `${dialCode} ${name}`;
+  return `${(dialCode)} ${name}`;
 }
