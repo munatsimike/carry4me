@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { getLocationUseCase } from "@/app/lib/useCases";
+import { normalizeCountryCode, toCountryName } from "@/app/Mapper";
+import type { MyLocation } from "@/app/shared/Authentication/domain/MyLocation";
 
-function matchesSelectedCountry(
+export function matchesSelectedCountry(
   country: { code: string; name: string },
   selectedCountry: string,
 ) {
@@ -17,6 +19,63 @@ function matchesSelectedCountry(
   );
 }
 
+export function getCountryCodes(locations: MyLocation[] | undefined): string[] {
+  return locations?.map((loc) => loc.country.code) ?? [];
+}
+
+export function getCountryNames(locations: MyLocation[] | undefined): string[] {
+  return locations?.map((loc) => loc.country.name) ?? [];
+}
+
+export function getCityOptions(
+  locations: MyLocation[] | undefined,
+  selectedCountry?: string,
+): string[] {
+  if (!selectedCountry?.trim() || !locations) return [];
+
+  return (
+    locations
+      .find((loc) => matchesSelectedCountry(loc.country, selectedCountry))
+      ?.cities.map((city) => city.name) ?? []
+  );
+}
+
+/** Resolves a stored country code (or name) to the full display name from the DB or mapper. */
+export function getCountryName(
+  locations: MyLocation[] | undefined,
+  countryValue: string | null | undefined,
+): string {
+  const value = countryValue?.trim();
+  if (!value) return "—";
+
+  const fromDb = locations?.find((loc) =>
+    matchesSelectedCountry(loc.country, value),
+  )?.country.name;
+  if (fromDb) return fromDb;
+
+  const normalized = normalizeCountryCode(value);
+  return toCountryName(normalized ?? value) ?? value;
+}
+
+/** Resolves a country display name or code to the app country code. */
+export function getCountryCode(
+  locations: MyLocation[] | undefined,
+  countryValue: string | null | undefined,
+): string | null {
+  const value = countryValue?.trim();
+  if (!value) return null;
+
+  const fromDb = locations?.find((loc) =>
+    matchesSelectedCountry(loc.country, value),
+  )?.country.code;
+  if (fromDb) return fromDb;
+
+  return normalizeCountryCode(value) ?? value;
+}
+
+/** @deprecated Use getCountryName instead. */
+export const resolveCountryDisplayName = getCountryName;
+
 export function useLocations(selectedCountry?: string) {
   const query = useQuery({
     queryKey: queryKeys.locations.all,
@@ -26,28 +85,48 @@ export function useLocations(selectedCountry?: string) {
     refetchOnWindowFocus: false,
   });
 
-  const countryOptions = useMemo(() => {
-    return !query.isLoading && !query.error
-      ? (query.data?.map((loc) => loc.country.code) ?? [])
-      : [];
-  }, [query.data, query.isLoading, query.error]);
+  const locations = query.data;
+  const isReady = !query.isLoading && !query.error;
 
-  const cityOptions = useMemo(() => {
-    if (!selectedCountry || query.isLoading || query.error) {
-      return [];
-    }
-    return (
-      query.data
-        ?.find((loc) => matchesSelectedCountry(loc.country, selectedCountry))
-        ?.cities.map((city) => city.name) ?? []
-    );
-  }, [selectedCountry, query.data, query.isLoading, query.error]);
+  const countryCodes = useMemo(
+    () => (isReady ? getCountryCodes(locations) : []),
+    [isReady, locations],
+  );
+
+  const countryNames = useMemo(
+    () => (isReady ? getCountryNames(locations) : []),
+    [isReady, locations],
+  );
+
+  const cityOptions = useMemo(
+    () => (isReady ? getCityOptions(locations, selectedCountry) : []),
+    [isReady, locations, selectedCountry],
+  );
+
+  const resolveCountryName = useCallback(
+    (countryValue: string | null | undefined) =>
+      getCountryName(locations, countryValue),
+    [locations],
+  );
+
+  const resolveCountryCode = useCallback(
+    (countryValue: string | null | undefined) =>
+      getCountryCode(locations, countryValue),
+    [locations],
+  );
 
   return {
-    data: query.data,
+    data: locations,
     isLoading: query.isLoading,
     error: query.error,
-    countryOptions,
+    countryCodes,
+    countryNames,
     cityOptions,
+    getCountryName: resolveCountryName,
+    getCountryCode: resolveCountryCode,
+    /** @deprecated Use countryCodes instead. */
+    countryOptions: countryCodes,
+    /** @deprecated Use countryNames instead. */
+    countryNameOptions: countryNames,
   };
 }

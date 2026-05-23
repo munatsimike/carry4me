@@ -395,7 +395,7 @@ function FormContents({ formProps }: SigupFormProps) {
   );
   const displayCountry =
     selectedCountry || countryNameFromPhone(phoneNumber) || "";
-  const countryFlagIcon = phoneCountryCode ? toflag(phoneCountryCode) : null;
+  const countryFlagIcon = toflag(selectedCountry || phoneCountryCode);
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
 
@@ -507,7 +507,7 @@ function FormContents({ formProps }: SigupFormProps) {
             value={displayCountry}
             leadingIcon={
               countryFlagIcon ? (
-                <SvgIcon size="xs" Icon={countryFlagIcon} />
+                <SvgIcon size="sm" Icon={countryFlagIcon} />
               ) : undefined
             }
             isDirty={false}

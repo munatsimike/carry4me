@@ -17,13 +17,18 @@ export const tagToVariant = {
   traveler: "success",
 } as const;
 
-export function toflag(country: string) {
-  switch (country) {
+export function toflag(country: string | null | undefined) {
+  if (!country?.trim()) return null;
+
+  switch (country.trim()) {
     case "UK":
     case "GB":
+    case "United Kingdom":
       return META_ICONS.ukFlag;
     case "USA":
     case "US":
+    case "United States":
+    case "United States of America":
       return META_ICONS.uSFlagIcon;
     case "Zimbabwe":
     case "ZW":
@@ -31,18 +36,26 @@ export function toflag(country: string) {
     case "NL":
     case "Netherlands":
       return META_ICONS.nlFlag;
-    default:
-      return null;
+    default: {
+      const normalized = normalizeCountryCode(country.trim());
+      if (!normalized || normalized === country.trim()) return null;
+      return toflag(normalized);
+    }
   }
 }
 
-export function toDialCode(country: string): string | null {
-  switch (country) {
+export function toDialCode(country: string | null | undefined): string | null {
+  if (!country?.trim()) return null;
+
+  switch (country.trim()) {
     case "UK":
     case "GB":
+    case "United Kingdom":
       return "+44";
     case "USA":
     case "US":
+    case "United States":
+    case "United States of America":
       return "+1";
     case "Zimbabwe":
     case "ZW":
@@ -55,13 +68,18 @@ export function toDialCode(country: string): string | null {
   }
 }
 
-export function toIsoCountryCode(country: string) {
-  switch (country) {
+export function toIsoCountryCode(country: string | null | undefined) {
+  if (!country?.trim()) return null;
+
+  switch (country.trim()) {
     case "UK":
     case "GB":
+    case "United Kingdom":
       return "GB";
     case "USA":
     case "US":
+    case "United States":
+    case "United States of America":
       return "US";
     case "Zimbabwe":
     case "ZW":
@@ -69,19 +87,23 @@ export function toIsoCountryCode(country: string) {
     case "NL":
     case "Netherlands":
       return "NL";
-
     default:
       return null;
   }
 }
 
-export function toCountryName(country: string): string | null {
-  switch (country) {
+export function toCountryName(country: string | null | undefined): string | null {
+  if (!country?.trim()) return null;
+
+  switch (country.trim()) {
     case "UK":
     case "GB":
+    case "United Kingdom":
       return "United Kingdom";
     case "USA":
     case "US":
+    case "United States":
+    case "United States of America":
       return "United States of America";
     case "Zimbabwe":
     case "ZW":
