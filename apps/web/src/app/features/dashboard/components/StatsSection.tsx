@@ -75,9 +75,9 @@ export default function StatsSection({ statsList }: StatsSectionProps) {
                       </CustomText>
                     </span>
                     <CustomText
-                      textVariant="primary"
-                      textSize="lg"
-                      className="shrink-0 font-semibold tabular-nums"
+                      textVariant="label"
+                      textSize="md"
+                      className="shrink-0  tabular-nums"
                     >
                       {item.count}
                     </CustomText>
