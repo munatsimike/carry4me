@@ -1,11 +1,11 @@
 export type MyLocation = {
   country: {
-    id: number;
+    id: string;
     name: string;
     code: string;
   };
   cities: {
-    id: number;
+    id: string;
     name: string;
   }[];
 };

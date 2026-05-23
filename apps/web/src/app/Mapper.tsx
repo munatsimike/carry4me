@@ -12,6 +12,15 @@ const DIAL_CODES_LONGEST_FIRST = [...SUPPORTED_PHONE_COUNTRIES].sort(
   (a, b) => b.dialCode.length - a.dialCode.length,
 );
 
+/** Used when a country exists in the DB but has no seeded cities yet. */
+export const FALLBACK_CITIES_BY_COUNTRY_CODE: Record<string, string[]> = {
+  UK: ["London", "Birmingham", "Manchester"],
+  USA: ["Houston", "Dallas", "Atlanta"],
+  NL: ["Amsterdam", "Rotterdam", "The Hague", "Utrecht", "Eindhoven"],
+  Zimbabwe: ["Harare", "Bulawayo"],
+  ZW: ["Harare", "Bulawayo"],
+};
+
 export const tagToVariant = {
   sender: "primary",
   traveler: "success",
@@ -138,6 +147,10 @@ export function normalizeCountryCode(
       return "USA";
     case "Netherlands":
       return "NL";
+    case "Zimbabwe":
+      return "ZW";
+    case "ZW":
+      return "ZW";
     default:
       return value;
   }

@@ -38,9 +38,7 @@ import Spinner from "@/app/components/Spinner";
 import { useToast } from "@/app/components/Toast";
 import {
   countryCodeFromPhone,
-  countryNameFromPhone,
   normalizeCountryCode,
-  toCountryName,
   toDialCode,
   toIsoCountryCode,
   toflag,
@@ -203,6 +201,30 @@ export default function CompleteProfile() {
   });
 
   const formPhoneNumber = watch("phoneNumber");
+  const selectedCountry = watch("country");
+  const phoneCountryCode = countryCodeFromPhone(formPhoneNumber);
+
+  const countryCodeForCities = useMemo(() => {
+    return (
+      phoneCountryCode ??
+      normalizeCountryCode(selectedCountry) ??
+      profile?.countryCode ??
+      normalizeCountryCode(profile?.country) ??
+      undefined
+    );
+  }, [
+    phoneCountryCode,
+    profile?.country,
+    profile?.countryCode,
+    selectedCountry,
+  ]);
+
+  const {
+    cityOptions,
+    getCountryName,
+    getCountryCode,
+    isLoading: locationsLoading,
+  } = useLocations(countryCodeForCities);
 
   useEffect(() => {
     if (user?.email) {
@@ -225,18 +247,17 @@ export default function CompleteProfile() {
   }, [profile?.phoneNumber, setValue, user?.email, user?.phone]);
 
   useEffect(() => {
-    const countryToSet =
-      countryNameFromPhone(formPhoneNumber) ??
-      profile?.country ??
-      (profile?.countryCode ? toCountryName(profile.countryCode) : null);
-    if (!countryToSet) return;
+    if (!countryCodeForCities) return;
+
+    const countryToSet = getCountryName(countryCodeForCities);
+    if (countryToSet === "—") return;
 
     setValue("country", countryToSet, {
       shouldDirty: false,
       shouldTouch: false,
       shouldValidate: true,
     });
-  }, [formPhoneNumber, profile?.country, profile?.countryCode, setValue]);
+  }, [countryCodeForCities, getCountryName, setValue]);
 
   useEffect(() => {
     if (!profile?.city) return;
@@ -262,11 +283,10 @@ export default function CompleteProfile() {
         email: values.emailAddress,
         fullName: `${values.firstName} ${values.lastName}`.trim(),
         avatarUrl: null,
-        country:
-          countryNameFromPhone(values.phoneNumber) ?? values.country,
+        country: getCountryName(values.country),
         countryCode:
           countryCodeFromPhone(values.phoneNumber) ??
-          normalizeCountryCode(values.country),
+          getCountryCode(values.country),
         city: values.city,
         phoneNumber: profile?.phoneNumber ?? values.phoneNumber ?? null,
       },
@@ -308,6 +328,14 @@ export default function CompleteProfile() {
         submitCount: submitCount,
         isValid: isValid,
         onChangePhone: () => setChangePhoneOpen(true),
+      }}
+      locationProps={{
+        cityOptions,
+        countryCodeForCities,
+        getCountryName,
+        getCountryCode,
+        locationsLoading,
+        phoneCountryCode,
       }}
     />
   );
@@ -364,10 +392,20 @@ type FormProps = {
   onChangePhone: () => void;
 };
 
+type LocationProps = {
+  cityOptions: string[];
+  countryCodeForCities?: string;
+  getCountryName: (countryValue: string | null | undefined) => string;
+  getCountryCode: (countryValue: string | null | undefined) => string | null;
+  locationsLoading: boolean;
+  phoneCountryCode: string | null;
+};
+
 type SigupFormProps = {
   formProps: FormProps;
+  locationProps: LocationProps;
 };
-function FormContents({ formProps }: SigupFormProps) {
+function FormContents({ formProps, locationProps }: SigupFormProps) {
   const {
     register,
     watch,
@@ -387,19 +425,20 @@ function FormContents({ formProps }: SigupFormProps) {
   const lastName = watch("lastName");
   const emailAddress = watch("emailAddress");
   const phoneNumber = watch("phoneNumber");
-  const selectedCountry = watch("country");
-  const phoneCountryCode = countryCodeFromPhone(phoneNumber);
+  const { cityOptions, countryCodeForCities, getCountryName, phoneCountryCode } =
+    locationProps;
   const formattedPhoneNumber = formatVerifiedPhoneNumber(
     phoneNumber,
     phoneCountryCode,
   );
-  const displayCountry =
-    selectedCountry || countryNameFromPhone(phoneNumber) || "";
-  const countryFlagIcon = toflag(selectedCountry || phoneCountryCode);
+  const displayCountry = countryCodeForCities
+    ? getCountryName(countryCodeForCities)
+    : "";
+  const countryFlagIcon = countryCodeForCities
+    ? toflag(countryCodeForCities)
+    : null;
   const headerContent = "flex flex-col gap-2 mt-2";
   const contentClass = "flex flex-col gap-5";
-
-  const { cityOptions } = useLocations(selectedCountry || undefined);
   return (
     <>
       <span className="flex flex-col items-center gap-1 pb-2">
@@ -522,7 +561,7 @@ function FormContents({ formProps }: SigupFormProps) {
                 wrapperClassName="w-full sm:max-w-[260px]"
                 placeholder="Select city"
                 menuItems={cityOptions}
-                disabled={!selectedCountry}
+                disabled={!countryCodeForCities}
                 disabledMessage="Select a country first"
                 value={field.value}
                 onValueChange={field.onChange}
