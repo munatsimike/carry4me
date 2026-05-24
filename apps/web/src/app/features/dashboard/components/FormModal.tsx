@@ -15,7 +15,7 @@ export default function FormModal({
   onSubmit,
 }: FormModalProps) {
   return (
-    <CustomModal onClose={() => onClose(false)}>
+    <CustomModal onClose={() => onClose(false)} scrollable={false}>
       <form id="tripForm" onSubmit={onSubmit}>
         <motion.div
           layout

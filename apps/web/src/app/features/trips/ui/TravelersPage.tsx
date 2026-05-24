@@ -2,7 +2,7 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import Travelers from "./Travelers";
 import { useEffect, useMemo, useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
-import ConfirmRequest from "@/app/components/ConfirmRequest";
+import RequestSummary from "@/app/components/RequestSummary";
 import PageSection from "@/app/components/PageSection";
 import Search, { SearchResults } from "@/app/components/Search";
 import type { TripListing } from "../domain/Trip";
@@ -349,14 +349,14 @@ export default function TravelersPage() {
       <AnimatePresence>
         {selectedTrip && selectedParcel && user && modalState && (
           <CustomModal
-            width="2xl"
+            width="4xl"
             scrollable={false}
             onClose={() => {
               setSelectedParcel(null);
               setModalState(false);
             }}
           >
-            <ConfirmRequest
+            <RequestSummary
               loggedInUserId={user.id}
               trip={selectedTrip}
               parcel={selectedParcel}

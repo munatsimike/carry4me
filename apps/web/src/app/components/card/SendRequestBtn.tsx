@@ -15,6 +15,7 @@ type SendRequestBtnProps<T> = {
   iconColorVariant?: IconColor;
   buttonTextVariant?: TextVariant;
   isActive?: boolean;
+  disabled?: boolean;
 };
 
 export default function SendRequestBtn<T>({
@@ -25,6 +26,7 @@ export default function SendRequestBtn<T>({
   buttonTextVariant = "primary",
   iconColorVariant = "onDark",
   isActive = false,
+  disabled = false,
 }: SendRequestBtnProps<T>) {
   const { user } = useAuth();
   const { openSignInModal } = useSignInModal();
@@ -36,7 +38,9 @@ export default function SendRequestBtn<T>({
     <div className={`${base}`}>
       <Button
         isBusy={isActive}
+        disabled={disabled}
         onClick={() => {
+          if (disabled) return;
           if (!user?.id) {
             openSignInModal({ redirectTo: page });
             return;
@@ -47,7 +51,9 @@ export default function SendRequestBtn<T>({
           }, "send_request");
         }}
         variant={buttonVariant}
-        className="shadow-sm w-full"
+        className={`shadow-sm w-full ${
+          disabled ? "pointer-events-none opacity-60" : ""
+        }`}
         size={"sm"}
         leadingIcon={
           <SvgIcon

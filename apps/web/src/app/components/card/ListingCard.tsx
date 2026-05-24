@@ -41,10 +41,9 @@ export function ListingCard<T extends Listing>({
 
   const isDisplayMode = mode === "display";
   const isTripListing = listing.type === "trip";
-  const listingSurface = isTripListing
-    ? { bg: "!bg-primary-50/50", border: "border-primary-100" }
-    : { bg: "!bg-purple-50/50", border: "border-purple-100" };
-  const borderClass = `border ${listingSurface.border}`;
+  const borderClass = isTripListing
+    ? "border border-primary-200"
+    : "border border-purple-200";
   const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
 
   const handleToggleLike = () => {
@@ -70,7 +69,6 @@ export function ListingCard<T extends Listing>({
   return (
     <Card
       enableHover={isDisplayMode}
-      className={listingSurface.bg}
       borderClass={borderClass}
       shadowClass={shadowClass}
     >

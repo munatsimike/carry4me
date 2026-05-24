@@ -44,7 +44,7 @@ export function SuggestedMatchCard({
     <Card
       enableHover
       paddingClass="p-4 sm:p-5"
-      cornerRadiusClass="rounded-2xl"
+      cornerRadiusClass="rounded-3xl"
       borderClass="border border-slate-200 transition-colors hover:border-primary-200"
       shadowClass="shadow-sm transition-shadow hover:shadow-md"
       className="flex h-full flex-col"

@@ -36,7 +36,7 @@ export function StepHeader({
   const step = steps[currentStep - 1];
 
   return (
-    <div className="flex sm:justify-between items-center overflow-x-auto">
+    <div className="flex sm:justify-between items-center overflow-x-hidden">
       {/* Left: Step text */}
       <div className="flex items-center gap-1 min-w-0">
         <span className="inline-flex text-sm  sm:text-base h-6 items-center justify-center text-neutral-600 whitespace-nowrap">

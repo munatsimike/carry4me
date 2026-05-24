@@ -4,7 +4,7 @@ import { useMediaQuery } from "../shared/Authentication/UI/hooks/useMediaQuery";
 import { useUI } from "../shared/Authentication/UI/hooks/useUI";
 import { useEffect } from "react";
 
-type Width = "sm" | "md" | "lg" | "xl" | "2xl";
+type Width = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 
 type Props = {
   width?: Width;
@@ -20,6 +20,8 @@ const sizes: Record<Width, string> = {
   lg: "max-w-lg",
   xl: "max-w-xl",
   "2xl": "max-w-2xl",
+  "3xl": "max-w-3xl",
+  "4xl": "max-w-4xl",
 };
 export default function CustomModal({
   children,
@@ -72,8 +74,10 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-[110] w-full ${sizes[width]} max-h-[calc(100vh-1rem)] rounded-t-2xl border border-neutral-300 bg-white p-3 pt-4 pb-4 shadow-xl sm:max-h-[calc(100vh-2rem)] sm:rounded-2xl sm:px-5 ${
-          scrollable ? "overflow-y-auto" : "overflow-hidden"
+        className={`relative z-[110] w-full ${sizes[width]} rounded-t-2xl border border-neutral-300 bg-white p-3 pt-4 pb-4 shadow-xl sm:rounded-2xl sm:px-5 ${
+          scrollable
+            ? "max-h-[calc(100vh-1rem)] overflow-y-auto sm:max-h-[calc(100vh-2rem)]"
+            : "max-h-none overflow-visible"
         }`}
         initial={modalAnimation.initial}
         animate={modalAnimation.animate}

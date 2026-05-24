@@ -108,7 +108,12 @@ export default function TripFormReview({
       </div>
 
       <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
-        <CustomText as="p" textSize="xs" textVariant="label" className="mb-1">
+        <CustomText
+          as="p"
+          textSize="xs"
+          textVariant="label"
+          className="mb-1 whitespace-nowrap"
+        >
           Potential earnings
         </CustomText>
         <CustomText
@@ -153,7 +158,7 @@ function ReviewSection({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <CustomText as="p" textSize="xs" textVariant="label">
+      <CustomText as="p" textSize="xs" textVariant="label" className="whitespace-nowrap">
         {label}
       </CustomText>
       {children}

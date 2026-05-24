@@ -109,10 +109,10 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
       <div className="flex flex-col gap-4">
         {step !== 3 && (
           <FormHeader
-          size="sm"
+            size="sm"
             heading={mode === "edit" ? "Edit trip" : "Post your trip"}
             subHeading="Share your trip details and get matched with senders."
-            icon={<Plane size={32} className=" text-primary-500"/>}
+            icon={<Plane size={32} className=" text-primary-500" />}
           />
         )}
 

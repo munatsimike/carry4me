@@ -18,7 +18,7 @@ import {
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import PageSection from "@/app/components/PageSection";
 import { AnimatePresence, motion } from "framer-motion";
-import ConfirmRequest from "@/app/components/ConfirmRequest";
+import RequestSummary from "@/app/components/RequestSummary";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
@@ -332,14 +332,14 @@ export default function ParcelsPage() {
       <AnimatePresence>
         {selectedParcel && user && selectedTrip && modalState && (
           <CustomModal
-            width="2xl"
+            width="4xl"
             scrollable={false}
             onClose={() => {
               setModalState(false);
               setSelectedTrip(null);
             }}
           >
-            <ConfirmRequest
+            <RequestSummary
               loggedInUserId={user.id}
               trip={selectedTrip}
               parcel={selectedParcel}

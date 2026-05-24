@@ -146,7 +146,7 @@ function ReviewSection({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <CustomText as="p" textSize="xs" textVariant="label">
+      <CustomText as="p" textSize="xs" textVariant="label" className="whitespace-nowrap">
         {label}
       </CustomText>
       {children}

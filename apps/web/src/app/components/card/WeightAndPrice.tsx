@@ -23,7 +23,7 @@ export function WeightAndPrice({
     <div className={`flex flex-col gap-2`}>
       <div className="flex justify-between items-center">
         <CustomText
-          className={baseLabel}
+          className={`${baseLabel} whitespace-nowrap`}
           as="div"
           textSize={textSize}
           textVariant={labelColor}
