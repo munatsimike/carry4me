@@ -1,8 +1,4 @@
--- Event-driven notifications:
---   carry_request_events (insert) -> notifications (template) -> email_queue
---
--- perform_carry_request_action and carry_requests insert only write events;
--- notify_on_carry_request_event() handles notification + email queue.
+-- Restore event-driven notifications (20260524120000) after mistaken revert in 20260528120000.
 
 insert into public.carry_request_notification_templates (
   type,
@@ -51,7 +47,6 @@ declare
   tpl_link text;
   notification_id uuid;
 begin
-  -- expire_overdue_carry_requests inserts events + notifications directly
   if new.type = 'REQUEST_EXPIRED' then
     return new;
   end if;
@@ -151,7 +146,8 @@ after insert on public.carry_request_events
 for each row
 execute function public.notify_on_carry_request_event();
 
--- perform_carry_request_action: status transition + event only (no direct notification/email).
+drop function if exists public.is_carry_request_payment_expired(uuid);
+
 create or replace function public.perform_carry_request_action(
   request_id uuid,
   action_key text
@@ -327,10 +323,6 @@ begin
   );
 end;
 $$;
-
-drop trigger if exists carry_requests_after_insert_notify on public.carry_requests;
-drop function if exists public.handle_carry_request_insert_notifications();
-drop function if exists public.create_carry_request_notification(uuid, text, text, text, uuid);
 
 revoke all on function public.notify_on_carry_request_event() from public;
 revoke all on function public.emit_request_sent_event() from public;

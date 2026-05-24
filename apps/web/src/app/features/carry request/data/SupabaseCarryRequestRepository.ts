@@ -28,22 +28,20 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
     return requireData(data).id;
   }
 
-  async isExpired(requestId: string): Promise<boolean> {
-    const { data, error, status } = await supabase.rpc(
-      "perform_carry_request_action",
-      {
-        request_id: requestId,
-        action_key: "PAY",
-      },
-    );
+  async isPaymentExpired(requestId: string): Promise<boolean> {
+    const { data, error, status } = await supabase
+      .from("carry_requests")
+      .select("status, payment_expires_at")
+      .eq("id", requestId)
+      .maybeSingle();
 
     throwIfSupabaseError(error, status);
 
-    if (!data.ok && data.reason === "PAYMENT_EXPIRED") {
+    if (!data || data.status !== "PENDING_PAYMENT" || !data.payment_expires_at) {
       return false;
     }
 
-    return true;
+    return new Date(data.payment_expires_at).getTime() <= Date.now();
   }
 
   async fetchCarryRequestsForUser(userId: string): Promise<CarryRequest[]> {

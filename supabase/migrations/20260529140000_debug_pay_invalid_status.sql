@@ -1,157 +1,5 @@
--- Event-driven notifications:
---   carry_request_events (insert) -> notifications (template) -> email_queue
---
--- perform_carry_request_action and carry_requests insert only write events;
--- notify_on_carry_request_event() handles notification + email queue.
+-- Production refinements for perform_carry_request_action (PAY guards, status handling).
 
-insert into public.carry_request_notification_templates (
-  type,
-  recipient_role,
-  actor_role,
-  title,
-  body,
-  link
-)
-values
-  (
-    'REQUEST_SENT',
-    'TRAVELER',
-    'SENDER',
-    'New carry request',
-    'A sender requested to carry their parcel on your trip.',
-    '/requests'
-  ),
-  (
-    'REQUEST_SENT',
-    'SENDER',
-    'TRAVELER',
-    'New carry request',
-    'A traveler offered to carry your parcel on their trip.',
-    '/requests'
-  )
-on conflict (type, recipient_role, actor_role)
-do update set
-  title = excluded.title,
-  body = excluded.body,
-  link = excluded.link;
-
-create or replace function public.notify_on_carry_request_event()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  cr record;
-  v_actor_role text;
-  v_recipient_role text;
-  recipient_id uuid;
-  tpl_title text;
-  tpl_body text;
-  tpl_link text;
-  notification_id uuid;
-begin
-  -- expire_overdue_carry_requests inserts events + notifications directly
-  if new.type = 'REQUEST_EXPIRED' then
-    return new;
-  end if;
-
-  if new.actor_user_id is null then
-    return new;
-  end if;
-
-  select * into cr
-  from public.carry_requests
-  where id = new.carry_request_id;
-
-  if not found then
-    return new;
-  end if;
-
-  if new.actor_user_id = cr.sender_user_id then
-    v_actor_role := 'SENDER';
-    recipient_id := cr.traveler_user_id;
-    v_recipient_role := 'TRAVELER';
-  elsif new.actor_user_id = cr.traveler_user_id then
-    v_actor_role := 'TRAVELER';
-    recipient_id := cr.sender_user_id;
-    v_recipient_role := 'SENDER';
-  else
-    return new;
-  end if;
-
-  select t.title, t.body, t.link
-  into tpl_title, tpl_body, tpl_link
-  from public.carry_request_notification_templates t
-  where t.type = new.type::text
-    and t.recipient_role = v_recipient_role
-    and t.actor_role = v_actor_role
-  limit 1;
-
-  if tpl_title is null then
-    return new;
-  end if;
-
-  insert into public.notifications (user_id, type, title, body, link, metadata)
-  values (
-    recipient_id,
-    new.type::text,
-    tpl_title,
-    tpl_body,
-    coalesce(tpl_link, '/requests'),
-    jsonb_build_object(
-      'carry_request_id', new.carry_request_id,
-      'event_id', new.id
-    )
-  )
-  returning id into notification_id;
-
-  insert into public.email_queue (notification_id, user_id)
-  values (notification_id, recipient_id);
-
-  return new;
-end;
-$$;
-
-create or replace function public.emit_request_sent_event()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  actor_user_id uuid;
-begin
-  actor_user_id := case
-    when new.initiator_role = 'SENDER' then new.sender_user_id
-    else new.traveler_user_id
-  end;
-
-  insert into public.carry_request_events (
-    carry_request_id,
-    type,
-    actor_user_id,
-    metadata
-  )
-  values (new.id, 'REQUEST_SENT', actor_user_id, '{}'::jsonb);
-
-  return new;
-end;
-$$;
-
-drop trigger if exists carry_requests_after_insert_emit_request_sent on public.carry_requests;
-create trigger carry_requests_after_insert_emit_request_sent
-after insert on public.carry_requests
-for each row
-execute function public.emit_request_sent_event();
-
-drop trigger if exists carry_request_events_after_insert_notify on public.carry_request_events;
-create trigger carry_request_events_after_insert_notify
-after insert on public.carry_request_events
-for each row
-execute function public.notify_on_carry_request_event();
-
--- perform_carry_request_action: status transition + event only (no direct notification/email).
 create or replace function public.perform_carry_request_action(
   request_id uuid,
   action_key text
@@ -244,6 +92,10 @@ begin
       return jsonb_build_object('ok', false, 'reason', 'INVALID_STATUS');
     end if;
 
+    if actor_role <> 'SENDER' then
+      return jsonb_build_object('ok', false, 'reason', 'ONLY_SENDER_CAN_PAY');
+    end if;
+
     if cr.payment_expires_at is not null
        and cr.payment_expires_at <= now() then
       return jsonb_build_object('ok', false, 'reason', 'PAYMENT_EXPIRED');
@@ -309,7 +161,7 @@ begin
 
   update public.carry_requests
   set status = next_status,
-      payment_expires_at = new_payment_expires_at,
+      payment_expires_at = coalesce(new_payment_expires_at, payment_expires_at),
       expired_at = new_expired_at,
       updated_at = now()
   where id = request_id;
@@ -327,13 +179,6 @@ begin
   );
 end;
 $$;
-
-drop trigger if exists carry_requests_after_insert_notify on public.carry_requests;
-drop function if exists public.handle_carry_request_insert_notifications();
-drop function if exists public.create_carry_request_notification(uuid, text, text, text, uuid);
-
-revoke all on function public.notify_on_carry_request_event() from public;
-revoke all on function public.emit_request_sent_event() from public;
 
 revoke execute on function public.perform_carry_request_action(uuid, text) from public;
 grant execute on function public.perform_carry_request_action(uuid, text) to authenticated;

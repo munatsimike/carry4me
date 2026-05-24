@@ -6,16 +6,27 @@ import type { UIActionKey } from "../ui/ActionsMapper";
 
 export class SupabasePerformActionRepository implements PerformActionRepository {
   async performAction(
-    action: UIActionKey,
+    actionKey: UIActionKey,
     carryRequestId: string,
   ): Promise<PerformActionResponse> {
+    console.log("RPC INPUT", {
+      actionKey,
+      carryRequestId,
+    });
+
     const { data, error, status } = await supabase.rpc(
       "perform_carry_request_action",
       {
         request_id: carryRequestId,
-        action_key: action,
+        action_key: actionKey,
       },
     );
+
+    console.log("RPC RESPONSE", {
+      data,
+      error,
+      status,
+    });
 
     throwIfSupabaseError(error, status);
 

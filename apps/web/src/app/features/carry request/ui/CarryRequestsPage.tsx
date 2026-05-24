@@ -10,7 +10,7 @@ import { dateFormat, INFOMODES, progress } from "@/types/Ui";
 import { Button } from "@/components/ui/Button";
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
@@ -87,7 +87,7 @@ export default function CarryRequestsPage() {
     HandoverConfirmationState | undefined
   >(undefined);
 
- 
+
   const [emptyStateMessage, setEmptyState] = useState<EmptyStateConfig | null>(
     null,
   );
@@ -230,82 +230,117 @@ export default function CarryRequestsPage() {
     }
   };
 
+  const actionInProgressRef = useRef(false);
+
   const handlePrimaryActions = async (
     actions: UIActions,
     carryRequest: CarryRequest,
   ) => {
-    if (!actions.primary || isRequestSent || !user) return;
+    if (!actions.primary || actionInProgressRef.current || !user) return;
 
-    // check weight and parcel availability before accepting a request
-    if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
-      if (!guardAction(() => undefined, "send_request")) {
-        return;
-      }
-      const weightResult = await checkTravelersWeight(carryRequest);
-      if (!weightResult) return;
+    actionInProgressRef.current = true;
 
-      const parcelAvailability = await isParcelAvailable(carryRequest);
-      if (!parcelAvailability) return;
-    }
-
-    /// check if request has not expired
-    if (actions.primary.key === UIACTIONKEYS.PAY) {
-      try {
-        const canPay = await performRequestActions.isExpired(
-          carryRequest.carryRequestId,
-        );
-
-        if (!canPay) {
-          openInfo({
-          title: "Request expired",
-          message: "This request has expired. You can send a new one.",
-            label:
-              carryRequest.initiatorRole === ROLES.SENDER
-                ? "Browse trips"
-                : "Browse parcels",
-          });
+    try {
+      // ACCEPT checks
+      if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
+        if (!guardAction(() => undefined, "send_request")) {
           return;
         }
-      } catch (err) {
-        showSupabaseError(err);
+
+        const weightResult = await checkTravelersWeight(carryRequest);
+        if (!weightResult) return;
+
+        const parcelAvailability = await isParcelAvailable(carryRequest);
+        if (!parcelAvailability) return;
+      }
+
+      if (actions.primary.key === UIACTIONKEYS.PAY) {
+        console.log("clicked action: PAY", {
+          carryRequestId: carryRequest.carryRequestId,
+          requestStatusBeforeAction: carryRequest.status,
+        });
+
+        try {
+          const paymentExpired = await performRequestActions.isPaymentExpired(
+            carryRequest.carryRequestId,
+          );
+
+          if (paymentExpired) {
+            openInfo({
+              title: "Request expired",
+              message: "This request has expired. You can send a new one.",
+              label:
+                carryRequest.initiatorRole === ROLES.SENDER
+                  ? "Browse trips"
+                  : "Browse parcels",
+            });
+
+            return;
+          }
+        } catch (err) {
+          showSupabaseError(err);
+          return;
+        }
+      }
+
+      console.log("RPC INPUT (page)", {
+        actionKey: actions.primary.key,
+        carryRequestId: carryRequest.carryRequestId,
+        requestStatusBeforeAction: carryRequest.status,
+      });
+
+      const response = await performRequestActions.execute(
+        actions.primary.key,
+        carryRequest.carryRequestId,
+      );
+
+      console.log("RPC RESPONSE (page)", response);
+
+      await queryClient.refetchQueries({
+        queryKey: queryKeys.carryRequests.all,
+      });
+
+      if (!response.ok) {
+        if (response.reason === "INVALID_STATUS") {
+          console.warn("PAY INVALID_STATUS debug", {
+            current_status_in_db: response.current_status_in_db,
+            expected_status: response.expected_status,
+            request_id_received: response.request_id_received,
+            action_key_received: response.action_key_received,
+            carryRequestId: carryRequest.carryRequestId,
+          });
+        }
         return;
       }
-    }
 
-    // process request
-    const response = await performRequestActions.execute(
-      actions.primary.key,
-      carryRequest.carryRequestId,
-    );
+      processActionEmailQueue(response);
 
-    if (!response.ok) {
-      return;
-    }
-
-    processActionEmailQueue(response);
-
-    if (response.ok) {
-      try {
-        await performRequestActions.reserveWeight(
-          carryRequest.tripId,
-          carryRequest.parcelSnapshot.weight_kg,
-        );
-      } catch (err) {
-        showSupabaseError(err);
-        return;
+      if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
+        try {
+          await performRequestActions.reserveWeight(
+            carryRequest.tripId,
+            carryRequest.parcelSnapshot.weight_kg,
+          );
+        } catch (err) {
+          showSupabaseError(err);
+          return;
+        }
       }
-    }
 
-    setisRequestSent(true);
-    refreshProfile();
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.carryRequests.all,
-    });
-    toast("Parcel accepted. Waiting for payment from the sender.", {
-      variant: "success",
-    });
+      refreshProfile();
+
+      const successMessage =
+        actions.primary.key === UIACTIONKEYS.PAY
+          ? "Payment completed. You can now proceed to handover."
+          : actions.primary.key === UIACTIONKEYS.ACCEPT
+            ? "Parcel accepted. Waiting for payment from the sender."
+            : "Action completed.";
+
+      toast(successMessage, { variant: "success" });
+    } finally {
+      actionInProgressRef.current = false;
+    }
   };
-
   const handleSecondaryAcion = async (
     actions: UIActions,
     carryRequest: CarryRequest,
@@ -340,7 +375,6 @@ export default function CarryRequestsPage() {
   useEffect(() => {
     if (pendingHandoverRequest?.handoverState) {
       setHandoverState(pendingHandoverRequest.handoverState);
-     
     }
   }, [pendingHandoverRequest]);
 
@@ -368,8 +402,16 @@ export default function CarryRequestsPage() {
                 emptyStateMessage.actions && (
                   <div className="flex flex-wrap items-center justify-around gap-3">
                     {emptyStateMessage.actions.map((action) => (
-                      <Link key={action.href} to={action.href} className="w-full sm:flex-1">
-                        <Button variant={action.variant} size="sm" className="w-full whitespace-nowrap">
+                      <Link
+                        key={action.href}
+                        to={action.href}
+                        className="w-full sm:flex-1"
+                      >
+                        <Button
+                          variant={action.variant}
+                          size="sm"
+                          className="w-full whitespace-nowrap"
+                        >
                           {action.label}
                         </Button>
                       </Link>
@@ -729,7 +771,6 @@ function TripDetails({
 
 function ParcelDetails({
   parcel,
-
 }: {
   parcel: ParcelSnapshot;
   viewerRole: Role;

@@ -26,8 +26,8 @@ export class PerformCarryRequestActionUseCase {
     return await this.performActionRepo.performAction(action, carryRequestId);
   }
 
-  async isExpired(requestId: string): Promise<boolean> {
-    return await this.carryRequestRepo.isExpired(requestId);
+  async isPaymentExpired(requestId: string): Promise<boolean> {
+    return await this.carryRequestRepo.isPaymentExpired(requestId);
   }
 
   async isSpaceAvailable(

@@ -80,7 +80,7 @@ export default function RouteRow({
               pointer-events-none absolute left-1/2 bottom-full z-50
               mb-1 -translate-x-1/2
               whitespace-nowrap rounded-full
-              border border-blue-100 bg-blue-50 border border-blue-100 px-3 py-1.5
+              border border-blue-100 bg-yellow-50 border border-yellow-100 px-3 py-1.5
               text-xs font-medium text-neutral-700
               shadow-lg
 
