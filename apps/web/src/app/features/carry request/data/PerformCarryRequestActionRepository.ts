@@ -1,5 +1,8 @@
 import { supabase } from "@/app/shared/supabase/client";
-import { requireData, throwIfSupabaseError } from "@/app/shared/domain/AppError";
+import {
+  requireData,
+  throwIfSupabaseError,
+} from "@/app/shared/domain/AppError";
 import type { PerformActionResponse } from "../domain/performActionResponse";
 import type { PerformActionRepository } from "../domain/PerformActionRepository";
 import type { UIActionKey } from "../ui/ActionsMapper";
@@ -9,11 +12,6 @@ export class SupabasePerformActionRepository implements PerformActionRepository 
     actionKey: UIActionKey,
     carryRequestId: string,
   ): Promise<PerformActionResponse> {
-    console.log("RPC INPUT", {
-      actionKey,
-      carryRequestId,
-    });
-
     const { data, error, status } = await supabase.rpc(
       "perform_carry_request_action",
       {
@@ -21,12 +19,6 @@ export class SupabasePerformActionRepository implements PerformActionRepository 
         action_key: actionKey,
       },
     );
-
-    console.log("RPC RESPONSE", {
-      data,
-      error,
-      status,
-    });
 
     throwIfSupabaseError(error, status);
 

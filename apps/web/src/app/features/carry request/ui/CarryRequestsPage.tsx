@@ -79,7 +79,7 @@ export default function CarryRequestsPage() {
   useQueryErrorEffect(error, !!user?.id);
 
   const { openInfo, showSupabaseError } = useUniversalModal();
-  const [isRequestSent, setisRequestSent] = useState(false);
+ 
   const navigate = useNavigate();
   const { toast } = useToast();
 
