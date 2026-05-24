@@ -17,7 +17,6 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "../Toast";
 import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
 
-
 interface ListingCardProps<T extends Listing> {
   mode?: CardMode;
   listing: T;
@@ -69,6 +68,7 @@ export function ListingCard<T extends Listing>({
   return (
     <Card
       enableHover={isDisplayMode}
+      className="group"
       borderClass={borderClass}
       shadowClass={shadowClass}
     >
@@ -104,6 +104,7 @@ export function ListingCard<T extends Listing>({
       <Stack>
         <RouteRow
           origin={listing.route.originCountry}
+          originCity={listing.route.originCity}
           destination={listing.route.destinationCountry}
         />
 
