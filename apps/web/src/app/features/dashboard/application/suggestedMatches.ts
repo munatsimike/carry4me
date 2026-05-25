@@ -1,3 +1,4 @@
+import { normalizeCountryCode } from "@/app/Mapper";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import type { TripListing } from "@/app/features/trips/domain/Trip";
 
@@ -9,46 +10,83 @@ export type DashboardSuggestedMatches = {
 };
 
 const MAX_SUGGESTIONS = 5;
-const CLOSE_DATE_RANGE_DAYS = 3;
+
+type Listing = ParcelListing | TripListing;
 
 function normalize(value: string | null | undefined) {
   return value?.trim().toLowerCase() ?? "";
 }
 
-function routesMatch(
-  source: ParcelListing | TripListing,
-  candidate: ParcelListing | TripListing,
-) {
+/** Canonical country key so UK/United Kingdom/GB and Zimbabwe/ZW match. */
+function canonicalCountry(value: string | null | undefined) {
+  const code = (normalizeCountryCode(value) ?? value?.trim() ?? "").toLowerCase();
+
+  if (code === "united kingdom" || code === "gb") {
+    return "uk";
+  }
+
+  if (code === "zw") {
+    return "zimbabwe";
+  }
+
+  return code;
+}
+
+function countriesMatch(a: Listing, b: Listing) {
   return (
-    normalize(source.route.originCountry) ===
-      normalize(candidate.route.originCountry) &&
-    normalize(source.route.originCity) === normalize(candidate.route.originCity) &&
-    normalize(source.route.destinationCountry) ===
-      normalize(candidate.route.destinationCountry) &&
-    normalize(source.route.destinationCity) ===
-      normalize(candidate.route.destinationCity)
+    canonicalCountry(a.route.originCountry) ===
+      canonicalCountry(b.route.originCountry) &&
+    canonicalCountry(a.route.destinationCountry) ===
+      canonicalCountry(b.route.destinationCountry)
   );
 }
 
-function getListingDate(listing: ParcelListing | TripListing) {
-  const date = (listing as Partial<TripListing> & { departDate?: string })
-    .departDate;
-  return date ? new Date(date) : null;
+function categoryKeys(category: { id: string; slug: string; name: string }) {
+  return [
+    normalize(category.id),
+    normalize(category.slug),
+    normalize(category.name),
+  ].filter(Boolean);
 }
 
-function datesMatch(
-  source: ParcelListing | TripListing,
-  candidate: ParcelListing | TripListing,
-) {
-  const sourceDate = getListingDate(source);
-  const candidateDate = getListingDate(candidate);
+/** At least one parcel category must be accepted on the trip (by id, slug, or name). */
+function categoriesMatch(parcel: ParcelListing, trip: TripListing) {
+  if (parcel.goodsCategory.length === 0 || trip.goodsCategory.length === 0) {
+    return true;
+  }
 
-  if (!sourceDate || !candidateDate) return true;
+  const tripCategoryKeys = new Set(
+    trip.goodsCategory.flatMap((category) => categoryKeys(category)),
+  );
 
-  const diffMs = Math.abs(sourceDate.getTime() - candidateDate.getTime());
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  return parcel.goodsCategory.some((parcelCategory) => {
+    const keys = categoryKeys(parcelCategory);
+    return keys.some((key) => tripCategoryKeys.has(key));
+  });
+}
 
-  return diffDays <= CLOSE_DATE_RANGE_DAYS;
+/** Parcel weight must fit within the trip's available capacity. */
+function weightFits(parcel: ParcelListing, trip: TripListing) {
+  return parcel.weightKg <= trip.weightKg;
+}
+
+function isSuggestedMatch(source: Listing, candidate: Listing) {
+  if (source.type === candidate.type) {
+    return false;
+  }
+
+  const parcel =
+    source.type === "parcel"
+      ? (source as ParcelListing)
+      : (candidate as ParcelListing);
+  const trip =
+    source.type === "trip" ? (source as TripListing) : (candidate as TripListing);
+
+  return (
+    countriesMatch(source, candidate) &&
+    categoriesMatch(parcel, trip) &&
+    weightFits(parcel, trip)
+  );
 }
 
 function uniqueById<T extends { id: string }>(items: T[]) {
@@ -60,8 +98,8 @@ function uniqueById<T extends { id: string }>(items: T[]) {
   });
 }
 
-function matchListings<TCandidate extends ParcelListing | TripListing>(
-  sources: Array<ParcelListing | TripListing>,
+function matchListings<TCandidate extends Listing>(
+  sources: Listing[],
   candidates: TCandidate[],
   currentUserId: string,
 ) {
@@ -70,8 +108,7 @@ function matchListings<TCandidate extends ParcelListing | TripListing>(
       candidates.filter(
         (candidate) =>
           candidate.user.id !== currentUserId &&
-          routesMatch(source, candidate) &&
-          datesMatch(source, candidate),
+          isSuggestedMatch(source, candidate),
       ),
     ),
   ).slice(0, MAX_SUGGESTIONS);
