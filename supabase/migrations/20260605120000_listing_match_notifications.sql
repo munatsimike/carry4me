@@ -25,7 +25,7 @@ values
     'SENDER',
     'TRAVELER',
     'New matching trip',
-    'A traveler posted a trip that matches your parcel route. View it on the marketplace.',
+    'A traveler posted a trip that matches your parcel route.',
     '/travelers'
   ),
   (
@@ -33,7 +33,7 @@ values
     'TRAVELER',
     'SENDER',
     'New matching parcel',
-    'A sender posted a parcel that matches your trip route. View it on the marketplace.',
+    'A sender posted a parcel that matches your trip route.',
     '/parcels'
   )
 on conflict (type, recipient_role, actor_role)
