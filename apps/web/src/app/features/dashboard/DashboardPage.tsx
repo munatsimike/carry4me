@@ -225,10 +225,7 @@ function RecentActivity({
 
           {recentActivities.length > 0 &&
             recentActivities.map((activity, index) => (
-              <div
-                key={activity.id}
-                className="flex w-full min-w-0 flex-col"
-              >
+              <div key={activity.id} className="flex w-full min-w-0 flex-col">
                 <div className="flex gap-3 hover:bg-neutral-100 p-2 rounded-lg">
                   <span className="inline-flex pt-1">
                     {iconForActivity(activity.type)}
@@ -370,7 +367,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           onClick={onPostTrip}
           btnText="Post a trip"
           iconColor="onDark"
-            iconSize="lg"
+          iconSize="lg"
           icon={META_ICONS.planeFilled}
         />
       </motion.div>
@@ -421,7 +418,7 @@ type ActionButtonsProps = {
   textVariant?: TextVariant;
   iconColor?: IconColor;
   btnText: string;
-  iconSize?:  "lg" | "xl";
+  iconSize?: "lg" | "xl";
   icon?: SvgIconComponent;
   onClick?: () => void;
 };
@@ -442,22 +439,22 @@ function ActionButton({
       variant={btnVariant}
       size={"xxl"}
       trailingIcon={
-          showArrow && (
-            <SvgIcon size={"sm"} Icon={META_ICONS.arrowSmall} color="primary" />
-          )
-        }
-      >
-        <span className="flex flex-col gap-1.5 items-center">
-          <SvgIcon color={iconColor} size={iconSize} Icon={icon} />
-          <CustomText
-            as="span"
-            textVariant={textVariant}
-            textSize="lg"
-            className="whitespace-nowrap pr-3"
-          >
-            {btnText}
-          </CustomText>
-        </span>
+        showArrow && (
+          <SvgIcon size={"sm"} Icon={META_ICONS.arrowSmall} color="primary" />
+        )
+      }
+    >
+      <span className="flex flex-col gap-1.5 items-center">
+        <SvgIcon color={iconColor} size={iconSize} Icon={icon} />
+        <CustomText
+          as="span"
+          textVariant={textVariant}
+          textSize="lg"
+          className="whitespace-nowrap pr-3"
+        >
+          {btnText}
+        </CustomText>
+      </span>
     </Button>
   );
 }
