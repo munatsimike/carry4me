@@ -4,6 +4,7 @@ export const FROM_ADDRESS = "Carry4Me <notifications@carry4me.uk>";
 export type NotificationRow = {
   id: string;
   user_id: string;
+  type?: string;
   title: string;
   body: string;
   link: string | null;
@@ -15,7 +16,7 @@ export type ProfileRow = {
 };
 
 export type SendNotificationEmailOutcome =
-  | { sent: true; messageId: string | null }
+  | { sent: true; messageId: string | null; providerResponse: unknown }
   | { sent: false; reason: "email_missing" | "email_not_verified" };
 
 export function escapeHtml(value: string) {
@@ -49,16 +50,24 @@ export function buildNotificationEmailBodies(notification: NotificationRow) {
   return { textBody, htmlBody };
 }
 
+export type SendNotificationEmailOptions = {
+  /** When false, send if profile has an email (carry-request transactional mail). */
+  requireEmailVerified?: boolean;
+};
+
 export async function sendNotificationEmailViaResend(
   notification: NotificationRow,
   profile: ProfileRow,
   resendApiKey: string,
+  options: SendNotificationEmailOptions = {},
 ): Promise<SendNotificationEmailOutcome> {
+  const requireEmailVerified = options.requireEmailVerified !== false;
+
   if (!profile.email?.trim()) {
     return { sent: false, reason: "email_missing" };
   }
 
-  if (profile.email_verified !== true) {
+  if (requireEmailVerified && profile.email_verified !== true) {
     return { sent: false, reason: "email_not_verified" };
   }
 
@@ -79,11 +88,25 @@ export async function sendNotificationEmailViaResend(
     }),
   });
 
-  if (!resendResponse.ok) {
-    const resendError = await resendResponse.text();
-    throw new Error(`Resend API error (${resendResponse.status}): ${resendError}`);
+  const responseText = await resendResponse.text();
+  let providerResponse: unknown = responseText;
+
+  try {
+    providerResponse = JSON.parse(responseText);
+  } catch {
+    // keep raw text
   }
 
-  const resendData = (await resendResponse.json()) as { id?: string };
-  return { sent: true, messageId: resendData.id ?? null };
+  if (!resendResponse.ok) {
+    throw new Error(
+      `Resend API error (${resendResponse.status}): ${responseText}`,
+    );
+  }
+
+  const resendData = providerResponse as { id?: string };
+  return {
+    sent: true,
+    messageId: resendData.id ?? null,
+    providerResponse,
+  };
 }
