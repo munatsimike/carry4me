@@ -11,13 +11,28 @@ export type DashboardSuggestedMatches = {
   suggestedParcels: ParcelListing[];
 };
 
-/** Listings the logged-in user can pick when sending a carry request. */
+/** Parcel is on the marketplace and can receive a new carry request. */
+export function isParcelEligibleForMatching(parcel: ParcelListing) {
+  return parcel.status === PARCELSTATUSES.OPEN;
+}
+
+/** Trip is on the marketplace and can receive a new carry request. */
+export function isTripEligibleForMatching(trip: TripListing) {
+  return trip.status === TRIPSTATUSES.ACTIVE;
+}
+
 export function filterParcelsForMatching(parcels: ParcelListing[]) {
-  return parcels.filter((parcel) => parcel.status === PARCELSTATUSES.OPEN);
+  return parcels.filter(isParcelEligibleForMatching);
 }
 
 export function filterTripsForMatching(trips: TripListing[]) {
-  return trips.filter((trip) => trip.status === TRIPSTATUSES.ACTIVE);
+  return trips.filter(isTripEligibleForMatching);
+}
+
+function isListingEligibleForMatching(listing: Listing) {
+  return listing.type === "parcel"
+    ? isParcelEligibleForMatching(listing as ParcelListing)
+    : isTripEligibleForMatching(listing as TripListing);
 }
 
 const MAX_SUGGESTIONS = 5;
@@ -94,6 +109,8 @@ export function isSuggestedMatch(source: Listing, candidate: Listing) {
     source.type === "trip" ? (source as TripListing) : (candidate as TripListing);
 
   return (
+    isListingEligibleForMatching(source) &&
+    isListingEligibleForMatching(candidate) &&
     countriesMatch(source, candidate) &&
     categoriesMatch(parcel, trip) &&
     weightFits(parcel, trip)
@@ -145,17 +162,22 @@ export function buildDashboardSuggestedMatches(input: {
   allParcels: ParcelListing[];
   allTrips: TripListing[];
 }): DashboardSuggestedMatches {
+  const matchingParcels = filterParcelsForMatching(input.activeParcels);
+  const matchingTrips = filterTripsForMatching(input.activeTrips);
+  const marketplaceParcels = filterParcelsForMatching(input.allParcels);
+  const marketplaceTrips = filterTripsForMatching(input.allTrips);
+
   return {
     activeParcels: input.activeParcels,
     activeTrips: input.activeTrips,
     suggestedTrips: matchListings(
-      input.activeParcels,
-      input.allTrips,
+      matchingParcels,
+      marketplaceTrips,
       input.userId,
     ),
     suggestedParcels: matchListings(
-      input.activeTrips,
-      input.allParcels,
+      matchingTrips,
+      marketplaceParcels,
       input.userId,
     ),
   };
