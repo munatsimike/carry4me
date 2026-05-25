@@ -3,22 +3,14 @@ import { supabase } from "@/app/shared/supabase/client";
 export type ProcessEmailQueueResult = {
   ok: boolean;
   processed: number;
-  results?: Array<{
-    emailQueueId: string;
-    ok: boolean;
-    status: string;
-    sent?: boolean;
-    reason?: string;
-    messageId?: string | null;
-    error?: string;
-  }>;
   error?: string;
 };
 
 type ProcessEmailQueueInput = {
   notificationId?: string;
   emailQueueId?: string;
-  limit?: number;
+  carryRequestId?: string;
+  eventType?: string;
 };
 
 /**

@@ -255,11 +255,6 @@ export default function CarryRequestsPage() {
       }
 
       if (actions.primary.key === UIACTIONKEYS.PAY) {
-        console.log("clicked action: PAY", {
-          carryRequestId: carryRequest.carryRequestId,
-          requestStatusBeforeAction: carryRequest.status,
-        });
-
         try {
           const paymentExpired = await performRequestActions.isPaymentExpired(
             carryRequest.carryRequestId,
@@ -283,37 +278,20 @@ export default function CarryRequestsPage() {
         }
       }
 
-      console.log("RPC INPUT (page)", {
-        actionKey: actions.primary.key,
-        carryRequestId: carryRequest.carryRequestId,
-        requestStatusBeforeAction: carryRequest.status,
-      });
-
       const response = await performRequestActions.execute(
         actions.primary.key,
         carryRequest.carryRequestId,
       );
 
-      console.log("RPC RESPONSE (page)", response);
+      if (!response.ok) {
+        return;
+      }
+
+      processActionEmailQueue(response, carryRequest.carryRequestId);
 
       await queryClient.refetchQueries({
         queryKey: queryKeys.carryRequests.all,
       });
-
-      if (!response.ok) {
-        if (response.reason === "INVALID_STATUS") {
-          console.warn("PAY INVALID_STATUS debug", {
-            current_status_in_db: response.current_status_in_db,
-            expected_status: response.expected_status,
-            request_id_received: response.request_id_received,
-            action_key_received: response.action_key_received,
-            carryRequestId: carryRequest.carryRequestId,
-          });
-        }
-        return;
-      }
-
-      processActionEmailQueue(response);
 
       if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
         try {
@@ -346,7 +324,7 @@ export default function CarryRequestsPage() {
     carryRequest: CarryRequest,
   ) => {
     if (!actions.secondary?.key || !user) return;
-    // process request
+
     const response = await performRequestActions.execute(
       actions.secondary.key,
       carryRequest.carryRequestId,
@@ -356,16 +334,14 @@ export default function CarryRequestsPage() {
       return;
     }
 
-    processActionEmailQueue(response);
+    processActionEmailQueue(response, carryRequest.carryRequestId);
 
-    if (response.ok) {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.carryRequests.all,
-      });
-      toast("Request cancelled. The traveler has been notified.", {
-        variant: "success",
-      });
-    }
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.carryRequests.all,
+    });
+    toast("Request cancelled. The traveler has been notified.", {
+      variant: "success",
+    });
   };
 
   const pendingHandoverRequest = carryRequestsList?.find(

@@ -41,11 +41,32 @@ export function mapCarryRequestToUI(
           : "We’re waiting for payment from the sender. You’ll be notified once payment is made.";
       break;
 
-    case CARRY_REQUEST_STATUSES.PENDING_HANDOVER:
+    case CARRY_REQUEST_STATUSES.PENDING_HANDOVER: {
       currentStep = 3;
       title = "Awaiting handover";
-      description = `Arrange the handover with the ${viewerRole === ROLES.SENDER ? "traveler" : "sender"} and confirm once the parcel is handed over.`;
+
+      const otherParty =
+        viewerRole === ROLES.SENDER ? "traveler" : "sender";
+      const viewerConfirmed =
+        viewerRole === ROLES.SENDER
+          ? request.handoverState.senderConfirmed
+          : request.handoverState.travelerConfirmed;
+      const otherPartyConfirmed =
+        viewerRole === ROLES.SENDER
+          ? request.handoverState.travelerConfirmed
+          : request.handoverState.senderConfirmed;
+
+      if (!request.handoverState.senderConfirmed && !request.handoverState.travelerConfirmed) {
+        description = `Arrange the handover with the ${otherParty} and confirm once the parcel is handed over.`;
+      } else if (viewerConfirmed && !otherPartyConfirmed) {
+        description = `You have confirmed handover. We are waiting for the ${otherParty} to confirm.`;
+      } else if (!viewerConfirmed && otherPartyConfirmed) {
+        description = `The ${otherParty} has confirmed handover. Please confirm once the parcel has been handed over.`;
+      } else {
+        description = `Arrange the handover with the ${otherParty} and confirm once the parcel is handed over.`;
+      }
       break;
+    }
 
     case CARRY_REQUEST_STATUSES.IN_TRANSIT:
       currentStep = 4;

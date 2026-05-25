@@ -29,7 +29,7 @@ import { cn } from "@/app/lib/cn";
 import LineDivider from "./LineDivider";
 import SvgIcon from "@/components/ui/SvgIcon";
 import SendIcon from "@/assets/send-arrow-icon.svg?react";
-import { processEmailQueueInBackground } from "../shared/supabase/processEmailQueue";
+import { processRequestSentEmailQueue } from "../features/carry request/application/processRequestSentEmailQueue";
 
 type RequestSummaryProps = {
   loggedInUserId: string;
@@ -107,9 +107,13 @@ export default function RequestSummary({
     }
 
     try {
-      await createRequest.execute(loggedInUserId, parcel, trip);
+      const carryRequestId = await createRequest.execute(
+        loggedInUserId,
+        parcel,
+        trip,
+      );
 
-      processEmailQueueInBackground({ limit: 5 });
+      processRequestSentEmailQueue(carryRequestId);
 
       openInfo({
         icon: <CircleCheck className="h-6 w-6 text-success-500" />,

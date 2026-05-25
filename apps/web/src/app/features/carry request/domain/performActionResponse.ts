@@ -9,10 +9,4 @@ export type PerformActionResponse = {
   reason?: string;
   notification_id?: string;
   event_type?: string;
-  new_status?: string;
-  current_status_in_db?: string;
-  expected_status?: string;
-  request_id_received?: string;
-  action_key_received?: string;
-  actor_user_id?: string;
 };
