@@ -21,6 +21,7 @@ import {
 } from "@/app/lib/useCases";
 import { useInvalidateTrips } from "@/app/hooks/mutations/useTripMutations";
 import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
+import { processMatchAlertEmailQueue } from "@/app/features/listings/application/processMatchAlertEmailQueue";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
 import { useUniversalModal } from "../../application/DialogBoxModalProvider";
@@ -176,6 +177,8 @@ export function useTripForm({
         );
       }
 
+      processMatchAlertEmailQueue("trip", initialFormValues.id);
+
       toast("Changes saved successfully.", { variant: "success" });
       await refreshProfile();
       await invalidateTrips();
@@ -211,6 +214,8 @@ export function useTripForm({
         saveGoodsUseCase,
         toGoodsMapper(tripId, selectedIds),
       );
+
+      processMatchAlertEmailQueue("trip", tripId);
 
       await invalidateTrips();
       toast("Trip posted successfully.", { variant: "success" });

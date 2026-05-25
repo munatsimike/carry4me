@@ -20,6 +20,7 @@ import {
 } from "@/app/lib/useCases";
 import { useInvalidateParcels } from "@/app/hooks/mutations/useParcelMutations";
 import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
+import { processMatchAlertEmailQueue } from "@/app/features/listings/application/processMatchAlertEmailQueue";
 import type { CreateParcelUseCase } from "@/app/features/parcels/application/CreateParcelUseCase";
 import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
 import toCreateParcelMapper from "@/app/features/goods/domain/toCreatParcelMapper";
@@ -167,6 +168,8 @@ export default function useParcelForm({
         );
       }
 
+      processMatchAlertEmailQueue("parcel", initialFormValues.id);
+
       toast("Changes saved successfully.", { variant: "success" });
       await refreshProfile();
       await invalidateParcels();
@@ -203,6 +206,9 @@ export default function useParcelForm({
         saveGoodsUseCase,
         toGoodsMapper(parcelId, selectedIds),
       );
+
+      processMatchAlertEmailQueue("parcel", parcelId);
+
       await invalidateParcels();
       if (setModalState) {
         setModalState();

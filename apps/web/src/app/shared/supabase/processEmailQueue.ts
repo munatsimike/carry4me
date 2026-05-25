@@ -10,6 +10,8 @@ type ProcessEmailQueueInput = {
   notificationId?: string;
   emailQueueId?: string;
   carryRequestId?: string;
+  matchedListingType?: "parcel" | "trip";
+  matchedListingId?: string;
   eventType?: string;
 };
 
