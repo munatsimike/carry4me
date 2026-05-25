@@ -1,5 +1,4 @@
 import { Card } from "@/app/components/card/Card";
-import CardLabel from "@/app/components/card/CardLabel";
 import LineDivider from "@/app/components/LineDivider";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
 import { META_ICONS } from "@/app/icons/MetaIcon";
@@ -43,11 +42,10 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { MoveRight, Package, PackageX } from "lucide-react";
+import { Package, PackageX } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
 import { useToast } from "@/app/components/Toast";
 import { format } from "date-fns";
-import { formatCurrencyByCountry } from "@/app/lib/currency";
 import {
   HorizontalMenu,
   type TabItem,
@@ -58,6 +56,12 @@ import {
   MobileProgressSection,
   type MobileSection,
 } from "./CarryRequestPageMobile";
+import {
+  RequestCostSummarySection,
+  RequestDetailsGrid,
+  RequestParcelDetailsSection,
+  RequestTripDetailsSection,
+} from "./RequestDetailsLayout";
 
 export type SelectedTab = "ongoing" | "completed" | "declined" | "cancelled";
 
@@ -763,179 +767,43 @@ function InfoBlockDisplay({ actions }: { actions: UIActions }) {
 function DetailsSection({
   trip,
   parcel,
-  viewerRole,
 }: {
   trip: TripSnapshot;
   parcel: ParcelSnapshot;
   viewerRole: Role;
 }) {
   const totalPrice = parcel.price_per_kg * parcel.weight_kg;
+  const categories = parcel.goods_category.map((item) => item.name).join(", ");
 
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[0.8fr_minmax(0,1fr)_0.5fr] lg:gap-8">
-      <TripDetails trip={trip} viewerRole={viewerRole} />
-      <ParcelDetails parcel={parcel} viewerRole={viewerRole} />
-      <CostSummary parcel={parcel} totalPrice={totalPrice} />
-    </div>
-  );
-}
-
-function TripDetails({
-  trip,
-  viewerRole,
-}: {
-  trip: TripSnapshot;
-  viewerRole: Role;
-}) {
-  const cardLabel =
-    viewerRole === ROLES.TRAVELER ? "Trip details" : "Trip details";
-
-  return (
-    <section className="space-y-3">
-      <CardLabel variant="trip" label={cardLabel} />
-
-      <div className="space-y-2">
-        <span className="flex min-w-0 flex-wrap items-center gap-1">
-          <SvgIcon size={"xs"} Icon={META_ICONS.ukFlag} />
-          <CustomText
-            textVariant="primary"
-            textSize="md"
-            className="font-medium"
-          >
-            {trip.origin.country}{" "}
-          </CustomText>
-          <MoveRight className="text-neutral-800 h-5 w-4" strokeWidth={1.5} />
-          <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
-          <CustomText
-            textVariant="primary"
-            textSize="md"
-            className="font-medium"
-          >
-            {trip.destination.country}
-          </CustomText>
-        </span>
-
-        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[80px_minmax(0,1fr)]">
-          <CustomText textVariant="secondary" textSize="sm">
-            Traveler
-          </CustomText>
-          <CustomText textVariant="primary" textSize="sm">
-            {trip.traveler_name}
-          </CustomText>
-
-          <CustomText textVariant="secondary" textSize="sm">
-            Departs
-          </CustomText>
-          <CustomText textVariant="primary" textSize="sm">
-            {format(new Date(trip.departure_date), dateFormat)}
-          </CustomText>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ParcelDetails({
-  parcel,
-}: {
-  parcel: ParcelSnapshot;
-  viewerRole: Role;
-}) {
-  const cardLabel = "Parcel details";
-  const categories = parcel.goods_category.map((item) => item.name);
-
-  return (
-    <section className="space-y-3">
-      <CardLabel variant="parcel" label={cardLabel} />
-
-      <div className="space-y-2">
-        <span className="flex min-w-0 flex-wrap items-center gap-1">
-          <SvgIcon size={"xs"} Icon={META_ICONS.ukFlag} />
-          <CustomText
-            textVariant="primary"
-            textSize="md"
-            className="font-medium"
-          >
-            {parcel.origin.country}
-          </CustomText>
-          <MoveRight className="text-neutral-800 h-5 w-4" strokeWidth={1.5} />
-          <SvgIcon size={"xs"} Icon={META_ICONS.zimFlag} />
-          <CustomText
-            textVariant="primary"
-            textSize="md"
-            className="font-medium"
-          >
-            {parcel.destination.country}
-          </CustomText>
-        </span>
-        <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[80px_minmax(0,1fr)]">
-          <CustomText textVariant="secondary" textSize="sm">
-            Sender
-          </CustomText>
-          <CustomText textVariant="primary" textSize="sm">
-            {parcel.sender_name}
-          </CustomText>
-
-          <CustomText textVariant="secondary" textSize="sm">
-            Items
-          </CustomText>
-          <CustomText textVariant="primary" textSize="sm">
-            {categories.join(", ")}
-          </CustomText>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CostSummary({
-  parcel,
-  totalPrice,
-}: {
-  parcel: ParcelSnapshot;
-  totalPrice: number;
-}) {
-  const priceCountry = parcel.origin.country;
-
-  return (
-    <section className="space-y-3">
-      <span className="inline-flex rounded-full border bg-neutral-100 px-3 py-1">
-        <CustomText textVariant="primary" as="span" textSize="xs">
-          Cost summary
-        </CustomText>
-      </span>
-
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1">
-        <CustomText textVariant="secondary" textSize="sm">
-          Parcel weight
-        </CustomText>
-        <CustomText textVariant="primary" textSize="sm" className="text-right">
-          {parcel.weight_kg}kg
-        </CustomText>
-
-        <CustomText textVariant="secondary" textSize="sm">
-          Price per kg
-        </CustomText>
-        <div className="grid grid-cols-[auto_auto] justify-end gap-1 tabular-nums">
-          <CustomText textVariant="primary" textSize="sm">
-            {formatCurrencyByCountry(priceCountry, parcel.price_per_kg)}
-          </CustomText>
-        </div>
-
-        <CustomText textVariant="primary" textSize="md" className="font-medium">
-          Total
-        </CustomText>
-        <div className="grid grid-cols-[auto_auto] justify-end gap-1 tabular-nums">
-          <CustomText
-            textVariant="primary"
-            textSize="md"
-            className="font-medium"
-          >
-            {formatCurrencyByCountry(priceCountry, totalPrice)}
-          </CustomText>
-        </div>
-      </div>
-    </section>
+    <RequestDetailsGrid>
+      <RequestTripDetailsSection
+        route={{
+          originCountry: trip.origin.country,
+          destinationCountry: trip.destination.country,
+          originCity: trip.origin.city,
+          destinationCity: trip.destination.city,
+        }}
+        travelerName={trip.traveler_name}
+        departsLabel={format(new Date(trip.departure_date), dateFormat)}
+      />
+      <RequestParcelDetailsSection
+        route={{
+          originCountry: parcel.origin.country,
+          destinationCountry: parcel.destination.country,
+          originCity: parcel.origin.city,
+          destinationCity: parcel.destination.city,
+        }}
+        senderName={parcel.sender_name}
+        itemsLabel={categories}
+      />
+      <RequestCostSummarySection
+        weightKg={parcel.weight_kg}
+        pricePerKg={parcel.price_per_kg}
+        totalPrice={totalPrice}
+        priceCountry={parcel.origin.country}
+      />
+    </RequestDetailsGrid>
   );
 }
 type HeaderProps = {
