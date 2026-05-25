@@ -1,4 +1,4 @@
-import { renderEmailFooter } from "./EmailFooter.ts";
+import { renderEmailFooter, renderEmailFooterHeadStyles } from "./EmailFooter.ts";
 
 export type EmailLayoutOptions = {
   /** Optional preheader shown in inbox preview (hidden in body). */
@@ -61,6 +61,7 @@ export function renderEmailLayout(
       .email-container { width:100% !important; max-width:100% !important; }
       .email-content-cell { padding-left:20px !important; padding-right:20px !important; }
     }
+    ${renderEmailFooterHeadStyles()}
   </style>
 </head>
 <body style="margin:0;padding:0;background-color:#eef2f7;">
