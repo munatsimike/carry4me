@@ -18,6 +18,10 @@ import ParcelCard from "@/app/features/parcels/ui/ParcelCard";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
 import type { TripListing } from "../../trips/domain/Trip";
 import { cn } from "@/app/lib/cn";
+import {
+  filterParcelsForMatching,
+  filterTripsForMatching,
+} from "../application/suggestedMatches";
 
 export type SuggestedMatchesData = {
   activeParcels: ParcelListing[];
@@ -98,7 +102,7 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
         return;
       }
 
-      let parcels = data.activeParcels;
+      let parcels = filterParcelsForMatching(data.activeParcels);
 
       if (parcels.length === 0) {
         try {
@@ -146,7 +150,7 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
         return;
       }
 
-      let trips = data.activeTrips;
+      let trips = filterTripsForMatching(data.activeTrips);
 
       if (trips.length === 0) {
         try {

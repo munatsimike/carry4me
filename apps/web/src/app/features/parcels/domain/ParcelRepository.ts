@@ -10,6 +10,8 @@ export interface ParcelRepository {
     params?: ListingPageParams,
   ): Promise<ParcelListing[] | PaginatedResult<ParcelListing>>;
   parcelsById(userId: string): Promise<ParcelListing[]>;
+  /** OPEN parcels only — for send-request / match selection. */
+  parcelsForMatching(userId: string): Promise<ParcelListing[]>;
   deleteParcel(parcelId: string): Promise<string>;
   editParcel(editParcel: Partial<ParcelDto>): Promise<string>;
 }

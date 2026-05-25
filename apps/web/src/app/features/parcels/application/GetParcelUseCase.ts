@@ -8,6 +8,6 @@ export class GetParcelUseCase {
   }
 
   async execute(userId: string): Promise<ParcelListing[]> {
-    return await this.repo.parcelsById(userId);
+    return await this.repo.parcelsForMatching(userId);
   }
 }

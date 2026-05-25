@@ -56,13 +56,18 @@ export class SupabaseParcelRepository implements ParcelRepository {
   }
 
   parcelsById(userId: string, parcelId?: string): Promise<ParcelListing[]> {
-    return this.fetchParcels(userId, parcelId, true);
+    return this.fetchParcels(userId, parcelId, true, false);
+  }
+
+  parcelsForMatching(userId: string): Promise<ParcelListing[]> {
+    return this.fetchParcels(userId, undefined, true, true);
   }
 
   async fetchParcels(
     userId?: string,
     parcelId?: string,
     shouldFilter?: boolean,
+    matchingEligibleOnly?: boolean,
   ): Promise<ParcelListing[]>;
   async fetchParcels(
     userId: string | undefined,
@@ -72,6 +77,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
     userId?: string,
     parcelIdOrParams?: string | ListingPageParams,
     shouldFilter: boolean = false,
+    matchingEligibleOnly: boolean = false,
   ): Promise<ParcelListing[] | PaginatedResult<ParcelListing>> {
     const params =
       typeof parcelIdOrParams === "object" ? parcelIdOrParams : undefined;
@@ -106,6 +112,9 @@ export class SupabaseParcelRepository implements ParcelRepository {
 
     if (parcelId) {
       // Owner detail: allow OPEN, MATCHED, or ARCHIVED by id.
+    } else if (shouldFilter && userId && matchingEligibleOnly) {
+      // Send-request picker: only marketplace-active parcels.
+      query.eq("status", PARCELSTATUSES.OPEN);
     } else if (shouldFilter && userId) {
       // My parcels: active shipments (off marketplace but visible to owner).
       query.in("status", [PARCELSTATUSES.OPEN, PARCELSTATUSES.MATCHED]);

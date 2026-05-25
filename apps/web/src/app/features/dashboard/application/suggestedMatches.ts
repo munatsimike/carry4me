@@ -1,6 +1,8 @@
 import { normalizeCountryCode } from "@/app/Mapper";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
+import { PARCELSTATUSES } from "@/app/features/parcels/domain/Parcel";
 import type { TripListing } from "@/app/features/trips/domain/Trip";
+import { TRIPSTATUSES } from "@/app/features/trips/domain/Trip";
 
 export type DashboardSuggestedMatches = {
   activeParcels: ParcelListing[];
@@ -8,6 +10,15 @@ export type DashboardSuggestedMatches = {
   suggestedTrips: TripListing[];
   suggestedParcels: ParcelListing[];
 };
+
+/** Listings the logged-in user can pick when sending a carry request. */
+export function filterParcelsForMatching(parcels: ParcelListing[]) {
+  return parcels.filter((parcel) => parcel.status === PARCELSTATUSES.OPEN);
+}
+
+export function filterTripsForMatching(trips: TripListing[]) {
+  return trips.filter((trip) => trip.status === TRIPSTATUSES.ACTIVE);
+}
 
 const MAX_SUGGESTIONS = 5;
 
