@@ -49,7 +49,9 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       "expire_overdue_carry_requests",
     );
 
-    throwIfSupabaseError(expireError);
+    if (expireError) {
+      console.error("expire_overdue_carry_requests failed:", expireError);
+    }
 
     const { data, status, error } = await supabase
       .from("carry_requests")
@@ -69,6 +71,7 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
         "PAID_OUT",
         "REJECTED",
         "CANCELLED",
+        "EXPIRED",
       ])
       .or(`sender_user_id.eq.${userId},traveler_user_id.eq.${userId}`)
       .order("created_at", { ascending: false });

@@ -2,7 +2,7 @@ import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 export const PARCELSTATUSES = {
   OPEN: "OPEN",
   ARCHIVED: "ARCHIVED",
-  MATCHED: "MARCHED",
+  MATCHED: "MATCHED",
 } as const;
 
 export type ParcelStatuses =

@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
     const { data: notification, error: notificationError } = await supabaseAdmin
       .from("notifications")
-      .select("id, user_id, title, body, link")
+      .select("id, user_id, type, title, body, link")
       .eq("id", notificationId)
       .maybeSingle<NotificationRow>();
 

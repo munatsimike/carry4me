@@ -31,9 +31,10 @@ interface RawTripSnapshot {
 
 interface RawEvent {
   carry_request_id: string;
-  type: CarryRequest["events"]["type"];
-  actor_user_id: string;
+  type: string;
+  actor_user_id: string | null;
   metadata: CarryRequest["events"]["metadata"];
+  created_at?: string;
 }
 
 export interface RawCarryRequestRow {
@@ -47,7 +48,40 @@ export interface RawCarryRequestRow {
   handover_confirmations: RawConfirmation[];
   parcel_snapshot: RawParcelSnapshot;
   trip_snapshot: RawTripSnapshot;
-  events: RawEvent;
+  events: RawEvent | RawEvent[] | null;
+}
+
+function resolveLatestEvent(
+  events: RawCarryRequestRow["events"],
+  requestId: string,
+): RawEvent {
+  if (Array.isArray(events)) {
+    if (events.length === 0) {
+      return {
+        carry_request_id: requestId,
+        type: "REQUEST_SENT",
+        actor_user_id: null,
+        metadata: {},
+      };
+    }
+
+    return [...events].sort(
+      (a, b) =>
+        new Date(b.created_at ?? 0).getTime() -
+        new Date(a.created_at ?? 0).getTime(),
+    )[0]!;
+  }
+
+  if (events && typeof events === "object") {
+    return events;
+  }
+
+  return {
+    carry_request_id: requestId,
+    type: "REQUEST_SENT",
+    actor_user_id: null,
+    metadata: {},
+  };
 }
 
 export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
@@ -61,9 +95,11 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
     (c) => c.role === "TRAVELER" && Boolean(c.confirmed_at),
   );
 
-  if (!row.parcel_snapshot || !row.trip_snapshot || !row.events) {
-    throw new Error("Invalid carry request row (missing snapshots/events)");
+  if (!row.parcel_snapshot || !row.trip_snapshot) {
+    throw new Error("Invalid carry request row (missing snapshots)");
   }
+
+  const latestEvent = resolveLatestEvent(row.events, row.id);
 
   if (
     !row.parcel_snapshot.origin ||
@@ -119,10 +155,10 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
     },
 
     events: {
-      carryRequestId: row.events.carry_request_id,
-      type: row.events.type,
-      actorUserId: row.events.actor_user_id,
-      metadata: row.events.metadata,
+      carryRequestId: latestEvent.carry_request_id,
+      type: latestEvent.type as CarryRequest["events"]["type"],
+      actorUserId: latestEvent.actor_user_id ?? "",
+      metadata: latestEvent.metadata,
     },
   };
 }

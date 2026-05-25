@@ -103,7 +103,16 @@ export class SupabaseParcelRepository implements ParcelRepository {
     if (shouldFilter && userId) {
       query.eq("sender_user_id", userId);
     }
-    query.eq("status", PARCELSTATUSES.OPEN);
+
+    if (parcelId) {
+      // Owner detail: allow OPEN, MATCHED, or ARCHIVED by id.
+    } else if (shouldFilter && userId) {
+      // My parcels: active shipments (off marketplace but visible to owner).
+      query.in("status", [PARCELSTATUSES.OPEN, PARCELSTATUSES.MATCHED]);
+    } else {
+      // Marketplace browse: only listings available to match.
+      query.eq("status", PARCELSTATUSES.OPEN);
+    }
 
     if (params) {
       this.applyParcelBrowseFilters(query, params, categoryParcelIds);

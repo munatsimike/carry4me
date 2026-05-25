@@ -1,8 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
-
-const RESEND_API_URL = "https://api.resend.com/emails";
-const FROM_ADDRESS = "Carry4Me <notifications@carry4me.uk>";
+import {
+  FROM_ADDRESS,
+  RESEND_API_URL,
+} from "../_shared/notificationEmail.ts";
+import { renderEmailVerificationEmail } from "../_shared/emails/renderNotificationEmail.ts";
 const TOKEN_TTL_HOURS = 24;
 
 type ProfileRow = {
@@ -101,6 +103,11 @@ Deno.serve(async (req) => {
     );
     const verifyUrl = `${appUrl}/verify-email?token=${tokenRow.token}`;
 
+    const { html, text } = renderEmailVerificationEmail(
+      verifyUrl,
+      TOKEN_TTL_HOURS,
+    );
+
     const resendResponse = await fetch(RESEND_API_URL, {
       method: "POST",
       headers: {
@@ -111,8 +118,8 @@ Deno.serve(async (req) => {
         from: FROM_ADDRESS,
         to: [profile.email],
         subject: "Verify your Carry4Me email",
-        html: `<p>Please verify your email to post parcels and trips on Carry4Me.</p><p><a href="${escapeHtml(verifyUrl)}">Verify email</a></p><p>This link expires in ${TOKEN_TTL_HOURS} hours.</p>`,
-        text: `Please verify your email to post parcels and trips on Carry4Me.\n\n${verifyUrl}\n\nThis link expires in ${TOKEN_TTL_HOURS} hours.`,
+        html,
+        text,
       }),
     });
 
@@ -142,11 +149,3 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}

@@ -10,7 +10,7 @@ import { dateFormat, INFOMODES, progress } from "@/types/Ui";
 import { Button } from "@/components/ui/Button";
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
@@ -18,7 +18,12 @@ import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import { processActionEmailQueue } from "../application/processActionEmailQueue";
 import statusColor from "./StatustColorMapper";
-import actionsMapper, { UIACTIONKEYS, type UIActions } from "./ActionsMapper";
+import actionsMapper, {
+  UIACTIONKEYS,
+  type UIActionKey,
+  type UIActions,
+} from "./ActionsMapper";
+import type { PerformActionResponse } from "../domain/performActionResponse";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import type { CarryRequest } from "../domain/CarryRequest";
@@ -68,6 +73,50 @@ const statusToTab: Record<CarryRequestStatus, SelectedTab> = {
   REJECTED: "declined",
 };
 
+const EMPTY_CARRY_REQUESTS: CarryRequest[] = [];
+
+type PendingActionSlot = "primary" | "secondary";
+
+function actionButtonLabel(label: string, isPending: boolean): string {
+  return isPending ? "Processing..." : label;
+}
+
+function primaryActionSuccessMessage(
+  actionKey: UIActionKey,
+  response: PerformActionResponse,
+): string {
+  if (
+    actionKey === UIACTIONKEYS.CONFIRM_HANDOVER &&
+    response.progressed === false
+  ) {
+    return "Handover confirmation recorded. Waiting for the other party to confirm.";
+  }
+
+  const messages: Partial<Record<UIActionKey, string>> = {
+    [UIACTIONKEYS.ACCEPT]:
+      "Parcel accepted. Waiting for payment from the sender.",
+    [UIACTIONKEYS.PAY]: "Payment completed. You can now proceed to handover.",
+    [UIACTIONKEYS.CONFIRM_HANDOVER]:
+      "Handover confirmed successfully. The parcel is now in transit.",
+    [UIACTIONKEYS.MARK_DELIVERED]: "Delivery confirmed successfully.",
+    [UIACTIONKEYS.RELEASE_PAYMENT]: "Payment released successfully.",
+  };
+
+  return messages[actionKey] ?? "Action completed.";
+}
+
+function secondaryActionSuccessMessage(actionKey: UIActionKey): string {
+  if (actionKey === UIACTIONKEYS.REJECT) {
+    return "Request rejected successfully.";
+  }
+
+  if (actionKey === UIACTIONKEYS.CANCEL) {
+    return "Request cancelled. The traveler has been notified.";
+  }
+
+  return "Action completed.";
+}
+
 export default function CarryRequestsPage() {
   const { user, refreshProfile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
@@ -75,7 +124,12 @@ export default function CarryRequestsPage() {
   const queryClient = useQueryClient();
   const performRequestActions = performCarryRequestActionUseCase;
 
-  const { data: carryRequestsList = [], error } = useCarryRequests(user?.id);
+  const {
+    data: carryRequestsData,
+    error,
+    isPending: carryRequestsPending,
+  } = useCarryRequests(user?.id);
+  const carryRequestsList = carryRequestsData ?? EMPTY_CARRY_REQUESTS;
   useQueryErrorEffect(error, !!user?.id);
 
   const { openInfo, showSupabaseError } = useUniversalModal();
@@ -115,15 +169,6 @@ export default function CarryRequestsPage() {
     setSelectedTab(tab as SelectedTab);
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!selectedTab) return;
-    if (carryRequestsList.length === 0) {
-      setEmptyState(toEmptyStateForMapper(selectedTab));
-    } else {
-      setEmptyState(null);
-    }
-  }, [carryRequestsList.length, selectedTab]);
-
   const tabs: TabItem<SelectedTab>[] = [
     { id: "ongoing", label: "Ongoing", count: tabCounts.ongoing },
     { id: "completed", label: "Completed", count: tabCounts.completed },
@@ -152,9 +197,11 @@ export default function CarryRequestsPage() {
       );
     }
 
-    if (selectedTab === statusToTab.CANCELLED) {
+    if (selectedTab === "cancelled") {
       result = result.filter(
-        (item) => item.status === CARRY_REQUEST_STATUSES.CANCELLED,
+        (item) =>
+          item.status === CARRY_REQUEST_STATUSES.CANCELLED ||
+          item.status === CARRY_REQUEST_STATUSES.EXPIRED,
       );
     }
 
@@ -168,14 +215,14 @@ export default function CarryRequestsPage() {
   }, [carryRequestsList, selectedTab]);
 
   useEffect(() => {
-    if (!selectedTab) return;
+    if (!selectedTab || carryRequestsPending) return;
 
     if (displayList.length === 0) {
       setEmptyState(toEmptyStateForMapper(selectedTab));
     } else {
       setEmptyState(null);
     }
-  }, [displayList, selectedTab]);
+  }, [displayList.length, selectedTab, carryRequestsPending]);
 
   const [inputValue, setValue] = useState<string>("");
 
@@ -230,15 +277,21 @@ export default function CarryRequestsPage() {
     }
   };
 
-  const actionInProgressRef = useRef(false);
+  const [pendingAction, setPendingAction] = useState<{
+    requestId: string;
+    slot: PendingActionSlot;
+  } | null>(null);
 
   const handlePrimaryActions = async (
     actions: UIActions,
     carryRequest: CarryRequest,
   ) => {
-    if (!actions.primary || actionInProgressRef.current || !user) return;
+    if (!actions.primary || pendingAction || !user) return;
 
-    actionInProgressRef.current = true;
+    setPendingAction({
+      requestId: carryRequest.carryRequestId,
+      slot: "primary",
+    });
 
     try {
       // ACCEPT checks
@@ -293,66 +346,73 @@ export default function CarryRequestsPage() {
         queryKey: queryKeys.carryRequests.all,
       });
 
-      if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
-        try {
-          await performRequestActions.reserveWeight(
-            carryRequest.tripId,
-            carryRequest.parcelSnapshot.weight_kg,
-          );
-        } catch (err) {
-          showSupabaseError(err);
-          return;
-        }
-      }
-
       refreshProfile();
 
-      const successMessage =
-        actions.primary.key === UIACTIONKEYS.PAY
-          ? "Payment completed. You can now proceed to handover."
-          : actions.primary.key === UIACTIONKEYS.ACCEPT
-            ? "Parcel accepted. Waiting for payment from the sender."
-            : "Action completed.";
-
-      toast(successMessage, { variant: "success" });
+      toast(
+        primaryActionSuccessMessage(actions.primary.key, response),
+        { variant: "success" },
+      );
     } finally {
-      actionInProgressRef.current = false;
+      setPendingAction(null);
     }
   };
   const handleSecondaryAcion = async (
     actions: UIActions,
     carryRequest: CarryRequest,
   ) => {
-    if (!actions.secondary?.key || !user) return;
+    if (!actions.secondary?.key || pendingAction || !user) return;
 
-    const response = await performRequestActions.execute(
-      actions.secondary.key,
-      carryRequest.carryRequestId,
-    );
+    setPendingAction({
+      requestId: carryRequest.carryRequestId,
+      slot: "secondary",
+    });
 
-    if (!response.ok) {
-      return;
+    try {
+      const response = await performRequestActions.execute(
+        actions.secondary.key,
+        carryRequest.carryRequestId,
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      processActionEmailQueue(response, carryRequest.carryRequestId);
+
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.carryRequests.all,
+      });
+      toast(secondaryActionSuccessMessage(actions.secondary.key), {
+        variant: "success",
+      });
+    } finally {
+      setPendingAction(null);
     }
-
-    processActionEmailQueue(response, carryRequest.carryRequestId);
-
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.carryRequests.all,
-    });
-    toast("Request cancelled. The traveler has been notified.", {
-      variant: "success",
-    });
   };
 
-  const pendingHandoverRequest = carryRequestsList?.find(
-    (request) => request.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER,
+  const pendingHandoverRequest = useMemo(
+    () =>
+      carryRequestsList.find(
+        (request) => request.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER,
+      ),
+    [carryRequestsList],
   );
 
   useEffect(() => {
-    if (pendingHandoverRequest?.handoverState) {
-      setHandoverState(pendingHandoverRequest.handoverState);
-    }
-  }, [pendingHandoverRequest]);
+    const state = pendingHandoverRequest?.handoverState;
+    if (!state) return;
+
+    setHandoverState((prev) =>
+      prev?.senderConfirmed === state.senderConfirmed &&
+      prev?.travelerConfirmed === state.travelerConfirmed
+        ? prev
+        : state,
+    );
+  }, [
+    pendingHandoverRequest?.carryRequestId,
+    pendingHandoverRequest?.handoverState?.senderConfirmed,
+    pendingHandoverRequest?.handoverState?.travelerConfirmed,
+  ]);
 
   return (
     <>
@@ -407,6 +467,11 @@ export default function CarryRequestsPage() {
               setValue={setValue}
               onPrimaryAction={handlePrimaryActions}
               onSecondaryAction={handleSecondaryAcion}
+              pendingActionSlot={
+                pendingAction?.requestId === request.carryRequestId
+                  ? pendingAction.slot
+                  : null
+              }
             />
           ))}
         </div>
@@ -423,6 +488,7 @@ function CarryRequestCard({
   setValue,
   onPrimaryAction,
   onSecondaryAction,
+  pendingActionSlot,
 }: {
   request: CarryRequest;
   user: { id: string } | null;
@@ -431,6 +497,7 @@ function CarryRequestCard({
   setValue: (value: string) => void;
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
+  pendingActionSlot: PendingActionSlot | null;
 }) {
   const [openSection, setOpenSection] = useState<MobileSection | null>(null);
 
@@ -507,6 +574,7 @@ function CarryRequestCard({
             setValue={setValue}
             onPrimaryAction={onPrimaryAction}
             onSecondaryAction={onSecondaryAction}
+            pendingActionSlot={pendingActionSlot}
           />
         )}
       </Card>
@@ -537,6 +605,7 @@ function RequestActions({
   setValue,
   onPrimaryAction,
   onSecondaryAction,
+  pendingActionSlot,
 }: {
   actions: UIActions;
   request: CarryRequest;
@@ -544,7 +613,12 @@ function RequestActions({
   setValue: (value: string) => void;
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
+  pendingActionSlot: PendingActionSlot | null;
 }) {
+  const isActionPending = pendingActionSlot !== null;
+  const isPrimaryPending = pendingActionSlot === "primary";
+  const isSecondaryPending = pendingActionSlot === "secondary";
+
   return (
     <div className="flex flex-col sm:flex-row items-start justify-end gap-4 sm:gap-4">
       {actions.secondary && (
@@ -554,8 +628,10 @@ function RequestActions({
           variant="outline"
           size="md"
           leadingIcon={undefined}
+          disabled={isActionPending}
+          isBusy={isSecondaryPending}
         >
-          {actions.secondary.label}
+          {actionButtonLabel(actions.secondary.label, isSecondaryPending)}
         </Button>
       )}
 
@@ -567,8 +643,10 @@ function RequestActions({
             variant="primary"
             size="md"
             leadingIcon
+            disabled={isActionPending}
+            isBusy={isPrimaryPending}
           >
-            {actions.primary.label}
+            {actionButtonLabel(actions.primary.label, isPrimaryPending)}
           </Button>
         )}
 
@@ -584,6 +662,8 @@ function RequestActions({
           actions={actions}
           onChange={setValue}
           inputValue={inputValue}
+          isActionPending={isActionPending}
+          isPrimaryPending={isPrimaryPending}
         />
       )}
     </div>
@@ -609,13 +689,20 @@ function InfoBlockInput({
   onChange,
   inputValue,
   carryRequest,
+  isActionPending,
+  isPrimaryPending,
 }: {
   inputValue: string;
   carryRequest: CarryRequest;
   actions: UIActions;
   onChange: (value: string) => void;
   handleActions: (actions: UIActions, request: CarryRequest) => void;
+  isActionPending: boolean;
+  isPrimaryPending: boolean;
 }) {
+  const releaseLabel =
+    actions.primary?.label ?? "Release payout";
+
   return (
     <div className="inline-flex flex-col gap-3">
       <div className="inline-flex items-center gap-4">
@@ -625,7 +712,8 @@ function InfoBlockInput({
           value={inputValue}
           maxLength={15}
           inputMode="numeric"
-          className="w-[15ch] rounded-md border border-neutral-200 px-3 py-1 font-mono tracking-widest text-neutral-500 outline-none focus:border-primary-100 focus:ring-2 focus:ring-primary-100"
+          disabled={isActionPending}
+          className="w-[15ch] rounded-md border border-neutral-200 px-3 py-1 font-mono tracking-widest text-neutral-500 outline-none focus:border-primary-100 focus:ring-2 focus:ring-primary-100 disabled:cursor-not-allowed disabled:opacity-60"
           onChange={(e) => onChange(e.target.value)}
         />
 
@@ -634,9 +722,11 @@ function InfoBlockInput({
           variant="primary"
           size="sm"
           leadingIcon={undefined}
+          disabled={isActionPending}
+          isBusy={isPrimaryPending}
         >
           <CustomText textVariant="primary" className="text-white">
-            Release payout
+            {actionButtonLabel(releaseLabel, isPrimaryPending)}
           </CustomText>
         </Button>
       </div>
