@@ -202,9 +202,6 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
           Suggested matches
         </CustomText>
 
-        {!hasMatchingListing ? (
-          <NoActiveListingForMatchesState />
-        ) : (
         <div className="flex w-full min-w-0 flex-col items-center p-3 text-center sm:p-4">
           <div className="flex w-full justify-center">
             <div
@@ -238,7 +235,12 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
                   key="trips"
                   panelId="trips"
                   emptyTitle="No matching trips yet."
-                  isEmpty={tripCount === 0}
+                  isEmpty={!hasMatchingListing || tripCount === 0}
+                  emptyState={
+                    !hasMatchingListing ? (
+                      <NoActiveListingForMatchesState />
+                    ) : undefined
+                  }
                 >
                   {data.suggestedTrips.map((trip) => (
                     <TravelerCard
@@ -254,7 +256,12 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
                   key="parcels"
                   panelId="parcels"
                   emptyTitle="No matching parcels yet."
-                  isEmpty={parcelCount === 0}
+                  isEmpty={!hasMatchingListing || parcelCount === 0}
+                  emptyState={
+                    !hasMatchingListing ? (
+                      <NoActiveListingForMatchesState />
+                    ) : undefined
+                  }
                 >
                   {data.suggestedParcels.map((parcel) => (
                     <ParcelCard
@@ -269,7 +276,6 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
             </AnimatePresence>
           </div>
         </div>
-        )}
       </section>
 
       <ListingSelectionModal
@@ -383,11 +389,13 @@ function TabPanel({
   panelId,
   emptyTitle,
   isEmpty,
+  emptyState,
   children,
 }: {
   panelId: string;
   emptyTitle: string;
   isEmpty: boolean;
+  emptyState?: ReactNode;
   children: ReactNode;
 }) {
   if (isEmpty) {
@@ -399,7 +407,7 @@ function TabPanel({
         className="flex w-full min-w-0 flex-col items-center py-1"
         {...tabMotion}
       >
-        <EmptyMatchesState title={emptyTitle} />
+        {emptyState ?? <EmptyMatchesState title={emptyTitle} />}
       </motion.div>
     );
   }
@@ -421,11 +429,11 @@ function TabPanel({
 
 function NoActiveListingForMatchesState() {
   return (
-    <div className="rounded-2xl border border-neutral-200/80 bg-white px-4 py-6 text-center sm:px-6 sm:py-8">
+    <div className="space-y-0.5 py-1 text-center">
       <CustomText as="p" textSize="sm" className="font-medium text-neutral-700">
         There are no suggested matches.
       </CustomText>
-      <CustomText as="p" textSize="sm" className="mt-1 text-neutral-500">
+      <CustomText as="p" textSize="sm" className="text-neutral-500">
         Matches will be shown when you post a trip or parcel.
       </CustomText>
     </div>
