@@ -18,14 +18,12 @@ import ParcelCard from "@/app/features/parcels/ui/ParcelCard";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
 import type { TripListing } from "../../trips/domain/Trip";
 import { cn } from "@/app/lib/cn";
-import {
-  filterParcelsForMatching,
-  filterTripsForMatching,
-} from "../application/suggestedMatches";
 
 export type SuggestedMatchesData = {
   activeParcels: ParcelListing[];
   activeTrips: TripListing[];
+  matchingParcels: ParcelListing[];
+  matchingTrips: TripListing[];
   suggestedTrips: TripListing[];
   suggestedParcels: ParcelListing[];
 };
@@ -53,10 +51,11 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
 
   const tripCount = data.suggestedTrips.length;
   const parcelCount = data.suggestedParcels.length;
-  const hasActiveParcels = data.activeParcels.length > 0;
-  
+  const hasMatchingListing =
+    data.matchingParcels.length > 0 || data.matchingTrips.length > 0;
+  const hasMatchingParcels = data.matchingParcels.length > 0;
 
-  const defaultTab: TabId = hasActiveParcels ? "trips" : "parcels";
+  const defaultTab: TabId = hasMatchingParcels ? "trips" : "parcels";
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab);
 
   const [selectedTrip, setSelectedTrip] = useState<TripListing | null>(null);
@@ -102,7 +101,7 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
         return;
       }
 
-      let parcels = filterParcelsForMatching(data.activeParcels);
+      let parcels = [...data.matchingParcels];
 
       if (parcels.length === 0) {
         try {
@@ -150,7 +149,7 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
         return;
       }
 
-      let trips = filterTripsForMatching(data.activeTrips);
+      let trips = [...data.matchingTrips];
 
       if (trips.length === 0) {
         try {
@@ -203,6 +202,9 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
           Suggested matches
         </CustomText>
 
+        {!hasMatchingListing ? (
+          <NoActiveListingForMatchesState />
+        ) : (
         <div className="flex w-full min-w-0 flex-col items-center p-3 text-center sm:p-4">
           <div className="flex w-full justify-center">
             <div
@@ -267,6 +269,7 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
             </AnimatePresence>
           </div>
         </div>
+        )}
       </section>
 
       <ListingSelectionModal
@@ -413,6 +416,19 @@ function TabPanel({
         {children}
       </div>
     </motion.div>
+  );
+}
+
+function NoActiveListingForMatchesState() {
+  return (
+    <div className="rounded-2xl border border-neutral-200/80 bg-white px-4 py-6 text-center sm:px-6 sm:py-8">
+      <CustomText as="p" textSize="sm" className="font-medium text-neutral-700">
+        There are no suggested matches.
+      </CustomText>
+      <CustomText as="p" textSize="sm" className="mt-1 text-neutral-500">
+        Matches will be shown when you post a trip or parcel.
+      </CustomText>
+    </div>
   );
 }
 

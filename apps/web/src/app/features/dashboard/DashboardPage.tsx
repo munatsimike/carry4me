@@ -17,6 +17,7 @@ import StatsSection from "./components/StatsSection";
 import SuggestedMatchesTabs, {
   type SuggestedMatchesData,
 } from "./components/SuggestedMatchesTabs";
+import { EMPTY_DASHBOARD_SUGGESTED_MATCHES } from "./application/suggestedMatches";
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";
 import type { DashboardData } from "./domain/DashboardData";
@@ -147,7 +148,7 @@ export default function DashboardPage() {
       {/* Full-width suggested matches */}
       <section
         id="suggested-matches"
-        className="w-full bg-canvas pt-3 pb-5 scroll-mt-4"
+        className="w-full bg-canvas pt-3 pb-5 scroll-mt-4 flex-1"
       >
         <div className="mx-auto w-full max-w-container px-4 sm:px-5 lg:px-6">
           <DashboardSuggestedMatchesSection
@@ -185,28 +186,33 @@ function DashboardSuggestedMatchesSection({
   isLoading: boolean;
   error: unknown;
 }) {
-  const hasActiveParcels = (data?.activeParcels.length ?? 0) > 0;
-  const hasActiveTrips = (data?.activeTrips.length ?? 0) > 0;
-
   if (isLoading) {
     return (
-      <section className="w-full min-w-0 text-sm text-neutral-500">
-        Loading suggested matches...
+      <section className="w-full min-w-0 flex-col gap-2">
+        <CustomText textVariant="primary" textSize="lg" className="font-medium">
+          Suggested matches
+        </CustomText>
+        <p className="text-sm text-neutral-500">Loading suggested matches...</p>
       </section>
     );
   }
 
   if (error) {
     return (
-      <section className="w-full min-w-0 text-sm text-neutral-500">
-        Suggested matches are unavailable right now.
+      <section className="w-full min-w-0 flex-col gap-2">
+        <CustomText textVariant="primary" textSize="lg" className="font-medium">
+          Suggested matches
+        </CustomText>
+        <p className="text-sm text-neutral-500">
+          Suggested matches are unavailable right now.
+        </p>
       </section>
     );
   }
 
-  if ((!hasActiveParcels && !hasActiveTrips) || !data) return null;
+  const matchData: SuggestedMatchesData = data ?? EMPTY_DASHBOARD_SUGGESTED_MATCHES;
 
-  return <SuggestedMatchesTabs data={data} />;
+  return <SuggestedMatchesTabs data={matchData} />;
 }
 
 function YourActivitySection({

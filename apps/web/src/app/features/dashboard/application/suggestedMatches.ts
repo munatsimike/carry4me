@@ -7,8 +7,21 @@ import { TRIPSTATUSES } from "@/app/features/trips/domain/Trip";
 export type DashboardSuggestedMatches = {
   activeParcels: ParcelListing[];
   activeTrips: TripListing[];
+  /** OPEN parcels — used as match sources for suggested trips. */
+  matchingParcels: ParcelListing[];
+  /** ACTIVE trips — used as match sources for suggested parcels. */
+  matchingTrips: TripListing[];
   suggestedTrips: TripListing[];
   suggestedParcels: ParcelListing[];
+};
+
+export const EMPTY_DASHBOARD_SUGGESTED_MATCHES: DashboardSuggestedMatches = {
+  activeParcels: [],
+  activeTrips: [],
+  matchingParcels: [],
+  matchingTrips: [],
+  suggestedTrips: [],
+  suggestedParcels: [],
 };
 
 /** Parcel is on the marketplace and can receive a new carry request. */
@@ -170,6 +183,8 @@ export function buildDashboardSuggestedMatches(input: {
   return {
     activeParcels: input.activeParcels,
     activeTrips: input.activeTrips,
+    matchingParcels,
+    matchingTrips,
     suggestedTrips: matchListings(
       matchingParcels,
       marketplaceTrips,
