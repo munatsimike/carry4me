@@ -27,6 +27,8 @@ export const EMAIL_PROCESSABLE_NOTIFICATION_TYPES = [
   "PARCEL_RECEIVED",
   "PARCEL_DELIVERED",
   "PAYMENT_RELEASED",
+  "MATCHING_TRIP_POSTED",
+  "MATCHING_PARCEL_POSTED",
 ] as const;
 
 export type EmailProcessableNotificationType =
@@ -124,6 +126,78 @@ export async function assertCarryRequestParticipant(
   }
 
   return data.sender_user_id === userId || data.traveler_user_id === userId;
+}
+
+export async function assertListingMatchPoster(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  matchedListingType: string,
+  matchedListingId: string,
+  userId: string,
+): Promise<boolean> {
+  if (matchedListingType === "trip") {
+    const { data, error } = await supabaseAdmin
+      .from("trips")
+      .select("traveler_user_id")
+      .eq("id", matchedListingId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to verify trip poster:", error);
+      throw error;
+    }
+
+    return data?.traveler_user_id === userId;
+  }
+
+  if (matchedListingType === "parcel") {
+    const { data, error } = await supabaseAdmin
+      .from("parcels")
+      .select("sender_user_id")
+      .eq("id", matchedListingId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to verify parcel poster:", error);
+      throw error;
+    }
+
+    return data?.sender_user_id === userId;
+  }
+
+  return false;
+}
+
+export async function loadQueueRowsByListingMatchEvent(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  matchedListingType: string,
+  matchedListingId: string,
+  eventType: string,
+): Promise<EmailQueueRow[]> {
+  const { data, error } = await supabaseAdmin
+    .from("email_queue")
+    .select(
+      "id, notification_id, user_id, status, attempts, last_error, created_at, notifications!inner(type, metadata)",
+    )
+    .eq("notifications.type", eventType)
+    .filter(
+      "notifications.metadata->>matched_listing_type",
+      "eq",
+      matchedListingType,
+    )
+    .filter(
+      "notifications.metadata->>matched_listing_id",
+      "eq",
+      matchedListingId,
+    )
+    .in("status", ["pending", "failed"])
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load email_queue by listing match event:", error);
+    throw error;
+  }
+
+  return (data as EmailQueueRow[] | null) ?? [];
 }
 
 export async function processQueueRow(

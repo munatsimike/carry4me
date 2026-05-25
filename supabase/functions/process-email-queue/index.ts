@@ -2,8 +2,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import {
   assertCarryRequestParticipant,
+  assertListingMatchPoster,
   loadExactQueueRow,
   loadQueueRowByCarryRequestEvent,
+  loadQueueRowsByListingMatchEvent,
   processQueueRow,
   USER_PROCESSABLE_STATUSES,
 } from "../_shared/emailQueueProcessor.ts";
@@ -12,6 +14,8 @@ type RequestBody = {
   emailQueueId?: string;
   notificationId?: string;
   carryRequestId?: string;
+  matchedListingType?: string;
+  matchedListingId?: string;
   eventType?: string;
 };
 
@@ -66,7 +70,57 @@ Deno.serve(async (req) => {
     const emailQueueId = body.emailQueueId?.trim();
     const notificationId = body.notificationId?.trim();
     const carryRequestId = body.carryRequestId?.trim();
+    const matchedListingType = body.matchedListingType?.trim();
+    const matchedListingId = body.matchedListingId?.trim();
     const eventType = body.eventType?.trim();
+
+    if (matchedListingType && matchedListingId && eventType) {
+      const isPoster = await assertListingMatchPoster(
+        supabaseAdmin,
+        matchedListingType,
+        matchedListingId,
+        authData.user.id,
+      );
+
+      if (!isPoster) {
+        return jsonResponse({ error: "Forbidden" }, 403);
+      }
+
+      const rows = await loadQueueRowsByListingMatchEvent(
+        supabaseAdmin,
+        matchedListingType,
+        matchedListingId,
+        eventType,
+      );
+
+      if (rows.length === 0) {
+        return jsonResponse({
+          ok: true,
+          mode: "listing_match",
+          processed: 0,
+          results: [],
+          hint: "No email_queue rows found for the given listing match event.",
+        });
+      }
+
+      const results = [];
+      for (const row of rows) {
+        results.push(
+          await processQueueRow(supabaseAdmin, row, resendApiKey, {
+            allowedStatuses: USER_PROCESSABLE_STATUSES,
+          }),
+        );
+      }
+
+      const processed = results.filter((result) => result.processed === true).length;
+
+      return jsonResponse({
+        ok: true,
+        mode: "listing_match",
+        processed,
+        results,
+      });
+    }
 
     let row = await loadExactQueueRow(supabaseAdmin, {
       emailQueueId,
@@ -91,10 +145,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!emailQueueId && !notificationId && !(carryRequestId && eventType)) {
+    if (
+      !emailQueueId &&
+      !notificationId &&
+      !(carryRequestId && eventType)
+    ) {
       return jsonResponse({
         error:
-          "emailQueueId, notificationId, or carryRequestId+eventType is required",
+          "emailQueueId, notificationId, carryRequestId+eventType, or matchedListingType+matchedListingId+eventType is required",
       }, 400);
     }
 
