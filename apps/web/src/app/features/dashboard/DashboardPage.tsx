@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/supabase/AuthProvider";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import PageSection from "../../components/PageSection";
@@ -59,6 +59,7 @@ export default function DashboardPage() {
   const [createParcel, setCreateParcel] = useState<boolean>(false);
   const [createTrip, setCreateTrip] = useState<boolean>(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useMediaQuery();
   const { user, profile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
@@ -69,6 +70,20 @@ export default function DashboardPage() {
     isLoading: suggestionsLoading,
     error: suggestionsError,
   } = useDashboardSuggestedMatches(user?.id);
+
+  useEffect(() => {
+    if (location.hash !== "#suggested-matches") return;
+
+    const scrollToSuggested = () => {
+      document
+        .getElementById("suggested-matches")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    const frame = requestAnimationFrame(scrollToSuggested);
+    return () => cancelAnimationFrame(frame);
+  }, [location.hash, suggestionsLoading]);
+
   useQueryErrorEffect(error, !!user?.id);
 
   const fullName = profile?.fullName ?? null;
@@ -130,7 +145,10 @@ export default function DashboardPage() {
       </section>
 
       {/* Full-width suggested matches */}
-      <section className="w-full bg-canvas pt-3 pb-5">
+      <section
+        id="suggested-matches"
+        className="w-full bg-canvas pt-3 pb-5 scroll-mt-4"
+      >
         <div className="mx-auto w-full max-w-container px-4 sm:px-5 lg:px-6">
           <DashboardSuggestedMatchesSection
             data={suggestedMatches}

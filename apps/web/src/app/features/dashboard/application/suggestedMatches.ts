@@ -70,7 +70,7 @@ function weightFits(parcel: ParcelListing, trip: TripListing) {
   return parcel.weightKg <= trip.weightKg;
 }
 
-function isSuggestedMatch(source: Listing, candidate: Listing) {
+export function isSuggestedMatch(source: Listing, candidate: Listing) {
   if (source.type === candidate.type) {
     return false;
   }
@@ -112,6 +112,19 @@ function matchListings<TCandidate extends Listing>(
       ),
     ),
   ).slice(0, MAX_SUGGESTIONS);
+}
+
+/** Matches on the marketplace for a listing the actor just posted or edited. */
+export function countMatchesForPostedListing(
+  source: Listing,
+  candidates: Listing[],
+  currentUserId: string,
+): number {
+  return candidates.filter(
+    (candidate) =>
+      candidate.user.id !== currentUserId &&
+      isSuggestedMatch(source, candidate),
+  ).length;
 }
 
 export function buildDashboardSuggestedMatches(input: {

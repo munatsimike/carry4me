@@ -33,10 +33,12 @@ type ConfirmModalPayload = {
   onCancel?: () => void;
 };
 
-type InfoModalPayload = {
+export type InfoModalPayload = {
   type: "info";
   title: string;
   message: string;
+  /** Optional second line (e.g. match summary), shown slightly darker than message. */
+  messageDetail?: string;
   label: string;
   secondaryLabel?: string;
   icon?: React.ReactNode;

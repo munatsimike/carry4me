@@ -21,6 +21,7 @@ import {
 } from "@/app/lib/useCases";
 import { useInvalidateTrips } from "@/app/hooks/mutations/useTripMutations";
 import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
+import { notifyActorSuggestedMatches } from "@/app/features/listings/application/notifyActorSuggestedMatches";
 import { processMatchAlertEmailQueue } from "@/app/features/listings/application/processMatchAlertEmailQueue";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
@@ -114,7 +115,7 @@ export function useTripForm({
   const { guardAction } = useMarketplaceActionGuard();
   const { toast } = useToast();
 
-  const { showSupabaseError } = useUniversalModal();
+  const { showSupabaseError, openInfo } = useUniversalModal();
   const {
     control,
     register,
@@ -178,8 +179,16 @@ export function useTripForm({
       }
 
       processMatchAlertEmailQueue("trip", initialFormValues.id);
-
-      toast("Changes saved successfully.", { variant: "success" });
+      if (user?.id) {
+        void notifyActorSuggestedMatches(
+          user.id,
+          "trip",
+          initialFormValues.id,
+          "edit",
+          openInfo,
+          navigate,
+        );
+      }
       await refreshProfile();
       await invalidateTrips();
     } catch (err) {
@@ -216,9 +225,18 @@ export function useTripForm({
       );
 
       processMatchAlertEmailQueue("trip", tripId);
+      if (user?.id) {
+        void notifyActorSuggestedMatches(
+          user.id,
+          "trip",
+          tripId,
+          "create",
+          openInfo,
+          navigate,
+        );
+      }
 
       await invalidateTrips();
-      toast("Trip posted successfully.", { variant: "success" });
       if (setModalState) {
         setModalState();
       } else {

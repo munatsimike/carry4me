@@ -20,6 +20,7 @@ import {
 } from "@/app/lib/useCases";
 import { useInvalidateParcels } from "@/app/hooks/mutations/useParcelMutations";
 import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
+import { notifyActorSuggestedMatches } from "@/app/features/listings/application/notifyActorSuggestedMatches";
 import { processMatchAlertEmailQueue } from "@/app/features/listings/application/processMatchAlertEmailQueue";
 import type { CreateParcelUseCase } from "@/app/features/parcels/application/CreateParcelUseCase";
 import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
@@ -103,7 +104,7 @@ export default function useParcelForm({
   setModalState,
 }: UseParcelFormProps) {
   const invalidateParcels = useInvalidateParcels();
-  const { showSupabaseError } = useUniversalModal();
+  const { showSupabaseError, openInfo } = useUniversalModal();
   const { toast } = useToast();
   const { user, profile, refreshProfile } = useAuth();
   const { data: locations } = useLocations();
@@ -169,8 +170,16 @@ export default function useParcelForm({
       }
 
       processMatchAlertEmailQueue("parcel", initialFormValues.id);
-
-      toast("Changes saved successfully.", { variant: "success" });
+      if (user?.id) {
+        void notifyActorSuggestedMatches(
+          user.id,
+          "parcel",
+          initialFormValues.id,
+          "edit",
+          openInfo,
+          navigate,
+        );
+      }
       await refreshProfile();
       await invalidateParcels();
     } catch (err) {
@@ -208,6 +217,16 @@ export default function useParcelForm({
       );
 
       processMatchAlertEmailQueue("parcel", parcelId);
+      if (user?.id) {
+        void notifyActorSuggestedMatches(
+          user.id,
+          "parcel",
+          parcelId,
+          "create",
+          openInfo,
+          navigate,
+        );
+      }
 
       await invalidateParcels();
       if (setModalState) {
@@ -215,7 +234,6 @@ export default function useParcelForm({
       } else {
         setToDashBoard(true);
       }
-      toast("Parcel posted successfully.", { variant: "success" });
     } catch (err) {
       showSupabaseError(err);
     }

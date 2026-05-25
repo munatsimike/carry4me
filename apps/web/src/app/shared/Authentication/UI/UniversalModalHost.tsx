@@ -86,12 +86,20 @@ export function UniversalModalHost({
                 </span>
 
                 <CustomText textVariant="secondary">{modal.message}</CustomText>
+                {modal.type === "info" && modal.messageDetail ? (
+                  <CustomText
+                    textVariant="primary"
+                    className="text-neutral-800"
+                  >
+                    {modal.messageDetail}
+                  </CustomText>
+                ) : null}
               </span>
 
               <LineDivider />
 
               <div className="mt-5 flex justify-end gap-8">
-                {action.secondaryAction && (
+                {action.secondaryLabel ? (
                   <Button
                     className="min-w-[100px]"
                     onClick={() => {
@@ -105,7 +113,7 @@ export function UniversalModalHost({
                       {action.secondaryLabel}
                     </CustomText>
                   </Button>
-                )}
+                ) : null}
 
                 <Button
                   className="min-w-[100px]"
