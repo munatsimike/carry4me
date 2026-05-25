@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Package, Plane } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -50,7 +50,7 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
   const tripCount = data.suggestedTrips.length;
   const parcelCount = data.suggestedParcels.length;
   const hasActiveParcels = data.activeParcels.length > 0;
-  const hasActiveTrips = data.activeTrips.length > 0;
+  
 
   const defaultTab: TabId = hasActiveParcels ? "trips" : "parcels";
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab);
@@ -62,14 +62,6 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
   const [tripSelectionOpen, setTripSelectionOpen] = useState(false);
   const [userParcels, setUserParcels] = useState<ParcelListing[]>([]);
   const [userTrips, setUserTrips] = useState<TripListing[]>([]);
-
-  useEffect(() => {
-    if (activeTab === "trips" && !hasActiveParcels && hasActiveTrips) {
-      setActiveTab("parcels");
-    } else if (activeTab === "parcels" && !hasActiveTrips && hasActiveParcels) {
-      setActiveTab("trips");
-    }
-  }, [activeTab, hasActiveParcels, hasActiveTrips]);
 
   const invalidateSuggestedMatches = () => {
     if (!user?.id) return;
@@ -207,10 +199,10 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
           Suggested matches
         </CustomText>
 
-        <div className="flex w-full min-w-0 flex-col items-center rounded-xl border border-neutral-200/80 bg-neutral-50/60 p-3 text-center shadow-sm sm:p-4">
+        <div className="flex w-full min-w-0 flex-col items-center p-3 text-center sm:p-4">
           <div className="flex w-full justify-center">
             <div
-              className="inline-flex w-fit gap-1 rounded-lg bg-neutral-100/80 p-1"
+              className="inline-flex w-fit gap-1 rounded-lg bg-white p-1"
               role="tablist"
               aria-label="Suggested matches"
             >

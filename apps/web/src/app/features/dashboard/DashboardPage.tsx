@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/supabase/AuthProvider";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
-import DefaultContainer from "@/components/ui/DefualtContianer";
 import PageSection from "../../components/PageSection";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
 import CustomText, { type TextVariant } from "@/components/ui/CustomText";
@@ -102,43 +101,55 @@ export default function DashboardPage() {
   }, [createParcel, isMobile, navigate]);
 
   return (
-    <DefaultContainer outerClassName="min-h-screen">
-      <PageSection align="left">{<Greeting user={fullName} />}</PageSection>
+    <>
+      {/* Main dashboard section */}
+      <section className="py-2 sm:py-3">
+        <div className="mx-auto w-full max-w-container px-4 sm:px-5 lg:px-6">
+          <PageSection align="left">
+            <Greeting user={fullName} />
+          </PageSection>
 
-      <div className="flex flex-col gap-12 pt-2 sm:pt-4">
-        <ActionButtonRow
-          onPostTrip={() => requirePhoneVerification("trip")}
-          onPostParcel={() => requirePhoneVerification("parcel")}
-        />
+          <div className="flex flex-col gap-6 pt-2 sm:pt-4">
+            <ActionButtonRow
+              onPostTrip={() => requirePhoneVerification("trip")}
+              onPostParcel={() => requirePhoneVerification("parcel")}
+            />
 
-        <div className="flex flex-col gap-6 sm:justify-center md:flex-row md:items-start">
-          <StatsSection statsList={dashboardData ? dashboardData.stats : []} />
-          <YourActivitySection
-            recentActivityList={notifications}
-            activityList={dashboardData ? dashboardData.activity : []}
-          />
+            <div className="flex flex-col gap-6 sm:justify-center md:flex-row md:items-start">
+              <StatsSection
+                statsList={dashboardData ? dashboardData.stats : []}
+              />
+
+              <YourActivitySection
+                recentActivityList={notifications}
+                activityList={dashboardData ? dashboardData.activity : []}
+              />
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="w-full min-w-0 px-2">
+      {/* Full-width suggested matches */}
+      <section className="w-full bg-canvas pt-3 pb-5">
+        <div className="mx-auto w-full max-w-container px-4 sm:px-5 lg:px-6">
           <DashboardSuggestedMatchesSection
             data={suggestedMatches}
             isLoading={suggestionsLoading}
             error={suggestionsError}
           />
         </div>
-      </div>
+      </section>
 
       <AnimatePresence>
         {createTrip && !isMobile && (
           <CreateTripModal setModalState={() => setCreateTrip(false)} />
         )}
 
-        {/* hide and show post parcel modal */}
         {createParcel && !isMobile && (
           <CreatParcelModal setModalState={() => setCreateParcel(false)} />
         )}
       </AnimatePresence>
-    </DefaultContainer>
+    </>
   );
 }
 
