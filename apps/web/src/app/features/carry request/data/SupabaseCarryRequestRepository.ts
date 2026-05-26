@@ -57,7 +57,25 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       .from("carry_requests")
       .select(
         `
-        *,
+        id,
+        parcel_id,
+        trip_id,
+        sender_user_id,
+        traveler_user_id,
+        initiator_role,
+        status,
+        parcel_snapshot,
+        trip_snapshot,
+        payment_expires_at,
+        expired_at,
+        created_at,
+        updated_at,
+        stripe_payment_intent_id,
+        payment_status,
+        delivery_otp_expires_at,
+        delivery_otp_attempts,
+        delivery_otp_verified_at,
+        delivery_otp_last_sent_at,
         events:carry_request_events(*),
         handover_confirmations:carry_request_handover_confirmations(role, confirmed_at)
       `,

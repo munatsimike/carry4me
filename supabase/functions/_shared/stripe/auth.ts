@@ -18,7 +18,7 @@ export function requireEnv(name: string): string {
 
 export async function getAuthenticatedUser(
   req: Request,
-): Promise<{ user: User; supabaseAdmin: SupabaseClient }> {
+): Promise<{ user: User; supabaseAdmin: SupabaseClient; supabaseUser: SupabaseClient }> {
   const supabaseUrl = requireEnv("SUPABASE_URL");
   const supabaseAnonKey = requireEnv("SUPABASE_ANON_KEY");
   const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
@@ -44,7 +44,7 @@ export async function getAuthenticatedUser(
   }
 
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-  return { user: authData.user, supabaseAdmin };
+  return { user: authData.user, supabaseAdmin, supabaseUser };
 }
 
 export function isResponse(value: unknown): value is Response {

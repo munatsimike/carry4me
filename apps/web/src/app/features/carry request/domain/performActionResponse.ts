@@ -7,6 +7,7 @@ export type PerformActionResponse = {
   progressed?: boolean;
   waiting_for?: Role;
   reason?: string;
+  message?: string;
   notification_id?: string;
   event_type?: string;
 };

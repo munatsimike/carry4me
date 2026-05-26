@@ -17,6 +17,10 @@ import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import { processActionEmailQueue } from "../application/processActionEmailQueue";
 import { ensureTravelerStripeReady } from "../application/travelerStripeVerification";
+import {
+  deliveryOtpFailureMessage,
+  verifyDeliveryOtp,
+} from "../application/deliveryOtp";
 import PayCarryRequestModal from "./PayCarryRequestModal";
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 import statusColor from "./StatustColorMapper";
@@ -92,6 +96,13 @@ function primaryActionSuccessMessage(
   actionKey: UIActionKey,
   response: PerformActionResponse,
 ): string {
+  if (
+    actionKey === UIACTIONKEYS.RELEASE_PAYMENT &&
+    response.reason === "ALREADY_PAID_OUT"
+  ) {
+    return "Payment was already released for this request.";
+  }
+
   if (
     actionKey === UIACTIONKEYS.CONFIRM_HANDOVER &&
     response.progressed === false
@@ -390,6 +401,28 @@ export default function CarryRequestsPage() {
         if (!parcelAvailability) return;
       }
 
+      if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
+        const otp = inputValue.trim();
+        if (!/^\d{6}$/.test(otp)) {
+          toast("Enter the 6-digit code from the sender.", { variant: "error" });
+          return;
+        }
+
+        try {
+          const verifyResult = await verifyDeliveryOtp(
+            carryRequest.carryRequestId,
+            otp,
+          );
+          if (!verifyResult.ok) {
+            toast(deliveryOtpFailureMessage(verifyResult), { variant: "error" });
+            return;
+          }
+        } catch (err) {
+          showSupabaseError(err);
+          return;
+        }
+      }
+
       if (actions.primary.key === UIACTIONKEYS.PAY) {
         try {
           const paymentExpired = await performRequestActions.isPaymentExpired(
@@ -424,7 +457,19 @@ export default function CarryRequestsPage() {
       );
 
       if (!response.ok) {
+        if (response.reason === "OTP_NOT_VERIFIED") {
+          openInfo({
+            title: "Delivery code required",
+            message:
+              "Verify the sender's 6-digit code before releasing payment.",
+            label: "Close",
+          });
+        }
         return;
+      }
+
+      if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
+        setValue("");
       }
 
       processActionEmailQueue(response, carryRequest.carryRequestId);
@@ -820,7 +865,7 @@ function InfoBlockInput({
 
         <input
           value={inputValue}
-          maxLength={15}
+          maxLength={6}
           inputMode="numeric"
           disabled={isActionPending}
           className="w-[15ch] rounded-md border border-neutral-200 px-3 py-1 font-mono tracking-widest text-neutral-500 outline-none focus:border-primary-100 focus:ring-2 focus:ring-primary-100 disabled:cursor-not-allowed disabled:opacity-60"
@@ -854,12 +899,14 @@ function InfoBlockDisplay({ actions }: { actions: UIActions }) {
       <div className="inline-flex flex-col gap-2">
         <div className="inline-flex items-center gap-3">
           <CustomText textSize="xs">{actions.infoBlock?.label}</CustomText>
-          <CustomText
-            className="rounded-md bg-secondary-100 px-3 py-1"
-            textVariant="primary"
-          >
-            {actions.infoBlock?.value}
-          </CustomText>
+          {actions.infoBlock?.value ? (
+            <CustomText
+              className="rounded-md bg-secondary-100 px-3 py-1"
+              textVariant="primary"
+            >
+              {actions.infoBlock.value}
+            </CustomText>
+          ) : null}
         </div>
 
         <CustomText textVariant="primary" textSize="xs">

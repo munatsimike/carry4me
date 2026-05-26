@@ -110,12 +110,12 @@ function confirmDelivery(): UIAction {
   };
 }
 
-function displayPaymentCode(): InfoBlock {
+function displayPaymentCodePending(): InfoBlock {
   return {
     mode: INFOMODES.DISPLAY,
     label: "Payment code",
-    helperText: "Provide this code to the traveler after delivery.",
-    value: "25689",
+    helperText:
+      "You will receive a 6-digit code by email when the traveler confirms delivery.",
   };
 }
 
@@ -189,8 +189,8 @@ function pendingPayout(viewerRole: Role): UIActions {
       infoBlock: {
         mode: INFOMODES.DISPLAY,
         label: "Payment code",
-        helperText: "Provide this code to the traveler after delivery.",
-        value: "25689",
+        helperText:
+          "Check your email or notifications for the 6-digit code, then share it with your traveler.",
       },
     };
   } else {
@@ -214,7 +214,7 @@ function pendingPayout(viewerRole: Role): UIActions {
 function intransit(viewerRole: Role): UIActions {
   if (viewerRole === ROLES.SENDER) {
     return {
-      infoBlock: displayPaymentCode(),
+      infoBlock: displayPaymentCodePending(),
       secondary: cancelRequest,
     };
   } else {
