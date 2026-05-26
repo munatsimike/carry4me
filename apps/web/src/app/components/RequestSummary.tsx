@@ -17,6 +17,7 @@ import { cn } from "@/app/lib/cn";
 import SvgIcon from "@/components/ui/SvgIcon";
 import SendIcon from "@/assets/send-arrow-icon.svg?react";
 import { processRequestSentEmailQueue } from "../features/carry request/application/processRequestSentEmailQueue";
+import { ensureTravelerStripeReady } from "../features/carry request/application/travelerStripeVerification";
 import {
   RequestCostSummarySection,
   RequestDetailsGrid,
@@ -170,7 +171,20 @@ export default function RequestSummary({
     if (!user?.id) return;
 
     guardAction(() => {
-      void handleSendRequest();
+      void (async () => {
+        // Travelers must complete Stripe onboarding before sending/accepting paid requests.
+        if (!isSenderRequesting) {
+          try {
+            const stripeReady = await ensureTravelerStripeReady({ openInfo });
+            if (!stripeReady) return;
+          } catch (err) {
+            showSupabaseError(err);
+            return;
+          }
+        }
+
+        await handleSendRequest();
+      })();
     }, "send_request");
   };
 

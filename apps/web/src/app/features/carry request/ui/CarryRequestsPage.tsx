@@ -9,13 +9,16 @@ import { dateFormat, INFOMODES, progress } from "@/types/Ui";
 import { Button } from "@/components/ui/Button";
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import { processActionEmailQueue } from "../application/processActionEmailQueue";
+import { ensureTravelerStripeReady } from "../application/travelerStripeVerification";
+import PayCarryRequestModal from "./PayCarryRequestModal";
+import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 import statusColor from "./StatustColorMapper";
 import actionsMapper, {
   UIACTIONKEYS,
@@ -136,7 +139,7 @@ export default function CarryRequestsPage() {
   const carryRequestsList = carryRequestsData ?? EMPTY_CARRY_REQUESTS;
   useQueryErrorEffect(error, !!user?.id);
 
-  const { openInfo, showSupabaseError } = useUniversalModal();
+  const { openInfo, showSupabaseError, confirm } = useUniversalModal();
  
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -151,6 +154,7 @@ export default function CarryRequestsPage() {
   );
 
   const [searchParams] = useSearchParams();
+  const stripeParamHandledRef = useRef<string | null>(null);
 
   const tabCounts = useMemo<Record<SelectedTab, number>>(() => {
     const counts: Record<SelectedTab, number> = {
@@ -285,6 +289,71 @@ export default function CarryRequestsPage() {
     requestId: string;
     slot: PendingActionSlot;
   } | null>(null);
+  const [paymentRequest, setPaymentRequest] = useState<CarryRequest | null>(null);
+
+  const completePaymentAfterStripe = async (carryRequest: CarryRequest) => {
+    setPendingAction({
+      requestId: carryRequest.carryRequestId,
+      slot: "primary",
+    });
+
+    try {
+      const response = await performRequestActions.execute(
+        UIACTIONKEYS.PAY,
+        carryRequest.carryRequestId,
+      );
+
+      if (!response.ok) {
+        if (response.reason === "PAYMENT_NOT_CONFIRMED") {
+          openInfo({
+            title: "Payment not confirmed",
+            message:
+              "Stripe payment is still processing. Wait a moment and try again.",
+            label: "Close",
+          });
+        }
+        return;
+      }
+
+      processActionEmailQueue(response, carryRequest.carryRequestId);
+
+      await queryClient.refetchQueries({
+        queryKey: queryKeys.carryRequests.all,
+      });
+
+      refreshProfile();
+
+      toast(primaryActionSuccessMessage(UIACTIONKEYS.PAY, response), {
+        variant: "success",
+      });
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  useEffect(() => {
+    const stripeParam = searchParams.get("stripe");
+    if (stripeParam !== "return" && stripeParam !== "refresh") return;
+
+    // Prevent repeated calls when the page re-renders (common after refreshProfile).
+    if (stripeParamHandledRef.current === stripeParam) return;
+    stripeParamHandledRef.current = stripeParam;
+
+    void (async () => {
+      try {
+        await invokeStripeFunction("stripe-connect-status", {});
+        refreshProfile();
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
+        // Remove the stripe param so we don't re-run this effect forever.
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("stripe");
+        const nextSearch = params.toString();
+        navigate({ search: nextSearch ? `?${nextSearch}` : "" }, { replace: true });
+      }
+    })();
+  }, [searchParams, refreshProfile, showSupabaseError, navigate]);
 
   const handlePrimaryActions = async (
     actions: UIActions,
@@ -301,6 +370,16 @@ export default function CarryRequestsPage() {
       // ACCEPT checks
       if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
         if (!guardAction(() => undefined, "send_request")) {
+          return;
+        }
+
+        try {
+          const stripeReady = await ensureTravelerStripeReady({ openInfo });
+          if (!stripeReady) {
+            return;
+          }
+        } catch (err) {
+          showSupabaseError(err);
           return;
         }
 
@@ -333,6 +412,10 @@ export default function CarryRequestsPage() {
           showSupabaseError(err);
           return;
         }
+
+        setPendingAction(null);
+        setPaymentRequest(carryRequest);
+        return;
       }
 
       const response = await performRequestActions.execute(
@@ -365,6 +448,18 @@ export default function CarryRequestsPage() {
     carryRequest: CarryRequest,
   ) => {
     if (!actions.secondary?.key || pendingAction || !user) return;
+
+    if (actions.secondary.key === UIACTIONKEYS.CANCEL) {
+      const shouldCancel = await confirm({
+        title: "Cancel this request?",
+        message:
+          "This action cancels the carry request and cannot be undone. You can send a new request later.",
+        confirmText: "Yes, cancel request",
+        cancelText: "Keep request",
+        destructive: true,
+      });
+      if (!shouldCancel) return;
+    }
 
     setPendingAction({
       requestId: carryRequest.carryRequestId,
@@ -480,6 +575,17 @@ export default function CarryRequestsPage() {
           ))}
         </div>
       </DefaultContainer>
+
+      {paymentRequest ? (
+        <PayCarryRequestModal
+          carryRequestId={paymentRequest.carryRequestId}
+          onClose={() => setPaymentRequest(null)}
+          onPaymentComplete={async () => {
+            await completePaymentAfterStripe(paymentRequest);
+            setPaymentRequest(null);
+          }}
+        />
+      ) : null}
     </>
   );
 }
