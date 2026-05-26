@@ -19,6 +19,7 @@ import { processActionEmailQueue } from "../application/processActionEmailQueue"
 import { ensureTravelerStripeReady } from "../application/travelerStripeVerification";
 import {
   deliveryOtpFailureMessage,
+  resendDeliveryOtp,
   verifyDeliveryOtp,
 } from "../application/deliveryOtp";
 import PayCarryRequestModal from "./PayCarryRequestModal";
@@ -244,6 +245,7 @@ export default function CarryRequestsPage() {
   }, [displayList.length, selectedTab, carryRequestsPending]);
 
   const [inputValue, setValue] = useState<string>("");
+  const [otpErrorRequestId, setOtpErrorRequestId] = useState<string | null>(null);
 
 
   const checkTravelersWeight = async (carryRequest: CarryRequest) => {
@@ -404,6 +406,7 @@ export default function CarryRequestsPage() {
       if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
         const otp = inputValue.trim();
         if (!/^\d{6}$/.test(otp)) {
+          setOtpErrorRequestId(carryRequest.carryRequestId);
           toast("Enter the 6-digit code from the sender.", { variant: "error" });
           return;
         }
@@ -414,10 +417,13 @@ export default function CarryRequestsPage() {
             otp,
           );
           if (!verifyResult.ok) {
+            setOtpErrorRequestId(carryRequest.carryRequestId);
             toast(deliveryOtpFailureMessage(verifyResult), { variant: "error" });
             return;
           }
+          setOtpErrorRequestId(null);
         } catch (err) {
+          setOtpErrorRequestId(carryRequest.carryRequestId);
           showSupabaseError(err);
           return;
         }
@@ -470,9 +476,10 @@ export default function CarryRequestsPage() {
 
       if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
         setValue("");
+        setOtpErrorRequestId(null);
       }
 
-      processActionEmailQueue(response, carryRequest.carryRequestId);
+    //  processActionEmailQueue(response, carryRequest.carryRequestId);
 
       await queryClient.refetchQueries({
         queryKey: queryKeys.carryRequests.all,
@@ -506,6 +513,24 @@ export default function CarryRequestsPage() {
       if (!shouldCancel) return;
     }
 
+    if (actions.secondary.key === UIACTIONKEYS.RESEND_DELIVERY_OTP) {
+      setPendingAction({
+        requestId: carryRequest.carryRequestId,
+        slot: "secondary",
+      });
+      try {
+        await resendDeliveryOtp(carryRequest.carryRequestId);
+        toast("A new 6-digit code was sent to your email.", {
+          variant: "success",
+        });
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
+        setPendingAction(null);
+      }
+      return;
+    }
+
     setPendingAction({
       requestId: carryRequest.carryRequestId,
       slot: "secondary",
@@ -521,7 +546,7 @@ export default function CarryRequestsPage() {
         return;
       }
 
-      processActionEmailQueue(response, carryRequest.carryRequestId);
+     // processActionEmailQueue(response, carryRequest.carryRequestId);
 
       void queryClient.invalidateQueries({
         queryKey: queryKeys.carryRequests.all,
@@ -609,6 +634,13 @@ export default function CarryRequestsPage() {
               handoverState={handoverState}
               inputValue={inputValue}
               setValue={setValue}
+              onInputValueChange={(value) => {
+                setValue(value);
+                if (otpErrorRequestId === request.carryRequestId) {
+                  setOtpErrorRequestId(null);
+                }
+              }}
+              otpInputInvalid={otpErrorRequestId === request.carryRequestId}
               onPrimaryAction={handlePrimaryActions}
               onSecondaryAction={handleSecondaryAcion}
               pendingActionSlot={
@@ -641,6 +673,8 @@ function CarryRequestCard({
   handoverState,
   inputValue,
   setValue,
+  onInputValueChange,
+  otpInputInvalid,
   onPrimaryAction,
   onSecondaryAction,
   pendingActionSlot,
@@ -650,6 +684,8 @@ function CarryRequestCard({
   handoverState?: HandoverConfirmationState;
   inputValue: string;
   setValue: (value: string) => void;
+  onInputValueChange: (value: string) => void;
+  otpInputInvalid: boolean;
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
   pendingActionSlot: PendingActionSlot | null;
@@ -727,6 +763,8 @@ function CarryRequestCard({
             request={request}
             inputValue={inputValue}
             setValue={setValue}
+            onInputValueChange={onInputValueChange}
+            otpInputInvalid={otpInputInvalid}
             onPrimaryAction={onPrimaryAction}
             onSecondaryAction={onSecondaryAction}
             pendingActionSlot={pendingActionSlot}
@@ -757,7 +795,8 @@ function RequestActions({
   actions,
   request,
   inputValue,
-  setValue,
+  onInputValueChange,
+  otpInputInvalid,
   onPrimaryAction,
   onSecondaryAction,
   pendingActionSlot,
@@ -766,6 +805,8 @@ function RequestActions({
   request: CarryRequest;
   inputValue: string;
   setValue: (value: string) => void;
+  onInputValueChange: (value: string) => void;
+  otpInputInvalid: boolean;
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
   pendingActionSlot: PendingActionSlot | null;
@@ -815,8 +856,9 @@ function RequestActions({
           handleActions={onPrimaryAction}
           carryRequest={request}
           actions={actions}
-          onChange={setValue}
+          onChange={onInputValueChange}
           inputValue={inputValue}
+          otpInputInvalid={otpInputInvalid}
           isActionPending={isActionPending}
           isPrimaryPending={isPrimaryPending}
         />
@@ -843,6 +885,7 @@ function InfoBlockInput({
   actions,
   onChange,
   inputValue,
+  otpInputInvalid,
   carryRequest,
   isActionPending,
   isPrimaryPending,
@@ -851,6 +894,7 @@ function InfoBlockInput({
   carryRequest: CarryRequest;
   actions: UIActions;
   onChange: (value: string) => void;
+  otpInputInvalid: boolean;
   handleActions: (actions: UIActions, request: CarryRequest) => void;
   isActionPending: boolean;
   isPrimaryPending: boolean;
@@ -868,7 +912,11 @@ function InfoBlockInput({
           maxLength={6}
           inputMode="numeric"
           disabled={isActionPending}
-          className="w-[15ch] rounded-md border border-neutral-200 px-3 py-1 font-mono tracking-widest text-neutral-500 outline-none focus:border-primary-100 focus:ring-2 focus:ring-primary-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`w-[15ch] rounded-md border px-3 py-1 font-mono tracking-widest text-neutral-500 outline-none disabled:cursor-not-allowed disabled:opacity-60 ${
+            otpInputInvalid
+              ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+              : "border-neutral-200 focus:border-primary-100 focus:ring-2 focus:ring-primary-100"
+          }`}
           onChange={(e) => onChange(e.target.value)}
         />
 

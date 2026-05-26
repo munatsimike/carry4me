@@ -15,6 +15,7 @@ export const UIACTIONKEYS = {
   CONFIRM_HANDOVER: "CONFIRM_HANDOVER",
   MARK_DELIVERED: "MARK_DELIVERED",
   RELEASE_PAYMENT: "RELEASE_PAYMENT",
+  RESEND_DELIVERY_OTP: "RESEND_DELIVERY_OTP",
   BROWSE_TRIPS: "BROWSE_TRIPS",
   BROWSE_PARCELS: "BROWSE_PARCELS",
 } as const;
@@ -99,6 +100,13 @@ const confirmHandover: UIAction = {
   variant: VARIANTS.PRIMARY,
   label: "Confirm handover",
   key: UIACTIONKEYS.CONFIRM_HANDOVER,
+};
+
+const resendDeliveryCode: UIAction = {
+  kind: ACTIONKINDS.PAYOUT,
+  variant: VARIANTS.PRIMARY,
+  label: "Resend code",
+  key: UIACTIONKEYS.RESEND_DELIVERY_OTP,
 };
 
 function confirmDelivery(): UIAction {
@@ -186,6 +194,7 @@ function paidOut(): UIActions {
 function pendingPayout(viewerRole: Role): UIActions {
   if (viewerRole === ROLES.SENDER) {
     return {
+      secondary: resendDeliveryCode,
       infoBlock: {
         mode: INFOMODES.DISPLAY,
         label: "Payment code",
