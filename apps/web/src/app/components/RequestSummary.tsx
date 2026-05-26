@@ -5,7 +5,6 @@ import type { ParcelListing } from "../features/parcels/domain/Parcel";
 import { useMemo, useState } from "react";
 import { SupabaseCarryRequestRepository } from "../features/carry request/data/SupabaseCarryRequestRepository";
 import { CreateCarryRequestUseCase } from "../features/carry request/application/CreateCarryReaquest";
-import { useToast } from "./Toast";
 import { AppError } from "@/app/shared/domain/AppError";
 import { useUniversalModal } from "../shared/Authentication/application/DialogBoxModalProvider";
 import { useMarketplaceActionGuard } from "../shared/Authentication/UI/hooks/useMarketplaceActionGuard";
@@ -54,7 +53,6 @@ export default function RequestSummary({
   const { user } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const { showSupabaseError, openInfo } = useUniversalModal();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const routeMismatch = useMemo(() => {
@@ -70,7 +68,41 @@ export default function RequestSummary({
     };
   }, [parcel.route, trip.route]);
 
-  const canSendRequest = !routeMismatch.hasMismatch;
+  const sendValidation = useMemo(() => {
+    const issues: RequestFormIssue[] = [];
+
+    if (routeMismatch.hasMismatch) {
+      issues.push(getRouteMismatchIssue(routeMismatch));
+    }
+
+    if (parcel.weightKg > trip.weightKg) {
+      issues.push(getWeightCapacityIssue(isSenderRequesting));
+    }
+
+    const categoriesAccepted = parcel.goodsCategory.every((parcelCategory) =>
+      trip.goodsCategory.some(
+        (tripCategory) => tripCategory.name === parcelCategory.name,
+      ),
+    );
+
+    if (!categoriesAccepted) {
+      issues.push(getCategoryMismatchIssue());
+    }
+
+    return {
+      canSend: issues.length === 0,
+      issues,
+    };
+  }, [
+    routeMismatch,
+    parcel.weightKg,
+    parcel.goodsCategory,
+    trip.weightKg,
+    trip.goodsCategory,
+    isSenderRequesting,
+  ]);
+
+  const canSendRequest = sendValidation.canSend;
 
   const pricePerKg = isSenderRequesting ? trip.pricePerKg : parcel.pricePerKg;
   const totalPrice = pricePerKg * parcel.weightKg;
@@ -90,31 +122,6 @@ export default function RequestSummary({
 
   const handleSendRequest = async () => {
     if (requestLoaded || !canSendRequest) return;
-
-    if (parcel.weightKg > trip.weightKg) {
-      const message = isSenderRequesting
-        ? "This traveler doesn’t have enough space for your parcel."
-        : "You do not have enough space to carry this parcel.";
-
-      toast(message, { variant: "warning" });
-      onClose();
-      return;
-    }
-
-    const canCarry = parcel.goodsCategory.every((parcelCategory) =>
-      trip.goodsCategory.some(
-        (tripCategory) => tripCategory.name === parcelCategory.name,
-      ),
-    );
-
-    if (!canCarry) {
-      toast(
-        "This traveler doesn’t accept one or more item categories in your parcel.",
-        { variant: "warning" },
-      );
-      onClose();
-      return;
-    }
 
     try {
       const carryRequestId = await createRequest.execute(
@@ -188,8 +195,16 @@ export default function RequestSummary({
         </CustomText>
       </header>
 
-      {routeMismatch.hasMismatch ? (
-        <RouteMismatchNotice routeMismatch={routeMismatch} />
+      {sendValidation.issues.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          {sendValidation.issues.map((issue) => (
+            <RequestFormAlert
+              key={issue.id}
+              headline={issue.headline}
+              detail={issue.detail}
+            />
+          ))}
+        </div>
       ) : null}
 
       <RequestDetailsGrid>
@@ -252,15 +267,19 @@ type RouteMismatchState = {
   destinationMismatch: boolean;
 };
 
-function getRouteMismatchMessage(routeMismatch: RouteMismatchState): {
+type RequestFormIssue = {
+  id: string;
   headline: string;
   detail: string;
-} {
+};
+
+function getRouteMismatchIssue(routeMismatch: RouteMismatchState): RequestFormIssue {
   const detail =
     "The trip and parcel routes must match before you can send a request.";
 
   if (routeMismatch.originMismatch && routeMismatch.destinationMismatch) {
     return {
+      id: "route-both",
       headline: "Origin and destination countries do not match.",
       detail,
     };
@@ -268,24 +287,45 @@ function getRouteMismatchMessage(routeMismatch: RouteMismatchState): {
 
   if (routeMismatch.originMismatch) {
     return {
+      id: "route-origin",
       headline: "Origin countries do not match.",
       detail,
     };
   }
 
   return {
+    id: "route-destination",
     headline: "Destination countries do not match.",
     detail,
   };
 }
 
-function RouteMismatchNotice({
-  routeMismatch,
-}: {
-  routeMismatch: RouteMismatchState;
-}) {
-  const { headline, detail } = getRouteMismatchMessage(routeMismatch);
+function getWeightCapacityIssue(isSenderRequesting: boolean): RequestFormIssue {
+  return {
+    id: "weight",
+    headline: isSenderRequesting
+      ? "This traveler doesn’t have enough space for your parcel."
+      : "You do not have enough space to carry this parcel.",
+    detail: "Reduce the parcel weight or choose a trip with more available capacity.",
+  };
+}
 
+function getCategoryMismatchIssue(): RequestFormIssue {
+  return {
+    id: "categories",
+    headline:
+      "This traveler doesn’t accept one or more item categories in your parcel.",
+    detail: "Update the parcel items or choose a trip that accepts those categories.",
+  };
+}
+
+function RequestFormAlert({
+  headline,
+  detail,
+}: {
+  headline: string;
+  detail: string;
+}) {
   return (
     <div
       role="alert"
