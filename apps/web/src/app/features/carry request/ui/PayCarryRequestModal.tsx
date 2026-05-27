@@ -77,18 +77,20 @@ function PaymentForm({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <CustomText textSize="sm" textVariant="secondary">
-        Pay securely with Stripe test mode. Your card will not be charged in production
-        until go-live.
-      </CustomText>
-      <PaymentElement />
-      {errorMessage ? (
-        <CustomText textSize="sm" className="text-red-600">
-          {errorMessage}
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-4">
+        <CustomText textSize="sm" textVariant="secondary">
+          Pay securely with Stripe test mode. Your card will not be charged in production
+          until go-live.
         </CustomText>
-      ) : null}
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <PaymentElement />
+        {errorMessage ? (
+          <CustomText textSize="sm" className="text-red-600">
+            {errorMessage}
+          </CustomText>
+        ) : null}
+      </div>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
         <Button
           type="button"
           variant="outline"
@@ -140,7 +142,7 @@ export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
 
   return (
     <CustomModal width="lg" scrollable onClose={props.onClose}>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <CustomText textSize="lg" textVariant="primary" className="font-medium">
           Make payment
         </CustomText>

@@ -21,39 +21,39 @@ export default function EmptyState({
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="flex max-w-md flex-col gap-2 rounded-3xl bg-white px-6 py-4 shadow-sm"
+        className="flex max-w-md flex-col rounded-3xl bg-white px-6 py-4 shadow-sm"
       >
-        {icon && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, duration: 0.25, ease: "easeOut" }}
-            className="flex justify-center text-neutral-400"
-          >
-            {icon}
-          </motion.div>
-        )}
+        <div className="flex flex-col gap-4">
+          {icon ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.25, ease: "easeOut" }}
+              className="flex justify-center text-neutral-400"
+            >
+              {icon}
+            </motion.div>
+          ) : null}
 
-        <motion.h3
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.25 }}
-          className="text-lg font-medium text-neutral-800"
-        >
-          {title}
-        </motion.h3>
+          <div className="flex flex-col gap-3">
+            <motion.h3
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.25 }}
+              className="text-lg font-medium text-neutral-800"
+            >
+              {title}
+            </motion.h3>
 
-        {description && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.25 }}
-          >
-            <CustomText as="p">{description}</CustomText>
-          </motion.div>
-        )}
+            {description ? (
+              <CustomText as="p" className="leading-snug">
+                {description}
+              </CustomText>
+            ) : null}
+          </div>
+        </div>
 
-        {action && <div className="mt-2">{action}</div>}
+        {action ? <div className="mt-4">{action}</div> : null}
       </motion.div>
     </div>
   );

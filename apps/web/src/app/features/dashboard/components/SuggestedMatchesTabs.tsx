@@ -404,7 +404,7 @@ function TabPanel({
         role="tabpanel"
         id={`panel-${panelId}`}
         aria-labelledby={`tab-${panelId}`}
-        className="flex w-full min-w-0 flex-col items-center py-1"
+        className="flex w-full min-w-0 flex-col items-center gap-4 py-4"
         {...tabMotion}
       >
         {emptyState ?? <EmptyMatchesState title={emptyTitle} />}
@@ -429,7 +429,7 @@ function TabPanel({
 
 function NoActiveListingForMatchesState() {
   return (
-    <div className="space-y-0.5 py-1 text-center">
+    <div className="flex flex-col items-center gap-3 py-4 text-center">
       <CustomText as="p" textSize="sm" className="font-medium text-neutral-700">
         There are no suggested matches.
       </CustomText>
@@ -442,7 +442,7 @@ function NoActiveListingForMatchesState() {
 
 function EmptyMatchesState({ title }: { title: string }) {
   return (
-    <div className="space-y-0.5 py-1 text-center">
+    <div className="flex flex-col items-center gap-3 py-4 text-center">
       <CustomText as="p" textSize="sm" className="font-medium text-neutral-700">
         {title}
       </CustomText>

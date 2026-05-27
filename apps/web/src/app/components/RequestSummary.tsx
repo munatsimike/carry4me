@@ -14,8 +14,6 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns/format";
 import { dateFormat } from "@/types/Ui";
 import { cn } from "@/app/lib/cn";
-import SvgIcon from "@/components/ui/SvgIcon";
-import SendIcon from "@/assets/send-arrow-icon.svg?react";
 import { processRequestSentEmailQueue } from "../features/carry request/application/processRequestSentEmailQueue";
 import { ensureTravelerStripeReady } from "../features/carry request/application/travelerStripeVerification";
 import {
@@ -189,8 +187,9 @@ export default function RequestSummary({
   };
 
   return (
-    <div className="flex flex-col gap-4 overflow-visible px-1 sm:px-2">
-      <header className="border-b border-neutral-100 pb-3">
+    <div className="flex flex-col overflow-visible px-1 sm:px-2">
+      <div className="flex flex-col gap-4">
+      <header className="flex flex-col gap-4 border-b border-neutral-100 pb-4">
         <CustomText
           textSize="lg"
           textVariant="primary"
@@ -201,7 +200,7 @@ export default function RequestSummary({
         <CustomText
           textSize="sm"
           textVariant="secondary"
-          className="mt-0.5 leading-snug"
+          className="leading-snug"
         >
           {isSenderRequesting
             ? "Check the trip and parcel details below, then send your carry request."
@@ -241,6 +240,7 @@ export default function RequestSummary({
           priceCountry={parcel.route.originCountry}
         />
       </RequestDetailsGrid>
+      </div>
 
       <Button
         type="button"
@@ -251,16 +251,13 @@ export default function RequestSummary({
         onClick={handleSendClick}
         cornerRadiusClass="rounded-full"
         className={cn(
-          "h-9 w-full shadow-sm",
+          "mt-4 h-9 w-full shadow-sm",
           canSendRequest &&
             !requestLoaded &&
             "bg-primary-500 hover:bg-primary-600 hover:shadow-md active:scale-[0.99]",
           !canSendRequest &&
             "border border-neutral-200 bg-neutral-100 text-neutral-400 hover:bg-neutral-100 hover:shadow-none hover:ring-0",
         )}
-        leadingIcon={
-          <SvgIcon size="sm" Icon={SendIcon} color={canSendRequest ? "onDark" : "neutral"} />
-        }
       >
         <CustomText
           as="span"
@@ -268,7 +265,7 @@ export default function RequestSummary({
           textVariant={canSendRequest ? "onDark" : "label"}
           className="font-medium"
         >
-          Send carry request
+          Submit request
         </CustomText>
       </Button>
     </div>

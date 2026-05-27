@@ -290,12 +290,12 @@ function RecentActivity({
             ))}
 
           {recentActivities.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center gap-2 text-neutral-400 p-2">
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center text-neutral-400">
               <p className="text-sm font-medium text-ink-secondary sm:mt-6">
                 No activity yet
               </p>
 
-              <p className="text-xs max-w-sm">
+              <p className="max-w-sm text-xs">
                 Post a parcel or find a traveler to get started.
               </p>
             </div>

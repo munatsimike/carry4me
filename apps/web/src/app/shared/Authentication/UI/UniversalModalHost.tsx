@@ -72,9 +72,9 @@ export function UniversalModalHost({
       {modal && (
         <div>
           <CustomModal width="lg" onClose={onRequestClose}>
-            <div className="p-4">
-              <span className="flex flex-col gap-2">
-                <span className="flex gap-2 items-center">
+            <div className="flex flex-col gap-3">
+              <span className="flex flex-col gap-3">
+                <span className="flex items-center gap-2">
                   {modal.icon ?? ""}
                   <CustomText
                     textVariant="primary"
@@ -96,12 +96,12 @@ export function UniversalModalHost({
                 ) : null}
               </span>
 
-              <LineDivider />
+              <LineDivider heightClass="my-0" />
 
-              <div className="mt-5 flex justify-end gap-8">
+              <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
                 {action.secondaryLabel ? (
                   <Button
-                    className="min-w-[100px]"
+                    className="w-full sm:min-w-[120px] sm:w-auto"
                     onClick={() => {
                       action.secondaryAction?.();
                       onRequestClose();
@@ -116,7 +116,7 @@ export function UniversalModalHost({
                 ) : null}
 
                 <Button
-                  className="min-w-[100px]"
+                  className="w-full sm:min-w-[120px] sm:w-auto"
                   onClick={action.onClick}
                   variant="primary"
                   size="sm"

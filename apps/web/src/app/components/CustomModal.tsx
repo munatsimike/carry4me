@@ -74,7 +74,7 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-[110] w-full ${sizes[width]} rounded-t-2xl border border-neutral-300 bg-white p-3 pt-4 pb-4 shadow-xl sm:rounded-2xl sm:px-5 ${
+        className={`relative z-[110] w-full ${sizes[width]} rounded-t-2xl border border-neutral-300 bg-white px-4 py-4 shadow-xl sm:rounded-2xl sm:px-6 sm:py-4 ${
           scrollable
             ? "max-h-[calc(100vh-1rem)] overflow-y-auto sm:max-h-[calc(100vh-2rem)]"
             : "max-h-none overflow-visible"
