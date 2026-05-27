@@ -1,6 +1,5 @@
 import CardLabel from "@/app/components/card/CardLabel";
 import { toflag } from "@/app/Mapper";
-import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { cn } from "@/app/lib/cn";
 import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDestination";
 import CustomText from "@/components/ui/CustomText";
@@ -90,31 +89,6 @@ function CountryFlag({ country }: { country: string }) {
   return <SvgIcon size="xs" Icon={flag as SvgIconComponent} />;
 }
 
-const serviceFeeTooltipClass =
-  "pointer-events-none absolute left-1/2 bottom-full z-50 mb-1 -translate-x-1/2 whitespace-nowrap rounded-full border border-yellow-100 bg-yellow-50 px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-lg opacity-0 translate-y-1 scale-95 transition-all duration-300 ease-out group-hover/service-fee:translate-y-0 group-hover/service-fee:scale-100 group-hover/service-fee:opacity-100";
-
-export function ServiceFeeRow({
-  priceCountry,
-  serviceFee,
-}: {
-  priceCountry: string;
-  serviceFee: number;
-}) {
-  return (
-    <div className="group/service-fee relative col-span-2 grid grid-cols-[minmax(0,1fr)_auto] overflow-visible">
-      <CustomText textVariant="secondary" textSize="sm">
-        Service fee
-      </CustomText>
-      <CustomText textVariant="primary" textSize="sm" className="text-right tabular-nums">
-        {formatCurrencyByCountry(priceCountry, serviceFee)}
-      </CustomText>
-      <span className={serviceFeeTooltipClass}>
-        Service fee is 20% of total price.
-      </span>
-    </div>
-  );
-}
-
 export function RequestDetailRows({ children }: { children: ReactNode }) {
   return (
     <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-[80px_minmax(0,1fr)]">
@@ -192,62 +166,11 @@ export function RequestParcelDetailsSection({
   );
 }
 
-export function RequestCostSummarySection({
-  weightKg,
-  pricePerKg,
-  totalPrice,
-  serviceFee,
-  totalWithFee,
-  priceCountry,
-}: {
-  weightKg: number;
-  pricePerKg: number;
-  totalPrice: number;
-  serviceFee?: number;
-  totalWithFee?: number;
-  priceCountry: string;
-}) {
-  return (
-    <section className="min-w-0 space-y-3">
-      <span className="inline-flex h-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 px-4 text-sm font-light text-ink-primary">
-        Cost summary
-      </span>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1 overflow-visible">
-        <CustomText textVariant="secondary" textSize="sm">
-          Parcel weight
-        </CustomText>
-        <CustomText textVariant="primary" textSize="sm" className="text-right">
-          {weightKg}kg
-        </CustomText>
-
-        <CustomText textVariant="secondary" textSize="sm">
-          Price per kg
-        </CustomText>
-        <CustomText textVariant="primary" textSize="sm" className="text-right tabular-nums">
-          {formatCurrencyByCountry(priceCountry, pricePerKg)}
-        </CustomText>
-
-        {typeof serviceFee === "number" ? (
-          <ServiceFeeRow priceCountry={priceCountry} serviceFee={serviceFee} />
-        ) : null}
-
-        <CustomText textVariant="primary" textSize="md" className="font-medium">
-          {typeof totalWithFee === "number" ? "Total to pay" : "Total"}
-        </CustomText>
-        <CustomText
-          textVariant="primary"
-          textSize="md"
-          className="text-right font-semibold tabular-nums"
-        >
-          {formatCurrencyByCountry(
-            priceCountry,
-            typeof totalWithFee === "number" ? totalWithFee : totalPrice,
-          )}
-        </CustomText>
-      </div>
-    </section>
-  );
-}
+export {
+  CarryRequestCostSummary,
+  RequestCostSummarySection,
+  ServiceFeeRow,
+} from "./CarryRequestCostSummary";
 
 /** Horizontal on md+, stacked on mobile — matches carry request card details. */
 export function RequestDetailsGrid({

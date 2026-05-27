@@ -11,6 +11,7 @@ import { dateFormat, progress } from "@/types/Ui";
 import CustomModal from "@/app/components/CustomModal";
 import LineDivider from "@/app/components/LineDivider";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
+import { CarryRequestCostSummary } from "./CarryRequestCostSummary";
 export type MobileSection = "details" | "timeline";
 
 export function MobileFirstHeader({
@@ -62,7 +63,7 @@ export function MobileFirstHeader({
 
           <div className="text-right">
             <CustomText textSize="xs" textVariant="secondary">
-              Total
+              Total to pay
             </CustomText>
             <CustomText
               textSize="sm"
@@ -104,8 +105,6 @@ export function MobileDetailsSection({
   viewerRole: Role;
   setOpenSection: () => void;
 }) {
-  const totalPrice = parcel.price_per_kg * parcel.weight_kg;
-
   return (
     <CustomModal onClose={setOpenSection}>
       <div className="flex flex-col gap-4">
@@ -113,7 +112,7 @@ export function MobileDetailsSection({
         <LineDivider heightClass="" />
         <ParcelDetailsMobile parcel={parcel} viewerRole={viewerRole} />
         <LineDivider heightClass="" />
-        <CostSummaryMobile parcel={parcel} totalPrice={totalPrice} />
+        <CostSummaryMobile parcel={parcel} />
       </div>
     </CustomModal>
   );
@@ -206,46 +205,15 @@ export function ParcelDetailsMobile({
   );
 }
 
-export function CostSummaryMobile({
-  parcel,
-  totalPrice,
-}: {
-  parcel: ParcelSnapshot;
-  totalPrice: number;
-}) {
-  const priceCountry = parcel.origin.country;
-
+export function CostSummaryMobile({ parcel }: { parcel: ParcelSnapshot }) {
   return (
-    <section className="space-y-3">
-      <span className="inline-flex rounded-full border bg-neutral-100 px-3 py-1">
-        <CustomText textVariant="primary" as="span" textSize="xs">
-          Cost summary
-        </CustomText>
-      </span>
-
-      <div className="grid grid-cols-[1fr_auto] gap-y-2">
-        <CustomText textVariant="secondary" textSize="sm">
-          Parcel weight
-        </CustomText>
-        <CustomText textVariant="primary" textSize="sm">
-          {parcel.weight_kg}kg
-        </CustomText>
-
-        <CustomText textVariant="secondary" textSize="sm">
-          Price per kg
-        </CustomText>
-        <CustomText textVariant="primary" textSize="sm">
-          {formatCurrencyByCountry(priceCountry, parcel.price_per_kg)}
-        </CustomText>
-
-        <CustomText textVariant="primary" textSize="sm" className="font-medium">
-          Total
-        </CustomText>
-        <CustomText textVariant="primary" textSize="sm" className="font-medium">
-          {formatCurrencyByCountry(priceCountry, totalPrice)}
-        </CustomText>
-      </div>
-    </section>
+    <CarryRequestCostSummary
+      weightKg={parcel.weight_kg}
+      pricePerKg={parcel.price_per_kg}
+      priceCountry={parcel.origin.country}
+      showServiceFee
+      size="compact"
+    />
   );
 }
 

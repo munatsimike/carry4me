@@ -27,6 +27,7 @@ import {
   type CancelCarryRequestResponse,
 } from "../application/cancelCarryRequest";
 import PayCarryRequestModal from "./PayCarryRequestModal";
+import { calculateCarryRequestPricing } from "../domain/carryRequestPricing";
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 import statusColor from "./StatustColorMapper";
 import actionsMapper, {
@@ -741,8 +742,10 @@ function CarryRequestCard({
     setOpenSection((prev) => (prev === section ? null : section));
   };
 
-  const totalPrice =
-    request.parcelSnapshot.price_per_kg * request.parcelSnapshot.weight_kg;
+  const { totalWithFee } = calculateCarryRequestPricing(
+    request.parcelSnapshot.price_per_kg,
+    request.parcelSnapshot.weight_kg,
+  );
 
   return (
     <>
@@ -765,7 +768,7 @@ function CarryRequestCard({
               toggleSection={toggleSection}
               trip={request.tripSnapshot}
               parcel={request.parcelSnapshot}
-              totalPrice={totalPrice}
+              totalPrice={totalWithFee}
             />
           </div>
         </div>
@@ -1006,7 +1009,6 @@ function DetailsSection({
   parcel: ParcelSnapshot;
   viewerRole: Role;
 }) {
-  const totalPrice = parcel.price_per_kg * parcel.weight_kg;
   const categories = parcel.goods_category.map((item) => item.name).join(", ");
 
   return (
@@ -1034,8 +1036,8 @@ function DetailsSection({
       <RequestCostSummarySection
         weightKg={parcel.weight_kg}
         pricePerKg={parcel.price_per_kg}
-        totalPrice={totalPrice}
         priceCountry={parcel.origin.country}
+        showServiceFee
       />
     </RequestDetailsGrid>
   );

@@ -11,7 +11,7 @@ import {
   syncCarryRequestPayment,
 } from "../application/carryRequestPayment";
 import { AppError } from "@/app/shared/domain/AppError";
-import { ServiceFeeRow } from "./RequestDetailsLayout";
+import { ServiceFeeRow } from "./CarryRequestCostSummary";
 
 type PayCarryRequestModalProps = {
   carryRequestId: string;

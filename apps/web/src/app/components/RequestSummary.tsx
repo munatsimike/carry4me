@@ -21,8 +21,8 @@ import {
 } from "@/app/components/ModalFooter";
 import { processRequestSentEmailQueue } from "../features/carry request/application/processRequestSentEmailQueue";
 import { ensureTravelerStripeReady } from "../features/carry request/application/travelerStripeVerification";
+import { CarryRequestCostSummary } from "../features/carry request/ui/CarryRequestCostSummary";
 import {
-  RequestCostSummarySection,
   RequestDetailsGrid,
   RequestParcelDetailsSection,
   RequestTripDetailsSection,
@@ -35,8 +35,6 @@ type RequestSummaryProps = {
   onClose: () => void;
   isSenderRequesting: boolean;
 };
-
-const SERVICE_FEE = 20;
 
 export default function RequestSummary({
   loggedInUserId,
@@ -111,8 +109,6 @@ export default function RequestSummary({
   const canSendRequest = sendValidation.canSend;
 
   const pricePerKg = isSenderRequesting ? trip.pricePerKg : parcel.pricePerKg;
-  const totalPrice = pricePerKg * parcel.weightKg;
-  const totalWithFee = totalPrice + SERVICE_FEE;
   const tripRoute = {
     originCountry: trip.route.originCountry,
     destinationCountry: trip.route.destinationCountry,
@@ -242,13 +238,11 @@ export default function RequestSummary({
           itemsLabel={parcelItems}
           highlightOrigin={routeMismatch.originMismatch}
         />
-        <RequestCostSummarySection
+        <CarryRequestCostSummary
           weightKg={parcel.weightKg}
           pricePerKg={pricePerKg}
-          totalPrice={totalPrice}
-          serviceFee={SERVICE_FEE}
-          totalWithFee={totalWithFee}
           priceCountry={parcel.route.originCountry}
+          showServiceFee
         />
       </RequestDetailsGrid>
       </ModalBody>
