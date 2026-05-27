@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import CustomModal from "@/app/components/CustomModal";
+import { ModalBody, ModalFooter } from "@/app/components/ModalFooter";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import { getStripePromise } from "@/app/shared/stripe/stripeClient";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 import {
   createCarryRequestPaymentIntent,
   syncCarryRequestPayment,
 } from "../application/carryRequestPayment";
 import { AppError } from "@/app/shared/domain/AppError";
+import { ServiceFeeRow } from "./RequestDetailsLayout";
 
 type PayCarryRequestModalProps = {
   carryRequestId: string;
+  originCountry: string;
   onClose: () => void;
   onPaymentComplete: () => Promise<void>;
 };
@@ -78,7 +82,7 @@ function PaymentForm({
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-4">
+      <ModalBody className="gap-4">
         <CustomText textSize="sm" textVariant="secondary">
           Pay securely with Stripe test mode. Your card will not be charged in production
           until go-live.
@@ -89,8 +93,8 @@ function PaymentForm({
             {errorMessage}
           </CustomText>
         ) : null}
-      </div>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+      </ModalBody>
+      <ModalFooter>
         <Button
           type="button"
           variant="outline"
@@ -110,7 +114,7 @@ function PaymentForm({
         >
           Pay now
         </Button>
-      </div>
+      </ModalFooter>
     </div>
   );
 }
@@ -118,6 +122,8 @@ function PaymentForm({
 export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
+  const [platformFeeAmount, setPlatformFeeAmount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,6 +133,8 @@ export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
         const result = await createCarryRequestPaymentIntent(props.carryRequestId);
         if (!cancelled) {
           setClientSecret(result.client_secret);
+          setPaymentAmount(result.payment_amount);
+          setPlatformFeeAmount(result.platform_fee_amount);
         }
       } catch (err) {
         if (!cancelled) {
@@ -155,6 +163,23 @@ export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
           <CustomText textSize="sm" textVariant="secondary">
             Preparing secure payment…
           </CustomText>
+        ) : null}
+        {paymentAmount !== null && platformFeeAmount !== null ? (
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1 overflow-visible">
+              <ServiceFeeRow
+                priceCountry={props.originCountry}
+                serviceFee={platformFeeAmount / 100}
+              />
+
+              <CustomText textSize="sm" textVariant="primary" className="font-medium">
+                Total charged
+              </CustomText>
+              <CustomText textSize="sm" textVariant="primary" className="text-right font-medium">
+                {formatCurrencyByCountry(props.originCountry, paymentAmount / 100)}
+              </CustomText>
+            </div>
+          </div>
         ) : null}
         {clientSecret ? (
           <Elements

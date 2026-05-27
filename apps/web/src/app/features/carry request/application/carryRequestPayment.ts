@@ -4,6 +4,10 @@ import { getStripePromise } from "@/app/shared/stripe/stripeClient";
 type CreatePaymentIntentResponse = {
   client_secret: string;
   payment_intent_id: string;
+  payment_amount: number;
+  payment_currency: string;
+  traveler_payout_amount: number;
+  platform_fee_amount: number;
 };
 
 type SyncPaymentResponse = {

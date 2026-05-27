@@ -513,7 +513,7 @@ export default function CarryRequestsPage() {
       const shouldCancel = await confirm({
         title: "Cancel this request?",
         message: senderPaidCancellation
-          ? "This will cancel the request and process a partial refund. The 20% service fee is non-refundable. Continue?"
+          ? "This will cancel the request and process a partial refund. The service fee is non-refundable. Continue?"
           : "This action cancels the carry request and cannot be undone. You can send a new request later.",
         confirmText: "Yes, cancel request",
         cancelText: "Keep request",
@@ -565,14 +565,14 @@ export default function CarryRequestsPage() {
         const refundNote = cancelResponse.refund?.applied
           ? cancelResponse.refund!.refund_status === "FULL"
             ? "Refund: full amount returned to sender."
-            : "Refund: partial amount returned. 20% service fee retained."
+            : "Refund: partial amount returned. Service fee retained."
           : senderCanceled
             ? "Refund is being processed with retained service fee."
             : "Refund is being processed for the sender.";
         openInfo({
           title: "Request cancelled",
           message: senderCanceled
-            ? "Traveler notified. Your refund is being processed with a retained 20% service fee."
+            ? "Traveler notified. Your refund is being processed with a retained service fee."
             : "Request cancelled. The sender will be refunded in full.",
           messageDetail: refundNote,
           label: senderCanceled ? "Browse other parcels" : "Browse other trips",
@@ -688,6 +688,7 @@ export default function CarryRequestsPage() {
       {paymentRequest ? (
         <PayCarryRequestModal
           carryRequestId={paymentRequest.carryRequestId}
+          originCountry={paymentRequest.parcelSnapshot.origin.country}
           onClose={() => setPaymentRequest(null)}
           onPaymentComplete={async () => {
             await completePaymentAfterStripe(paymentRequest);

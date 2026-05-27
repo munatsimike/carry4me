@@ -4,6 +4,7 @@ import SvgIcon from "@/components/ui/SvgIcon";
 import CustomText from "@/components/ui/CustomText";
 import { MoveRight } from "lucide-react";
 import { toflag } from "@/app/Mapper";
+import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDestination";
 import type { SvgIconComponent } from "@/types/Ui";
 
 function CountryFlag({ country }: { country: string }) {
@@ -25,7 +26,10 @@ export default function RouteRow({
   destinationCity?: string;
 }) {
   const originCityLabel = originCity?.trim();
-  const destinationCityLabel = destinationCity?.trim() ?? "Harare";
+  const destinationCityLabel = formatDestinationCityForDisplay(
+    destinationCity,
+    destination,
+  );
 
   const hasOriginCity = !!originCityLabel;
   const hasDestinationCity = !!destinationCityLabel;
@@ -94,7 +98,7 @@ export default function RouteRow({
           >
             <span>{originCityLabel || origin}</span>
             <span className="mx-1 text-neutral-400">→</span>
-            <span>{destinationCityLabel || destination}</span>
+            <span>{destinationCityLabel}</span>
           </div>
         ) : null}
       </InlineRow>

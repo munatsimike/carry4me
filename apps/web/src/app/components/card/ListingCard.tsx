@@ -133,7 +133,6 @@ export function ListingCard<T extends Listing>({
       <SendRequestBtn
         isActive={!isDisplayMode}
         buttonTextVariant="onDark"
-        iconColorVariant="onDark"
         buttonVariant="primary"
         payLoad={listing}
         primaryAction={onClick}

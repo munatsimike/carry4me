@@ -2,6 +2,7 @@ import CardLabel from "@/app/components/card/CardLabel";
 import { toflag } from "@/app/Mapper";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { cn } from "@/app/lib/cn";
+import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDestination";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 import type { SvgIconComponent } from "@/types/Ui";
@@ -25,7 +26,10 @@ export function RequestRouteDisplay({
   highlightOrigin = false,
 }: RequestRouteDisplayProps) {
   const originCityLabel = route.originCity?.trim();
-  const destinationCityLabel = route.destinationCity?.trim();
+  const destinationCityLabel = formatDestinationCityForDisplay(
+    route.destinationCity,
+    route.destinationCountry,
+  );
   const hasCities = !!originCityLabel || !!destinationCityLabel;
 
   return (
@@ -73,7 +77,7 @@ export function RequestRouteDisplay({
         >
           <span>{originCityLabel || route.originCountry}</span>
           <span className="mx-1 text-neutral-400">→</span>
-          <span>{destinationCityLabel || route.destinationCountry}</span>
+          <span>{destinationCityLabel}</span>
         </div>
       ) : null}
     </span>
@@ -84,6 +88,31 @@ function CountryFlag({ country }: { country: string }) {
   const flag = toflag(country);
   if (!flag) return null;
   return <SvgIcon size="xs" Icon={flag as SvgIconComponent} />;
+}
+
+const serviceFeeTooltipClass =
+  "pointer-events-none absolute left-1/2 bottom-full z-50 mb-1 -translate-x-1/2 whitespace-nowrap rounded-full border border-yellow-100 bg-yellow-50 px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-lg opacity-0 translate-y-1 scale-95 transition-all duration-300 ease-out group-hover/service-fee:translate-y-0 group-hover/service-fee:scale-100 group-hover/service-fee:opacity-100";
+
+export function ServiceFeeRow({
+  priceCountry,
+  serviceFee,
+}: {
+  priceCountry: string;
+  serviceFee: number;
+}) {
+  return (
+    <div className="group/service-fee relative col-span-2 grid grid-cols-[minmax(0,1fr)_auto] overflow-visible">
+      <CustomText textVariant="secondary" textSize="sm">
+        Service fee
+      </CustomText>
+      <CustomText textVariant="primary" textSize="sm" className="text-right tabular-nums">
+        {formatCurrencyByCountry(priceCountry, serviceFee)}
+      </CustomText>
+      <span className={serviceFeeTooltipClass}>
+        Service fee is 20% of total price.
+      </span>
+    </div>
+  );
 }
 
 export function RequestDetailRows({ children }: { children: ReactNode }) {
@@ -167,11 +196,15 @@ export function RequestCostSummarySection({
   weightKg,
   pricePerKg,
   totalPrice,
+  serviceFee,
+  totalWithFee,
   priceCountry,
 }: {
   weightKg: number;
   pricePerKg: number;
   totalPrice: number;
+  serviceFee?: number;
+  totalWithFee?: number;
   priceCountry: string;
 }) {
   return (
@@ -179,7 +212,7 @@ export function RequestCostSummarySection({
       <span className="inline-flex h-7 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 px-4 text-sm font-light text-ink-primary">
         Cost summary
       </span>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1 overflow-visible">
         <CustomText textVariant="secondary" textSize="sm">
           Parcel weight
         </CustomText>
@@ -194,15 +227,22 @@ export function RequestCostSummarySection({
           {formatCurrencyByCountry(priceCountry, pricePerKg)}
         </CustomText>
 
+        {typeof serviceFee === "number" ? (
+          <ServiceFeeRow priceCountry={priceCountry} serviceFee={serviceFee} />
+        ) : null}
+
         <CustomText textVariant="primary" textSize="md" className="font-medium">
-          Total
+          {typeof totalWithFee === "number" ? "Total to pay" : "Total"}
         </CustomText>
         <CustomText
           textVariant="primary"
           textSize="md"
-          className="text-right font-medium tabular-nums"
+          className="text-right font-semibold tabular-nums"
         >
-          {formatCurrencyByCountry(priceCountry, totalPrice)}
+          {formatCurrencyByCountry(
+            priceCountry,
+            typeof totalWithFee === "number" ? totalWithFee : totalPrice,
+          )}
         </CustomText>
       </div>
     </section>

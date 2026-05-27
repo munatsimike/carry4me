@@ -1,6 +1,4 @@
 import { Button, type ButtonVariant } from "@/components/ui/Button";
-import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
-import SendIcon from "@/assets/send-arrow-icon.svg?react";
 import CustomText, { type TextVariant } from "@/components/ui/CustomText";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import type { ListingType } from "@/app/shared/Authentication/domain/Listing";
@@ -12,7 +10,6 @@ type SendRequestBtnProps<T> = {
   payLoad: T;
   primaryAction: (payLoad: T) => void;
   buttonVariant?: ButtonVariant;
-  iconColorVariant?: IconColor;
   buttonTextVariant?: TextVariant;
   isActive?: boolean;
   disabled?: boolean;
@@ -24,7 +21,6 @@ export default function SendRequestBtn<T>({
   payLoad,
   buttonVariant = "primary",
   buttonTextVariant = "primary",
-  iconColorVariant = "onDark",
   isActive = false,
   disabled = false,
 }: SendRequestBtnProps<T>) {
@@ -55,13 +51,6 @@ export default function SendRequestBtn<T>({
           disabled ? "pointer-events-none opacity-60" : ""
         }`}
         size={"sm"}
-        leadingIcon={
-          <SvgIcon
-            size={"sm"}
-            Icon={SendIcon}
-            color={iconColorVariant}
-          ></SvgIcon>
-        }
       >
         <CustomText as="span" textSize={"sm"} textVariant={buttonTextVariant}>
           Send request

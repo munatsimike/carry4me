@@ -3,9 +3,15 @@ import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import CustomModal from "@/app/components/CustomModal";
 import type { UniversalModalState } from "../application/DialogBoxModalProvider";
-import LineDivider from "@/app/components/LineDivider";
+import {
+  ModalBody,
+  ModalFooter,
+  ModalSeparator,
+} from "@/app/components/ModalFooter";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
+import { cn } from "@/app/lib/cn";
+import { resolveModalIcon } from "./modalIcons";
 
 export function UniversalModalHost({
   modal,
@@ -67,15 +73,22 @@ export function UniversalModalHost({
     }
   })();
 
+  const icon = resolveModalIcon(modal);
+
   return (
     <AnimatePresence mode="wait">
       {modal && (
         <div>
           <CustomModal width="lg" onClose={onRequestClose}>
-            <div className="flex flex-col gap-3">
-              <span className="flex flex-col gap-3">
-                <span className="flex items-center gap-2">
-                  {modal.icon ?? ""}
+            <div className="flex flex-col">
+              <div className="flex flex-col">
+                <span
+                  className={cn(
+                    "flex min-w-0 pb-4",
+                    icon ? "items-start gap-2" : "flex-col",
+                  )}
+                >
+                  {icon}
                   <CustomText
                     textVariant="primary"
                     textSize="lg"
@@ -84,7 +97,10 @@ export function UniversalModalHost({
                     {modal.title ?? ""}
                   </CustomText>
                 </span>
+                <ModalSeparator />
+              </div>
 
+              <ModalBody className="gap-3 pt-4">
                 <CustomText textVariant="secondary">{modal.message}</CustomText>
                 {modal.type === "info" && modal.messageDetail ? (
                   <CustomText
@@ -94,11 +110,9 @@ export function UniversalModalHost({
                     {modal.messageDetail}
                   </CustomText>
                 ) : null}
-              </span>
+              </ModalBody>
 
-              <LineDivider heightClass="my-0" />
-
-              <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
+              <ModalFooter>
                 {action.secondaryLabel ? (
                   <Button
                     className="w-full sm:min-w-[120px] sm:w-auto"
@@ -123,7 +137,7 @@ export function UniversalModalHost({
                 >
                   <CustomText textVariant="onDark">{action.label}</CustomText>
                 </Button>
-              </div>
+              </ModalFooter>
             </div>
           </CustomModal>
         </div>

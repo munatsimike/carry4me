@@ -9,11 +9,16 @@ import { AppError } from "@/app/shared/domain/AppError";
 import { useUniversalModal } from "../shared/Authentication/application/DialogBoxModalProvider";
 import { useMarketplaceActionGuard } from "../shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import { useAuth } from "../shared/supabase/AuthProvider";
-import { AlertCircle, CircleCheck, Clock } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns/format";
 import { dateFormat } from "@/types/Ui";
 import { cn } from "@/app/lib/cn";
+import {
+  ModalBody,
+  ModalFooter,
+  ModalSeparator,
+} from "@/app/components/ModalFooter";
 import { processRequestSentEmailQueue } from "../features/carry request/application/processRequestSentEmailQueue";
 import { ensureTravelerStripeReady } from "../features/carry request/application/travelerStripeVerification";
 import {
@@ -30,6 +35,8 @@ type RequestSummaryProps = {
   onClose: () => void;
   isSenderRequesting: boolean;
 };
+
+const SERVICE_FEE = 20;
 
 export default function RequestSummary({
   loggedInUserId,
@@ -105,6 +112,7 @@ export default function RequestSummary({
 
   const pricePerKg = isSenderRequesting ? trip.pricePerKg : parcel.pricePerKg;
   const totalPrice = pricePerKg * parcel.weightKg;
+  const totalWithFee = totalPrice + SERVICE_FEE;
   const tripRoute = {
     originCountry: trip.route.originCountry,
     destinationCountry: trip.route.destinationCountry,
@@ -132,12 +140,12 @@ export default function RequestSummary({
       processRequestSentEmailQueue(carryRequestId);
 
       openInfo({
-        icon: <CircleCheck className="h-6 w-6 text-success-500" />,
         title: "Request sent",
         message:
           "Your request has been sent. You will be notified when the traveler responds.",
-        onClick: () => navigate("/requests"),
         label: "View requests",
+        onClick: () => navigate("/requests"),
+        secondaryLabel: "Close",
       });
 
       setLoadRequest(true);
@@ -149,13 +157,13 @@ export default function RequestSummary({
 
       if (appError.status === 409) {
         openInfo({
-          icon: <Clock className="h-6 w-6 text-warning-400" />,
           title: "Pending request exists",
           message: `You already have a pending request with this ${
             isSenderRequesting ? "sender" : "traveler"
           }. Check your existing request for updates.`,
           label: "Go to requests",
           onClick: () => navigate("/requests"),
+          secondaryLabel: "Close",
         });
       } else {
         showSupabaseError(appError);
@@ -188,25 +196,26 @@ export default function RequestSummary({
 
   return (
     <div className="flex flex-col overflow-visible px-1 sm:px-2">
-      <div className="flex flex-col gap-4">
-      <header className="flex flex-col gap-4 border-b border-neutral-100 pb-4">
-        <CustomText
-          textSize="lg"
-          textVariant="primary"
-          className="font-medium leading-tight"
-        >
-          Review request
-        </CustomText>
-        <CustomText
-          textSize="sm"
-          textVariant="secondary"
-          className="leading-snug"
-        >
-          {isSenderRequesting
-            ? "Check the trip and parcel details below, then send your carry request."
-            : "Check the parcel and your trip details below, then send your offer."}
-        </CustomText>
-      </header>
+      <ModalBody className="gap-4">
+        <header className="flex flex-col gap-4">
+          <CustomText
+            textSize="lg"
+            textVariant="primary"
+            className="font-medium leading-tight"
+          >
+            Review request
+          </CustomText>
+          <CustomText
+            textSize="sm"
+            textVariant="secondary"
+            className="leading-snug"
+          >
+            {isSenderRequesting
+              ? "Check the trip and parcel details below, then send your carry request."
+              : "Check the parcel and your trip details below, then send your offer."}
+          </CustomText>
+          <ModalSeparator />
+        </header>
 
       {sendValidation.issues.length > 0 ? (
         <div className="flex flex-col gap-2">
@@ -237,37 +246,41 @@ export default function RequestSummary({
           weightKg={parcel.weightKg}
           pricePerKg={pricePerKg}
           totalPrice={totalPrice}
+          serviceFee={SERVICE_FEE}
+          totalWithFee={totalWithFee}
           priceCountry={parcel.route.originCountry}
         />
       </RequestDetailsGrid>
-      </div>
+      </ModalBody>
 
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        disabled={!canSendRequest || requestLoaded}
-        isBusy={!canSendRequest || requestLoaded}
-        onClick={handleSendClick}
-        cornerRadiusClass="rounded-full"
-        className={cn(
-          "mt-4 h-9 w-full shadow-sm",
-          canSendRequest &&
-            !requestLoaded &&
-            "bg-primary-500 hover:bg-primary-600 hover:shadow-md active:scale-[0.99]",
-          !canSendRequest &&
-            "border border-neutral-200 bg-neutral-100 text-neutral-400 hover:bg-neutral-100 hover:shadow-none hover:ring-0",
-        )}
-      >
-        <CustomText
-          as="span"
-          textSize="sm"
-          textVariant={canSendRequest ? "onDark" : "label"}
-          className="font-medium"
+      <ModalFooter className="flex-col sm:flex-col">
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          disabled={!canSendRequest || requestLoaded}
+          isBusy={!canSendRequest || requestLoaded}
+          onClick={handleSendClick}
+          cornerRadiusClass="rounded-full"
+          className={cn(
+            "h-9 w-full shadow-sm",
+            canSendRequest &&
+              !requestLoaded &&
+              "bg-primary-500 hover:bg-primary-600 hover:shadow-md active:scale-[0.99]",
+            !canSendRequest &&
+              "border border-neutral-200 bg-neutral-100 text-neutral-400 hover:bg-neutral-100 hover:shadow-none hover:ring-0",
+          )}
         >
-          Submit request
-        </CustomText>
-      </Button>
+          <CustomText
+            as="span"
+            textSize="sm"
+            textVariant={canSendRequest ? "onDark" : "label"}
+            className="font-medium"
+          >
+            Submit request
+          </CustomText>
+        </Button>
+      </ModalFooter>
     </div>
   );
 }
