@@ -16,7 +16,7 @@ export function renderPaymentReceivedEmail(notification: NotificationEmailInput)
   const contentHtml = `
     ${renderParagraph(notification.body)}
     ${renderParagraph("You can now proceed to handover when you are ready.")}
-    ${absoluteLink ? renderCtaButton("View request", absoluteLink) : ""}
+    ${absoluteLink ? renderCtaButton("Confirm handover", absoluteLink) : ""}
   `;
 
   return {
@@ -24,6 +24,6 @@ export function renderPaymentReceivedEmail(notification: NotificationEmailInput)
       title: notification.title,
       preheader: "Payment received — handover is next.",
     }),
-    text: buildTextBody(notification),
+    text: buildTextBody(notification, "Confirm handover"),
   };
 }

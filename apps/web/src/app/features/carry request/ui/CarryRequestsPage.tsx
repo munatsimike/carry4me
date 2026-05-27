@@ -22,7 +22,10 @@ import {
   resendDeliveryOtp,
   verifyDeliveryOtp,
 } from "../application/deliveryOtp";
-import { cancelCarryRequest } from "../application/cancelCarryRequest";
+import {
+  cancelCarryRequest,
+  type CancelCarryRequestResponse,
+} from "../application/cancelCarryRequest";
 import PayCarryRequestModal from "./PayCarryRequestModal";
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 import statusColor from "./StatustColorMapper";
@@ -543,7 +546,7 @@ export default function CarryRequestsPage() {
     });
 
     try {
-      const response = actions.secondary.key === UIACTIONKEYS.CANCEL
+      const response: PerformActionResponse = actions.secondary.key === UIACTIONKEYS.CANCEL
         ? await cancelCarryRequest(carryRequest.carryRequestId)
         : await performRequestActions.execute(
           actions.secondary.key,
@@ -558,8 +561,9 @@ export default function CarryRequestsPage() {
 
       if (actions.secondary.key === UIACTIONKEYS.CANCEL) {
         const senderCanceled = viewerRole === ROLES.SENDER;
-        const refundNote = response.refund?.applied
-          ? response.refund.refund_status === "FULL"
+        const cancelResponse = response as CancelCarryRequestResponse;
+        const refundNote = cancelResponse.refund?.applied
+          ? cancelResponse.refund!.refund_status === "FULL"
             ? "Refund: full amount returned to sender."
             : "Refund: partial amount returned. 20% service fee retained."
           : senderCanceled
