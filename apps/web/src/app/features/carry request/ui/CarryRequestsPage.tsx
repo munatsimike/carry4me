@@ -22,6 +22,7 @@ import {
   resendDeliveryOtp,
   verifyDeliveryOtp,
 } from "../application/deliveryOtp";
+import { cancelCarryRequest } from "../application/cancelCarryRequest";
 import PayCarryRequestModal from "./PayCarryRequestModal";
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 import statusColor from "./StatustColorMapper";
@@ -130,7 +131,7 @@ function secondaryActionSuccessMessage(actionKey: UIActionKey): string {
   }
 
   if (actionKey === UIACTIONKEYS.CANCEL) {
-    return "Request cancelled. The traveler has been notified.";
+    return "Request cancelled successfully.";
   }
 
   return "Action completed.";
@@ -479,7 +480,7 @@ export default function CarryRequestsPage() {
         setOtpErrorRequestId(null);
       }
 
-    //  processActionEmailQueue(response, carryRequest.carryRequestId);
+      processActionEmailQueue(response, carryRequest.carryRequestId);
 
       await queryClient.refetchQueries({
         queryKey: queryKeys.carryRequests.all,
@@ -500,12 +501,17 @@ export default function CarryRequestsPage() {
     carryRequest: CarryRequest,
   ) => {
     if (!actions.secondary?.key || pendingAction || !user) return;
+    const viewerRole =
+      user.id === carryRequest.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
 
     if (actions.secondary.key === UIACTIONKEYS.CANCEL) {
+      const senderPaidCancellation = viewerRole === ROLES.SENDER &&
+        carryRequest.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER;
       const shouldCancel = await confirm({
         title: "Cancel this request?",
-        message:
-          "This action cancels the carry request and cannot be undone. You can send a new request later.",
+        message: senderPaidCancellation
+          ? "This will cancel the request and process a partial refund. The 20% service fee is non-refundable. Continue?"
+          : "This action cancels the carry request and cannot be undone. You can send a new request later.",
         confirmText: "Yes, cancel request",
         cancelText: "Keep request",
         destructive: true,
@@ -537,16 +543,38 @@ export default function CarryRequestsPage() {
     });
 
     try {
-      const response = await performRequestActions.execute(
-        actions.secondary.key,
-        carryRequest.carryRequestId,
-      );
+      const response = actions.secondary.key === UIACTIONKEYS.CANCEL
+        ? await cancelCarryRequest(carryRequest.carryRequestId)
+        : await performRequestActions.execute(
+          actions.secondary.key,
+          carryRequest.carryRequestId,
+        );
 
       if (!response.ok) {
         return;
       }
 
-     // processActionEmailQueue(response, carryRequest.carryRequestId);
+      processActionEmailQueue(response, carryRequest.carryRequestId);
+
+      if (actions.secondary.key === UIACTIONKEYS.CANCEL) {
+        const senderCanceled = viewerRole === ROLES.SENDER;
+        const refundNote = response.refund?.applied
+          ? response.refund.refund_status === "FULL"
+            ? "Refund: full amount returned to sender."
+            : "Refund: partial amount returned. 20% service fee retained."
+          : senderCanceled
+            ? "Refund is being processed with retained service fee."
+            : "Refund is being processed for the sender.";
+        openInfo({
+          title: "Request cancelled",
+          message: senderCanceled
+            ? "Traveler notified. Your refund is being processed with a retained 20% service fee."
+            : "Request cancelled. The sender will be refunded in full.",
+          messageDetail: refundNote,
+          label: senderCanceled ? "Browse other parcels" : "Browse other trips",
+          onClick: () => navigate(senderCanceled ? "/parcels" : "/travelers"),
+        });
+      }
 
       void queryClient.invalidateQueries({
         queryKey: queryKeys.carryRequests.all,

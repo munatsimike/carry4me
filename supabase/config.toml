@@ -432,3 +432,8 @@ entrypoint = "./functions/generate-delivery-otp/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/verify-delivery-otp/index.ts"
+
+[functions.cancel-carry-request]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/cancel-carry-request/index.ts"
