@@ -20,6 +20,14 @@ import {
   ProtectedRoute,
 } from "./shared/Authentication/application/RouteGuards";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
+import SafetyPage from "./pages/SafetyPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import ProhibitedItemsPage from "./pages/ProhibitedItemsPage";
+import RefundsPage from "./pages/RefundsPage";
+import HelpPage from "./pages/HelpPage";
+import PricingPage from "./pages/PricingPage";
+import HowItWorksPage from "./pages/HowItWorksPage";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +37,14 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "about", element: <AboutPage /> },
+      { path: "how-it-works", element: <HowItWorksPage /> },
+      { path: "safety", element: <SafetyPage /> },
+      { path: "terms", element: <TermsPage /> },
+      { path: "privacy", element: <PrivacyPage /> },
+      { path: "prohibited-items", element: <ProhibitedItemsPage /> },
+      { path: "refunds", element: <RefundsPage /> },
+      { path: "help", element: <HelpPage /> },
+      { path: "pricing", element: <PricingPage /> },
       { path: "signin", element: <PhoneVerificationModal /> },
       { path: "verify-email", element: <VerifyEmailPage /> },
       {

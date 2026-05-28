@@ -1,6 +1,5 @@
 import LineDivider from "@/app/components/LineDivider";
 import { Button } from "@/components/ui/Button";
-import AgreeToTermsRow from "../../dashboard/components/AgreeToTermsRow";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { PriceField } from "../../dashboard/components/PriceField";
@@ -204,16 +203,6 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
                 </CustomText>
               </div>
             </div>
-            {isEditMode && (
-              <>
-                <LineDivider heightClass={dividerHeight} />
-                <AgreeToTermsRow
-                  register={register("agreeToRules")}
-                  id={"terms"}
-                  error={errors.agreeToRules?.message}
-                />
-              </>
-            )}
             <LineDivider heightClass={dividerHeight} />
             <StepActions
               onBack={goBack}
@@ -248,11 +237,6 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
               goodsCategory={goodsCategory}
               weight={weightValue}
               pricePerKg={priceValue}
-            />
-            <AgreeToTermsRow
-              register={register("agreeToRules")}
-              id={"terms"}
-              error={errors.agreeToRules?.message}
             />
             <LineDivider heightClass={dividerHeight} />
             <StepActions

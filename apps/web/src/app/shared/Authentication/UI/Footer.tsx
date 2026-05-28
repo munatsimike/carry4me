@@ -2,50 +2,74 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import { cn } from "@/app/lib/cn";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { Link } from "react-router-dom";
+import {
+  footerCompanyLinks,
+  footerLegalLinks,
+  footerProductLinks,
+  footerSupportLinks,
+} from "./footerLinks";
+
+/** Wider than main content (`max-w-container` 1200px) so all footer columns fit comfortably. */
+const footerMaxWidthClass = "max-w-[1440px]";
 
 type FooterProps = {
   isAuthed: boolean;
 };
 
+const footerLinkClass =
+  "transition-colors duration-200 hover:text-slate-900";
+
 export default function Footer({ isAuthed }: FooterProps) {
   return (
     <footer className="border-t border-slate-100 bg-[#EAF2FF] text-slate-600">
-      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-12 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-9 xl:grid-cols-[1.15fr_0.7fr_0.7fr_0.95fr_0.95fr] xl:items-start xl:gap-x-8">
+      <div
+        className={cn(
+          "mx-auto w-full px-5 py-10 sm:px-6 sm:py-12 lg:px-8",
+          footerMaxWidthClass,
+        )}
+      >
+        <div
+          className={cn(
+            "grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-9",
+            "xl:grid-cols-[1.15fr_0.7fr_0.7fr_0.7fr_0.7fr_0.95fr_0.95fr] xl:items-start xl:gap-x-8",
+          )}
+        >
           <Brand isAuthed={isAuthed} />
           <Product />
-          <Company />
+          <FooterLinkGroup title="Company" links={footerCompanyLinks} />
+          <FooterLinkGroup title="Legal" links={footerLegalLinks} />
+          <FooterLinkGroup title="Support" links={footerSupportLinks} />
           <OurLocation />
           <ContactSection />
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="border-t border-white/80">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 text-xs text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+        <div
+          className={cn(
+            "mx-auto flex w-full flex-col gap-3 px-5 py-4 text-xs text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8",
+            footerMaxWidthClass,
+          )}
+        >
           <span>
             © {new Date().getFullYear()} Carry4Me. All rights reserved.
           </span>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <a
-              href="/privacy"
-              className="transition-colors duration-200 hover:text-slate-900"
-            >
-              Privacy Policy
-            </a>
-            <a
-              href="/terms"
-              className="transition-colors duration-200 hover:text-slate-900"
-            >
-              Terms of Service
-            </a>
-            <a
-              href="/safety"
-              className="transition-colors duration-200 hover:text-slate-900"
-            >
-              Safety Guidelines
-            </a>
+            {footerLegalLinks.map((link) => (
+              <Link key={link.to} to={link.to} className={footerLinkClass}>
+                {link.label}
+              </Link>
+            ))}
+            <Link to="/safety" className={footerLinkClass}>
+              Safety Center
+            </Link>
+            <Link to="/help" className={footerLinkClass}>
+              Help Center
+            </Link>
+            <Link to="/pricing" className={footerLinkClass}>
+              Pricing
+            </Link>
           </div>
         </div>
       </div>
@@ -53,9 +77,34 @@ export default function Footer({ isAuthed }: FooterProps) {
   );
 }
 
+function FooterLinkGroup({
+  title,
+  links,
+}: {
+  title: string;
+  links: readonly { to: string; label: string }[];
+}) {
+  return (
+    <div className="min-w-0 space-y-3">
+      <h4 className="text-sm font-semibold tracking-tight text-slate-900">
+        {title}
+      </h4>
+      <ul className="space-y-2 text-sm leading-6">
+        {links.map((link) => (
+          <li key={link.to}>
+            <Link to={link.to} className={footerLinkClass}>
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Brand({ isAuthed }: { isAuthed: boolean }) {
   return (
-    <div className="max-w-sm">
+    <div className="max-w-sm min-w-0">
       <Link
         to={isAuthed ? "/dashboard" : "/"}
         className="inline-flex items-center"
@@ -80,45 +129,12 @@ function Brand({ isAuthed }: { isAuthed: boolean }) {
 }
 
 function Product() {
-  return (
-    <div className="space-y-3">
-      <h4 className="text-sm font-semibold tracking-tight text-slate-900">
-        Product
-      </h4>
-
-      <ul className="space-y-2 text-sm leading-6">
-        <li>
-          <a
-            href="/browse/trips"
-            className="transition-colors duration-200 hover:text-slate-900"
-          >
-            Find travelers
-          </a>
-        </li>
-        <li>
-          <a
-            href="/browse/parcels"
-            className="transition-colors duration-200 hover:text-slate-900"
-          >
-            Send a parcel
-          </a>
-        </li>
-        <li>
-          <a
-            href="/how-it-works"
-            className="transition-colors duration-200 hover:text-slate-900"
-          >
-            How it works
-          </a>
-        </li>
-      </ul>
-    </div>
-  );
+  return <FooterLinkGroup title="Product" links={footerProductLinks} />;
 }
 
 function OurLocation() {
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <h4 className="text-sm font-semibold tracking-tight text-slate-900">
         Locations
       </h4>
@@ -171,70 +187,31 @@ function OurLocation() {
   );
 }
 
-function Company() {
-  return (
-    <div className="space-y-3">
-      <h4 className="text-sm font-semibold tracking-tight text-slate-900">
-        Company
-      </h4>
-
-      <ul className="space-y-2 text-sm leading-6">
-        <li>
-          <a
-            href="/about"
-            className="transition-colors duration-200 hover:text-slate-900"
-          >
-            About us
-          </a>
-        </li>
-        <li>
-          <a
-            href="/contact"
-            className="transition-colors duration-200 hover:text-slate-900"
-          >
-            Contact
-          </a>
-        </li>
-        <li>
-          <a
-            href="/faq"
-            className="transition-colors duration-200 hover:text-slate-900"
-          >
-            FAQ
-          </a>
-        </li>
-      </ul>
-    </div>
-  );
-}
-
 function ContactSection() {
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <h4 className="text-sm font-semibold tracking-tight text-slate-900">
         Contact
       </h4>
 
       <ul className="space-y-2.5 text-sm text-slate-600">
-        {/* Email */}
         <li>
           <div>
             <p className="font-semibold text-slate-800">Email</p>
             <a
-              href="mailto:support@carry4me.com"
+              href="mailto:info@carry4me.uk"
               className="text-slate-600 transition hover:text-slate-900"
             >
-              info@carry4me.Uk
+              info@carry4me.uk
             </a>
           </div>
         </li>
 
-        {/* Phone */}
         <li>
           <div>
             <p className="font-semibold text-slate-800">Phone</p>
             <a
-              href="tel:+31612345678"
+              href="tel:+31622528250"
               className="text-slate-600 transition hover:text-slate-900"
             >
               +31 622528250
@@ -242,7 +219,6 @@ function ContactSection() {
           </div>
         </li>
 
-        {/* WhatsApp */}
         <li>
           <div>
             <p className="font-semibold text-slate-800">WhatsApp</p>

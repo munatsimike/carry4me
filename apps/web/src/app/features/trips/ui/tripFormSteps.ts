@@ -13,5 +13,3 @@ export const tripStep2Fields = [
   "weight",
   "pricePerKg",
 ] as const;
-
-export const tripStep3Fields = ["agreeToRules"] as const;

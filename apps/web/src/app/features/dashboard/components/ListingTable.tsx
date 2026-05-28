@@ -175,7 +175,8 @@ export function ListingTable<T extends Listing>({
                         itemDescriptions: row.items,
                         weight: row.weightKg,
                         pricePerKg: row.pricePerKg,
-                        agreeToRules: false,
+                        confirmNoProhibitedItems: false,
+                        understandTravelerInspection: false,
                         senderId: row.user.id ?? "",
                         departureDate:
                           row.type === "trip" ? row.departDate : "",

@@ -145,6 +145,12 @@ export const questions: InfoItem[] = [
     tag: "traveler",
   },
   {
+    label: "How does pricing work for travelers?",
+    value:
+      "You set your price per kg on your trip. If a sender requests you, your rate applies. If you request a parcel, the sender’s parcel rate applies. A 20% platform fee is added to the delivery total paid by the sender. See Pricing for details.",
+    tag: "traveler",
+  },
+  {
     label: "How do I send a parcel?",
     value:
       "Post your parcel details, browse available travelers, and send a carry request. Once accepted, make payment and hand over the parcel.",
@@ -161,7 +167,7 @@ export const questions: InfoItem[] = [
   {
     label: "How does pricing work?",
     value:
-      "Travelers set a price per kilogram. You see the total cost before requesting, so there are no surprises.",
+      "Senders and travelers each set their own price per kg. Either side can start a request—the recipient’s listed price is used. Carry4Me adds a 20% service fee on the delivery total, shown before you pay. See Pricing for details.",
     tag: "sender",
   },
 

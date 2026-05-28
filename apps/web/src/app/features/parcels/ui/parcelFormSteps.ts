@@ -14,4 +14,7 @@ export const parcelStep2Fields = [
   "pricePerKg",
 ] as const;
 
-export const parcelStep3Fields = ["agreeToRules"] as const;
+export const parcelStep3Fields = [
+  "confirmNoProhibitedItems",
+  "understandTravelerInspection",
+] as const;

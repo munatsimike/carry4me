@@ -32,13 +32,11 @@ import toCreateTrip from "@/app/features/goods/domain/toCreateTripMapper";
 import {
   tripStep1Fields,
   tripStep2Fields,
-  tripStep3Fields,
 } from "@/app/features/trips/ui/tripFormSteps";
 import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import {
-  agreeToRulesSchema,
   citySchema,
   countrySchema,
   customCitySchema,
@@ -59,7 +57,6 @@ export const tripSchema = z
     weight: listingWeightSchema,
     pricePerKg: pricePerKgSchema,
     goodsCategoryIds: goodsCategoriesSchema,
-    agreeToRules: agreeToRulesSchema,
   })
   .superRefine((data, ctx) => {
     if (
@@ -85,7 +82,6 @@ const emptyDefaultsValues = {
   pricePerKg: 10,
   weight: 0,
   goodsCategoryIds: [],
-  agreeToRules: false,
 };
 
 type ListingFormProps = {
@@ -204,7 +200,6 @@ export function useTripForm({
       [
         ...tripStep1Fields,
         ...tripStep2Fields,
-        ...tripStep3Fields,
       ] as (keyof TripFormFields)[],
       { shouldFocus: true },
     );

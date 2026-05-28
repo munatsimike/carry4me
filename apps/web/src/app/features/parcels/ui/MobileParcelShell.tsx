@@ -47,7 +47,8 @@ import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
             itemDescriptions: [],
             weight: data.weightKg,
             pricePerKg: data.pricePerKg,
-            agreeToRules: false,
+            confirmNoProhibitedItems: false,
+            understandTravelerInspection: false,
             senderId: data.user.id!,
             departureDate: data.departDate,
           });

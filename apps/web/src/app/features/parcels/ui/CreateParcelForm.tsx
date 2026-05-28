@@ -26,7 +26,7 @@ import { WeightField } from "../../dashboard/components/WeightField";
 import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useParcelForm";
 import { PriceField } from "../../dashboard/components/PriceField";
 import CustomText from "@/components/ui/CustomText";
-import AgreeToTermsRow from "../../dashboard/components/AgreeToTermsRow";
+import ParcelReviewConfirmations from "./ParcelReviewConfirmations";
 import { inputError, inputNeutral } from "@/app/lib/cn";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
@@ -176,6 +176,7 @@ export default function CreateParcelForm({
             <LineDivider heightClass={dividerHeight} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-[20px]">
               <WeightField<ParcelFormFields>
+                label="Total weight"
                 register={register("weight", { valueAsNumber: true })}
                 id="weight"
                 error={errors.weight?.message}
@@ -235,16 +236,12 @@ export default function CreateParcelForm({
                 </span>
               </div>
             </div>
-            {isEditMode && (
+            {isEditMode ? (
               <>
                 <LineDivider heightClass={dividerHeight} />
-                <AgreeToTermsRow
-                  register={register("agreeToRules")}
-                  id="terms"
-                  error={errors.agreeToRules?.message}
-                />
+                <ParcelReviewConfirmations register={register} errors={errors} />
               </>
-            )}
+            ) : null}
             <LineDivider heightClass={dividerHeight} />
             <StepActions
               onBack={goBack}
@@ -280,11 +277,7 @@ export default function CreateParcelForm({
               weight={weightValue}
               pricePerKg={priceValue}
             />
-            <AgreeToTermsRow
-              register={register("agreeToRules")}
-              id="terms"
-              error={errors.agreeToRules?.message}
-            />
+            <ParcelReviewConfirmations register={register} errors={errors} />
             <LineDivider heightClass={dividerHeight} />
             <StepActions
               onBack={goBack}

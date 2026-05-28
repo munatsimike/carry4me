@@ -52,7 +52,9 @@ import {
   useRequestPhoneChangeMutation,
   useVerifyPhoneChangeMutation,
 } from "@/app/hooks/mutations/useAuthMutations";
+import AgreeToTermsAndSafetyRow from "@/app/features/dashboard/components/AgreeToTermsAndSafetyRow";
 import {
+  agreeToTermsAndSafetySchema,
   citySchema,
   countrySchema,
   emailSchema,
@@ -72,10 +74,15 @@ export const profileDetailsSchema = z.object({
 
 export type ProfileDetailsFields = z.infer<typeof profileDetailsSchema>;
 
-/** @alias profileDetailsSchema — used on /complete-profile and profile settings */
-export const completeProfileSchema = profileDetailsSchema;
+/** Complete-profile route only — includes terms acceptance. */
+export const completeProfileFormSchema = profileDetailsSchema.extend({
+  agreeToTermsAndSafety: agreeToTermsAndSafetySchema,
+});
 
-export type CompleteProfileFields = ProfileDetailsFields;
+export type CompleteProfileFields = z.infer<typeof completeProfileFormSchema>;
+
+/** @deprecated Use profileDetailsSchema for profile settings */
+export const completeProfileSchema = profileDetailsSchema;
 
 /** @deprecated Use profileDetailsSchema */
 export const UserDetailsScema = profileDetailsSchema;
@@ -186,7 +193,7 @@ export default function CompleteProfile() {
       touchedFields,
     },
   } = useForm<CompleteProfileFields>({
-    resolver: zodResolver(completeProfileSchema),
+    resolver: zodResolver(completeProfileFormSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -194,6 +201,7 @@ export default function CompleteProfile() {
       phoneNumber: user?.phone ?? "",
       country: "",
       city: "",
+      agreeToTermsAndSafety: false,
     },
     mode: "onTouched",
   });
@@ -575,6 +583,15 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
           ></Controller>
         </span>
         <LineDivider heightClass="my-0" />
+      </motion.div>
+
+      {/* Terms */}
+      <motion.div variants={item}>
+        <AgreeToTermsAndSafetyRow
+          register={register("agreeToTermsAndSafety")}
+          id="complete-profile-terms-safety"
+          error={errors.agreeToTermsAndSafety?.message}
+        />
       </motion.div>
 
       {/* Submit */}

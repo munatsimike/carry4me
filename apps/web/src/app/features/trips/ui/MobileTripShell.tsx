@@ -45,7 +45,6 @@ export default function MobileTripShell() {
             itemDescriptions: [],
             weight: data.weightKg,
             pricePerKg: data.pricePerKg,
-            agreeToRules: false,
             senderId: data.user.id!,
             departureDate: data.departDate,
           });

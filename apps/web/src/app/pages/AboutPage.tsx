@@ -1,10 +1,6 @@
-import DefaultContainer from "@/components/ui/DefualtContianer";
+import PolicyPageLayout from "./policy/PolicyPageLayout";
+import { aboutContent } from "./policy/content/aboutContent";
 
 export default function AboutPage() {
-  return (
-    <DefaultContainer>
-      <h1>About Page</h1>
-      <p>About page placeholder</p>
-    </DefaultContainer>
-  );
+  return <PolicyPageLayout {...aboutContent} />;
 }

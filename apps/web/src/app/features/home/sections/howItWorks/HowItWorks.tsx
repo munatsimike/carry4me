@@ -30,7 +30,11 @@ export default function HowItWorks({ steps }: StepsPros) {
   };
 
   return (
-    <DefaultContainer outerClassName="bg-canvas" className="flex flex-col py-8 sm:py-10">
+    <DefaultContainer
+      id="how-it-works"
+      outerClassName="bg-canvas scroll-mt-20"
+      className="flex flex-col py-8 sm:py-10"
+    >
       <motion.div
         variants={howItWorksContainer}
         initial="hidden"

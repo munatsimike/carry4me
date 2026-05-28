@@ -86,10 +86,22 @@ export const goodsCategoriesSchema = z
   .array(z.string())
   .min(1, "Select at least one category");
 
-export const agreeToRulesSchema = z
+function requiredAgreementSchema(message: string) {
+  return z.boolean().refine((value) => value === true, { message });
+}
+
+export const confirmNoProhibitedItemsSchema = requiredAgreementSchema(
+  "Please confirm your package contains no prohibited items",
+);
+
+export const understandTravelerInspectionSchema = requiredAgreementSchema(
+  "Please confirm you understand the traveler may inspect the package",
+);
+
+export const agreeToTermsAndSafetySchema = z
   .boolean()
   .refine((value) => value === true, {
-    message: "Please agree to the rules to continue",
+    message: "Please agree to the Terms & Safety Policy to continue",
   });
 
 export const parcelItemSchema = z.object({

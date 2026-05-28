@@ -39,8 +39,9 @@ import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import {
-  agreeToRulesSchema,
   citySchema,
+  confirmNoProhibitedItemsSchema,
+  understandTravelerInspectionSchema,
   countrySchema,
   customCitySchema,
   goodsCategoriesSchema,
@@ -62,7 +63,8 @@ const parcelSchema = z
       .min(1, "Enter item quantity and description"),
     weight: listingWeightSchema,
     pricePerKg: pricePerKgSchema,
-    agreeToRules: agreeToRulesSchema,
+    confirmNoProhibitedItems: confirmNoProhibitedItemsSchema,
+    understandTravelerInspection: understandTravelerInspectionSchema,
   })
   .superRefine((data, ctx) => {
     if (
@@ -89,7 +91,8 @@ const emptyDefaultsValues = {
   itemDescriptions: [{ quantity: 1, description: "" }],
   weight: 0,
   pricePerKg: 0,
-  agreeToRules: false,
+  confirmNoProhibitedItems: false,
+  understandTravelerInspection: false,
 };
 
 type UseParcelFormProps = {

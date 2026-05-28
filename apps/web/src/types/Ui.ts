@@ -58,7 +58,9 @@ export type FormValues = {
   itemDescriptions: GoodsItem[];
   weight: number;
   pricePerKg: number;
-  agreeToRules: false;
+  /** Parcel review confirmations */
+  confirmNoProhibitedItems?: boolean;
+  understandTravelerInspection?: boolean;
   senderId: string;
   departureDate?: string;
 };
