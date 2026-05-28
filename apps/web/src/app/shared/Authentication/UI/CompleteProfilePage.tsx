@@ -405,8 +405,8 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
   return (
     <>
       <span className="flex flex-col items-center gap-1 pb-2">
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-          <UserRound size={32} aria-hidden strokeWidth={1.75} />
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+          <UserRound className="h-5 w-5" aria-hidden strokeWidth={1.75} />
         </span>
         <CustomText
           as="h1"
@@ -471,11 +471,7 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
               readOnly
               disabled
               value={formattedPhoneNumber}
-              trailingIcon={
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                  Verified
-                </span>
-              }
+              trailingIcon={<EmailVerificationBadge verified compact />}
               isDirty={false}
               isTouched={false}
             />

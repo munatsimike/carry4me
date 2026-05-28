@@ -193,8 +193,8 @@ export default function ProfilePage() {
             className="w-full max-w-md p-8 text-center"
             paddingClass="p-8"
           >
-            <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-              <Lock className="h-7 w-7" aria-hidden strokeWidth={1.75} />
+            <span className="mx-auto mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+              <Lock className="h-5 w-5" aria-hidden strokeWidth={1.75} />
             </span>
             <CustomText
               as="h2"
@@ -328,8 +328,8 @@ export default function ProfilePage() {
   };
 
   const iconSpecs: IconSpecs = {
-    className: "h-6 w-6 text-slate-600",
-    strokeWidth: 2,
+    className: "h-5 w-5 text-slate-600",
+    strokeWidth: 1.75,
   };
 
   return (
@@ -665,7 +665,7 @@ function SecurityDetailsCard({
               value={profile.phoneNumber ?? ""}
               readOnly
               disabled
-              trailingIcon={<EmailVerificationBadge verified />}
+              trailingIcon={<EmailVerificationBadge verified compact />}
               isDirty={false}
               isTouched={false}
             />
@@ -1294,7 +1294,7 @@ function PhoneInfoRow({ phone }: { phone?: string | null }) {
       </CustomText>
       <span className="flex min-w-0 flex-wrap items-center gap-2">
         <CustomText textVariant="primary">{phone ?? "—"}</CustomText>
-        <EmailVerificationBadge verified />
+        <EmailVerificationBadge verified compact />
       </span>
     </div>
   );
