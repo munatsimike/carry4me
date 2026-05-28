@@ -40,10 +40,13 @@ import EmailVerificationBadge from "../UI/EmailVerificationBadge";
 import { useLocations } from "@/app/hookes/useLocation";
 import CustomModal from "@/app/components/CustomModal";
 import { z } from "zod";
+import { otpCodeSchema } from "@/app/shared/validation/formValidation";
+import { toE164PhoneNumber } from "../application/toE164PhoneNumber";
+import PhoneNumberWithCountryFields from "../UI/components/PhoneNumberWithCountryFields";
 import {
-  otpCodeSchema,
-  phoneNumberSchema,
-} from "@/app/shared/validation/formValidation";
+  phoneWithCountrySchema,
+  type PhoneWithCountryFields,
+} from "../validation/phoneWithCountrySchema";
 import {
   useRequestPhoneChangeMutation,
   useVerifyPhoneChangeMutation,
@@ -58,15 +61,10 @@ type AvatarProps = {
 
 type ProfileSection = "personal" | "location" | "security";
 
-const changePhoneSchema = z.object({
-  phoneNumber: phoneNumberSchema,
-});
-
 const verifyPhoneChangeSchema = z.object({
   otpCode: otpCodeSchema,
 });
 
-type ChangePhoneFields = z.infer<typeof changePhoneSchema>;
 type VerifyPhoneChangeFields = z.infer<typeof verifyPhoneChangeSchema>;
 
 type FormProps = {
@@ -1000,14 +998,16 @@ function ChangePhoneNumberModal({
     register: registerPhone,
     handleSubmit: handlePhoneSubmit,
     watch: watchPhone,
+    setValue: setPhoneValue,
     formState: {
       errors: phoneErrors,
       dirtyFields: phoneDirtyFields,
       touchedFields: phoneTouchedFields,
     },
-  } = useForm<ChangePhoneFields>({
-    resolver: zodResolver(changePhoneSchema),
+  } = useForm<PhoneWithCountryFields>({
+    resolver: zodResolver(phoneWithCountrySchema),
     defaultValues: {
+      countryCode: profileCountry ?? "",
       phoneNumber: "",
     },
     mode: "onTouched",
@@ -1031,15 +1031,21 @@ function ChangePhoneNumberModal({
     mode: "onTouched",
   });
 
-  const watchedPhoneNumber = watchPhone("phoneNumber");
+  const selectedCountryCode = watchPhone("countryCode");
   const watchedOtpCode = watchOtp("otpCode");
   const isRequesting = requestPhoneChange.isPending;
   const isVerifying = verifyPhoneChange.isPending;
 
-  const requestCode = async (values: ChangePhoneFields) => {
+  const requestCode = async (values: PhoneWithCountryFields) => {
+    const e164PhoneNumber = toE164PhoneNumber(
+      values.countryCode,
+      values.phoneNumber,
+    );
+    if (!e164PhoneNumber) return;
+
     try {
-      await requestPhoneChange.mutateAsync(values.phoneNumber);
-      setPendingPhoneNumber(values.phoneNumber);
+      await requestPhoneChange.mutateAsync(e164PhoneNumber);
+      setPendingPhoneNumber(e164PhoneNumber);
       resetOtp();
       toast("Verification code sent.", { variant: "success" });
     } catch (err) {
@@ -1048,14 +1054,14 @@ function ChangePhoneNumberModal({
   };
 
   const verifyCode = async (values: VerifyPhoneChangeFields) => {
-    if (!pendingPhoneNumber) return;
+    if (!pendingPhoneNumber || !selectedCountryCode) return;
 
     try {
       await verifyPhoneChange.mutateAsync({
         userId,
         phoneNumber: pendingPhoneNumber,
         token: values.otpCode,
-        countryCode: profileCountry ?? "",
+        countryCode: selectedCountryCode,
       });
       toast("Phone number updated successfully.", { variant: "success" });
       await onVerified();
@@ -1066,9 +1072,9 @@ function ChangePhoneNumberModal({
   };
 
   return (
-    <CustomModal onClose={onClose} width="md">
+    <CustomModal onClose={onClose} width="xl" scrollable={false}>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-4">
           <CustomText
             textVariant="primary"
             textSize="lg"
@@ -1088,25 +1094,29 @@ function ChangePhoneNumberModal({
           className="flex flex-col gap-4"
         >
           <div className="flex flex-col gap-3">
-            <FloatingInputField
-              className="w-full"
-              hasValue={!!watchedPhoneNumber}
-              label="New phone number"
-              type="tel"
-              helperText={
-                pendingPhoneNumber
-                  ? `Code sent to ${pendingPhoneNumber}`
-                  : "Include your country code, for example +44..."
-              }
-              error={phoneErrors.phoneNumber?.message}
-              isDirty={!!phoneDirtyFields.phoneNumber}
-              isTouched={!!phoneTouchedFields.phoneNumber}
-              disabled={isRequesting || isVerifying}
-              {...registerPhone("phoneNumber")}
-            />
+            <div className="mx-auto w-full max-w-[360px]">
+              <PhoneNumberWithCountryFields
+                register={registerPhone}
+                setValue={setPhoneValue}
+                watch={watchPhone}
+                errors={phoneErrors}
+                dirtyFields={phoneDirtyFields}
+                touchedFields={phoneTouchedFields}
+                disabled={isRequesting || isVerifying}
+                defaultCountryCode={profileCountry}
+                phoneHelperText={
+                  pendingPhoneNumber
+                    ? `Code sent to ${pendingPhoneNumber}`
+                    : undefined
+                }
+              />
+            </div>
             {currentPhoneNumber && (
-              <CustomText textVariant="secondary" textSize="xs">
-                Current phone: {currentPhoneNumber}
+              <CustomText as="p" textVariant="secondary" textSize="xs">
+                Current phone:{" "}
+                <CustomText as="span" textVariant="primary" textSize="xs">
+                  {currentPhoneNumber}
+                </CustomText>
               </CustomText>
             )}
           </div>
@@ -1141,7 +1151,7 @@ function ChangePhoneNumberModal({
               className="flex flex-col gap-3"
             >
               <FloatingInputField
-                className="w-full sm:max-w-[220px]"
+                className="mx-auto w-full max-w-[360px]"
                 hasValue={!!watchedOtpCode}
                 label="Verification code"
                 inputMode="numeric"

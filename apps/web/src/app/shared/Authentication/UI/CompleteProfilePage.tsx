@@ -10,7 +10,7 @@ import FloatingInputField from "@/app/components/CustomInputField";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
 import { motion } from "framer-motion";
-import { ChevronDown, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -39,14 +39,15 @@ import {
   countryCodeFromPhone,
   normalizeCountryCode,
   toDialCode,
-  toIsoCountryCode,
   toflag,
 } from "@/app/Mapper";
-import {
-  parsePhoneNumberFromString,
-  type CountryCode,
-} from "libphonenumber-js";
 import { otpCodeSchema } from "@/app/shared/validation/formValidation";
+import { toE164PhoneNumber } from "../application/toE164PhoneNumber";
+import PhoneNumberWithCountryFields from "./components/PhoneNumberWithCountryFields";
+import {
+  phoneWithCountrySchema,
+  type PhoneWithCountryFields,
+} from "../validation/phoneWithCountrySchema";
 import {
   useRequestPhoneChangeMutation,
   useVerifyPhoneChangeMutation,
@@ -89,56 +90,11 @@ export const UserDetailsScema = profileDetailsSchema;
 /** @deprecated Use ProfileDetailsFields */
 export type UserDetailsFields = ProfileDetailsFields;
 
-const changePhoneSchema = z
-  .object({
-    countryCode: z.string().min(1, "Select a country code"),
-    phoneNumber: z
-      .string()
-      .trim()
-      .min(1, "Enter your phone number")
-      .regex(/^\d+$/, "Enter numbers only, without the country code"),
-  })
-  .superRefine((value, ctx) => {
-    if (toE164PhoneNumber(value.countryCode, value.phoneNumber)) return;
-
-    ctx.addIssue({
-      code: "custom",
-      path: ["phoneNumber"],
-      message: "Enter a valid local phone number",
-    });
-  });
-
 const verifyPhoneChangeSchema = z.object({
   otpCode: otpCodeSchema,
 });
 
-type ChangePhoneFields = z.infer<typeof changePhoneSchema>;
 type VerifyPhoneChangeFields = z.infer<typeof verifyPhoneChangeSchema>;
-
-function toE164PhoneNumber(countryCode: string, localPhoneNumber: string) {
-  const isoCountryCode = toIsoCountryCode(countryCode);
-
-  if (!isoCountryCode || /^\s*\+/.test(localPhoneNumber)) return null;
-
-  const normalizedLocalNumber = localPhoneNumber.trim();
-  const parsed = parsePhoneNumberFromString(
-    normalizedLocalNumber,
-    isoCountryCode as CountryCode,
-  );
-
-  if (parsed?.isValid() || parsed?.isPossible()) return parsed.number;
-
-  if (!normalizedLocalNumber.startsWith("0")) {
-    const parsedWithTrunkPrefix = parsePhoneNumberFromString(
-      `0${normalizedLocalNumber}`,
-      isoCountryCode as CountryCode,
-    );
-
-    if (parsedWithTrunkPrefix?.isValid()) return parsedWithTrunkPrefix.number;
-  }
-
-  return null;
-}
 
 function formatVerifiedPhoneNumber(
   phoneNumber: string | null | undefined,
@@ -622,11 +578,9 @@ function ChangePhoneNumberModal({
   onClose,
   onVerified,
 }: ChangePhoneNumberModalProps) {
-  const { countryOptions } = useLocations();
   const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(
     null,
   );
-  const [countryMenuOpen, setCountryMenuOpen] = useState(false);
   const requestPhoneChange = useRequestPhoneChangeMutation();
   const verifyPhoneChange = useVerifyPhoneChangeMutation();
   const { toast } = useToast();
@@ -643,8 +597,8 @@ function ChangePhoneNumberModal({
       dirtyFields: phoneDirtyFields,
       touchedFields: phoneTouchedFields,
     },
-  } = useForm<ChangePhoneFields>({
-    resolver: zodResolver(changePhoneSchema),
+  } = useForm<PhoneWithCountryFields>({
+    resolver: zodResolver(phoneWithCountrySchema),
     defaultValues: {
       countryCode: currentCountryCode ?? "",
       phoneNumber: "",
@@ -671,28 +625,11 @@ function ChangePhoneNumberModal({
   });
 
   const selectedCountryCode = watchPhone("countryCode");
-  const newPhoneNumber = watchPhone("phoneNumber");
   const otpCode = watchOtp("otpCode");
-  const selectedDialCode = selectedCountryCode
-    ? toDialCode(selectedCountryCode)
-    : null;
-  const selectedFlagIcon = selectedCountryCode
-    ? toflag(selectedCountryCode)
-    : null;
   const isRequesting = requestPhoneChange.isPending;
   const isVerifying = verifyPhoneChange.isPending;
 
-  useEffect(() => {
-    if (selectedCountryCode || !countryOptions[0]) return;
-
-    setPhoneValue("countryCode", countryOptions[0], {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: true,
-    });
-  }, [countryOptions, selectedCountryCode, setPhoneValue]);
-
-  const requestCode = async (values: ChangePhoneFields) => {
+  const requestCode = async (values: PhoneWithCountryFields) => {
     const e164PhoneNumber = toE164PhoneNumber(
       values.countryCode,
       values.phoneNumber,
@@ -734,9 +671,9 @@ function ChangePhoneNumberModal({
   };
 
   return (
-    <CustomModal onClose={onClose} width="lg">
+    <CustomModal onClose={onClose} width="xl" scrollable={false}>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-4">
           <CustomText
             textVariant="primary"
             textSize="lg"
@@ -755,95 +692,33 @@ function ChangePhoneNumberModal({
           onSubmit={handlePhoneSubmit(requestCode)}
           className="flex flex-col gap-4"
         >
-          <input type="hidden" {...registerPhone("countryCode")} />
           <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-[minmax(132px,145px)_minmax(0,1fr)] gap-3">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <CustomText as="label" textVariant="label" textSize="xs">
-                Country code
-              </CustomText>
-              <div className="relative">
-                <button
-                  type="button"
-                  disabled={isRequesting || isVerifying}
-                  aria-expanded={countryMenuOpen}
-                  aria-label="Select country code"
-                  onClick={() => setCountryMenuOpen((open) => !open)}
-                  className="flex w-full items-center justify-between gap-2 rounded-xl border border-neutral-300 bg-white py-2 pl-3 pr-3 text-left text-sm text-ink-primary outline-none transition-colors focus:border-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    {selectedFlagIcon && (
-                      <SvgIcon size="xs" Icon={selectedFlagIcon} />
-                    )}
-                    <span className="truncate">
-                      {selectedCountryCode
-                        ? `${selectedCountryCode} ${selectedDialCode ?? ""}`
-                        : "Select"}
-                    </span>
-                  </span>
-                  <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
-                </button>
-
-                {countryMenuOpen && (
-                  <div className="absolute z-50 mt-2 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
-                    {countryOptions.map((option) => {
-                      const flagIcon = toflag(option);
-                      return (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => {
-                            setPhoneValue("countryCode", option, {
-                              shouldDirty: true,
-                              shouldTouch: true,
-                              shouldValidate: true,
-                            });
-                            setCountryMenuOpen(false);
-                          }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                        >
-                          {flagIcon && <SvgIcon size="xs" Icon={flagIcon} />}
-                          <span className="truncate">
-                            {option} {toDialCode(option) ?? ""}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              {phoneErrors.countryCode?.message && (
-                <CustomText textVariant="error" textSize="xs">
-                  {phoneErrors.countryCode.message}
-                </CustomText>
-              )}
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <CustomText as="label" textVariant="label" textSize="xs">
-                Phone number
-              </CustomText>
-              <FloatingInputField
-                className="w-full"
-                hasValue={!!newPhoneNumber}
-                placeholder="Phone number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                error={phoneErrors.phoneNumber?.message}
-                isDirty={!!phoneDirtyFields.phoneNumber}
-                isTouched={!!phoneTouchedFields.phoneNumber}
+            <div className="mx-auto w-full max-w-[360px]">
+              <PhoneNumberWithCountryFields
+                register={registerPhone}
+                setValue={setPhoneValue}
+                watch={watchPhone}
+                errors={phoneErrors}
+                dirtyFields={phoneDirtyFields}
+                touchedFields={phoneTouchedFields}
                 disabled={isRequesting || isVerifying}
-                {...registerPhone("phoneNumber")}
+                defaultCountryCode={currentCountryCode}
+                phoneHelperText={
+                  pendingPhoneNumber
+                    ? `Code sent to ${pendingPhoneNumber}`
+                    : undefined
+                }
               />
             </div>
-          </div>
 
-          {currentPhoneNumber && (
-            <CustomText textVariant="secondary" textSize="xs">
-              Current phone {"+"}
-              {currentPhoneNumber}
-            </CustomText>
-          )}
+            {currentPhoneNumber && (
+              <CustomText as="p" textVariant="secondary" textSize="xs">
+                Current phone:{" "}
+                <CustomText as="span" textVariant="primary" textSize="xs">
+                  {currentPhoneNumber}
+                </CustomText>
+              </CustomText>
+            )}
           </div>
 
           <LineDivider heightClass="my-0" />
@@ -876,7 +751,7 @@ function ChangePhoneNumberModal({
               className="flex flex-col gap-3"
             >
               <FloatingInputField
-                className="w-full sm:max-w-[220px]"
+                className="mx-auto w-full max-w-[360px]"
                 hasValue={!!otpCode}
                 label="Verification code"
                 inputMode="numeric"
