@@ -5,7 +5,6 @@ import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/
 import PageSection from "../../components/PageSection";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
 import CustomText, { type TextVariant } from "@/components/ui/CustomText";
-import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import type { SvgIconComponent } from "@/types/Ui";
@@ -248,9 +247,9 @@ function RecentActivity({
         <div className="flex flex-col px-2 mx-auto">
           <span className="flex flex-col gap-3">
             <span className="inline-flex gap-3 items-center">
-              <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
-                <Clock className="text-neutral-600 h-5 w-5" strokeWidth={1} />
-              </CircleBadge>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                <Clock className="h-5 w-5" strokeWidth={1.75} />
+              </span>
               <CustomText textVariant="primary" textSize="md">
                 {"Recent activity"}
               </CustomText>
@@ -318,9 +317,9 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       <Card enableHover={false} className="h-full flex-1">
         <div className="flex flex-col gap-4 bg-white p-3 sm:p-4">
           <span className="inline-flex min-w-0 items-center gap-3">
-            <CircleBadge size="md" bgColor="neutral" paddingClassName="1">
-              <Truck className="text-neutral-600 h-5 w-5" strokeWidth={1} />
-            </CircleBadge>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+              <Truck className="h-5 w-5" strokeWidth={1.75} />
+            </span>
             <CustomText
               textVariant="primary"
               textSize="md"

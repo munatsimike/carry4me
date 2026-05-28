@@ -22,7 +22,6 @@ import {
   type UseFormRegister,
   type UseFormWatch,
 } from "react-hook-form";
-import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { useSignInModal } from "../SignInModalContext";
 import ComboBox from "@/app/components/ComboBox";
@@ -450,13 +449,9 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
   return (
     <>
       <span className="flex flex-col items-center gap-1 pb-2">
-        <CircleBadge size="lg" bgColor="secondary" paddingClassName="p-2.5">
-          <UserRound
-            className="text-primary-500"
-            size={32}
-            aria-hidden
-          />
-        </CircleBadge>
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+          <UserRound size={32} aria-hidden strokeWidth={1.75} />
+        </span>
         <CustomText
           as="h1"
           textVariant="primary"
@@ -758,9 +753,10 @@ function ChangePhoneNumberModal({
 
         <form
           onSubmit={handlePhoneSubmit(requestCode)}
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-4"
         >
           <input type="hidden" {...registerPhone("countryCode")} />
+          <div className="flex flex-col gap-3">
           <div className="grid grid-cols-[minmax(132px,145px)_minmax(0,1fr)] gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">
               <CustomText as="label" textVariant="label" textSize="xs">
@@ -848,13 +844,16 @@ function ChangePhoneNumberModal({
               {currentPhoneNumber}
             </CustomText>
           )}
+          </div>
+
+          <LineDivider heightClass="my-0" />
 
           <Button
             type="submit"
             variant="primary"
             size="sm"
             disabled={isRequesting || isVerifying}
-            className="w-full"
+            className="w-full justify-center"
           >
             {isRequesting ? (
               <span className="inline-flex items-center gap-2">

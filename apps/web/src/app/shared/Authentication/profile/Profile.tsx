@@ -22,7 +22,6 @@ import {
 import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
 import CustomText from "@/components/ui/CustomText";
-import { CircleBadge } from "@/components/ui/CircleBadge";
 import { cn } from "@/app/lib/cn";
 import { toflag } from "@/app/Mapper";
 import { Lock, MapPin, Pencil, ShieldHalf, User2 } from "lucide-react";
@@ -196,9 +195,9 @@ export default function ProfilePage() {
             className="w-full max-w-md p-8 text-center"
             paddingClass="p-8"
           >
-            <CircleBadge size="lg" bgColor="secondary" paddingClassName="p-3 mx-auto mb-4">
-              <Lock className="h-7 w-7 text-primary-500" aria-hidden />
-            </CircleBadge>
+            <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+              <Lock className="h-7 w-7" aria-hidden strokeWidth={1.75} />
+            </span>
             <CustomText
               as="h2"
               textVariant="primary"
@@ -331,7 +330,7 @@ export default function ProfilePage() {
   };
 
   const iconSpecs: IconSpecs = {
-    className: "h-6 w-6 text-primary-500",
+    className: "h-6 w-6 text-slate-600",
     strokeWidth: 2,
   };
 
@@ -805,9 +804,9 @@ function SectionHeader({
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="inline-flex min-w-0 items-center gap-3">
-        <CircleBadge size="md" bgColor="secondary" paddingClassName="p-1.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
           {icon}
-        </CircleBadge>
+        </span>
         <CustomText as="h3" textVariant="primary" textSize="md" className="font-medium">
           {title}
         </CustomText>
@@ -1086,35 +1085,40 @@ function ChangePhoneNumberModal({
 
         <form
           onSubmit={handlePhoneSubmit(requestCode)}
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-4"
         >
-          <FloatingInputField
-            className="w-full sm:max-w-[320px]"
-            hasValue={!!watchedPhoneNumber}
-            label="New phone number"
-            type="tel"
-            helperText={
-              pendingPhoneNumber
-                ? `Code sent to ${pendingPhoneNumber}`
-                : "Include your country code, for example +44..."
-            }
-            error={phoneErrors.phoneNumber?.message}
-            isDirty={!!phoneDirtyFields.phoneNumber}
-            isTouched={!!phoneTouchedFields.phoneNumber}
-            disabled={isRequesting || isVerifying}
-            {...registerPhone("phoneNumber")}
-          />
-          {currentPhoneNumber && (
-            <CustomText textVariant="secondary" textSize="xs">
-              Current phone: {currentPhoneNumber}
-            </CustomText>
-          )}
+          <div className="flex flex-col gap-3">
+            <FloatingInputField
+              className="w-full"
+              hasValue={!!watchedPhoneNumber}
+              label="New phone number"
+              type="tel"
+              helperText={
+                pendingPhoneNumber
+                  ? `Code sent to ${pendingPhoneNumber}`
+                  : "Include your country code, for example +44..."
+              }
+              error={phoneErrors.phoneNumber?.message}
+              isDirty={!!phoneDirtyFields.phoneNumber}
+              isTouched={!!phoneTouchedFields.phoneNumber}
+              disabled={isRequesting || isVerifying}
+              {...registerPhone("phoneNumber")}
+            />
+            {currentPhoneNumber && (
+              <CustomText textVariant="secondary" textSize="xs">
+                Current phone: {currentPhoneNumber}
+              </CustomText>
+            )}
+          </div>
+
+          <LineDivider heightClass="my-0" />
+
           <Button
             type="submit"
-            variant="neutral"
+            variant="primary"
             size="sm"
             disabled={isRequesting || isVerifying}
-            className="w-fit"
+            className="w-full justify-center"
           >
             {isRequesting ? (
               <span className="inline-flex items-center gap-2">
