@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { enrichNotificationForEmail } from "./emails/notificationEmailEnrichment.ts";
 import {
   sendNotificationEmailViaResend,
   type NotificationRow,
@@ -244,7 +245,7 @@ export async function processQueueRow(
 
   const { data: notification, error: notificationError } = await supabaseAdmin
     .from("notifications")
-    .select("id, user_id, type, title, body, link")
+    .select("id, user_id, type, title, body, link, metadata")
     .eq("id", row.notification_id)
     .maybeSingle<NotificationRow>();
 
@@ -352,8 +353,13 @@ export async function processQueueRow(
   }
 
   try {
-    const outcome = await sendNotificationEmailViaResend(
+    const enrichedNotification = await enrichNotificationForEmail(
+      supabaseAdmin,
       notification,
+    );
+
+    const outcome = await sendNotificationEmailViaResend(
+      enrichedNotification,
       { email: recipientEmail, email_verified: profile.email_verified },
       resendApiKey,
       { requireEmailVerified: false },

@@ -6,8 +6,8 @@ import {
   type NotificationEmailInput,
 } from "../utils.ts";
 
-/** Sent when payment is completed (PAYMENT_COMPLETED). No CTA — contact details only. */
-export function renderPaymentReceivedEmail(notification: NotificationEmailInput): {
+/** Sent when both parties confirm handover — informational only, no CTA. */
+export function renderParcelReceivedEmail(notification: NotificationEmailInput): {
   html: string;
   text: string;
 } {
@@ -16,14 +16,10 @@ export function renderPaymentReceivedEmail(notification: NotificationEmailInput)
     ${renderExtraParagraphs(notification.extraParagraphs)}
   `;
 
-  const preheader = notification.body.includes("Your payment for this carry request")
-    ? "Payment complete — arrange handover using the traveler's contact details."
-    : "Payment received — arrange handover using the sender's contact details.";
-
   return {
     html: renderEmailLayout(contentHtml, {
       title: notification.title,
-      preheader,
+      preheader: "Handover confirmed — the parcel is now in transit.",
     }),
     text: buildTextBody(notification, null),
   };

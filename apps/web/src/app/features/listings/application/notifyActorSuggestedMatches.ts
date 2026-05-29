@@ -10,6 +10,13 @@ import type { NavigateFunction } from "react-router-dom";
 
 type PostedListingType = "parcel" | "trip";
 type ListingSaveAction = "create" | "edit";
+export type SuggestedMatchTab = "trips" | "parcels";
+
+export function suggestedMatchTabForListing(
+  listingType: PostedListingType,
+): SuggestedMatchTab {
+  return listingType === "trip" ? "parcels" : "trips";
+}
 
 export async function countActorMatchesForListing(
   userId: string,
@@ -81,7 +88,10 @@ export function promptActorSuggestedMatches(
       messageDetail: `We found ${matchCount} matching ${counterpartLabel}.`,
       label: "View matches",
       secondaryLabel: "Close",
-      onClick: () => navigate("/dashboard#suggested-matches"),
+      onClick: () =>
+        navigate("/dashboard#suggested-matches", {
+          state: { suggestedMatchTab: suggestedMatchTabForListing(listingType) },
+        }),
     });
     return;
   }

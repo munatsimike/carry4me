@@ -13,6 +13,8 @@ emails/
   templates/
     RequestAccepted.ts
     PaymentReceived.ts    # PAYMENT_COMPLETED
+    HandoverConfirmed.ts  # HANDOVER_CONFIRMED (partial)
+    ParcelReceived.ts     # PARCEL_RECEIVED (both confirmed + phone)
     EmailVerification.ts
     GenericNotification.ts
   renderNotificationEmail.ts

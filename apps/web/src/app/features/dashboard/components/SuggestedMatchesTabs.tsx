@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Package, Plane } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,9 +30,23 @@ export type SuggestedMatchesData = {
 
 type TabId = "trips" | "parcels";
 
+export type SuggestedMatchTabId = TabId;
+
 type SuggestedMatchesTabsProps = {
   data: SuggestedMatchesData;
+  initialTab?: TabId;
 };
+
+function resolveDefaultTab(data: SuggestedMatchesData): TabId {
+  if (data.suggestedParcels.length > 0 && data.suggestedTrips.length === 0) {
+    return "parcels";
+  }
+  if (data.suggestedTrips.length > 0 && data.suggestedParcels.length === 0) {
+    return "trips";
+  }
+  if (data.matchingParcels.length > 0) return "trips";
+  return "parcels";
+}
 
 const tabMotion = {
   initial: { opacity: 0, y: 4 },
@@ -41,7 +55,10 @@ const tabMotion = {
   transition: { duration: 0.2, ease: "easeOut" as const },
 };
 
-export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps) {
+export default function SuggestedMatchesTabs({
+  data,
+  initialTab,
+}: SuggestedMatchesTabsProps) {
   const { user } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const { toast } = useToast();
@@ -53,10 +70,20 @@ export default function SuggestedMatchesTabs({ data }: SuggestedMatchesTabsProps
   const parcelCount = data.suggestedParcels.length;
   const hasMatchingListing =
     data.matchingParcels.length > 0 || data.matchingTrips.length > 0;
-  const hasMatchingParcels = data.matchingParcels.length > 0;
 
-  const defaultTab: TabId = hasMatchingParcels ? "trips" : "parcels";
-  const [activeTab, setActiveTab] = useState<TabId>(defaultTab);
+  const defaultTab = useMemo(() => resolveDefaultTab(data), [data]);
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? defaultTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (initialTab) return;
+    setActiveTab(defaultTab);
+  }, [defaultTab, initialTab]);
 
   const [selectedTrip, setSelectedTrip] = useState<TripListing | null>(null);
   const [selectedParcel, setSelectedParcel] = useState<ParcelListing | null>(null);

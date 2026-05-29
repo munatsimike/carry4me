@@ -1,6 +1,9 @@
 import { supabase } from "@/app/shared/supabase/client";
 import { requireData, throwIfSupabaseError } from "@/app/shared/domain/AppError";
-import type { CarryRequestRepository } from "../domain/CarryRequestRepository";
+import type {
+  CarryRequestRepository,
+  EndedRequestBetweenParties,
+} from "../domain/CarryRequestRepository";
 import {
   type CarryRequestStatus,
   type CreateCarryRequest,
@@ -118,5 +121,57 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
     throwIfSupabaseError(error, status);
 
     return requireData(data).id;
+  }
+
+  async findLatestEndedRequestBetweenParties(
+    senderUserId: string,
+    travelerUserId: string,
+  ): Promise<EndedRequestBetweenParties | null> {
+    const { data, status, error } = await supabase
+      .from("carry_requests")
+      .select(
+        `
+        status,
+        events:carry_request_events(type, actor_user_id, created_at)
+      `,
+      )
+      .eq("sender_user_id", senderUserId)
+      .eq("traveler_user_id", travelerUserId)
+      .in("status", ["REJECTED", "CANCELLED", "EXPIRED"])
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<{
+        status: "REJECTED" | "CANCELLED" | "EXPIRED";
+        events: Array<{
+          type: string;
+          actor_user_id: string | null;
+          created_at: string;
+        }> | null;
+      }>();
+
+    throwIfSupabaseError(error, status);
+
+    if (!data?.status) {
+      return null;
+    }
+
+    const terminalEventType =
+      data.status === "REJECTED"
+        ? "REQUEST_REJECTED"
+        : data.status === "CANCELLED"
+          ? "REQUEST_CANCELED"
+          : "REQUEST_EXPIRED";
+
+    const terminalEvent = (data.events ?? [])
+      .filter((event) => event.type === terminalEventType)
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )[0];
+
+    return {
+      status: data.status,
+      endedByUserId: terminalEvent?.actor_user_id ?? null,
+    };
   }
 }

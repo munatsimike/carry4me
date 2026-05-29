@@ -27,6 +27,7 @@ import {
   RequestParcelDetailsSection,
   RequestTripDetailsSection,
 } from "../features/carry request/ui/RequestDetailsLayout";
+import { formatPersonDisplayName } from "../shared/application/formatPersonDisplayName";
 
 type RequestSummaryProps = {
   loggedInUserId: string;
@@ -54,9 +55,10 @@ export default function RequestSummary({
   );
 
   const [requestLoaded, setLoadRequest] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
-  const { showSupabaseError, openInfo } = useUniversalModal();
+  const { showSupabaseError, openInfo, confirm } = useUniversalModal();
   const navigate = useNavigate();
 
   const routeMismatch = useMemo(() => {
@@ -123,6 +125,51 @@ export default function RequestSummary({
   };
   const parcelItems = parcel.goodsCategory.map((item) => item.name).join(", ");
 
+  const confirmResendAfterEndedRequest = async (): Promise<boolean> => {
+    try {
+      const priorRequest =
+        await carryRequestRepository.findLatestEndedRequestBetweenParties(
+          parcel.user.id,
+          trip.user.id,
+        );
+
+      if (!priorRequest) {
+        return true;
+      }
+
+      const counterpartLabel = isSenderRequesting ? "traveler" : "sender";
+      const endedByCurrentUser =
+        priorRequest.endedByUserId === loggedInUserId;
+
+      let message: string;
+      if (endedByCurrentUser) {
+        if (priorRequest.status === "REJECTED") {
+          message = `You rejected a request from this ${counterpartLabel}. Do you want to proceed?`;
+        } else if (priorRequest.status === "CANCELLED") {
+          message = `You cancelled a request from this ${counterpartLabel}. Do you want to proceed?`;
+        } else {
+          message = `A previous request with this ${counterpartLabel} expired. Do you want to proceed?`;
+        }
+      } else if (priorRequest.status === "REJECTED") {
+        message = `A previous request with this ${counterpartLabel} was declined. Do you want to proceed?`;
+      } else if (priorRequest.status === "CANCELLED") {
+        message = `A previous request with this ${counterpartLabel} was cancelled. Do you want to proceed?`;
+      } else {
+        message = `A previous request with this ${counterpartLabel} expired. Do you want to proceed?`;
+      }
+
+      return await confirm({
+        title: "Send another request?",
+        message,
+        confirmText: "Proceed",
+        cancelText: "Cancel",
+      });
+    } catch (err) {
+      showSupabaseError(err);
+      return false;
+    }
+  };
+
   const handleSendRequest = async () => {
     if (requestLoaded || !canSendRequest) return;
 
@@ -168,24 +215,32 @@ export default function RequestSummary({
   };
 
   const handleSendClick = () => {
-    if (!canSendRequest || requestLoaded) return;
+    if (!canSendRequest || requestLoaded || isSubmitting) return;
 
     if (!user?.id) return;
 
     guardAction(() => {
       void (async () => {
-        // Travelers must complete Stripe onboarding before sending/accepting paid requests.
-        if (!isSenderRequesting) {
-          try {
-            const stripeReady = await ensureTravelerStripeReady({ openInfo });
-            if (!stripeReady) return;
-          } catch (err) {
-            showSupabaseError(err);
-            return;
-          }
-        }
+        setIsSubmitting(true);
+        try {
+          const shouldSend = await confirmResendAfterEndedRequest();
+          if (!shouldSend) return;
 
-        await handleSendRequest();
+          // Travelers must complete Stripe onboarding before sending/accepting paid requests.
+          if (!isSenderRequesting) {
+            try {
+              const stripeReady = await ensureTravelerStripeReady({ openInfo });
+              if (!stripeReady) return;
+            } catch (err) {
+              showSupabaseError(err);
+              return;
+            }
+          }
+
+          await handleSendRequest();
+        } finally {
+          setIsSubmitting(false);
+        }
       })();
     }, "send_request");
   };
@@ -228,13 +283,13 @@ export default function RequestSummary({
       <RequestDetailsGrid>
         <RequestTripDetailsSection
           route={tripRoute}
-          travelerName={trip.user?.fullName ?? "—"}
+          travelerName={formatPersonDisplayName(trip.user?.fullName)}
           departsLabel={format(new Date(trip.departDate), dateFormat)}
           highlightOrigin={routeMismatch.originMismatch}
         />
         <RequestParcelDetailsSection
           route={parcelRoute}
-          senderName={parcel.user.fullName}
+          senderName={formatPersonDisplayName(parcel.user.fullName)}
           itemsLabel={parcelItems}
           highlightOrigin={routeMismatch.originMismatch}
         />
@@ -252,14 +307,15 @@ export default function RequestSummary({
           type="button"
           variant="primary"
           size="sm"
-          disabled={!canSendRequest || requestLoaded}
-          isBusy={!canSendRequest || requestLoaded}
+          disabled={!canSendRequest || requestLoaded || isSubmitting}
+          isBusy={isSubmitting}
           onClick={handleSendClick}
           cornerRadiusClass="rounded-full"
           className={cn(
             "h-9 w-full shadow-sm",
             canSendRequest &&
               !requestLoaded &&
+              !isSubmitting &&
               "bg-primary-500 hover:bg-primary-600 hover:shadow-md active:scale-[0.99]",
             !canSendRequest &&
               "border border-neutral-200 bg-neutral-100 text-neutral-400 hover:bg-neutral-100 hover:shadow-none hover:ring-0",
@@ -269,9 +325,8 @@ export default function RequestSummary({
             as="span"
             textSize="sm"
             textVariant={canSendRequest ? "onDark" : "label"}
-            className="font-medium"
           >
-            Submit request
+            {isSubmitting ? "Processing..." : "Submit request"}
           </CustomText>
         </Button>
       </ModalFooter>

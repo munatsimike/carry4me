@@ -11,6 +11,7 @@ import { dateFormat, progress } from "@/types/Ui";
 import CustomModal from "@/app/components/CustomModal";
 import LineDivider from "@/app/components/LineDivider";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
+import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
 import { CarryRequestCostSummary } from "./CarryRequestCostSummary";
 export type MobileSection = "details" | "timeline";
 
@@ -57,7 +58,7 @@ export function MobileFirstHeader({
               textVariant="primary"
               className="truncate font-medium"
             >
-              {trip.traveler_name}
+              {formatPersonDisplayName(trip.traveler_name)}
             </CustomText>
           </div>
 
@@ -146,7 +147,7 @@ export function TripDetailsMobile({
           Traveler
         </CustomText>
         <CustomText textVariant="primary" textSize="sm">
-          {trip.traveler_name}
+          {formatPersonDisplayName(trip.traveler_name)}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
@@ -191,7 +192,7 @@ export function ParcelDetailsMobile({
           Sender
         </CustomText>
         <CustomText textVariant="primary" textSize="sm">
-          {parcel.sender_name}
+          {formatPersonDisplayName(parcel.sender_name)}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">

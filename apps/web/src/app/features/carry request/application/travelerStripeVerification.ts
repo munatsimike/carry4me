@@ -15,7 +15,7 @@ type ConnectOnboardingResponse = {
 };
 
 const VERIFICATION_MESSAGE =
-  "Please complete identity and payout verification before accepting paid requests.";
+  "To receive payouts for your deliveries, you need to complete a quick identity and bank account verification with Stripe. This helps us securely send your earnings and keep the platform safe.";
 
 export async function ensureTravelerStripeReady(options: {
   openInfo: (payload: Omit<InfoModalPayload, "type">) => void;
@@ -67,7 +67,7 @@ export async function ensureTravelerStripeReady(options: {
       onClick: () => {
         window.location.href = onboarding.onboarding_url!;
       },
-      secondaryLabel: "Close",
+      secondaryLabel: "Not now",
     });
     return false;
   }

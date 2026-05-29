@@ -6,7 +6,42 @@ export type NotificationEmailInput = {
   body: string;
   link: string | null;
   type?: string;
+  /** undefined = use type defaults; null = suppress CTA */
+  ctaLabel?: string | null;
+  extraParagraphs?: string[];
+  paymentRequired?: boolean;
 };
+
+export function resolveCtaLabel(notification: NotificationEmailInput): string | null {
+  if (notification.ctaLabel === null) {
+    return null;
+  }
+
+  if (notification.ctaLabel) {
+    return notification.ctaLabel;
+  }
+
+  return getDefaultCtaLabel(notification.type?.trim().toUpperCase() ?? "");
+}
+
+export function getDefaultCtaLabel(type: string): string | null {
+  switch (type) {
+    case "REQUEST_SENT":
+      return "Accept request";
+    case "REQUEST_REJECTED":
+      return "Browse trips";
+    case "REQUEST_CANCELED":
+      return "Browse options";
+    case "HANDOVER_CONFIRMED":
+      return "Confirm handover";
+    case "MATCHING_TRIP_POSTED":
+      return "View trip";
+    case "MATCHING_PARCEL_POSTED":
+      return "View parcel";
+    default:
+      return null;
+  }
+}
 
 export function resolveAbsoluteLink(link: string | null): string | null {
   if (!link?.trim()) return null;
@@ -45,14 +80,27 @@ export function renderParagraph(text: string): string {
   return `<p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#334155;">${escapeHtml(text)}</p>`;
 }
 
+export function renderExtraParagraphs(paragraphs: string[] | undefined): string {
+  return (paragraphs ?? []).map(renderParagraph).join("");
+}
+
 export function buildTextBody(
   notification: NotificationEmailInput,
-  ctaLabel = "View in Carry4Me",
+  ctaLabel?: string | null,
 ): string {
   const absoluteLink = resolveAbsoluteLink(notification.link);
+  const resolvedCtaLabel = ctaLabel === undefined
+    ? resolveCtaLabel(notification)
+    : ctaLabel;
   const parts = [notification.body];
-  if (absoluteLink) {
-    parts.push("", `${ctaLabel}: ${absoluteLink}`);
+
+  for (const paragraph of notification.extraParagraphs ?? []) {
+    parts.push(paragraph);
   }
+
+  if (absoluteLink && resolvedCtaLabel) {
+    parts.push("", `${resolvedCtaLabel}: ${absoluteLink}`);
+  }
+
   return parts.join("\n");
 }

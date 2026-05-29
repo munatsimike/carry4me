@@ -13,6 +13,7 @@ export type NotificationRow = {
   title: string;
   body: string;
   link: string | null;
+  metadata?: Record<string, unknown> | null;
 };
 
 export type ProfileRow = {

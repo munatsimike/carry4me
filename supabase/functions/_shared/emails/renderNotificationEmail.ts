@@ -1,5 +1,7 @@
 import { renderEmailFooterText } from "./components/EmailFooter.ts";
 import { renderGenericNotificationEmail } from "./templates/GenericNotification.ts";
+import { renderHandoverConfirmedEmail } from "./templates/HandoverConfirmed.ts";
+import { renderParcelReceivedEmail } from "./templates/ParcelReceived.ts";
 import { renderPaymentReceivedEmail } from "./templates/PaymentReceived.ts";
 import { renderRequestAcceptedEmail } from "./templates/RequestAccepted.ts";
 import type { NotificationEmailInput } from "./utils.ts";
@@ -22,6 +24,12 @@ export function renderNotificationEmail(
       break;
     case "PAYMENT_COMPLETED":
       rendered = renderPaymentReceivedEmail(notification);
+      break;
+    case "HANDOVER_CONFIRMED":
+      rendered = renderHandoverConfirmedEmail(notification);
+      break;
+    case "PARCEL_RECEIVED":
+      rendered = renderParcelReceivedEmail(notification);
       break;
     default:
       rendered = renderGenericNotificationEmail(notification);

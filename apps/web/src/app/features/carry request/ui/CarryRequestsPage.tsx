@@ -62,6 +62,7 @@ import {
   toListingUnavailableInfoModal,
 } from "../application/listingAvailabilityForRequest";
 import { useToast } from "@/app/components/Toast";
+import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
 import { format } from "date-fns";
 import {
   HorizontalMenu,
@@ -391,6 +392,16 @@ export default function CarryRequestsPage() {
   ) => {
     if (!actions.primary || pendingAction || !user) return;
 
+    if (actions.primary.key === UIACTIONKEYS.BROWSE_TRIPS) {
+      navigate("/travelers");
+      return;
+    }
+
+    if (actions.primary.key === UIACTIONKEYS.BROWSE_PARCELS) {
+      navigate("/parcels");
+      return;
+    }
+
     setPendingAction({
       requestId: carryRequest.carryRequestId,
       slot: "primary",
@@ -534,6 +545,18 @@ export default function CarryRequestsPage() {
         destructive: true,
       });
       if (!shouldCancel) return;
+    }
+
+    if (actions.secondary.key === UIACTIONKEYS.REJECT) {
+      const shouldReject = await confirm({
+        title: "Reject this request?",
+        message:
+          "This will decline the carry request. The other party will be notified and this cannot be undone.",
+        confirmText: "Yes, reject request",
+        cancelText: "Keep request",
+        destructive: true,
+      });
+      if (!shouldReject) return;
     }
 
     if (actions.secondary.key === UIACTIONKEYS.RESEND_DELIVERY_OTP) {
@@ -1033,7 +1056,7 @@ function DetailsSection({
           originCity: trip.origin.city,
           destinationCity: trip.destination.city,
         }}
-        travelerName={trip.traveler_name}
+        travelerName={formatPersonDisplayName(trip.traveler_name)}
         departsLabel={format(new Date(trip.departure_date), dateFormat)}
       />
       <RequestParcelDetailsSection
@@ -1043,7 +1066,7 @@ function DetailsSection({
           originCity: parcel.origin.city,
           destinationCity: parcel.destination.city,
         }}
-        senderName={parcel.sender_name}
+        senderName={formatPersonDisplayName(parcel.sender_name)}
         itemsLabel={categories}
       />
       <RequestCostSummarySection

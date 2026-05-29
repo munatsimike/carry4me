@@ -15,6 +15,7 @@ import { Card } from "@/app/components/card/Card";
 import StatsSection from "./components/StatsSection";
 import SuggestedMatchesTabs, {
   type SuggestedMatchesData,
+  type SuggestedMatchTabId,
 } from "./components/SuggestedMatchesTabs";
 import { EMPTY_DASHBOARD_SUGGESTED_MATCHES } from "./application/suggestedMatches";
 import { toColorMapper } from "./application/toColorMapper";
@@ -82,7 +83,7 @@ export default function DashboardPage() {
 
     const frame = requestAnimationFrame(scrollToSuggested);
     return () => cancelAnimationFrame(frame);
-  }, [location.hash, suggestionsLoading]);
+  }, [location.hash, suggestionsLoading, location.key]);
 
   useQueryErrorEffect(error, !!user?.id);
 
@@ -114,6 +115,16 @@ export default function DashboardPage() {
     if (!createParcel || !isMobile) return;
     navigate("/create-parcel?mode=create");
   }, [createParcel, isMobile, navigate]);
+
+  const tabFromSearch = new URLSearchParams(location.search).get("tab");
+  const suggestedMatchTabFromUrl: SuggestedMatchTabId | undefined =
+    tabFromSearch === "trips" || tabFromSearch === "parcels"
+      ? tabFromSearch
+      : undefined;
+  const suggestedMatchTab =
+    (
+      location.state as { suggestedMatchTab?: SuggestedMatchTabId } | null
+    )?.suggestedMatchTab ?? suggestedMatchTabFromUrl;
 
   return (
     <>
@@ -154,6 +165,7 @@ export default function DashboardPage() {
             data={suggestedMatches}
             isLoading={suggestionsLoading}
             error={suggestionsError}
+            initialTab={suggestedMatchTab}
           />
         </div>
       </section>
@@ -180,10 +192,12 @@ function DashboardSuggestedMatchesSection({
   data,
   isLoading,
   error,
+  initialTab,
 }: {
   data?: SuggestedMatchesData;
   isLoading: boolean;
   error: unknown;
+  initialTab?: SuggestedMatchTabId;
 }) {
   if (isLoading) {
     return (
@@ -211,7 +225,7 @@ function DashboardSuggestedMatchesSection({
 
   const matchData: SuggestedMatchesData = data ?? EMPTY_DASHBOARD_SUGGESTED_MATCHES;
 
-  return <SuggestedMatchesTabs data={matchData} />;
+  return <SuggestedMatchesTabs data={matchData} initialTab={initialTab} />;
 }
 
 function YourActivitySection({

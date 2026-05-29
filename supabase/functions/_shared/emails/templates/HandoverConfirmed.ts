@@ -9,27 +9,24 @@ import {
   resolveAbsoluteLink,
 } from "../utils.ts";
 
-export function renderRequestAcceptedEmail(notification: NotificationEmailInput): {
+/** Sent when one party confirms handover and the other still needs to confirm. */
+export function renderHandoverConfirmedEmail(notification: NotificationEmailInput): {
   html: string;
   text: string;
 } {
   const absoluteLink = resolveAbsoluteLink(notification.link);
-  const ctaLabel = resolveCtaLabel(notification);
+  const ctaLabel = resolveCtaLabel(notification) ?? "Confirm handover";
   const contentHtml = `
     ${renderParagraph(notification.body)}
     ${renderExtraParagraphs(notification.extraParagraphs)}
-    ${absoluteLink && ctaLabel ? renderCtaButton(ctaLabel, absoluteLink) : ""}
+    ${absoluteLink ? renderCtaButton(ctaLabel, absoluteLink) : ""}
   `;
-
-  const preheader = notification.paymentRequired
-    ? "Your carry request was accepted — payment is required."
-    : "Your carry request was accepted.";
 
   return {
     html: renderEmailLayout(contentHtml, {
       title: notification.title,
-      preheader,
+      preheader: "Please confirm handover on Carry4Me.",
     }),
-    text: buildTextBody(notification),
+    text: buildTextBody(notification, ctaLabel),
   };
 }

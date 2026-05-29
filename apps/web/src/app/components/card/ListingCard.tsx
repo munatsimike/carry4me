@@ -17,6 +17,24 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "../Toast";
 import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
 
+function toTitleCase(value: string): string {
+  return value.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatListingCardUserName(fullName: string | null | undefined): string {
+  if (!fullName?.trim()) return "";
+
+  const parts = fullName.trim().split(/\s+/);
+  const firstInitial = parts[0].charAt(0).toUpperCase();
+
+  if (parts.length === 1) {
+    return `${firstInitial}.`;
+  }
+
+  const surname = parts.slice(1).map(toTitleCase).join(" ");
+  return `${firstInitial}. ${surname}`;
+}
+
 interface ListingCardProps<T extends Listing> {
   mode?: CardMode;
   listing: T;
@@ -97,7 +115,7 @@ export function ListingCard<T extends Listing>({
       </div>
       <User
         tag={isTripListing ? "Traveler" : "Sender"}
-        userName={`${listing.user.fullName?.charAt(0)}${"."} ${listing.user.fullName.substring(listing.user.fullName.indexOf(" "))}`}
+        userName={formatListingCardUserName(listing.user.fullName)}
         avatar={listing.user.avatarUrl}
       />
       <LineDivider heightClass="my-2" />

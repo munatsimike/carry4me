@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { enrichNotificationForEmail } from "../_shared/emails/notificationEmailEnrichment.ts";
 import {
   sendNotificationEmailViaResend,
   type NotificationRow,
@@ -68,7 +69,7 @@ Deno.serve(async (req) => {
 
     const { data: notification, error: notificationError } = await supabaseAdmin
       .from("notifications")
-      .select("id, user_id, type, title, body, link")
+      .select("id, user_id, type, title, body, link, metadata")
       .eq("id", notificationId)
       .maybeSingle<NotificationRow>();
 
@@ -96,8 +97,13 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Recipient profile not found" }, 404);
     }
 
-    const outcome = await sendNotificationEmailViaResend(
+    const enrichedNotification = await enrichNotificationForEmail(
+      supabaseAdmin,
       notification,
+    );
+
+    const outcome = await sendNotificationEmailViaResend(
+      enrichedNotification,
       profile,
       resendApiKey,
     );
