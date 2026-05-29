@@ -55,8 +55,12 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Package, PackageX } from "lucide-react";
+import { Package, PackageX, Plane } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
+import {
+  getListingUnavailableOnAccept,
+  toListingUnavailableInfoModal,
+} from "../application/listingAvailabilityForRequest";
 import { useToast } from "@/app/components/Toast";
 import { format } from "date-fns";
 import {
@@ -280,22 +284,30 @@ export default function CarryRequestsPage() {
     }
   };
 
-  const isParcelAvailable = async (carryRequest: CarryRequest) => {
+  const ensureListingsAvailableOnAccept = async (carryRequest: CarryRequest) => {
     try {
-      const available = await performRequestActions.isParcelAvailable(
-        carryRequest.parcelId,
+      const listingIssue = await getListingUnavailableOnAccept(
+        performRequestActions.parcelRepo,
+        performRequestActions.tripRepo,
+        {
+          parcelId: carryRequest.parcelId,
+          tripId: carryRequest.tripId,
+        },
       );
 
-      if (!available) {
+      if (listingIssue) {
         openInfo({
-          icon: <PackageX className={dialogIconStyle} />,
-          title: "Parcel no longer available",
-          message: "This parcel is no longer available. Browse other parcels.",
-          label: "Browse parcels",
-          onClick: () => navigate("/parcels"),
+          ...toListingUnavailableInfoModal(listingIssue, navigate),
+          icon:
+            listingIssue.iconKind === "parcel" ? (
+              <PackageX className={dialogIconStyle} />
+            ) : (
+              <Plane className={dialogIconStyle} />
+            ),
         });
         return false;
       }
+
       return true;
     } catch (err) {
       showSupabaseError(err);
@@ -404,8 +416,9 @@ export default function CarryRequestsPage() {
         const weightResult = await checkTravelersWeight(carryRequest);
         if (!weightResult) return;
 
-        const parcelAvailability = await isParcelAvailable(carryRequest);
-        if (!parcelAvailability) return;
+        const listingsAvailable =
+          await ensureListingsAvailableOnAccept(carryRequest);
+        if (!listingsAvailable) return;
       }
 
       if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {

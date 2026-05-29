@@ -75,6 +75,19 @@ export class SupabaseTripsRepository implements TripsRepository {
     return requireData(data).id;
   }
 
+  async isTripActive(tripId: string): Promise<boolean> {
+    const { data, error, status } = await supabase
+      .from("trips")
+      .select("id")
+      .eq("id", tripId)
+      .eq("status", TRIPSTATUSES.ACTIVE)
+      .maybeSingle();
+
+    throwIfSupabaseError(error, status);
+
+    return !!data;
+  }
+
   async availableSpace(tripId: string, parcelWeight: number): Promise<boolean> {
     const { data, status, error } = await supabase.rpc(
       "trip_has_available_capacity",
