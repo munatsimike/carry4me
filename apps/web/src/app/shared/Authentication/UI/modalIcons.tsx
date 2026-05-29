@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import type { UniversalModalState } from "../application/DialogBoxModalProvider";
 
@@ -16,9 +16,7 @@ export function resolveModalIcon(modal: UniversalModalState): ReactNode {
     case "error":
       return <AlertCircle className={`${iconClass} text-red-600`} aria-hidden />;
     case "confirm":
-      return modal.destructive ? (
-        <AlertTriangle className={`${iconClass} text-amber-600`} aria-hidden />
-      ) : null;
+      return null;
     default:
       return null;
   }

@@ -437,3 +437,8 @@ entrypoint = "./functions/verify-delivery-otp/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/cancel-carry-request/index.ts"
+
+[functions.delete-account]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/delete-account/index.ts"

@@ -9,6 +9,7 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   useForm,
   type FieldNamesMarkedBoolean,
@@ -29,6 +30,8 @@ import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { UpdateProfileUseCase } from "../application/UpdateProfileUseCase";
 import { UpdateAuthDetailsUseCase } from "../application/UpdateAuthDetailsUseCase";
+import { DeleteAccountUseCase } from "../application/DeleteAccountUseCase";
+import { LogoutUseCase } from "../application/LogoutUseCase";
 import { DeleteAvatarUseCase } from "../application/DeleteAvatarUseCase";
 import ComboBox from "@/app/components/ComboBox";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
@@ -108,9 +111,12 @@ export default function ProfilePage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [changePhoneOpen, setChangePhoneOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { user, refreshProfile, profile } = useAuth();
   const { toast } = useToast();
-  const { showSupabaseError } = useUniversalModal();
+  const { showSupabaseError, confirm } = useUniversalModal();
 
   const {
     control,
@@ -157,6 +163,13 @@ export default function ProfilePage() {
     setEditing("security");
   };
 
+  useEffect(() => {
+    if (searchParams.get("edit") !== "security" || !profile) return;
+
+    openSecurityEdit();
+    setSearchParams({}, { replace: true });
+  }, [profile, searchParams, setSearchParams, setValue, user?.email]);
+
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const updateAuthDetails = useMemo(
     () => new UpdateAuthDetailsUseCase(authRepo),
@@ -173,6 +186,14 @@ export default function ProfilePage() {
 
   const deleteAvatarUseCase = useMemo(
     () => new DeleteAvatarUseCase(authRepo),
+    [authRepo],
+  );
+  const deleteAccountUseCase = useMemo(
+    () => new DeleteAccountUseCase(authRepo),
+    [authRepo],
+  );
+  const logoutUseCase = useMemo(
+    () => new LogoutUseCase(authRepo),
     [authRepo],
   );
   //  Hook must be BEFORE any conditional return
@@ -332,6 +353,30 @@ export default function ProfilePage() {
     strokeWidth: 1.75,
   };
 
+  const handleDeleteAccount = async () => {
+    const shouldDelete = await confirm({
+      title: "Delete your account?",
+      message:
+        "This permanently deletes your account, profile, listings, and personal data. Active carry requests must be finished or cancelled first. This cannot be undone.",
+      confirmText: "Delete account",
+      cancelText: "Cancel",
+      destructive: true,
+    });
+
+    if (!shouldDelete) return;
+
+    setDeletingAccount(true);
+    try {
+      await deleteAccountUseCase.execute();
+      await logoutUseCase.execute();
+      navigate("/", { replace: true });
+    } catch (err) {
+      showSupabaseError(err);
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <header className="mb-4 px-1 sm:px-2">
@@ -458,6 +503,39 @@ export default function ProfilePage() {
             />
           )}
         </AnimatePresence>
+        <LineDivider heightClass="my-4" />
+        <div className="flex flex-col gap-3">
+          <CustomText
+            as="h3"
+            textVariant="primary"
+            textSize="md"
+            className="font-medium"
+          >
+            Delete account
+          </CustomText>
+          <CustomText textVariant="secondary" textSize="sm">
+            Permanently remove your account and personal data. This cannot be
+            undone.
+          </CustomText>
+          <Button
+            type="button"
+            variant="error"
+            size="sm"
+            className="group w-full hover:border-error-200 sm:w-auto"
+            disabled={deletingAccount || !!editing}
+            isBusy={deletingAccount}
+            onClick={() => void handleDeleteAccount()}
+          >
+            <CustomText
+              as="span"
+              textVariant="primary"
+              textSize="sm"
+              className="group-hover:text-ink-error"
+            >
+              Delete account
+            </CustomText>
+          </Button>
+        </div>
       </Card>
     </DefaultContainer>
   );

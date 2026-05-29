@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import { sendEmailVerification } from "@/app/shared/supabase/sendEmailVerification";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
+import { getWebmailAction } from "../application/emailWebmail";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { AnimatePresence } from "framer-motion";
 import {
   createContext,
@@ -15,13 +17,30 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useNavigate } from "react-router-dom";
 
 type EmailVerificationModalMode = "check-email" | "verify-required" | null;
 
+type CheckEmailModalSource = "default" | "profile-saved";
+
+type CheckEmailModalState = {
+  email?: string;
+  source: CheckEmailModalSource;
+  onDismiss?: () => void;
+};
+
+type OpenCheckEmailModalOptions = {
+  email?: string;
+  source?: CheckEmailModalSource;
+  onDismiss?: () => void;
+};
+
 type EmailVerificationContextValue = {
-  openCheckEmailModal: () => void;
+  openCheckEmailModal: (options?: OpenCheckEmailModalOptions) => void;
   openVerifyEmailModal: () => void;
   closeEmailVerificationModal: () => void;
+  isBlockingCompleteProfileRedirect: boolean;
+  setPostProfileSaveFlowActive: (active: boolean) => void;
 };
 
 const EmailVerificationContext =
@@ -33,18 +52,38 @@ export function EmailVerificationProvider({
   children: ReactNode;
 }) {
   const [mode, setMode] = useState<EmailVerificationModalMode>(null);
+  const [checkEmailModal, setCheckEmailModal] =
+    useState<CheckEmailModalState | null>(null);
+  const [postProfileSaveFlowActive, setPostProfileSaveFlowActive] =
+    useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const { toast } = useToast();
   const { showSupabaseError } = useUniversalModal();
+  const { profile, user } = useAuth();
+  const navigate = useNavigate();
+
+  const verificationEmail =
+    profile?.email?.trim() || user?.email?.trim() || "";
 
   const closeEmailVerificationModal = useCallback(() => {
+    const onDismiss = checkEmailModal?.onDismiss;
     setMode(null);
+    setCheckEmailModal(null);
     setResendLoading(false);
-  }, []);
+    onDismiss?.();
+  }, [checkEmailModal?.onDismiss]);
 
-  const openCheckEmailModal = useCallback(() => {
-    setMode("check-email");
-  }, []);
+  const openCheckEmailModal = useCallback(
+    (options?: OpenCheckEmailModalOptions) => {
+      setCheckEmailModal({
+        email: options?.email,
+        source: options?.source ?? "default",
+        onDismiss: options?.onDismiss,
+      });
+      setMode("check-email");
+    },
+    [],
+  );
 
   const openVerifyEmailModal = useCallback(() => {
     setMode("verify-required");
@@ -67,12 +106,39 @@ export function EmailVerificationProvider({
       openCheckEmailModal,
       openVerifyEmailModal,
       closeEmailVerificationModal,
+      isBlockingCompleteProfileRedirect: postProfileSaveFlowActive,
+      setPostProfileSaveFlowActive,
     }),
-    [closeEmailVerificationModal, openCheckEmailModal, openVerifyEmailModal],
+    [
+      closeEmailVerificationModal,
+      openCheckEmailModal,
+      openVerifyEmailModal,
+      postProfileSaveFlowActive,
+    ],
   );
 
   const isCheckEmail = mode === "check-email";
   const isVerifyRequired = mode === "verify-required";
+  const isProfileSaved = checkEmailModal?.source === "profile-saved";
+  const webmailAction = checkEmailModal?.email
+    ? getWebmailAction(checkEmailModal.email)
+    : null;
+
+  const handleCheckEmailDismiss = useCallback(() => {
+    closeEmailVerificationModal();
+  }, [closeEmailVerificationModal]);
+
+  const handleOpenWebmail = useCallback(() => {
+    if (webmailAction) {
+      window.open(webmailAction.url, "_blank", "noopener,noreferrer");
+    }
+    closeEmailVerificationModal();
+  }, [closeEmailVerificationModal, webmailAction]);
+
+  const handleChangeEmail = useCallback(() => {
+    closeEmailVerificationModal();
+    navigate("/profile?edit=security");
+  }, [closeEmailVerificationModal, navigate]);
 
   return (
     <EmailVerificationContext.Provider value={value}>
@@ -87,18 +153,51 @@ export function EmailVerificationProvider({
                 textSize="lg"
                 className="font-medium"
               >
-                {isCheckEmail ? "Check your email" : "Verify your email"}
+                {isCheckEmail
+                  ? isProfileSaved
+                    ? "Profile saved"
+                    : "Check your email"
+                  : "Verify your email"}
               </CustomText>
 
-              <CustomText textVariant="secondary" textSize="sm">
-                {isCheckEmail
-                  ? "We sent a verification link to your email. Please verify it before posting parcels or trips."
-                  : "Please verify your email before posting parcels or trips on Carry4Me."}
-              </CustomText>
+              {isVerifyRequired ? (
+                verificationEmail ? (
+                  <CustomText textVariant="secondary" textSize="sm">
+                    We sent a verification link to{" "}
+                    <span className="font-medium text-neutral-800">
+                      {verificationEmail}
+                    </span>
+                    . Click the link to verify your email address.
+                  </CustomText>
+                ) : (
+                  <CustomText textVariant="secondary" textSize="sm">
+                    We sent a verification link to your email. Click the link
+                    to verify your email address.
+                  </CustomText>
+                )
+              ) : (
+                <CustomText textVariant="secondary" textSize="sm">
+                  {isCheckEmail
+                    ? isProfileSaved
+                      ? "Your profile has been saved. We sent a verification link to your email address. Please verify it before posting parcels or trips."
+                      : "We sent a verification link to your email. Please verify it before posting parcels or trips."
+                    : ""}
+                </CustomText>
+              )}
+
+              {isVerifyRequired ? (
+                <button
+                  type="button"
+                  onClick={handleChangeEmail}
+                  className="w-fit text-sm font-medium text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
+                >
+                  Change email
+                </button>
+              ) : null}
 
               <LineDivider heightClass="my-2" />
 
-              <div className="flex justify-end gap-3  mt-1">
+              <div className="mt-1 flex justify-end gap-3">
                 {isVerifyRequired && (
                   <Button
                     type="button"
@@ -107,7 +206,7 @@ export function EmailVerificationProvider({
                     onClick={closeEmailVerificationModal}
                     disabled={resendLoading}
                   >
-                    <CustomText textVariant="primary">Cancel</CustomText>
+                    <CustomText textVariant="primary">Close</CustomText>
                   </Button>
                 )}
 
@@ -133,15 +232,38 @@ export function EmailVerificationProvider({
                       </CustomText>
                     )}
                   </Button>
+                ) : isCheckEmail && webmailAction ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCheckEmailDismiss}
+                      className="!px-6"
+                    >
+                      <CustomText textVariant="primary">Close</CustomText>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={handleOpenWebmail}
+                      className="!px-6"
+                    >
+                      <CustomText textVariant="onDark">
+                        {webmailAction.label}
+                      </CustomText>
+                    </Button>
+                  </>
                 ) : (
                   <Button
                     type="button"
                     variant="primary"
                     size="sm"
-                    onClick={closeEmailVerificationModal}
+                    onClick={handleCheckEmailDismiss}
                     className="!px-6"
                   >
-                    <CustomText textVariant="onDark">Got it</CustomText>
+                    <CustomText textVariant="onDark">Okay</CustomText>
                   </Button>
                 )}
               </div>

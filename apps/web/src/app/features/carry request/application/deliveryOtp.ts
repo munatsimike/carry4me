@@ -30,8 +30,5 @@ export function deliveryOtpFailureMessage(result: VerifyDeliveryOtpResponse): st
   if (result.reason === "OTP_ATTEMPTS_EXCEEDED") {
     return "Too many failed attempts. Ask the sender for a new code.";
   }
-  if (result.reason === "OTP_EXPIRED") {
-    return "This code has expired. Ask the sender for a new code.";
-  }
   return "Could not verify the delivery code.";
 }

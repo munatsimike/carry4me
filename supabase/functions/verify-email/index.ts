@@ -81,32 +81,6 @@ Deno.serve(async (req) => {
       }, 200);
     }
 
-    if (new Date(tokenRow.expires_at).getTime() < Date.now()) {
-      await supabaseAdmin
-        .from("email_verification_tokens")
-        .delete()
-        .eq("token", token);
-
-      const alreadyVerified = await isProfileEmailVerified(
-        supabaseAdmin,
-        tokenRow.user_id,
-      );
-
-      if (alreadyVerified) {
-        return jsonResponse({
-          ok: true,
-          verified: true,
-          alreadyVerified: true,
-        });
-      }
-
-      return jsonResponse({
-        ok: false,
-        verified: false,
-        error: "link_expired",
-      }, 200);
-    }
-
     const alreadyVerified = await isProfileEmailVerified(
       supabaseAdmin,
       tokenRow.user_id,

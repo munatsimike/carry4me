@@ -13,6 +13,7 @@ import {
   isProfileIncomplete,
   needsCompleteProfile,
 } from "../domain/profileCompletion";
+import { useEmailVerification } from "../UI/EmailVerificationContext";
 
 type GuardProps = {
   children: ReactNode;
@@ -92,14 +93,19 @@ export function ProtectedRoute({
 
 export function CompleteProfileRoute({ children }: GuardProps) {
   const { loading, user, profile } = useAuth();
+  const { isBlockingCompleteProfileRedirect } = useEmailVerification();
 
-  if (loading) return null;
+  if (loading && !isBlockingCompleteProfileRedirect) return null;
 
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  if (profile && !isProfileIncomplete(profile)) {
+  if (
+    profile &&
+    !isProfileIncomplete(profile) &&
+    !isBlockingCompleteProfileRedirect
+  ) {
     return <Navigate to={getDefaultAuthedPath(profile)} replace />;
   }
 

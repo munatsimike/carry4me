@@ -13,7 +13,6 @@ type RequestBody = {
 
 const REASON_MESSAGES: Record<string, string> = {
   OTP_INVALID: "Incorrect code. Please try again.",
-  OTP_EXPIRED: "This code has expired. Ask the sender to request a new code.",
   OTP_ATTEMPTS_EXCEEDED:
     "Too many failed attempts. Request a new code from the sender.",
   OTP_NOT_GENERATED: "No delivery code is active yet. Wait for delivery confirmation.",

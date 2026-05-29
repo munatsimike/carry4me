@@ -15,6 +15,7 @@ import {
   throwIfSupabaseError,
 } from "@/app/shared/domain/AppError";
 import { toCountryName } from "@/app/Mapper";
+import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 
 function buildVerifiedPhoneProfileUpdate(
   phoneNumber: string,
@@ -197,6 +198,10 @@ export class SupabaseAuthRepository implements AuthRepository {
     const { error } = await supabase.auth.signOut();
     throwIfSupabaseError(error);
     return true;
+  }
+
+  async deleteAccount(): Promise<void> {
+    await invokeStripeFunction<{ ok: boolean }>("delete-account", {});
   }
 
   async deleteAvatar(

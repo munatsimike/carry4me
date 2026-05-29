@@ -35,6 +35,8 @@ import { useEmailVerification } from "./EmailVerificationContext";
 import CustomModal from "@/app/components/CustomModal";
 import Spinner from "@/app/components/Spinner";
 import { useToast } from "@/app/components/Toast";
+import { useNavigate } from "react-router-dom";
+import { getDefaultAuthedPath } from "../domain/accountStatus";
 import {
   countryCodeFromPhone,
   normalizeCountryCode,
@@ -75,9 +77,15 @@ export const profileDetailsSchema = z.object({
 export type ProfileDetailsFields = z.infer<typeof profileDetailsSchema>;
 
 /** Complete-profile route only — includes terms acceptance. */
-export const completeProfileFormSchema = profileDetailsSchema.extend({
-  agreeToTermsAndSafety: agreeToTermsAndSafetySchema,
-});
+export const completeProfileFormSchema = profileDetailsSchema
+  .extend({
+    confirmEmailAddress: emailSchema,
+    agreeToTermsAndSafety: agreeToTermsAndSafetySchema,
+  })
+  .refine((data) => data.emailAddress === data.confirmEmailAddress, {
+    message: "Email addresses do not match",
+    path: ["confirmEmailAddress"],
+  });
 
 export type CompleteProfileFields = z.infer<typeof completeProfileFormSchema>;
 
@@ -129,11 +137,16 @@ const item = {
 
 export default function CompleteProfile() {
   const [changePhoneOpen, setChangePhoneOpen] = useState(false);
+  const [showEmailVerificationBadge, setShowEmailVerificationBadge] = useState(
+    false,
+  );
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
   const { user, profile, refreshProfile } = useAuth();
   const { openSignInModal } = useSignInModal();
-  const { openCheckEmailModal } = useEmailVerification();
+  const { openCheckEmailModal, setPostProfileSaveFlowActive } =
+    useEmailVerification();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery();
   const {
     control,
@@ -153,6 +166,7 @@ export default function CompleteProfile() {
       firstName: "",
       lastName: "",
       emailAddress: user?.email ?? "",
+      confirmEmailAddress: "",
       phoneNumber: user?.phone ?? "",
       country: "",
       city: "",
@@ -208,6 +222,12 @@ export default function CompleteProfile() {
   }, [profile?.phoneNumber, setValue, user?.email, user?.phone]);
 
   useEffect(() => {
+    if (profile?.email?.trim()) {
+      setShowEmailVerificationBadge(true);
+    }
+  }, [profile?.email]);
+
+  useEffect(() => {
     if (!countryCodeForCities) return;
 
     const countryToSet = getCountryName(countryCodeForCities);
@@ -233,6 +253,8 @@ export default function CompleteProfile() {
   const { showSupabaseError } = useUniversalModal();
 
   const onSubmit = async (values: CompleteProfileFields) => {
+    setPostProfileSaveFlowActive(true);
+
     const newUser: AppUser = {
       auth: {
         id: null,
@@ -257,22 +279,50 @@ export default function CompleteProfile() {
       await signupUseCase.execute(newUser);
       await refreshProfile();
 
+      if (values.emailAddress.trim()) {
+        setValue("emailAddress", values.emailAddress.trim(), {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: true,
+        });
+        setValue("confirmEmailAddress", values.confirmEmailAddress.trim(), {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: true,
+        });
+        setShowEmailVerificationBadge(true);
+      }
+
+      const email = values.emailAddress.trim();
+      const finishProfileSaveFlow = () => {
+        setPostProfileSaveFlowActive(false);
+        navigate(getDefaultAuthedPath(profile), { replace: true });
+      };
+
       const shouldSendVerification =
-        values.emailAddress.trim().length > 0 &&
-        profile?.emailVerified !== true;
+        email.length > 0 && profile?.emailVerified !== true;
 
       if (shouldSendVerification) {
         try {
           await sendEmailVerification();
-          openCheckEmailModal();
+          openCheckEmailModal({
+            email,
+            source: "profile-saved",
+            onDismiss: finishProfileSaveFlow,
+          });
         } catch (verificationError) {
           console.error(
             "Failed to send verification email:",
             verificationError,
           );
+          finishProfileSaveFlow();
         }
+      } else {
+        finishProfileSaveFlow();
       }
     } catch (err) {
+      setPostProfileSaveFlowActive(false);
+
       const appError = AppError.fromUnknown(err);
       if (appError.code === "user_already_exists") {
         showSupabaseError(appError, "Sign in", {
@@ -295,6 +345,7 @@ export default function CompleteProfile() {
         touchedFields: touchedFields,
         isSubmitting: isSubmitting,
         onChangePhone: () => setChangePhoneOpen(true),
+        showEmailVerificationBadge,
       }}
       locationProps={{
         cityOptions,
@@ -355,6 +406,7 @@ type FormProps = {
   touchedFields: Partial<FieldNamesMarkedBoolean<CompleteProfileFields>>;
   isSubmitting: boolean;
   onChangePhone: () => void;
+  showEmailVerificationBadge: boolean;
 };
 
 type LocationProps = {
@@ -380,6 +432,7 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
     errors,
     touchedFields,
     control,
+    showEmailVerificationBadge,
   } = formProps;
   const { profile } = useAuth();
   const emailVerified = profile?.emailVerified === true;
@@ -387,6 +440,7 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
   const firstName = watch("firstName");
   const lastName = watch("lastName");
   const emailAddress = watch("emailAddress");
+  const confirmEmailAddress = watch("confirmEmailAddress");
   const phoneNumber = watch("phoneNumber");
   const { cityOptions, countryCodeForCities, getCountryName, phoneCountryCode } =
     locationProps;
@@ -456,11 +510,25 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
               isDirty={!!dirtyFields.emailAddress}
               isTouched={!!touchedFields.emailAddress}
               trailingIcon={
-                emailAddress?.trim() ? (
+                showEmailVerificationBadge &&
+                emailAddress?.trim() &&
+                !dirtyFields.emailAddress ? (
                   <EmailVerificationBadge verified={emailVerified} />
                 ) : undefined
               }
               {...register("emailAddress")}
+            />
+
+            <FloatingInputField
+              hasValue={!!confirmEmailAddress}
+              className="max-w-sm"
+              label="Confirm email"
+              type="email"
+              autoComplete="off"
+              error={errors.confirmEmailAddress?.message}
+              isDirty={!!dirtyFields.confirmEmailAddress}
+              isTouched={!!touchedFields.confirmEmailAddress}
+              {...register("confirmEmailAddress")}
             />
 
             <FloatingInputField
@@ -549,6 +617,7 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
           size="sm"
           className="w-full"
           disabled={isSubmitting}
+          isBusy={isSubmitting}
         >
           <CustomText textVariant="onDark" textSize="sm">
             {isSubmitting ? "Saving profile..." : "Save profile"}

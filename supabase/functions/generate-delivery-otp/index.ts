@@ -14,7 +14,7 @@ type RequestBody = {
   carry_request_id?: string;
 };
 
-/** Resend delivery OTP (e.g. after expiry). Generation also runs on MARK_DELIVERED via RPC. */
+/** Resend delivery OTP. Generation also runs on MARK_DELIVERED via RPC. */
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
   if (preflight) return preflight;

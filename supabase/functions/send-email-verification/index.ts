@@ -5,7 +5,9 @@ import {
   RESEND_API_URL,
 } from "../_shared/notificationEmail.ts";
 import { renderEmailVerificationEmail } from "../_shared/emails/renderNotificationEmail.ts";
-const TOKEN_TTL_HOURS = 24;
+
+/** Stored for schema compatibility; verification links do not expire. */
+const VERIFICATION_TOKEN_EXPIRES_AT = "2099-12-31T23:59:59.999Z";
 
 type ProfileRow = {
   email: string | null;
@@ -74,9 +76,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ ok: true, sent: false, reason: "already_verified" });
     }
 
-    const expiresAt = new Date(
-      Date.now() + TOKEN_TTL_HOURS * 60 * 60 * 1000,
-    ).toISOString();
+    const expiresAt = VERIFICATION_TOKEN_EXPIRES_AT;
 
     await supabaseAdmin
       .from("email_verification_tokens")
@@ -103,10 +103,7 @@ Deno.serve(async (req) => {
     );
     const verifyUrl = `${appUrl}/verify-email?token=${tokenRow.token}`;
 
-    const { html, text } = renderEmailVerificationEmail(
-      verifyUrl,
-      TOKEN_TTL_HOURS,
-    );
+    const { html, text } = renderEmailVerificationEmail(verifyUrl);
 
     const resendResponse = await fetch(RESEND_API_URL, {
       method: "POST",

@@ -36,4 +36,5 @@ export interface AuthRepository {
     token: string,
     countryCode: string,
   ): Promise<string>;
+  deleteAccount(): Promise<void>;
 }
