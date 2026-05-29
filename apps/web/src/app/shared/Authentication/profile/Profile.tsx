@@ -24,7 +24,7 @@ import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
-import { toflag } from "@/app/Mapper";
+import { toDialCode, toflag } from "@/app/Mapper";
 import { Lock, MapPin, Pencil, ShieldHalf, User2 } from "lucide-react";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
@@ -87,6 +87,40 @@ function getProfileEmail(
   userEmail?: string | null,
 ): string {
   return profile?.email?.trim() || userEmail?.trim() || "";
+}
+
+function toTitleCase(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+}
+
+function formatProfileDisplayName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+
+  const firstName = toTitleCase(parts[0]);
+  const lastName = parts.slice(1).map(toTitleCase).join(" ");
+
+  return lastName ? `${firstName} ${lastName}` : firstName;
+}
+
+function formatDisplayPhoneNumber(
+  phoneNumber: string | null | undefined,
+  countryCode: string | null | undefined,
+): string {
+  if (!phoneNumber?.trim()) return "";
+  if (phoneNumber.trim().startsWith("+")) return phoneNumber.trim();
+
+  const digits = phoneNumber.replace(/\D/g, "");
+  const dialCode = countryCode ? toDialCode(countryCode) : null;
+
+  if (!digits || !dialCode) return phoneNumber;
+
+  const dialDigits = dialCode.replace(/\D/g, "");
+  if (digits.startsWith(dialDigits)) return `+${digits}`;
+
+  return `${dialCode}${digits.replace(/^0+/, "")}`;
 }
 
 
@@ -513,10 +547,6 @@ export default function ProfilePage() {
           >
             Delete account
           </CustomText>
-          <CustomText textVariant="secondary" textSize="sm">
-            Permanently remove your account and personal data. This cannot be
-            undone.
-          </CustomText>
           <Button
             type="button"
             variant="error"
@@ -693,7 +723,10 @@ function SecurityDetailsCard({
               email={profile.email ?? watch("emailAddress")}
               emailVerified={profile.emailVerified === true}
             />
-            <PhoneInfoRow phone={profile.phoneNumber} />
+            <PhoneInfoRow
+              phone={profile.phoneNumber}
+              countryCode={profile.countryCode}
+            />
             <button
               type="button"
               onClick={onChangePhone}
@@ -740,7 +773,10 @@ function SecurityDetailsCard({
               className="w-full cursor-not-allowed bg-neutral-50 sm:max-w-[350px]"
               hasValue={!!profile.phoneNumber}
               label="Phone number"
-              value={profile.phoneNumber ?? ""}
+              value={formatDisplayPhoneNumber(
+                profile.phoneNumber,
+                profile.countryCode,
+              )}
               readOnly
               disabled
               trailingIcon={<EmailVerificationBadge verified compact />}
@@ -817,8 +853,18 @@ function PersonalDetailsSection({
             exit={{ opacity: 0 }}
             className="flex flex-col gap-2 pl-1"
           >
-            <InfoRow label="First name" value={nameParts[0]} />
-            <InfoRow label="Last name" value={nameParts.slice(1).join(" ")} />
+            <InfoRow
+              label="First name"
+              value={nameParts[0] ? toTitleCase(nameParts[0]) : undefined}
+            />
+            <InfoRow
+              label="Last name"
+              value={
+                nameParts.length > 1
+                  ? nameParts.slice(1).map(toTitleCase).join(" ")
+                  : undefined
+              }
+            />
           </motion.div>
         ) : (
           <motion.div
@@ -1364,14 +1410,22 @@ function EmailInfoRow({
   );
 }
 
-function PhoneInfoRow({ phone }: { phone?: string | null }) {
+function PhoneInfoRow({
+  phone,
+  countryCode,
+}: {
+  phone?: string | null;
+  countryCode?: string | null;
+}) {
+  const display = formatDisplayPhoneNumber(phone, countryCode) || "—";
+
   return (
     <div className="grid grid-cols-[130px_auto] sm:grid-cols-[150px_auto] gap-y-1 sm:gap-x-6">
       <CustomText textVariant="label" textSize="sm">
         Phone
       </CustomText>
       <span className="flex min-w-0 flex-wrap items-center gap-2">
-        <CustomText textVariant="primary">{phone ?? "—"}</CustomText>
+        <CustomText textVariant="primary">{display}</CustomText>
         <EmailVerificationBadge verified compact />
       </span>
     </div>
@@ -1509,7 +1563,7 @@ function CardHeaderSection({
             textVariant="primary"
             className="font-medium"
           >
-            {fullName || "Your profile"}
+            {formatProfileDisplayName(fullName) || "Your profile"}
           </CustomText>
           <CustomText
             textSize="sm"
