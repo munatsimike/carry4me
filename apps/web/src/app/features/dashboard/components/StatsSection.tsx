@@ -54,7 +54,7 @@ export default function StatsSection({ statsList }: StatsSectionProps) {
                       "flex items-center justify-between gap-3 rounded-2xl px-3 py-3 transition-colors",
                       isInteractive
                         ? "hover:bg-neutral-50"
-                        : "hover:bg-neutral-50 cursor-default",
+                        : "hover:bg-neutral-50 cursor-text",
                       index < statsList.length - 1
                         ? "border-b border-neutral-100"
                         : "",
