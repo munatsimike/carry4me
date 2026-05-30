@@ -76,6 +76,16 @@ function isPermissionDenied(error: unknown): boolean {
   );
 }
 
+function normalizeFullName(fullName: string | null | undefined): string {
+  if (!fullName?.trim()) return "";
+
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function toUserProfile(profile: Record<string, any>): UserProfile {
   const publicUrl = fetchPublicUrl(profile.avatar_url ?? null);
   return {
@@ -113,7 +123,7 @@ export class SupabaseAuthRepository implements AuthRepository {
     }
 
     const { data, error } = await supabase.rpc("complete_current_profile", {
-      p_full_name: appUser.profile.fullName,
+      p_full_name: normalizeFullName(appUser.profile.fullName),
       p_city: appUser.profile.city,
       p_country_code: appUser.profile.countryCode,
       p_country: appUser.profile.country ?? null,
@@ -184,9 +194,16 @@ export class SupabaseAuthRepository implements AuthRepository {
     userId: string,
     updateProfile: Partial<UpdateProfileDto>,
   ): Promise<string> {
+    const normalizedUpdate = {
+      ...updateProfile,
+      ...(typeof updateProfile.full_name === "string"
+        ? { full_name: normalizeFullName(updateProfile.full_name) }
+        : {}),
+    };
+
     const { error, status } = await supabase
       .from("profiles")
-      .update(updateProfile)
+      .update(normalizedUpdate)
       .eq("id", userId);
 
     throwIfSupabaseError(error, status);

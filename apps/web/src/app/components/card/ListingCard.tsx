@@ -17,10 +17,6 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "../Toast";
 import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
 
-function toTitleCase(value: string): string {
-  return value.replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
 function formatListingCardUserName(fullName: string | null | undefined): string {
   if (!fullName?.trim()) return "";
 
@@ -31,7 +27,7 @@ function formatListingCardUserName(fullName: string | null | undefined): string 
     return `${firstInitial}.`;
   }
 
-  const surname = parts.slice(1).map(toTitleCase).join(" ");
+  const surname = parts.slice(1).join(" ");
   return `${firstInitial}. ${surname}`;
 }
 

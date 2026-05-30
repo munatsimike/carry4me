@@ -21,7 +21,7 @@ import { EMPTY_DASHBOARD_SUGGESTED_MATCHES } from "./application/suggestedMatche
 import { toColorMapper } from "./application/toColorMapper";
 import type { StatsItem } from "./domain/stats.types";
 import type { DashboardData } from "./domain/DashboardData";
-import { Clock, Truck } from "lucide-react";
+import { Clock, ClipboardList } from "lucide-react";
 import type { CarryRequestNotification } from "../carry request/carry request events/domain/CarryRequestNotification";
 import {
   useDashboard,
@@ -332,14 +332,14 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
         <div className="flex flex-col gap-4 bg-white p-3 sm:p-4">
           <span className="inline-flex min-w-0 items-center gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-              <Truck className="h-5 w-5" strokeWidth={1.75} />
+              <ClipboardList className="h-5 w-5" strokeWidth={1.75} />
             </span>
             <CustomText
               textVariant="primary"
               textSize="md"
               className="truncate"
             >
-              Delivery summary
+              Request progress
             </CustomText>
           </span>
 

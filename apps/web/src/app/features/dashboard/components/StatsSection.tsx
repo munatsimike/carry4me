@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import {
-  CircleCheck,
+  Clock3,
   ClipboardList,
   Package,
   Plane,
+  Truck,
   type LucideIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -15,8 +16,8 @@ type StatsSectionProps = {
 };
 
 const statIconByName: Record<string, LucideIcon> = {
-  "Active Requests": ClipboardList,
-  Deliveries: CircleCheck,
+  "Active Requests": Clock3,
+  Deliveries: Truck,
   "Posted Trips": Plane,
   "Posted  Parcels": Package,
   "Posted Parcels": Package,

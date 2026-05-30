@@ -89,20 +89,8 @@ function getProfileEmail(
   return profile?.email?.trim() || userEmail?.trim() || "";
 }
 
-function toTitleCase(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
-}
-
 function formatProfileDisplayName(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "";
-
-  const firstName = toTitleCase(parts[0]);
-  const lastName = parts.slice(1).map(toTitleCase).join(" ");
-
-  return lastName ? `${firstName} ${lastName}` : firstName;
+  return fullName.trim();
 }
 
 function formatDisplayPhoneNumber(
@@ -855,13 +843,13 @@ function PersonalDetailsSection({
           >
             <InfoRow
               label="First name"
-              value={nameParts[0] ? toTitleCase(nameParts[0]) : undefined}
+              value={nameParts[0] ? nameParts[0] : undefined}
             />
             <InfoRow
               label="Last name"
               value={
                 nameParts.length > 1
-                  ? nameParts.slice(1).map(toTitleCase).join(" ")
+                  ? nameParts.slice(1).join(" ")
                   : undefined
               }
             />

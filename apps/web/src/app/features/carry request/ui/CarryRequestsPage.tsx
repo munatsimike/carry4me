@@ -357,8 +357,11 @@ export default function CarryRequestsPage() {
 
       refreshProfile();
 
-      toast(primaryActionSuccessMessage(UIACTIONKEYS.PAY, response), {
-        variant: "success",
+      openInfo({
+        title: "Payment success",
+        message:
+          "Payment was successful. We sent the traveler's details by email and in-app notification. Please arrange package handover and confirm once done.",
+        label: "Close",
       });
     } finally {
       setPendingAction(null);
