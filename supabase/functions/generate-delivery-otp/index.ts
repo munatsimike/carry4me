@@ -14,6 +14,59 @@ type RequestBody = {
   carry_request_id?: string;
 };
 
+async function ensureDeliveryOtpNotification(
+  supabaseAdmin: Parameters<typeof issueDeliveryOtp>[0],
+  input: {
+    carryRequestId: string;
+    senderUserId: string;
+    otp: string | undefined;
+  },
+) {
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("notifications")
+    .select("id")
+    .eq("user_id", input.senderUserId)
+    .eq("type", "DELIVERY_OTP")
+    .filter("metadata->>carry_request_id", "eq", input.carryRequestId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error(
+      "generate-delivery-otp: failed checking existing notification",
+      existingError.message,
+    );
+    return;
+  }
+
+  if (existing?.id) {
+    return;
+  }
+
+  const otpText = input.otp
+    ? `Share this 6-digit code with the recipient. They must provide it to the traveler when receiving the package: ${input.otp}.`
+    : "Your payment release OTP is ready. Open Carry4Me to view and share it with the recipient.";
+
+  const { error: insertError } = await supabaseAdmin
+    .from("notifications")
+    .insert({
+      user_id: input.senderUserId,
+      type: "DELIVERY_OTP",
+      title: "Your payment release code",
+      body: otpText,
+      link: "/requests",
+      metadata: { carry_request_id: input.carryRequestId },
+    });
+
+  if (insertError) {
+    console.error(
+      "generate-delivery-otp: failed inserting fallback notification",
+      insertError.message,
+    );
+  }
+}
+
 /** Resend delivery OTP to the sender (issued on handover confirm, reusable in transit). */
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -59,6 +112,12 @@ Deno.serve(async (req) => {
     if (!issued.ok) {
       return jsonResponse({ error: "Could not generate delivery OTP" }, 500);
     }
+
+    await ensureDeliveryOtpNotification(supabaseAdmin, {
+      carryRequestId,
+      senderUserId: access.row.sender_user_id,
+      otp: issued.otp,
+    });
 
     const response: Record<string, unknown> = {
       ok: true,
