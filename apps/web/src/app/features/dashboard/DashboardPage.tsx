@@ -238,7 +238,8 @@ function YourActivitySection({
         {"Your activities"}
       </CustomText>
       <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:items-start">
-        <DeliverySummary activityList={activityList} />
+        <RequestProgress
+       activityList={activityList} />
         <RecentActivity recentActivities={recentActivityList} />
       </div>
     </div>
@@ -261,7 +262,7 @@ function RecentActivity({
         <div className="flex flex-col px-2 mx-auto">
           <span className="flex flex-col gap-3">
             <span className="inline-flex gap-3 items-center">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                 <Clock className="h-5 w-5" strokeWidth={1.75} />
               </span>
               <CustomText textVariant="primary" textSize="md">
@@ -320,7 +321,7 @@ function RecentActivity({
 }
 
 // card to disply activity items
-function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
+function RequestProgress({ activityList }: { activityList: StatsItem[] }) {
   return (
     <motion.div
       initial={{ scale: 0.96, opacity: 0 }}
@@ -329,9 +330,9 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       className="relative w-full max-w-full overflow-hidden rounded-3xl bg-slate-200/80 pt-1 lg:max-w-sm"
     >
       <Card enableHover={false} className="h-full flex-1 border-0">
-        <div className="flex flex-col gap-4 bg-white px-4 pb-4 pt-0 sm:px-5 sm:pb-5 sm:pt-0">
+        <div className="flex flex-col gap-4 bg-white px-4 pb-4 pt-0 sm:px-3 sm:pb-5 sm:pt-0">
           <span className="inline-flex min-w-0 items-center gap-3 border-b border-neutral-100 pb-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <ClipboardList className="h-5 w-5" strokeWidth={1.75} />
             </span>
             <CustomText
@@ -343,14 +344,14 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
             </CustomText>
           </span>
 
-          <DeliverySummaryItem activityList={activityList} />
+          <RequestProgressItem activityList={activityList} />
         </div>
       </Card>
     </motion.div>
   );
 }
 
-function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
+function RequestProgressItem({ activityList }: { activityList: StatsItem[] }) {
   return (
     <span className="flex flex-col gap-2.5">
       {activityList.map((item) => {

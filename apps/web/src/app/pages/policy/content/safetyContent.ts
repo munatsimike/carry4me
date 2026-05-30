@@ -14,7 +14,6 @@ export const safetyContent: PolicyPageContent = {
         "Describe parcel contents accurately and honestly.",
         "Pack items securely to prevent damage in transit.",
         "Confirm the traveler’s profile and trip details before handover.",
-        "Use in-app messaging and bookings—avoid off-platform arrangements.",
         "Never send illegal, dangerous, or prohibited items.",
       ],
     },
@@ -33,11 +32,9 @@ export const safetyContent: PolicyPageContent = {
       id: "meetup",
       title: "Safe Meetup Guidelines",
       bullets: [
-        "Meet in public, well-lit locations such as airports, transit hubs, or busy cafés.",
-        "Bring a friend when possible, especially for high-value items.",
+        "Choose a handover location that works for both parties, such as a workplace, residence, transport hub, or public meeting point.",
         "Verify the other party’s identity matches their Carry4Me profile.",
         "Complete handover only after both sides agree the parcel matches the listing.",
-        "Leave immediately if a meetup feels unsafe—contact support.",
       ],
     },
     {
