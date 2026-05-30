@@ -40,7 +40,7 @@ export default function StatsSection({ statsList }: StatsSectionProps) {
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className="relative w-full overflow-hidden rounded-3xl bg-primary-100/70 pt-1"
       >
-        <div className="rounded-3xl bg-white p-1 shadow-sm">
+        <div className="rounded-3xl bg-white py-1 shadow-sm px-4">
           <ul className="flex flex-col">
             {statsList.map((item, index) => {
               const Icon = iconForStat(item.itemName);

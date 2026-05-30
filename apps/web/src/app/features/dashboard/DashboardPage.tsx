@@ -259,7 +259,7 @@ function RecentActivity({
       className="relative w-full max-w-full overflow-hidden rounded-3xl bg-emerald-200 pt-1 lg:max-w-sm"
     >
       <Card enableHover={false} paddingClass="p-3" className="h-full flex-1">
-        <div className="flex flex-col px-2 mx-auto">
+        <div className="flex flex-col px-2 pt-1 mx-auto">
           <span className="flex flex-col gap-3">
             <span className="inline-flex gap-3 items-center">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
