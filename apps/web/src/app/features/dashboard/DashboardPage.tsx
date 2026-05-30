@@ -326,18 +326,18 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="relative w-full max-w-full overflow-hidden rounded-3xl bg-slate-200 pt-1 lg:max-w-sm"
+      className="relative w-full max-w-full overflow-hidden rounded-3xl bg-slate-200/80 pt-1 lg:max-w-sm"
     >
-      <Card enableHover={false} className="h-full flex-1">
-        <div className="flex flex-col gap-4 bg-white p-3 sm:p-4">
-          <span className="inline-flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+      <Card enableHover={false} className="h-full flex-1 border-0">
+        <div className="flex flex-col gap-4 bg-white px-4 pb-4 pt-0 sm:px-5 sm:pb-5 sm:pt-0">
+          <span className="inline-flex min-w-0 items-center gap-3 border-b border-neutral-100 pb-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <ClipboardList className="h-5 w-5" strokeWidth={1.75} />
             </span>
             <CustomText
               textVariant="primary"
               textSize="md"
-              className="truncate"
+              className="truncate font-medium"
             >
               Request progress
             </CustomText>
@@ -352,31 +352,43 @@ function DeliverySummary({ activityList }: { activityList: StatsItem[] }) {
 
 function DeliverySummaryItem({ activityList }: { activityList: StatsItem[] }) {
   return (
-    <span className="flex flex-col gap-3">
-      {activityList.map((item) => (
-        <span
-          key={item.itemName}
-          className="inline-flex min-w-0 items-center gap-3"
-        >
+    <span className="flex flex-col gap-2.5">
+      {activityList.map((item) => {
+        const isInteractive = (item.count ?? 0) > 0 && !!item.link;
+
+        return (
           <span
-            className={`w-2 h-2 rounded-full ${item.status && toColorMapper[item.status]}`}
-          />
-          <Link to={`${item.count > 0 ? item.link : ""}`}>
-            <span className="inline-flex min-w-0 items-center gap-2">
+            key={item.itemName}
+            className={[
+              "inline-flex min-w-0 items-center justify-between gap-3 rounded-xl border border-neutral-100 bg-neutral-50 px-3 py-2.5 transition-all",
+              isInteractive
+                ? "hover:bg-neutral-100 hover:-translate-y-0.5"
+                : "hover:bg-neutral-100",
+            ].join(" ")}
+          >
+          <span className="inline-flex min-w-0 items-center gap-2.5">
+            <span
+              className={`h-2 w-2 rounded-full ${item.status && toColorMapper[item.status]}`}
+            />
+            <Link to={`${isInteractive ? item.link : ""}`}>
               <CustomText
-                textVariant={`${item.count > 0 ? "secondary" : "helperText"}`}
-                className={`${item.count > 0 ? "cursor-pointer" : "cursor-text"}`}
+                textVariant={`${isInteractive ? "secondary" : "helperText"}`}
+                className={`${isInteractive ? "cursor-pointer" : "cursor-text"}`}
               >
                 {item.itemName}
               </CustomText>
-              <CustomText
-                textVariant={`${item.count > 0 ? "secondary" : "helperText"}`}
-                textSize="xs"
-              >{`(${item.count})`}</CustomText>
-            </span>
-          </Link>
-        </span>
-      ))}
+            </Link>
+          </span>
+          <CustomText
+            textVariant={`${isInteractive ? "secondary" : "helperText"}`}
+            textSize="xs"
+            className="rounded-full bg-white px-2 py-0.5"
+          >
+            {item.count}
+          </CustomText>
+          </span>
+        );
+      })}
     </span>
   );
 }
