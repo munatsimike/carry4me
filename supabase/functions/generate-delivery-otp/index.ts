@@ -53,7 +53,7 @@ async function ensureDeliveryOtpNotification(
     .insert({
       user_id: input.senderUserId,
       type: "DELIVERY_OTP",
-      title: "Your payment release code",
+      title: "Payment release code",
       body: otpText,
       link: "/requests",
       metadata: { carry_request_id: input.carryRequestId },
