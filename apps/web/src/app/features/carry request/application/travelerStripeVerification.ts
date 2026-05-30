@@ -63,6 +63,7 @@ export async function ensureTravelerStripeReady(options: {
     options.openInfo({
       title: "Stripe verification required",
       message: VERIFICATION_MESSAGE,
+      width: "xl",
       label: "Continue to Stripe",
       onClick: () => {
         window.location.href = onboarding.onboarding_url!;
@@ -75,6 +76,7 @@ export async function ensureTravelerStripeReady(options: {
   options.openInfo({
     title: "Stripe verification required",
     message: VERIFICATION_MESSAGE,
+    width: "xl",
     label: "Close",
   });
   return false;

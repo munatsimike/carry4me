@@ -5,6 +5,7 @@ export { escapeHtml } from "./emails/escapeHtml.ts";
 export { renderNotificationEmail } from "./emails/renderNotificationEmail.ts";
 
 import { renderNotificationEmail } from "./emails/renderNotificationEmail.ts";
+import type { NotificationEmailInput } from "./emails/utils.ts";
 
 export type NotificationRow = {
   id: string;
@@ -25,13 +26,24 @@ export type SendNotificationEmailOutcome =
   | { sent: true; messageId: string | null; providerResponse: unknown }
   | { sent: false; reason: "email_missing" | "email_not_verified" };
 
-export function buildNotificationEmailBodies(notification: NotificationRow) {
-  return renderNotificationEmail({
+export function buildNotificationEmailBodies(
+  notification: NotificationRow | NotificationEmailInput,
+) {
+  const input: NotificationEmailInput = {
     title: notification.title,
     body: notification.body,
     link: notification.link,
     type: notification.type,
-  });
+    extraParagraphs: "extraParagraphs" in notification
+      ? notification.extraParagraphs
+      : undefined,
+    ctaLabel: "ctaLabel" in notification ? notification.ctaLabel : undefined,
+    paymentRequired: "paymentRequired" in notification
+      ? notification.paymentRequired
+      : undefined,
+  };
+
+  return renderNotificationEmail(input);
 }
 
 export type SendNotificationEmailOptions = {
@@ -40,7 +52,7 @@ export type SendNotificationEmailOptions = {
 };
 
 export async function sendNotificationEmailViaResend(
-  notification: NotificationRow,
+  notification: NotificationRow | NotificationEmailInput,
   profile: ProfileRow,
   resendApiKey: string,
   options: SendNotificationEmailOptions = {},

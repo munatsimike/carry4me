@@ -177,11 +177,12 @@ export async function enrichNotificationForEmail(
       const senderMustPay = recipientIsSender;
       return {
         ...base,
+        link: base.link?.trim() ? base.link : "/requests",
         paymentRequired: senderMustPay,
-        ctaLabel: senderMustPay ? "Complete payment" : "View request",
+        ctaLabel: senderMustPay ? "Make payment" : "View request",
         extraParagraphs: senderMustPay
           ? [
-              "Please complete payment within the reservation window to secure this carry request.",
+              "Your payment will be held securely until delivery is complete.",
             ]
           : undefined,
       };
@@ -197,7 +198,7 @@ export async function enrichNotificationForEmail(
           ...base,
           title: "Payment received",
           body:
-            "The sender has completed payment for this carry request. Please arrange the package handover with the sender and, once the handover is complete, confirm it on this request in your account.",
+            "The sender has paid. Please arrange the package handover and confirm it once completed.",
           extraParagraphs: buildContactParagraphs(
             "Sender contact details:",
             senderContact,
@@ -217,7 +218,7 @@ export async function enrichNotificationForEmail(
           ...base,
           title: "Payment completed",
           body:
-            "Your payment for this carry request is complete. Please arrange the package handover with the traveler and, once the handover is complete, confirm it on this request in your account.",
+            "Payment has been completed. Please arrange the package handover with the traveler and confirm the handover.",
           extraParagraphs: buildContactParagraphs(
             "Traveler contact details:",
             travelerContact,

@@ -16,6 +16,7 @@ import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import { processActionEmailQueue } from "../application/processActionEmailQueue";
+import { processEmailQueueInBackground } from "@/app/shared/supabase/processEmailQueue";
 import { ensureTravelerStripeReady } from "../application/travelerStripeVerification";
 import {
   deliveryOtpFailureMessage,
@@ -27,6 +28,7 @@ import {
   type CancelCarryRequestResponse,
 } from "../application/cancelCarryRequest";
 import PayCarryRequestModal from "./PayCarryRequestModal";
+import { syncCarryRequestPayment } from "../application/carryRequestPayment";
 import { calculateCarryRequestPricing } from "../domain/carryRequestPricing";
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 import statusColor from "./StatustColorMapper";
@@ -177,6 +179,7 @@ export default function CarryRequestsPage() {
 
   const [searchParams] = useSearchParams();
   const stripeParamHandledRef = useRef<string | null>(null);
+  const paymentReturnHandledRef = useRef<string | null>(null);
 
   const tabCounts = useMemo<Record<SelectedTab, number>>(() => {
     const counts: Record<SelectedTab, number> = {
@@ -322,16 +325,16 @@ export default function CarryRequestsPage() {
   } | null>(null);
   const [paymentRequest, setPaymentRequest] = useState<CarryRequest | null>(null);
 
-  const completePaymentAfterStripe = async (carryRequest: CarryRequest) => {
+  const completePaymentAfterStripe = async (carryRequestId: string) => {
     setPendingAction({
-      requestId: carryRequest.carryRequestId,
+      requestId: carryRequestId,
       slot: "primary",
     });
 
     try {
       const response = await performRequestActions.execute(
         UIACTIONKEYS.PAY,
-        carryRequest.carryRequestId,
+        carryRequestId,
       );
 
       if (!response.ok) {
@@ -346,7 +349,7 @@ export default function CarryRequestsPage() {
         return;
       }
 
-      processActionEmailQueue(response, carryRequest.carryRequestId);
+      processActionEmailQueue(response, carryRequestId);
 
       await queryClient.refetchQueries({
         queryKey: queryKeys.carryRequests.all,
@@ -386,11 +389,62 @@ export default function CarryRequestsPage() {
     })();
   }, [searchParams, refreshProfile, showSupabaseError, navigate]);
 
+  useEffect(() => {
+    const carryRequestId = searchParams.get("carry_request_id")?.trim();
+    const paymentIntentId = searchParams.get("payment_intent")?.trim();
+    const redirectStatus = searchParams.get("redirect_status")?.trim();
+
+    if (!carryRequestId || !paymentIntentId || !redirectStatus) return;
+
+    const returnKey = `${carryRequestId}:${paymentIntentId}:${redirectStatus}`;
+    if (paymentReturnHandledRef.current === returnKey) return;
+    paymentReturnHandledRef.current = returnKey;
+
+    void (async () => {
+      try {
+        if (redirectStatus === "succeeded") {
+          const syncResult = await syncCarryRequestPayment(carryRequestId);
+          if (syncResult.ok) {
+            await completePaymentAfterStripe(carryRequestId);
+          } else {
+            toast(
+              syncResult.error ??
+                "Payment succeeded but could not be verified. Refresh and try again.",
+              { variant: "error" },
+            );
+          }
+        } else {
+          toast("Payment was not completed. You can try again when ready.", {
+            variant: "error",
+          });
+        }
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("carry_request_id");
+        params.delete("payment_intent");
+        params.delete("payment_intent_client_secret");
+        params.delete("redirect_status");
+        const nextSearch = params.toString();
+        navigate({ search: nextSearch ? `?${nextSearch}` : "" }, { replace: true });
+      }
+    })();
+  }, [searchParams, navigate, showSupabaseError, toast]);
+
   const handlePrimaryActions = async (
     actions: UIActions,
     carryRequest: CarryRequest,
   ) => {
     if (!actions.primary || pendingAction || !user) return;
+
+    if (
+      paymentRequest?.carryRequestId === carryRequest.carryRequestId &&
+      actions.primary.key !== UIACTIONKEYS.BROWSE_TRIPS &&
+      actions.primary.key !== UIACTIONKEYS.BROWSE_PARCELS
+    ) {
+      return;
+    }
 
     if (actions.primary.key === UIACTIONKEYS.BROWSE_TRIPS) {
       navigate("/travelers");
@@ -400,6 +454,17 @@ export default function CarryRequestsPage() {
     if (actions.primary.key === UIACTIONKEYS.BROWSE_PARCELS) {
       navigate("/parcels");
       return;
+    }
+
+    if (actions.primary.key === UIACTIONKEYS.MARK_DELIVERED) {
+      const shouldConfirmDelivery = await confirm({
+        title: "Confirm delivery?",
+        message:
+          "Have you successfully delivered the package? Only confirm once the recipient has received it.",
+        confirmText: "Yes, confirm delivery",
+        cancelText: "Not yet",
+      });
+      if (!shouldConfirmDelivery) return;
     }
 
     setPendingAction({
@@ -516,10 +581,21 @@ export default function CarryRequestsPage() {
 
       refreshProfile();
 
-      toast(
-        primaryActionSuccessMessage(actions.primary.key, response),
-        { variant: "success" },
-      );
+      if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
+        openInfo({
+          title: "Payment released",
+          message:
+            "Payment was released successfully. Depending on your bank, it may take 2 to 3 working days to arrive.",
+          label: "Close",
+        });
+      }
+
+      if (actions.primary.key !== UIACTIONKEYS.RELEASE_PAYMENT) {
+        toast(
+          primaryActionSuccessMessage(actions.primary.key, response),
+          { variant: "success" },
+        );
+      }
     } finally {
       setPendingAction(null);
     }
@@ -529,6 +605,12 @@ export default function CarryRequestsPage() {
     carryRequest: CarryRequest,
   ) => {
     if (!actions.secondary?.key || pendingAction || !user) return;
+
+    if (
+      paymentRequest?.carryRequestId === carryRequest.carryRequestId
+    ) {
+      return;
+    }
     const viewerRole =
       user.id === carryRequest.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
 
@@ -566,6 +648,10 @@ export default function CarryRequestsPage() {
       });
       try {
         await resendDeliveryOtp(carryRequest.carryRequestId);
+        processEmailQueueInBackground({
+          carryRequestId: carryRequest.carryRequestId,
+          eventType: "DELIVERY_OTP",
+        });
         toast("A new 6-digit code was sent to your email.", {
           variant: "success",
         });
@@ -717,6 +803,9 @@ export default function CarryRequestsPage() {
                   ? pendingAction.slot
                   : null
               }
+              paymentModalOpen={
+                paymentRequest?.carryRequestId === request.carryRequestId
+              }
             />
           ))}
         </div>
@@ -728,7 +817,7 @@ export default function CarryRequestsPage() {
           originCountry={paymentRequest.parcelSnapshot.origin.country}
           onClose={() => setPaymentRequest(null)}
           onPaymentComplete={async () => {
-            await completePaymentAfterStripe(paymentRequest);
+            await completePaymentAfterStripe(paymentRequest.carryRequestId);
             setPaymentRequest(null);
           }}
         />
@@ -748,6 +837,7 @@ function CarryRequestCard({
   onPrimaryAction,
   onSecondaryAction,
   pendingActionSlot,
+  paymentModalOpen,
 }: {
   request: CarryRequest;
   user: { id: string } | null;
@@ -759,6 +849,7 @@ function CarryRequestCard({
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
   pendingActionSlot: PendingActionSlot | null;
+  paymentModalOpen: boolean;
 }) {
   const [openSection, setOpenSection] = useState<MobileSection | null>(null);
 
@@ -840,6 +931,7 @@ function CarryRequestCard({
             onPrimaryAction={onPrimaryAction}
             onSecondaryAction={onSecondaryAction}
             pendingActionSlot={pendingActionSlot}
+            paymentModalOpen={paymentModalOpen}
           />
         )}
       </Card>
@@ -872,6 +964,7 @@ function RequestActions({
   onPrimaryAction,
   onSecondaryAction,
   pendingActionSlot,
+  paymentModalOpen,
 }: {
   actions: UIActions;
   request: CarryRequest;
@@ -882,26 +975,38 @@ function RequestActions({
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
   pendingActionSlot: PendingActionSlot | null;
+  paymentModalOpen: boolean;
 }) {
   const isActionPending = pendingActionSlot !== null;
+  const actionsDisabled = isActionPending || paymentModalOpen;
   const isPrimaryPending = pendingActionSlot === "primary";
   const isSecondaryPending = pendingActionSlot === "secondary";
 
+  const showDisplayInfo =
+    actions.infoBlock?.mode === INFOMODES.DISPLAY &&
+    actions.infoBlock.displayText !== null;
+
+  const secondaryButton = actions.secondary ? (
+    <Button
+      className="w-full sm:w-auto"
+      onClick={() => onSecondaryAction(actions, request)}
+      variant="outline"
+      size="md"
+      leadingIcon={undefined}
+      disabled={actionsDisabled}
+      isBusy={isSecondaryPending}
+    >
+      {actionButtonLabel(actions.secondary.label, isSecondaryPending)}
+    </Button>
+  ) : null;
+
   return (
-    <div className="flex flex-col sm:flex-row items-start justify-end gap-4 sm:gap-4">
-      {actions.secondary && (
-        <Button
-          className="w-full sm:w-auto"
-          onClick={() => onSecondaryAction(actions, request)}
-          variant="outline"
-          size="md"
-          leadingIcon={undefined}
-          disabled={isActionPending}
-          isBusy={isSecondaryPending}
-        >
-          {actionButtonLabel(actions.secondary.label, isSecondaryPending)}
-        </Button>
+    <div className="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-4">
+      {showDisplayInfo && (
+        <InfoBlockDisplay actions={actions} action={secondaryButton} />
       )}
+
+      {!showDisplayInfo && secondaryButton}
 
       {actions.primary &&
         actions.primary.key !== UIACTIONKEYS.RELEASE_PAYMENT && (
@@ -911,16 +1016,11 @@ function RequestActions({
             variant="primary"
             size="md"
             leadingIcon
-            disabled={isActionPending}
+            disabled={actionsDisabled}
             isBusy={isPrimaryPending}
           >
             {actionButtonLabel(actions.primary.label, isPrimaryPending)}
           </Button>
-        )}
-
-      {actions.infoBlock?.mode === INFOMODES.DISPLAY &&
-        actions.infoBlock.displayText !== null && (
-          <InfoBlockDisplay actions={actions} />
         )}
 
       {actions.infoBlock?.mode === INFOMODES.INPUT && (
@@ -1013,12 +1113,20 @@ function InfoBlockInput({
   );
 }
 
-function InfoBlockDisplay({ actions }: { actions: UIActions }) {
+function InfoBlockDisplay({
+  actions,
+  action,
+}: {
+  actions: UIActions;
+  action?: React.ReactNode;
+}) {
   return (
-    <div className="flex justify-end">
-      <div className="inline-flex flex-col gap-2">
-        <div className="inline-flex items-center gap-3">
-          <CustomText textSize="xs">{actions.infoBlock?.label}</CustomText>
+    <div className="flex w-full justify-end">
+      <div className="flex w-full flex-col gap-2 sm:w-auto">
+        <div className="flex w-full items-center gap-3 justify-start">
+          <CustomText textSize="xs" className="font-medium">
+            {actions.infoBlock?.label}
+          </CustomText>
           {actions.infoBlock?.value ? (
             <CustomText
               className="rounded-md bg-secondary-100 px-3 py-1"
@@ -1029,9 +1137,12 @@ function InfoBlockDisplay({ actions }: { actions: UIActions }) {
           ) : null}
         </div>
 
-        <CustomText textVariant="primary" textSize="xs">
-          {actions.infoBlock?.helperText}
-        </CustomText>
+        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <CustomText textVariant="secondary" textSize="xs">
+            {actions.infoBlock?.helperText}
+          </CustomText>
+          {action}
+        </div>
       </div>
     </div>
   );

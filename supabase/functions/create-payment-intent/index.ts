@@ -109,12 +109,45 @@ Deno.serve(async (req) => {
       originCountry,
     );
 
+    const { data: paymentWindowSetting } = await supabaseAdmin
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "payment_window_minutes")
+      .maybeSingle<{ value: string }>();
+
+    const paymentWindowMinutes = Math.max(
+      1,
+      Number.parseInt(paymentWindowSetting?.value ?? "10", 10) || 10,
+    );
+    const paymentExpiresAt = new Date(
+      Date.now() + paymentWindowMinutes * 60 * 1000,
+    ).toISOString();
+
+    const extendPaymentWindow = async () => {
+      const { error: extendError } = await supabaseAdmin
+        .from("carry_requests")
+        .update({
+          payment_expires_at: paymentExpiresAt,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", carryRequestId)
+        .eq("status", "PENDING_PAYMENT");
+
+      if (extendError) {
+        console.error(
+          "create-payment-intent extend payment window failed",
+          extendError.message,
+        );
+      }
+    };
+
     const appUrl = Deno.env.get("APP_URL")?.trim() || "http://localhost:5173";
 
     // Reuse existing pending intent when possible.
     if (
       carryRequest.stripe_payment_intent_id &&
-      carryRequest.payment_status === "PENDING"
+      (carryRequest.payment_status === "PENDING" ||
+        carryRequest.payment_status === "FAILED")
     ) {
       const existing = await stripe.paymentIntents.retrieve(
         carryRequest.stripe_payment_intent_id,
@@ -125,6 +158,8 @@ Deno.serve(async (req) => {
         existing.status === "requires_confirmation" ||
         existing.status === "requires_action"
       ) {
+        await extendPaymentWindow();
+
         return jsonResponse({
           client_secret: existing.client_secret,
           payment_intent_id: existing.id,
@@ -161,6 +196,7 @@ Deno.serve(async (req) => {
         payment_currency: amounts.currency,
         platform_fee_amount: amounts.platformFeeAmount,
         traveler_payout_amount: amounts.travelerPayoutAmount,
+        payment_expires_at: paymentExpiresAt,
         updated_at: new Date().toISOString(),
       })
       .eq("id", carryRequestId);

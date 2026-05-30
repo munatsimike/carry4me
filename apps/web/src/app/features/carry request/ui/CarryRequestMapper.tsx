@@ -73,8 +73,8 @@ export function mapCarryRequestToUI(
       title = viewerRole === ROLES.SENDER ? "In transit" : "Pending delivery";
       description =
         viewerRole === ROLES.SENDER
-          ? "The parcel is on its way. Share the payment code with the traveler once the parcel has been delivered."
-          : "Deliver the parcel and confirm delivery.";
+          ? "Check your email or in-app notifications for the payment OTP."
+          : "Deliver the parcel to the recipient, then confirm delivery.";
       break;
 
     case CARRY_REQUEST_STATUSES.PENDING_PAYOUT:
@@ -82,7 +82,7 @@ export function mapCarryRequestToUI(
       title = "Pending payout";
       description =
         viewerRole === ROLES.SENDER
-          ? "Share the payment code with the traveler to release the payout."
+          ? "Check your email or in-app notifications for the payment OTP."
           : "Enter the payment code to receive your payout.";
       break;
 

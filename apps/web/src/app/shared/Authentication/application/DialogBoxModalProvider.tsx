@@ -33,6 +33,8 @@ type ConfirmModalPayload = {
   onCancel?: () => void;
 };
 
+export type InfoModalWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
+
 export type InfoModalPayload = {
   type: "info";
   title: string;
@@ -45,6 +47,7 @@ export type InfoModalPayload = {
   buttonText?: string;
   onClick?: () => void;
   secondaryAction?: () => void;
+  width?: InfoModalWidth;
 };
 
 export type UniversalModalState =

@@ -127,10 +127,16 @@ export default function RequestSummary({
 
   const confirmResendAfterEndedRequest = async (): Promise<boolean> => {
     try {
+      const senderUserId = parcel.user.id;
+      const travelerUserId = trip.user.id;
+      if (!senderUserId || !travelerUserId) {
+        return true;
+      }
+
       const priorRequest =
         await carryRequestRepository.findLatestEndedRequestBetweenParties(
-          parcel.user.id,
-          trip.user.id,
+          senderUserId,
+          travelerUserId,
         );
 
       if (!priorRequest) {

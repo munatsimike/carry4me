@@ -32,4 +32,12 @@ export function processActionEmailQueue(
   if (carryRequestId && eventType) {
     processEmailQueueInBackground({ carryRequestId, eventType });
   }
+
+  if (
+    carryRequestId &&
+    eventType === "PARCEL_RECEIVED" &&
+    response.progressed !== false
+  ) {
+    processEmailQueueInBackground({ carryRequestId, eventType: "DELIVERY_OTP" });
+  }
 }

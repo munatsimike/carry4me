@@ -4,7 +4,7 @@ import {
   assertCarryRequestParticipant,
   assertListingMatchPoster,
   loadExactQueueRow,
-  loadQueueRowByCarryRequestEvent,
+  loadQueueRowsByCarryRequestEvent,
   loadQueueRowsByListingMatchEvent,
   processQueueRow,
   USER_PROCESSABLE_STATUSES,
@@ -127,7 +127,12 @@ Deno.serve(async (req) => {
       notificationId,
     });
 
-    if (!row && carryRequestId && eventType) {
+    if (
+      !emailQueueId &&
+      !notificationId &&
+      carryRequestId &&
+      eventType
+    ) {
       const isParticipant = await assertCarryRequestParticipant(
         supabaseAdmin,
         carryRequestId,
@@ -138,11 +143,40 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Forbidden" }, 403);
       }
 
-      row = await loadQueueRowByCarryRequestEvent(
+      const carryRequestRows = await loadQueueRowsByCarryRequestEvent(
         supabaseAdmin,
         carryRequestId,
         eventType,
       );
+
+      if (carryRequestRows.length === 0) {
+        return jsonResponse({
+          ok: true,
+          mode: "carry_request",
+          processed: 0,
+          results: [],
+          hint: "No email_queue rows found for the given carry request event.",
+        });
+      }
+
+      const results = [];
+      for (const carryRow of carryRequestRows) {
+        results.push(
+          await processQueueRow(supabaseAdmin, carryRow, resendApiKey, {
+            allowedStatuses: USER_PROCESSABLE_STATUSES,
+          }),
+        );
+      }
+
+      const processed = results.filter((result) => result.processed === true)
+        .length;
+
+      return jsonResponse({
+        ok: true,
+        mode: "carry_request",
+        processed,
+        results,
+      });
     }
 
     if (

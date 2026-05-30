@@ -44,7 +44,7 @@ function PaymentForm({
         return;
       }
 
-      const returnUrl = `${window.location.origin}/requests`;
+      const returnUrl = `${window.location.origin}/requests?carry_request_id=${encodeURIComponent(carryRequestId)}`;
       const result = await stripe.confirmPayment({
         elements,
         clientSecret,
@@ -66,7 +66,7 @@ function PaymentForm({
       if (!syncResult.ok) {
         setErrorMessage(
           syncResult.error ??
-            "Payment is processing. Please wait a moment and try again.",
+            "We couldn't confirm your payment yet. Wait a moment and try again.",
         );
         return;
       }
@@ -102,7 +102,7 @@ function PaymentForm({
           disabled={isSubmitting}
           onClick={onClose}
         >
-          Cancel
+          Not now
         </Button>
         <Button
           type="button"
@@ -112,7 +112,7 @@ function PaymentForm({
           isBusy={isSubmitting}
           onClick={() => void handlePay()}
         >
-          Pay now
+          {isSubmitting ? "Processing..." : "Pay now"}
         </Button>
       </ModalFooter>
     </div>
@@ -149,7 +149,12 @@ export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
   }, [props.carryRequestId]);
 
   return (
-    <CustomModal width="lg" scrollable onClose={props.onClose}>
+    <CustomModal
+      width="lg"
+      scrollable
+      closeOnBackdropClick={false}
+      onClose={props.onClose}
+    >
       <div className="flex flex-col gap-4">
         <CustomText textSize="lg" textVariant="primary" className="font-medium">
           Make payment

@@ -118,12 +118,12 @@ function confirmDelivery(): UIAction {
   };
 }
 
-function displayPaymentCodePending(): InfoBlock {
+function displayPaymentCodeReady(): InfoBlock {
   return {
     mode: INFOMODES.DISPLAY,
     label: "Payment code",
     helperText:
-      "You will receive a 6-digit code by email when the traveler confirms delivery.",
+      "Check your email or in-app notifications for the payment OTP.",
   };
 }
 
@@ -199,7 +199,7 @@ function pendingPayout(viewerRole: Role): UIActions {
         mode: INFOMODES.DISPLAY,
         label: "Payment code",
         helperText:
-          "Check your email or notifications for the 6-digit code, then share it with your traveler.",
+          "Check your email or in-app notifications for the payment OTP.",
       },
     };
   } else {
@@ -207,7 +207,7 @@ function pendingPayout(viewerRole: Role): UIActions {
       infoBlock: {
         mode: INFOMODES.INPUT,
         label: "Enter payment code",
-        helperText: "Haven’t received the code yet? Please contact the sender.",
+        helperText: "Haven’t received the code yet? Contact the sender.",
       },
 
       primary: {
@@ -223,15 +223,14 @@ function pendingPayout(viewerRole: Role): UIActions {
 function intransit(viewerRole: Role): UIActions {
   if (viewerRole === ROLES.SENDER) {
     return {
-      infoBlock: displayPaymentCodePending(),
-      secondary: cancelRequest,
-    };
-  } else {
-    return {
-      primary: confirmDelivery(),
-      secondary: cancelRequest,
+      infoBlock: displayPaymentCodeReady(),
+      secondary: resendDeliveryCode,
     };
   }
+
+  return {
+    primary: confirmDelivery(),
+  };
 }
 
 function pendingHandover(

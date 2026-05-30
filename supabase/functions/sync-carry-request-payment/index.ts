@@ -80,12 +80,16 @@ Deno.serve(async (req) => {
         .eq("id", carryRequestId);
     }
 
+    const retryMessage =
+      paymentIntent.status === "processing"
+        ? "Your payment is still being confirmed. Wait a few seconds, then tap Pay now again."
+        : "We couldn't confirm your payment yet. Wait a moment and try again.";
+
     return jsonResponse({
       ok: false,
       payment_status: carryRequest.payment_status,
       stripe_status: paymentIntent.status,
-      error:
-        "Payment is still processing with Stripe. Wait a few seconds and try again.",
+      error: retryMessage,
     });
   } catch (err) {
     if (isResponse(err)) return err;

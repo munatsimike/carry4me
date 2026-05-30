@@ -12,6 +12,8 @@ type Props = {
   onClose: () => void;
   /** When false, the modal panel does not scroll (e.g. sign-in). */
   scrollable?: boolean;
+  /** When false, backdrop clicks do not close the modal (e.g. payment). */
+  closeOnBackdropClick?: boolean;
 };
 
 const sizes: Record<Width, string> = {
@@ -28,6 +30,7 @@ export default function CustomModal({
   onClose,
   width = "2xl",
   scrollable = true,
+  closeOnBackdropClick = true,
 }: Props) {
   const isMobile = useMediaQuery();
 
@@ -66,7 +69,7 @@ export default function CustomModal({
     >
       <motion.div
         className="absolute inset-0 z-[100] bg-slate-600/40 backdrop-blur-[1px]"
-        onClick={onClose}
+        onClick={closeOnBackdropClick ? onClose : undefined}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

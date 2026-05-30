@@ -14,7 +14,7 @@ type RequestBody = {
   carry_request_id?: string;
 };
 
-/** Resend delivery OTP. Generation also runs on MARK_DELIVERED via RPC. */
+/** Resend delivery OTP to the sender (issued on handover confirm, reusable in transit). */
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
   if (preflight) return preflight;
@@ -41,11 +41,18 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: access.error }, access.status);
     }
 
-    if (access.row.status !== "PENDING_PAYOUT") {
+    if (
+      access.row.status !== "IN_TRANSIT" &&
+      access.row.status !== "PENDING_PAYOUT"
+    ) {
       return jsonResponse(
-        { error: "OTP can only be resent while awaiting payout release" },
+        { error: "OTP can only be resent while the parcel is in transit or awaiting payout" },
         400,
       );
+    }
+
+    if (user.id !== access.row.sender_user_id) {
+      return jsonResponse({ error: "Only the sender can resend the payment code" }, 403);
     }
 
     const issued = await issueDeliveryOtp(supabaseAdmin, carryRequestId);

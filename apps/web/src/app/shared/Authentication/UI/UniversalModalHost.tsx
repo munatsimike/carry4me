@@ -79,7 +79,10 @@ export function UniversalModalHost({
     <AnimatePresence mode="wait">
       {modal && (
         <div>
-          <CustomModal width="lg" onClose={onRequestClose}>
+          <CustomModal
+            width={modal.type === "info" && modal.width ? modal.width : "lg"}
+            onClose={onRequestClose}
+          >
             <div className="flex flex-col">
               <div className="flex flex-col">
                 <span

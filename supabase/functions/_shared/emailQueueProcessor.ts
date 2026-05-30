@@ -24,6 +24,7 @@ export const EMAIL_PROCESSABLE_NOTIFICATION_TYPES = [
   "REQUEST_REJECTED",
   "REQUEST_CANCELED",
   "PAYMENT_COMPLETED",
+  "DELIVERY_OTP",
   "HANDOVER_CONFIRMED",
   "PARCEL_RECEIVED",
   "PARCEL_DELIVERED",
@@ -83,6 +84,20 @@ export async function loadQueueRowByCarryRequestEvent(
   carryRequestId: string,
   eventType: string,
 ): Promise<EmailQueueRow | null> {
+  const rows = await loadQueueRowsByCarryRequestEvent(
+    supabaseAdmin,
+    carryRequestId,
+    eventType,
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function loadQueueRowsByCarryRequestEvent(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  carryRequestId: string,
+  eventType: string,
+): Promise<EmailQueueRow[]> {
   const { data, error } = await supabaseAdmin
     .from("email_queue")
     .select(
@@ -94,16 +109,15 @@ export async function loadQueueRowByCarryRequestEvent(
       "eq",
       carryRequestId,
     )
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .in("status", ["pending", "failed"])
+    .order("created_at", { ascending: true });
 
   if (error) {
     console.error("Failed to load email_queue by carry request event:", error);
     throw error;
   }
 
-  return (data as EmailQueueRow | null) ?? null;
+  return (data as EmailQueueRow[] | null) ?? [];
 }
 
 export async function assertCarryRequestParticipant(

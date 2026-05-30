@@ -44,7 +44,8 @@ export async function confirmCarryRequestStripePayment(
     throw new Error("Stripe failed to load.");
   }
 
-  const returnUrl = `${window.location.origin}/requests`;
+  const returnUrl =
+    `${window.location.origin}/requests?carry_request_id=${encodeURIComponent(carryRequestId)}`;
 
   const result = await stripe.confirmPayment({
     clientSecret,

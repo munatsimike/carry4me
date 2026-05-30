@@ -22,7 +22,7 @@ export function renderRequestAcceptedEmail(notification: NotificationEmailInput)
   `;
 
   const preheader = notification.paymentRequired
-    ? "Your carry request was accepted — payment is required."
+    ? "Your carry request was accepted — make payment to continue."
     : "Your carry request was accepted.";
 
   return {
