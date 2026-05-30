@@ -186,7 +186,7 @@ function paidOut(): UIActions {
       displayText: {
         title: "Thank you for using Carry4Me.",
         description:
-          "Need help or have feedback? WhatsApp +31 6 5831 89 or email info@carry4me.com.",
+          "Need help or have feedback? WhatsApp +31 622 528 250 or email info@carry4me.uk.",
       },
     },
   };

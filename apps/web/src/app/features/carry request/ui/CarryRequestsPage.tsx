@@ -888,7 +888,7 @@ function CarryRequestCard({
           <Header
             title={requestUI.title}
             description={requestUI.description}
-            requestId={request.carryRequestId.slice(-5)}
+              requestId={request.carryRequestId.slice(-6)}
             status={request.status}
           />
           <LineDivider heightClass="my-0" />
@@ -1199,12 +1199,14 @@ type HeaderProps = {
   status: CarryRequestStatus;
 };
 
-function Header({ title, description, status }: HeaderProps) {
+function Header({ title, description, requestId, status }: HeaderProps) {
   return (
     <SpaceBetweenRow>
       <CurrentStatus title={title} description={description} status={status} />
-      <div className="inline-flex flex-col gap-1">
-        {/* <CustomText textSize="xs">#{requestId}</CustomText> */}
+      <div className="inline-flex flex-col items-end gap-1">
+        <CustomText textSize="xs" textVariant="secondary" className="tracking-wide">
+          ID {requestId}
+        </CustomText>
       </div>
     </SpaceBetweenRow>
   );
@@ -1245,7 +1247,7 @@ function ProgressRow({
   const steps = [2, 3, 4, 5, 6] as const;
 
   return (
-    <div className="flex flex-wrap items-center gap-6 rounded-lg px-3 bg-neutral-50 border py-4">
+    <div className="flex flex-wrap items-center gap-6 rounded-lg px-3 bg-secondary-50  py-4">
       {isInitiator && <Step isCompleted stage={progress[1]} />}
 
       {steps.map((step) => (

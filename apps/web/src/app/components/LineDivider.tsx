@@ -14,7 +14,7 @@ export default function LineDivider({
   return (
     <div
       role="separator"
-      className={cn("w-full border-t border-neutral-100", heightClass, className)}
+      className={cn("w-full border-t border-neutral-200", heightClass, className)}
     />
   );
 }
