@@ -2,10 +2,10 @@ import { META_ICONS } from "./icons/MetaIcon";
 export const DEFAULT_VARIANT = "primary" as const;
 
 const SUPPORTED_PHONE_COUNTRIES = [
-  { countryCode: "GB", dialCode: "+44", name: "United Kingdom" },
-  { countryCode: "US", dialCode: "+1", name: "United States of America" },
+  { countryCode: "UK", dialCode: "+44", name: "United Kingdom" },
+  { countryCode: "USA", dialCode: "+1", name: "United States of America" },
   { countryCode: "NL", dialCode: "+31", name: "Netherlands" },
-  { countryCode: "ZW", dialCode: "+263", name: "Zimbabwe" },
+  { countryCode: "Zimbabwe", dialCode: "+263", name: "Zimbabwe" },
 ] as const;
 
 const DIAL_CODES_LONGEST_FIRST = [...SUPPORTED_PHONE_COUNTRIES].sort(
