@@ -10,6 +10,17 @@ type FaqMobileAccordionProps = {
   onToggle: (index: number) => void;
 };
 
+function faqTagClass(tag: string): string {
+  const normalized = tag.trim().toLowerCase();
+  if (normalized === "traveler") {
+    return "border border-primary-100 bg-primary-50 text-primary-500";
+  }
+  if (normalized === "sender") {
+    return "border border-purple-100 bg-purple-50 text-purple-500";
+  }
+  return "bg-slate-100 text-slate-500";
+}
+
 export default function FaqMobileAccordion({
   items,
   openIndex,
@@ -36,7 +47,12 @@ export default function FaqMobileAccordion({
             <span className="flex items-start justify-between gap-4">
               <span className="flex min-w-0 flex-col gap-1">
                 {item.tag && (
-                  <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium capitalize text-slate-500">
+                  <span
+                    className={cn(
+                      "w-fit rounded-full px-3 py-1 text-xs font-medium capitalize",
+                      faqTagClass(item.tag),
+                    )}
+                  >
                     {item.tag}
                   </span>
                 )}

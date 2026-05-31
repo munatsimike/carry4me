@@ -44,6 +44,17 @@ type FaqDesktopPanelProps = {
   onSelect: (index: number) => void;
 };
 
+function faqTagClass(tag: string): string {
+  const normalized = tag.trim().toLowerCase();
+  if (normalized === "traveler") {
+    return "border border-primary-100 bg-primary-50 text-primary-500";
+  }
+  if (normalized === "sender") {
+    return "border border-purple-100 bg-purple-50 text-purple-500";
+  }
+  return "bg-slate-100 text-slate-500";
+}
+
  function FaqDesktopPanel({
   items,
   openIndex,
@@ -93,7 +104,12 @@ type FaqDesktopPanelProps = {
       {selectedItem && (
         <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           {selectedItem.tag && (
-            <span className="mb-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium capitalize text-slate-500">
+            <span
+              className={cn(
+                "mb-4 inline-flex rounded-full px-3 py-1 text-xs font-medium capitalize",
+                faqTagClass(selectedItem.tag),
+              )}
+            >
               {selectedItem.tag}
             </span>
           )}
