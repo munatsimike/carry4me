@@ -235,7 +235,9 @@ function ContactSection() {
       </ul>
       <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-slate-700">
         <a
-          href="#"
+          href="https://www.facebook.com/carry4me"
+          target="_blank"
+          rel="noopener noreferrer"
           className="transition-colors duration-200 hover:text-slate-900"
         >
           <span className="inline-flex items-center gap-1.5">

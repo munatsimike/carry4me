@@ -145,9 +145,9 @@ export const questions: InfoItem[] = [
     tag: "traveler",
   },
   {
-    label: "How does pricing work for travelers?",
+    label: "Can I accept multiple parcel requests on one trip?",
     value:
-      "You set your price per kg on your trip. If a sender requests you, your rate applies. If you request a parcel, the sender’s parcel rate applies. A 20% platform fee is added to the delivery total paid by the sender. See Pricing for details.",
+      "Yes, as long as the total parcel weight stays within your available trip capacity. You can accept requests until your listed capacity is fully used.",
     tag: "traveler",
   },
   {
@@ -167,7 +167,7 @@ export const questions: InfoItem[] = [
   {
     label: "How does pricing work?",
     value:
-      "Senders and travelers each set their own price per kg. Either side can start a request—the recipient’s listed price is used. Carry4Me adds a 20% service fee on the delivery total, shown before you pay. See Pricing for details.",
+      "Both senders and travelers set a price per kg. The price that applies is the recipient’s listed rate: if you request a traveler, the traveler’s rate applies; if a traveler requests your parcel, your parcel rate applies. Carry4Me adds a 20% service fee to the delivery total shown before payment. See Pricing for details.",
     tag: "sender",
   },
 
