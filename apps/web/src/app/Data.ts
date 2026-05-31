@@ -92,7 +92,7 @@ export const benefits: InfoItem[] = [
     Icon: Wallet,
     label: "Save money",
     value:
-      "More affordable than traditional shipping. You negotiate the delivery fee.",
+      "More affordable than traditional shipping methods.",
     tag: "sender",
   },
   {
