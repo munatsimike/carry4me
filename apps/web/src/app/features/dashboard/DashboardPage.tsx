@@ -258,7 +258,7 @@ function RecentActivity({
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className="relative w-full max-w-full overflow-hidden rounded-3xl bg-emerald-200 pt-1 lg:max-w-sm"
     >
-      <Card enableHover={false} paddingClass="p-3" className="h-full flex-1">
+      <Card enableHover={false} paddingClass="p-3" className="h-full flex-1" borderClass="">
         <div className="flex flex-col px-2 pt-1 mx-auto">
           <span className="flex flex-col gap-3">
             <span className="inline-flex gap-3 items-center">
