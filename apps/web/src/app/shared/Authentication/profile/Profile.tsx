@@ -132,6 +132,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState<ProfileSection | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const localAvatarPreviewUrlRef = useRef<string | null>(null);
   const [changePhoneOpen, setChangePhoneOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -223,9 +224,23 @@ export default function ProfilePage() {
     // If user picked a file, don't overwrite their local preview
     if (file) return;
 
+    if (localAvatarPreviewUrlRef.current) {
+      URL.revokeObjectURL(localAvatarPreviewUrlRef.current);
+      localAvatarPreviewUrlRef.current = null;
+    }
+
     const url = profile?.avatarUrl ?? null;
     setPreview(url);
   }, [profile?.avatarUrl, file]);
+
+  useEffect(() => {
+    return () => {
+      if (localAvatarPreviewUrlRef.current) {
+        URL.revokeObjectURL(localAvatarPreviewUrlRef.current);
+        localAvatarPreviewUrlRef.current = null;
+      }
+    };
+  }, []);
 
   if (!user) {
     return (
@@ -281,6 +296,7 @@ export default function ProfilePage() {
     if (!file) return;
     try {
       await upLoadAvatrUseCase.uploadAvatar(user.id, file);
+      setFile(null);
       toast("Profile photo updated successfully.", { variant: "success" });
       await refreshProfile();
     } catch (err) {
@@ -426,6 +442,7 @@ export default function ProfilePage() {
           email={getProfileEmail(profile, user.email)}
           setFile={setFile}
           setPreview={setPreview}
+          localPreviewUrlRef={localAvatarPreviewUrlRef}
           updateAvatar={updateAvatar}
           onDelete={onDeleteAvatar}
         />
@@ -1498,18 +1515,21 @@ function handleFileChange(
   e: React.ChangeEvent<HTMLInputElement>,
   setFile: (s: File | null) => void,
   setPreview: (p: string) => void,
+  localPreviewUrlRef: React.MutableRefObject<string | null>,
 ) {
   const nextFile = e.target.files?.[0];
   if (!nextFile) return;
 
+  if (localPreviewUrlRef.current) {
+    URL.revokeObjectURL(localPreviewUrlRef.current);
+    localPreviewUrlRef.current = null;
+  }
+
   setFile(nextFile);
 
   const previewUrl = URL.createObjectURL(nextFile);
+  localPreviewUrlRef.current = previewUrl;
   setPreview(previewUrl);
-
-  // Cleanup object URL to prevent memory leaks
-  // (cleanup for previous object URL if any)
-  return () => URL.revokeObjectURL(previewUrl);
 }
 
 type CardHeaderSectionProps = {
@@ -1520,6 +1540,7 @@ type CardHeaderSectionProps = {
   email: string;
   setFile: (s: File | null) => void;
   setPreview: (p: string) => void;
+  localPreviewUrlRef: React.MutableRefObject<string | null>;
   onDelete: () => void;
   updateAvatar: () => void;
 };
@@ -1532,6 +1553,7 @@ function CardHeaderSection({
   email,
   setFile,
   setPreview,
+  localPreviewUrlRef,
   updateAvatar,
 }: CardHeaderSectionProps) {
   return (
@@ -1540,7 +1562,12 @@ function CardHeaderSection({
         onDelete={onDelete}
         preview={preview}
         handleFileChange={(event) =>
-          handleFileChange(event, setFile, setPreview)
+          handleFileChange(
+            event,
+            setFile,
+            setPreview,
+            localAvatarPreviewUrlRef,
+          )
         }
       />
 

@@ -53,7 +53,7 @@ export function ListingTable<T extends Listing>({
 }: ListingTableProps<T>) {
   const textStyle = "font-medium text-ink-primary py-4";
   const headerStyle = `pl-4 ${textStyle}`;
-  const [hoverId, sethover] = useState<string | null>(null);
+  const [hoverId, setHoverId] = useState<string | null>(null);
 
   return (
     <motion.div
@@ -63,32 +63,39 @@ export function ListingTable<T extends Listing>({
       style={{ marginTop: 16 }}
       className="bg-white shadow-md rounded-xl"
     >
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <table className="w-full border-collapse table-fixed">
         <thead>
           <tr className="text-left border border-b-neutral-200">
-            <TableTd className={headerStyle}>Route</TableTd>
-            <TableTd className={headerStyle}>Date</TableTd>
-            <TableTd className={headerStyle}>Space</TableTd>
-            <TableTd className={headerStyle}>Price per kg</TableTd>
-            <TableTd className={headerStyle}>Status</TableTd>
-            <TableTd className={`pl-6 ${textStyle}`}>Actions</TableTd>
+            <TableTd className={`w-[38%] ${headerStyle}`}>Route</TableTd>
+            <TableTd className={`w-[14%] ${headerStyle}`}>Date</TableTd>
+            <TableTd className={`w-[10%] ${headerStyle}`}>Space</TableTd>
+            <TableTd className={`w-[14%] ${headerStyle}`}>Price per kg</TableTd>
+            <TableTd className={`w-[10%] ${headerStyle}`}>Status</TableTd>
+            <TableTd className={`w-[14%] pl-6 ${textStyle}`}>Actions</TableTd>
           </tr>
         </thead>
 
         {/* Animate tbody + rows */}
         <motion.tbody variants={tbodyVariants} initial="hidden" animate="show">
+          {data.length === 0 ? (
+            <tr>
+              <TableTd className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+                No listings yet.
+              </TableTd>
+            </tr>
+          ) : null}
           {data.map((row: Listing) => (
             <motion.tr
               key={row.id}
-              onMouseEnter={() => sethover(row.id)}
-              onMouseLeave={() => sethover(null)}
+              onMouseEnter={() => setHoverId(row.id)}
+              onMouseLeave={() => setHoverId(null)}
               variants={rowVariants}
               whileHover={{ y: -1, scale: 1.002 }}
               transition={{ type: "spring", stiffness: 500, damping: 32 }}
               className="hover:bg-neutral-100 border border-b-neutral-100 hover:shadow-sm"
               style={{ transformOrigin: "center" }}
             >
-              <TableTd>
+              <TableTd className="pl-4 py-2 w-[38%]">
                 <span className="relative inline-flex items-center w-full max-w-lg pr-4">
                   {/* Left text stays stable */}
                   <span className="inline-flex gap-2 min-w-0">
@@ -105,6 +112,7 @@ export function ListingTable<T extends Listing>({
                     {hoverId === row.id && (
                       <motion.button
                         type="button"
+                        aria-label="Preview listing"
                         onClick={() => {
                           setListingPreview(row as T);
                         }}
@@ -121,9 +129,9 @@ export function ListingTable<T extends Listing>({
                 </span>
               </TableTd>
 
-              <TableTd>
+              <TableTd className="pl-4 py-2 w-[14%] whitespace-nowrap">
                 <TableText
-                  text={row.type === "trip" ? row.departDate.slice(0, 10) : ""}
+                  text={row.type === "trip" ? formatListingDate(row.departDate) : "—"}
                 />
               </TableTd>
 
@@ -145,9 +153,8 @@ export function ListingTable<T extends Listing>({
               </TableTd>
 
               <TableTd>
-                <span className="iniline-flex rounded-full bg-success-50 px-2 py-1 text-success-500 border border-success-200 text-[12px]">
-                  {row.status.charAt(0).toUpperCase() +
-                    row.status.slice(1).toLowerCase()}
+                <span className={`inline-flex rounded-full border px-2 py-1 text-[12px] ${statusBadgeClass(row.status)}`}>
+                  {formatListingStatus(row.status)}
                 </span>
               </TableTd>
 
@@ -156,7 +163,8 @@ export function ListingTable<T extends Listing>({
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
-                    className="hover:bg-neutral-300 px-3 rounded-md py-1"
+                    aria-label="Edit listing"
+                    className="rounded-md px-3 py-1 text-sm text-ink-primary transition hover:bg-neutral-300"
                     onClick={() => {
                       setModalState(true);
                       // set form values for editing
@@ -189,9 +197,9 @@ export function ListingTable<T extends Listing>({
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
-                    className="hover:bg-error-100 px-2 rounded-md py-1"
+                    aria-label="Delete listing"
+                    className="rounded-md px-2 py-1 text-sm text-red-600 transition hover:bg-error-100"
                     onClick={() => onDelete(row.id)}
-                    style={{ color: "crimson" }}
                   >
                     Delete
                   </motion.button>
@@ -208,11 +216,13 @@ export function ListingTable<T extends Listing>({
 function TableTd({
   children,
   className = "pl-4 py-2",
+  colSpan,
 }: {
   children: React.ReactNode;
   className?: string;
+  colSpan?: number;
 }) {
-  return <td className={className}>{children}</td>;
+  return <td className={className} colSpan={colSpan}>{children}</td>;
 }
 
 function TableText({ text }: { text: string }) {
@@ -221,4 +231,41 @@ function TableText({ text }: { text: string }) {
       {text}
     </CustomText>
   );
+}
+
+function formatListingDate(value: string | null | undefined): string {
+  const raw = value?.trim();
+  if (!raw) return "—";
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return raw.slice(0, 10);
+  }
+
+  const day = parsed.getDate().toString().padStart(2, "0");
+  const month = parsed.toLocaleString("en-GB", { month: "short" });
+  const year = parsed.getFullYear();
+  return `${day} ${month} ${year}`;
+}
+
+function formatListingStatus(status: string): string {
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
+function statusBadgeClass(status: string): string {
+  const normalized = status.trim().toUpperCase();
+
+  if (normalized === "ACTIVE" || normalized === "OPEN") {
+    return "bg-success-50 text-success-500 border-success-200";
+  }
+
+  if (normalized === "FULL" || normalized === "MATCHED") {
+    return "bg-primary-50 text-primary-500 border-primary-200";
+  }
+
+  if (normalized === "ARCHIVED") {
+    return "bg-neutral-100 text-neutral-500 border-neutral-200";
+  }
+
+  return "bg-neutral-100 text-neutral-600 border-neutral-200";
 }
