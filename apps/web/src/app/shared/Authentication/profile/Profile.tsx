@@ -1566,7 +1566,7 @@ function CardHeaderSection({
             event,
             setFile,
             setPreview,
-            localPreviewUrlRef,
+            localAvatarPreviewUrlRef,
           )
         }
       />
