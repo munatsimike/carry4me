@@ -34,6 +34,7 @@ import USFlagIcon from "@/assets/us-flag-icon.svg?react"
 import HeartFilled from "@/assets/heartFilled.svg?react";
 import EyeOnIcon from "@/assets/eye-on.svg?react";
 import EyeOffIcon from "@/assets/eye-off.svg?react";
+import FRFlag from "@/assets/france-flag.svg?react"
 
 export const META_ICONS = {
   planeIcon: PlaneIcon,
@@ -72,4 +73,5 @@ export const META_ICONS = {
   eyeOff: EyeOffIcon,
   eyeOn: EyeOnIcon,
   nlFlag: NlFlag,
+  frFlag: FRFlag
 }

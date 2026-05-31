@@ -45,6 +45,9 @@ export function toflag(country: string | null | undefined) {
     case "NL":
     case "Netherlands":
       return META_ICONS.nlFlag;
+    case "FR":
+    case "France":
+      return META_ICONS.frFlag;
     default: {
       const normalized = normalizeCountryCode(country.trim());
       if (!normalized || normalized === country.trim()) return null;
@@ -72,6 +75,9 @@ export function toDialCode(country: string | null | undefined): string | null {
     case "NL":
     case "Netherlands":
       return "+31";
+    case "FR":
+    case "France":
+      return "+33";
     default:
       return null;
   }
@@ -101,7 +107,9 @@ export function toIsoCountryCode(country: string | null | undefined) {
   }
 }
 
-export function toCountryName(country: string | null | undefined): string | null {
+export function toCountryName(
+  country: string | null | undefined,
+): string | null {
   if (!country?.trim()) return null;
 
   switch (country.trim()) {
@@ -208,5 +216,5 @@ export function countryLocationFromPhone(
   const dialCode = dialCodeFromPhone(phoneNumber);
   const name = countryNameFromPhone(phoneNumber);
   if (!dialCode || !name) return null;
-  return `${(dialCode)} ${name}`;
+  return `${dialCode} ${name}`;
 }
