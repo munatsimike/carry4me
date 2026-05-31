@@ -146,7 +146,7 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
             />
           </div>
         </div>
-
+<LineDivider heightClass="my-0" />
         <Button
           type="submit"
           disabled={isSubmitting}
