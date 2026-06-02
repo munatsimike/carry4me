@@ -181,7 +181,7 @@ function OurLocation() {
       </ul>
 
       <p className="text-xs font-medium leading-5 text-slate-500">
-        Operating across Europe, the UK, and the USA.
+        Operating across Europe, USA and Africa.
       </p>
     </div>
   );
@@ -211,10 +211,10 @@ function ContactSection() {
           <div>
             <p className="font-semibold text-slate-800">Phone</p>
             <a
-              href="tel:+31622528250"
+              href="tel:+44 7471366706"
               className="text-slate-600 transition hover:text-slate-900"
             >
-              +31 622528250
+              +44 7471366706
             </a>
           </div>
         </li>
@@ -223,7 +223,7 @@ function ContactSection() {
           <div>
             <p className="font-semibold text-slate-800">WhatsApp</p>
             <a
-              href="https://wa.me/31622528250"
+              href="https://wa.me/447471366706"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-600 transition hover:text-slate-900"
