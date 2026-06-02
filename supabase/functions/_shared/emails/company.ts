@@ -46,7 +46,7 @@ export function getEmailCompanyConfig(): EmailCompanyConfig {
     companyName,
     supportEmail:
       Deno.env.get("EMAIL_SUPPORT_EMAIL")?.trim() || "info@carry4me.uk",
-    phone: Deno.env.get("EMAIL_PHONE")?.trim() || "+31 622528250",
+    phone: Deno.env.get("EMAIL_PHONE")?.trim() || "+44 7471366706",
     address:
       Deno.env.get("EMAIL_ADDRESS")?.trim() ||
       "London, United Kingdom (Head office)",
