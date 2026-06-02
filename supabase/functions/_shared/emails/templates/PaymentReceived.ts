@@ -1,10 +1,25 @@
 import { renderEmailLayout } from "../components/EmailLayout.ts";
 import {
   buildTextBody,
-  renderExtraParagraphs,
   renderParagraph,
   type NotificationEmailInput,
 } from "../utils.ts";
+import { escapeHtml } from "../escapeHtml.ts";
+
+function renderPaymentContactParagraph(text: string): string {
+  const match = text.match(/^(Name|Phone):\s*(.+)$/i);
+  if (!match) {
+    return renderParagraph(text);
+  }
+
+  const label = match[1];
+  const value = match[2];
+  return `<p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:26px;color:#334155;">${escapeHtml(label)}: <strong>${escapeHtml(value)}</strong></p>`;
+}
+
+function renderPaymentExtraParagraphs(paragraphs: string[] | undefined): string {
+  return (paragraphs ?? []).map(renderPaymentContactParagraph).join("");
+}
 
 /** Sent when payment is completed (PAYMENT_COMPLETED). No CTA — contact details only. */
 export function renderPaymentReceivedEmail(notification: NotificationEmailInput): {
@@ -13,7 +28,7 @@ export function renderPaymentReceivedEmail(notification: NotificationEmailInput)
 } {
   const contentHtml = `
     ${renderParagraph(notification.body)}
-    ${renderExtraParagraphs(notification.extraParagraphs)}
+    ${renderPaymentExtraParagraphs(notification.extraParagraphs)}
   `;
 
   const preheader = notification.body.includes("Your payment for this carry request")

@@ -115,7 +115,7 @@ function buildContactParagraphs(
   const paragraphs = [heading];
 
   if (contact.name) {
-    paragraphs.push(contact.name);
+    paragraphs.push(`Name: ${contact.name}`);
   }
 
   if (contact.phone) {
