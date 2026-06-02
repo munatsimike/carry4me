@@ -76,11 +76,13 @@ export class SupabaseTripsRepository implements TripsRepository {
   }
 
   async isTripActive(tripId: string): Promise<boolean> {
+    const todayIsoDate = new Date().toISOString().slice(0, 10);
     const { data, error, status } = await supabase
       .from("trips")
       .select("id")
       .eq("id", tripId)
       .eq("status", TRIPSTATUSES.ACTIVE)
+      .gte("depart_date", todayIsoDate)
       .maybeSingle();
 
     throwIfSupabaseError(error, status);
