@@ -688,19 +688,24 @@ export default function CarryRequestsPage() {
       if (actions.secondary.key === UIACTIONKEYS.CANCEL) {
         const senderCanceled = viewerRole === ROLES.SENDER;
         const cancelResponse = response as CancelCarryRequestResponse;
-        const refundNote = cancelResponse.refund?.applied
-          ? cancelResponse.refund!.refund_status === "FULL"
-            ? "Refund: full amount returned to sender."
-            : "Refund: partial amount returned. Service fee retained."
-          : senderCanceled
-            ? "Refund is being processed with retained service fee."
-            : "Refund is being processed for the sender.";
+        const refundApplied = cancelResponse.refund?.applied === true;
+        const refundStatus = cancelResponse.refund?.refund_status;
+
+        const message = senderCanceled
+          ? refundApplied
+            ? refundStatus === "FULL"
+              ? "Traveler notified. Your payment was refunded in full."
+              : "Traveler notified. A partial refund was issued and the service fee was retained."
+            : "Traveler notified. This request was cancelled before payment, so no refund was needed."
+          : refundApplied
+            ? refundStatus === "FULL"
+              ? "Request cancelled. The sender was refunded in full."
+              : "Request cancelled. A partial refund was issued to the sender and the service fee was retained."
+            : "Request cancelled. No payment had been made yet.";
+
         openInfo({
           title: "Request cancelled",
-          message: senderCanceled
-            ? "Traveler notified. Your refund is being processed with a retained service fee."
-            : "Request cancelled. The sender will be refunded in full.",
-          messageDetail: refundNote,
+          message,
           label: senderCanceled ? "Browse other parcels" : "Browse other trips",
           onClick: () => navigate(senderCanceled ? "/parcels" : "/travelers"),
         });
