@@ -1,4 +1,4 @@
-import { addMonths } from "date-fns";
+import { addMonths, isValid, parseISO, startOfDay } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 
@@ -50,21 +50,19 @@ export const departureDateSchema = z
   .string()
   .trim()
   .min(1, "Select a departure date")
-  .refine((value) => !Number.isNaN(new Date(value).getTime()), {
+  .refine((value) => isValid(parseISO(value)), {
     message: "Select a valid departure date",
   })
   .refine(
     (value) => {
-      const selected = new Date(value);
-      selected.setHours(0, 0, 0, 0);
+      const selected = startOfDay(parseISO(value));
       return selected >= today();
     },
     { message: "Departure date cannot be in the past" },
   )
   .refine(
     (value) => {
-      const selected = new Date(value);
-      selected.setHours(0, 0, 0, 0);
+      const selected = startOfDay(parseISO(value));
       const maxDate = addMonths(today(), 12);
       return selected <= maxDate;
     },

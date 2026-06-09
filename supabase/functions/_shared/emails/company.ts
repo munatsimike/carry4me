@@ -42,11 +42,20 @@ export function getEmailCompanyConfig(): EmailCompanyConfig {
   const year = new Date().getFullYear();
   const companyName = Deno.env.get("EMAIL_COMPANY_NAME")?.trim() || "Carry4Me";
 
+  const configuredPhone = Deno.env.get("EMAIL_PHONE")?.trim() || null;
+  const normalizedConfiguredPhone = configuredPhone?.replace(/\s+/g, "") ?? null;
+  const phone =
+    !configuredPhone ||
+      normalizedConfiguredPhone === "+31622528250" ||
+      normalizedConfiguredPhone === "31622528250"
+      ? "+44 7471366706"
+      : configuredPhone;
+
   return {
     companyName,
     supportEmail:
       Deno.env.get("EMAIL_SUPPORT_EMAIL")?.trim() || "info@carry4me.uk",
-    phone: Deno.env.get("EMAIL_PHONE")?.trim() || "+44 7471366706",
+    phone,
     address:
       Deno.env.get("EMAIL_ADDRESS")?.trim() ||
       "London, United Kingdom (Head office)",

@@ -120,7 +120,9 @@ export function DateField<T extends FieldValues>({
                       mode="single"
                       selected={selectedDate}
                       onSelect={(d) => {
-                        field.onChange(d ? d.toISOString() : "");
+                        // Persist as local calendar date (YYYY-MM-DD) to avoid
+                        // timezone shifts that can move the day backward.
+                        field.onChange(d ? format(d, "yyyy-MM-dd") : "");
                         if (d) setOpen(false);
                       }}
                       disabled={disabledMatchers}
