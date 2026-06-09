@@ -42,7 +42,7 @@ export async function getListingUnavailableOnAccept(
       iconKind: "trip",
       title: "Trip no longer available",
       message:
-        "This trip is no longer active. Browse other trips to find a match.",
+        "This trip date has passed or the trip is no longer active. Browse other trips to find a match.",
       browseLabel: "Browse trips",
       browsePath: "/travelers",
     };

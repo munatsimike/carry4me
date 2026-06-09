@@ -40,7 +40,13 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
 
     throwIfSupabaseError(error, status);
 
-    if (!data || data.status !== "PENDING_PAYMENT" || !data.payment_expires_at) {
+    // Treat missing/non-payable requests as unavailable so UI won't open payment modal
+    // and then fail with create-payment-intent 404/invalid-status errors.
+    if (!data || data.status !== "PENDING_PAYMENT") {
+      return true;
+    }
+
+    if (!data.payment_expires_at) {
       return false;
     }
 

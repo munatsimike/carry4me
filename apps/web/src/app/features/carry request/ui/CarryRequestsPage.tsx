@@ -57,7 +57,7 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Package, PackageX, Plane } from "lucide-react";
+import { Package } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
 import {
   getListingUnavailableOnAccept,
@@ -302,12 +302,6 @@ export default function CarryRequestsPage() {
       if (listingIssue) {
         openInfo({
           ...toListingUnavailableInfoModal(listingIssue, navigate),
-          icon:
-            listingIssue.iconKind === "parcel" ? (
-              <PackageX className={dialogIconStyle} />
-            ) : (
-              <Plane className={dialogIconStyle} />
-            ),
         });
         return false;
       }
