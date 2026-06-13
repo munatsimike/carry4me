@@ -34,7 +34,7 @@ export class SupabaseFavouriteRepository implements FavouriteRepository {
 
     const { data, error, status } = await supabase
       .from("favourites")
-      .insert(payload)
+      .insert(payload as any)
       .select("id")
       .single();
 

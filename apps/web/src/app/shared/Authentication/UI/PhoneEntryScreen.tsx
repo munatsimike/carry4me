@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { UserRound } from "lucide-react";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
-import { CircleBadge } from "@/components/ui/CircleBadge";
 import LineDivider from "@/app/components/LineDivider";
 import ErrorText from "@/app/components/text/ErrorText";
 import Spinner from "@/app/components/Spinner";
@@ -27,10 +25,14 @@ const item = {
 };
 
 interface PhoneEntryScreenProps {
+  mode?: "signin" | "signup";
   onPhoneSubmitted: () => void;
 }
 
-export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
+export function PhoneEntryScreen({
+  mode = "signup",
+  onPhoneSubmitted,
+}: PhoneEntryScreenProps) {
   const {
     register,
     handleSubmit,
@@ -101,21 +103,13 @@ export function PhoneEntryScreen({ onPhoneSubmitted }: PhoneEntryScreenProps) {
       <motion.div variants={item} className="flex items-center justify-center">
         <ErrorText error={submitError?.toString()}>
           <span className="inline-flex flex-col items-center gap-2">
-            <CircleBadge size="lg" bgColor="secondary" paddingClassName="p-2.5">
-              <UserRound
-                className=" text-primary-500"
-                size={32}
-                aria-hidden
-              />
-            </CircleBadge>
-
             <CustomText
               as="h1"
               textVariant="primary"
               textSize="xl"
               className="font-medium"
             >
-              Sign in
+              {mode === "signin" ? "Sign in" : "Sign up"}
             </CustomText>
             <CustomText as="p" textVariant="label" textSize="sm">
               Enter your phone number to continue.

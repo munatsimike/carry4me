@@ -25,7 +25,7 @@ export class SupabaseGoodsRepository implements GoodsRepository {
       category_id: item,
     }));
 
-    const { error, status } = await supabase.from(table).insert(rows);
+    const { error, status } = await supabase.from(table).insert(rows as any);
 
     throwIfSupabaseError(error, status);
 
@@ -68,7 +68,7 @@ export class SupabaseGoodsRepository implements GoodsRepository {
           category_id: item.category_id,
         }));
 
-    const { error, status } = await supabase.from(table).insert(rows);
+    const { error, status } = await supabase.from(table).insert(rows as any);
 
     throwIfSupabaseError(error, status);
 

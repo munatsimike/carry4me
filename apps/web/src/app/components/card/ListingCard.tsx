@@ -58,6 +58,11 @@ export function ListingCard<T extends Listing>({
     ? "border border-primary-200"
     : "border border-purple-200";
   const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
+  const hoverBackgroundClass = isDisplayMode
+    ? isTripListing
+      ? "hover:bg-blue-50"
+      : "hover:bg-purple-50"
+    : "";
 
   const handleToggleLike = () => {
     if (!user?.id) {
@@ -82,7 +87,7 @@ export function ListingCard<T extends Listing>({
   return (
     <Card
       enableHover={isDisplayMode}
-      className="group"
+      className={`group transition-colors ${hoverBackgroundClass}`}
       borderClass={borderClass}
       shadowClass={shadowClass}
     >

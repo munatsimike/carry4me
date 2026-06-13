@@ -4,10 +4,12 @@ import { PhoneEntryScreen } from "./PhoneEntryScreen";
 import { OTPVerificationScreen } from "./OTPVerificationScreen";
 import CustomModal from "@/app/components/CustomModal";
 import { useSignInModal } from "../SignInModalContext";
+import { useNavigate } from "react-router-dom";
 
 export function PhoneVerificationModal() {
   const { step, setStep, resetPhoneVerification } = usePhoneVerification();
   const { state, closeSignInModal } = useSignInModal();
+  const navigate = useNavigate();
   const handleClose = () => {
     resetPhoneVerification();
     closeSignInModal();
@@ -23,15 +25,21 @@ export function PhoneVerificationModal() {
 
   const handleVerificationComplete = () => {
     resetPhoneVerification();
+    if (state.phoneOtpMode === "signin") {
+      navigate(state.redirectTo || "/dashboard", { replace: true });
+    }
     closeSignInModal();
   };
 
   return (
     <AnimatePresence>
-      {state.isOpen && (
+      {state.isOpen && state.view === "phone-otp" && (
         <CustomModal onClose={handleClose} width="xl" scrollable={false}>
           {step === "phone-entry" && (
-            <PhoneEntryScreen onPhoneSubmitted={handlePhoneSubmitted} />
+            <PhoneEntryScreen
+              mode={state.phoneOtpMode}
+              onPhoneSubmitted={handlePhoneSubmitted}
+            />
           )}
 
           {step === "otp-verification" && (

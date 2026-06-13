@@ -141,7 +141,7 @@ export async function notifyActorSuggestedMatches(
         const savedTitle = listingSavedTitle(listingType, action);
         const savedMessage = listingSavedMessage(listingType, action);
         const warningMessage =
-          "⚠ Complete identity verification before accepting requests and receiving payouts.";
+          "⚠️ Complete identity verification before accepting requests and receiving payouts.";
 
         if (matchCount > 0) {
           const returnUrl = window.location.href;

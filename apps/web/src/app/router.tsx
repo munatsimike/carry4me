@@ -13,7 +13,7 @@ import { MyTripsPage } from "./features/trips/MyTripsPage";
 import MobileTripShell from "./features/trips/ui/MobileTripShell";
 import MobileParcelShaell from "./features/parcels/ui/MobileParcelShell";
 import { RootLayout } from "./shared/Authentication/application/RootLayout";
-import { PhoneVerificationModal } from "./shared/Authentication/UI/PhoneVerificationModal";
+import { AuthEntryPage } from "./shared/Authentication/UI/AuthEntryPage";
 import CompleteProfile from "./shared/Authentication/UI/CompleteProfilePage";
 import {
   CompleteProfileRoute,
@@ -45,7 +45,7 @@ export const router = createBrowserRouter([
       { path: "refunds", element: <RefundsPage /> },
       { path: "help", element: <HelpPage /> },
       { path: "pricing", element: <PricingPage /> },
-      { path: "signin", element: <PhoneVerificationModal /> },
+      { path: "signin", element: <AuthEntryPage /> },
       { path: "verify-email", element: <VerifyEmailPage /> },
       {
         path: "complete-profile",

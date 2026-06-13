@@ -1,5 +1,5 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SignUpUseCase } from "../application/SignUpUseCase";
 import type { AppUser } from "../domain/authTypes";
@@ -64,6 +64,7 @@ import {
   lastNameSchema,
 } from "@/app/shared/validation/formValidation";
 import EmailVerificationBadge from "./EmailVerificationBadge";
+import { enrollPasskey, listPasskeys } from "../application/passkeyAuth";
 
 export const profileDetailsSchema = z.object({
   firstName: firstNameSchema,
@@ -140,10 +141,16 @@ export default function CompleteProfile() {
   const [showEmailVerificationBadge, setShowEmailVerificationBadge] = useState(
     false,
   );
+  const [passkeyPromptOpen, setPasskeyPromptOpen] = useState(false);
+  const [passkeyPromptLoading, setPasskeyPromptLoading] = useState(false);
+  const passkeyPromptResolveRef = useRef<((created: boolean) => void) | null>(
+    null,
+  );
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
   const { user, profile, refreshProfile } = useAuth();
   const { openSignInModal } = useSignInModal();
+  const { toast } = useToast();
   const { openCheckEmailModal, setPostProfileSaveFlowActive } =
     useEmailVerification();
   const navigate = useNavigate();
@@ -252,6 +259,33 @@ export default function CompleteProfile() {
 
   const { showSupabaseError } = useUniversalModal();
 
+  const promptPasskeySetup = () =>
+    new Promise<boolean>((resolve) => {
+      passkeyPromptResolveRef.current = resolve;
+      setPasskeyPromptOpen(true);
+    });
+
+  const handleSkipPasskeyPrompt = () => {
+    setPasskeyPromptOpen(false);
+    passkeyPromptResolveRef.current?.(false);
+    passkeyPromptResolveRef.current = null;
+  };
+
+  const handleCreatePasskey = async () => {
+    setPasskeyPromptLoading(true);
+    try {
+      await enrollPasskey();
+      toast("Passkey successfully added.", { variant: "success" });
+      setPasskeyPromptOpen(false);
+      passkeyPromptResolveRef.current?.(true);
+      passkeyPromptResolveRef.current = null;
+    } catch (passkeyError) {
+      showSupabaseError(passkeyError);
+    } finally {
+      setPasskeyPromptLoading(false);
+    }
+  };
+
   const onSubmit = async (values: CompleteProfileFields) => {
     setPostProfileSaveFlowActive(true);
 
@@ -291,6 +325,18 @@ export default function CompleteProfile() {
           shouldValidate: true,
         });
         setShowEmailVerificationBadge(true);
+      }
+
+      try {
+        const existingPasskeys = await listPasskeys();
+        if (existingPasskeys.length === 0) {
+          await promptPasskeySetup();
+        }
+      } catch (passkeyListError) {
+        console.error(
+          "[Passkey] Could not list existing passkeys after profile completion:",
+          passkeyListError,
+        );
       }
 
       const email = values.emailAddress.trim();
@@ -391,6 +437,50 @@ export default function CompleteProfile() {
               await refreshProfile();
             }}
           />
+        )}
+        {passkeyPromptOpen && (
+          <CustomModal
+            onClose={handleSkipPasskeyPrompt}
+            width="lg"
+          >
+            <div className="flex flex-col gap-4">
+              <CustomText
+                as="h2"
+                textSize="lg"
+                textVariant="primary"
+                className="font-medium"
+              >
+                Secure your account with a passkey
+              </CustomText>
+
+              <CustomText textSize="sm" textVariant="secondary">
+                Passkeys allow faster sign-in using Face ID, fingerprint, Windows
+                Hello, or device PIN.
+              </CustomText>
+
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={passkeyPromptLoading}
+                  onClick={handleSkipPasskeyPrompt}
+                >
+                  Skip for now
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  isBusy={passkeyPromptLoading}
+                  disabled={passkeyPromptLoading}
+                  onClick={() => void handleCreatePasskey()}
+                >
+                  Create Passkey
+                </Button>
+              </div>
+            </div>
+          </CustomModal>
         )}
       </Card>
     </DefaultContainer>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   useForm,
@@ -55,6 +55,12 @@ import {
   useVerifyPhoneChangeMutation,
 } from "@/app/hooks/mutations/useAuthMutations";
 import Spinner from "@/app/components/Spinner";
+import {
+  enrollPasskey,
+  listPasskeys,
+  removePasskey,
+  type PasskeyCredentialSummary,
+} from "../application/passkeyAuth";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -135,6 +141,10 @@ export default function ProfilePage() {
   const localAvatarPreviewUrlRef = useRef<string | null>(null);
   const [changePhoneOpen, setChangePhoneOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [passkeys, setPasskeys] = useState<PasskeyCredentialSummary[]>([]);
+  const [passkeysLoading, setPasskeysLoading] = useState(false);
+  const [passkeyActionLoading, setPasskeyActionLoading] = useState(false);
+  const [removingPasskeyId, setRemovingPasskeyId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, refreshProfile, profile } = useAuth();
@@ -219,6 +229,20 @@ export default function ProfilePage() {
     () => new LogoutUseCase(authRepo),
     [authRepo],
   );
+
+  const refreshPasskeys = useCallback(async () => {
+    if (!user) return;
+    setPasskeysLoading(true);
+    try {
+      const rows = await listPasskeys();
+      setPasskeys(rows);
+    } catch {
+      // Fail silently if passkeys are disabled for the project.
+      setPasskeys([]);
+    } finally {
+      setPasskeysLoading(false);
+    }
+  }, [user]);
   //  Hook must be BEFORE any conditional return
   useEffect(() => {
     // If user picked a file, don't overwrite their local preview
@@ -241,6 +265,10 @@ export default function ProfilePage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    void refreshPasskeys();
+  }, [refreshPasskeys]);
 
   if (!user) {
     return (
@@ -415,6 +443,41 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAddPasskey = async () => {
+    setPasskeyActionLoading(true);
+    try {
+      await enrollPasskey();
+      toast("Passkey added successfully.", { variant: "success" });
+      await refreshPasskeys();
+    } catch (err) {
+      showSupabaseError(err);
+    } finally {
+      setPasskeyActionLoading(false);
+    }
+  };
+
+  const handleRemovePasskey = async (passkeyId: string) => {
+    const shouldRemove = await confirm({
+      title: "Remove this passkey?",
+      message: "You can add it again later from security settings.",
+      confirmText: "Remove passkey",
+      cancelText: "Keep passkey",
+      destructive: true,
+    });
+    if (!shouldRemove) return;
+
+    setRemovingPasskeyId(passkeyId);
+    try {
+      await removePasskey(passkeyId);
+      toast("Passkey removed.", { variant: "success" });
+      await refreshPasskeys();
+    } catch (err) {
+      showSupabaseError(err);
+    } finally {
+      setRemovingPasskeyId(null);
+    }
+  };
+
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <header className="mb-4 px-1 sm:px-2">
@@ -481,6 +544,10 @@ export default function ProfilePage() {
                 iconSpecs={iconSpecs}
                 editing={editing}
                 isSubmitting={isSubmitting}
+                passkeys={passkeys}
+                passkeysLoading={passkeysLoading}
+                passkeyActionLoading={passkeyActionLoading}
+                removingPasskeyId={removingPasskeyId}
                 setEditing={openSecurityEdit}
                 control={control}
                 watch={watch}
@@ -489,6 +556,8 @@ export default function ProfilePage() {
                 onClick={onUpdateProfile}
                 dirtyFields={dirtyFields}
                 touchedFields={touchedFields}
+                onAddPasskey={() => void handleAddPasskey()}
+                onRemovePasskey={(passkeyId) => void handleRemovePasskey(passkeyId)}
                 actionBtns={{
                   onClick: () => onUpdateProfile(),
                   onCancel: () => setEditing(null),
@@ -675,6 +744,10 @@ type securityProps = {
   profile: UserProfile;
   editing: ProfileSection | null;
   isSubmitting: boolean;
+  passkeys: PasskeyCredentialSummary[];
+  passkeysLoading: boolean;
+  passkeyActionLoading: boolean;
+  removingPasskeyId: string | null;
   setEditing: () => void;
   actionBtns: ActionButtonProps;
   iconSpecs: IconSpecs;
@@ -686,6 +759,8 @@ type securityProps = {
   register: UseFormRegister<UserDetailsFields>;
   onClick: () => void;
   onChangePhone: () => void;
+  onAddPasskey: () => void;
+  onRemovePasskey: (passkeyId: string) => void;
 };
 
 function SecurityDetailsCard({
@@ -697,10 +772,17 @@ function SecurityDetailsCard({
   profile,
   iconSpecs,
   isSubmitting,
+  passkeys,
+  passkeysLoading,
+  passkeyActionLoading,
+  removingPasskeyId,
   onClick,
   onChangePhone,
+  onAddPasskey,
+  onRemovePasskey,
 }: securityProps) {
   const isEditing = editing === "security";
+  const passkeyCount = passkeys.length;
   return (
     <div className={`flex flex-col ${isEditing ? "gap-5" : "gap-3"}`}>
       <SectionHeader
@@ -732,6 +814,50 @@ function SecurityDetailsCard({
               phone={profile.phoneNumber}
               countryCode={profile.countryCode}
             />
+            <InfoRow
+              label="Passkey sign-in"
+              value={
+                passkeysLoading
+                  ? "Loading..."
+                  : passkeyCount > 0
+                    ? `Enabled (${passkeyCount})`
+                    : "Not set up"
+              }
+            />
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={onAddPasskey}
+                disabled={passkeyActionLoading || !!removingPasskeyId}
+                isBusy={passkeyActionLoading}
+              >
+                Add passkey
+              </Button>
+              {passkeys.map((passkey) => (
+                <div
+                  key={passkey.id}
+                  className="flex flex-wrap items-center gap-2 text-xs text-neutral-600"
+                >
+                  <span>
+                    {passkey.friendlyName?.trim() || `Passkey ${passkey.id.slice(0, 8)}`}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="neutral"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    disabled={passkeyActionLoading || removingPasskeyId === passkey.id}
+                    isBusy={removingPasskeyId === passkey.id}
+                    onClick={() => onRemovePasskey(passkey.id)}
+                  >
+                    Remove passkey
+                  </Button>
+                </div>
+              ))}
+            </div>
             <button
               type="button"
               onClick={onChangePhone}

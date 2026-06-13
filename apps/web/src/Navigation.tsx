@@ -1,5 +1,4 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useSignInModal } from "./app/shared/Authentication/SignInModalContext";
 import {
   Bell,
   BellRing,
@@ -20,6 +19,7 @@ import { useMarkNotificationsReadMutation } from "./app/hooks/mutations/useNotif
 import { AnimatePresence, motion } from "framer-motion";
 import { UserProfileMenu } from "./app/shared/Authentication/UI/userProfileMenu";
 import NotificationPopover from "./app/shared/Authentication/UI/NotificationPopOver";
+import { AuthEntryButtons } from "./app/shared/Authentication/UI/AuthEntryButtons";
 
 import CustomText from "./components/ui/CustomText";
 
@@ -74,36 +74,8 @@ function GuestNavigation() {
         <Package className={iconStyle} strokeWidth={strokeWidth} />
         Parcels
       </NavItem>
-      <SignInBtn />
+      <AuthEntryButtons />
     </NavLinks>
-  );
-}
-
-function SignInBtn() {
-  const { openSignInModal } = useSignInModal();
-  const location = useLocation();
-
-  return (
-    <div className="flex items-center gap-2">
-      {/* SECONDARY ACTION */}
-      <button
-        onClick={() =>
-          openSignInModal({ redirectTo: location.pathname })
-        }
-        className="
-            flex min-h-5 items-center gap-2
-            rounded-full bg-blue-500 text-white
-            px-3 py-1.5 sm:px-4
-            text-sm sm:text-md font-medium
-            transition-all duration-200
-            font-heading
-            hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-md
-            active:scale-95
-          "
-      >
-        Sign in
-      </button>
-    </div>
   );
 }
 
@@ -401,7 +373,7 @@ export function MobileToolBar({
                     transition={{ duration: 0.2, ease: "easeOut" }}
                     className="flex gap-2 items-center"
                   >
-                    <SignInBtn />
+                    <AuthEntryButtons />
                   </motion.div>
                 )
               )}
