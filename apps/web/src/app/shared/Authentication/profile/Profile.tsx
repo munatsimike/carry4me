@@ -478,8 +478,6 @@ export default function ProfilePage() {
     }
   };
 
-  const hasPasskeys = passkeys.length > 0;
-
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <header className="mb-4 px-1 sm:px-2">
@@ -511,26 +509,6 @@ export default function ProfilePage() {
           updateAvatar={updateAvatar}
           onDelete={onDeleteAvatar}
         />
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <CustomText textVariant="label" textSize="sm">
-            {passkeysLoading
-              ? "Checking passkey setup..."
-              : hasPasskeys
-                ? `Passkey sign-in enabled (${passkeys.length})`
-                : "Set up a passkey for faster and safer sign-in."}
-          </CustomText>
-          <Button
-            type="button"
-            variant={hasPasskeys ? "outline" : "primary"}
-            size="sm"
-            onClick={() => void handleAddPasskey()}
-            disabled={passkeysLoading || passkeyActionLoading || !!removingPasskeyId}
-            isBusy={passkeyActionLoading}
-            className="w-full sm:w-auto"
-          >
-            {hasPasskeys ? "Add another passkey" : "Set up passkey"}
-          </Button>
-        </div>
         <form onSubmit={(e) => e.preventDefault()} autoComplete="off">
           <LineDivider heightClass="my-2 sm:my-4" />
           <motion.div
@@ -578,6 +556,7 @@ export default function ProfilePage() {
                 onClick={onUpdateProfile}
                 dirtyFields={dirtyFields}
                 touchedFields={touchedFields}
+                onAddPasskey={() => void handleAddPasskey()}
                 onRemovePasskey={(passkeyId) => void handleRemovePasskey(passkeyId)}
                 actionBtns={{
                   onClick: () => onUpdateProfile(),
@@ -780,6 +759,7 @@ type securityProps = {
   register: UseFormRegister<UserDetailsFields>;
   onClick: () => void;
   onChangePhone: () => void;
+  onAddPasskey: () => void;
   onRemovePasskey: (passkeyId: string) => void;
 };
 
@@ -798,6 +778,7 @@ function SecurityDetailsCard({
   removingPasskeyId,
   onClick,
   onChangePhone,
+  onAddPasskey,
   onRemovePasskey,
 }: securityProps) {
   const isEditing = editing === "security";
@@ -833,6 +814,13 @@ function SecurityDetailsCard({
               phone={profile.phoneNumber}
               countryCode={profile.countryCode}
             />
+            <button
+              type="button"
+              onClick={onChangePhone}
+              className="w-fit text-sm font-medium text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
+            >
+              Change phone number
+            </button>
             <InfoRow
               label="Passkey sign-in"
               value={
@@ -843,6 +831,19 @@ function SecurityDetailsCard({
                     : "Not set up"
               }
             />
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant={passkeyCount > 0 ? "outline" : "primary"}
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={onAddPasskey}
+                disabled={passkeysLoading || passkeyActionLoading || !!removingPasskeyId}
+                isBusy={passkeyActionLoading}
+              >
+                {passkeyCount > 0 ? "Add another passkey" : "Set up passkey"}
+              </Button>
+            </div>
             {passkeyCount > 0 && (
               <div className="flex flex-col gap-2">
                 {passkeys.map((passkey) => (
@@ -857,7 +858,7 @@ function SecurityDetailsCard({
                       type="button"
                       variant="neutral"
                       size="sm"
-                      className="h-7 px-2 text-xs"
+                      className="h-7 px-2 text-xs hover:bg-red-50 hover:border-red-200 hover:text-red-700"
                       disabled={passkeyActionLoading || removingPasskeyId === passkey.id}
                       isBusy={removingPasskeyId === passkey.id}
                       onClick={() => onRemovePasskey(passkey.id)}
@@ -868,13 +869,6 @@ function SecurityDetailsCard({
                 ))}
               </div>
             )}
-            <button
-              type="button"
-              onClick={onChangePhone}
-              className="w-fit text-sm font-medium text-primary-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
-            >
-              Change phone number
-            </button>
           </motion.div>
         ) : (
           <motion.div
