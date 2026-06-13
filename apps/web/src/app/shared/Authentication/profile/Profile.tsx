@@ -578,7 +578,6 @@ export default function ProfilePage() {
                 onClick={onUpdateProfile}
                 dirtyFields={dirtyFields}
                 touchedFields={touchedFields}
-                onAddPasskey={() => void handleAddPasskey()}
                 onRemovePasskey={(passkeyId) => void handleRemovePasskey(passkeyId)}
                 actionBtns={{
                   onClick: () => onUpdateProfile(),
@@ -781,7 +780,6 @@ type securityProps = {
   register: UseFormRegister<UserDetailsFields>;
   onClick: () => void;
   onChangePhone: () => void;
-  onAddPasskey: () => void;
   onRemovePasskey: (passkeyId: string) => void;
 };
 
@@ -800,7 +798,6 @@ function SecurityDetailsCard({
   removingPasskeyId,
   onClick,
   onChangePhone,
-  onAddPasskey,
   onRemovePasskey,
 }: securityProps) {
   const isEditing = editing === "security";
