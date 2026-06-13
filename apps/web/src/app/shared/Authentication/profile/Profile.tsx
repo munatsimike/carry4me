@@ -478,6 +478,8 @@ export default function ProfilePage() {
     }
   };
 
+  const hasPasskeys = passkeys.length > 0;
+
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <header className="mb-4 px-1 sm:px-2">
@@ -509,6 +511,26 @@ export default function ProfilePage() {
           updateAvatar={updateAvatar}
           onDelete={onDeleteAvatar}
         />
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <CustomText textVariant="label" textSize="sm">
+            {passkeysLoading
+              ? "Checking passkey setup..."
+              : hasPasskeys
+                ? `Passkey sign-in enabled (${passkeys.length})`
+                : "Set up a passkey for faster and safer sign-in."}
+          </CustomText>
+          <Button
+            type="button"
+            variant={hasPasskeys ? "outline" : "primary"}
+            size="sm"
+            onClick={() => void handleAddPasskey()}
+            disabled={passkeysLoading || passkeyActionLoading || !!removingPasskeyId}
+            isBusy={passkeyActionLoading}
+            className="w-full sm:w-auto"
+          >
+            {hasPasskeys ? "Add another passkey" : "Set up passkey"}
+          </Button>
+        </div>
         <form onSubmit={(e) => e.preventDefault()} autoComplete="off">
           <LineDivider heightClass="my-2 sm:my-4" />
           <motion.div
@@ -824,40 +846,31 @@ function SecurityDetailsCard({
                     : "Not set up"
               }
             />
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto"
-                onClick={onAddPasskey}
-                disabled={passkeyActionLoading || !!removingPasskeyId}
-                isBusy={passkeyActionLoading}
-              >
-                Add passkey
-              </Button>
-              {passkeys.map((passkey) => (
-                <div
-                  key={passkey.id}
-                  className="flex flex-wrap items-center gap-2 text-xs text-neutral-600"
-                >
-                  <span>
-                    {passkey.friendlyName?.trim() || `Passkey ${passkey.id.slice(0, 8)}`}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="neutral"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    disabled={passkeyActionLoading || removingPasskeyId === passkey.id}
-                    isBusy={removingPasskeyId === passkey.id}
-                    onClick={() => onRemovePasskey(passkey.id)}
+            {passkeyCount > 0 && (
+              <div className="flex flex-col gap-2">
+                {passkeys.map((passkey) => (
+                  <div
+                    key={passkey.id}
+                    className="flex flex-wrap items-center gap-2 text-xs text-neutral-600"
                   >
-                    Remove passkey
-                  </Button>
-                </div>
-              ))}
-            </div>
+                    <span>
+                      {passkey.friendlyName?.trim() || `Passkey ${passkey.id.slice(0, 8)}`}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="neutral"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      disabled={passkeyActionLoading || removingPasskeyId === passkey.id}
+                      isBusy={removingPasskeyId === passkey.id}
+                      onClick={() => onRemovePasskey(passkey.id)}
+                    >
+                      Remove passkey
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
             <button
               type="button"
               onClick={onChangePhone}

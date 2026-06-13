@@ -26,6 +26,74 @@ import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
 
 type SignInTab = "passkey" | "phone" | "email";
 
+type EmailOtpFunctionErrorPayload = {
+  error?: string;
+  retry_after_seconds?: number;
+};
+
+type ResponseLike = {
+  status?: number;
+  json?: () => Promise<unknown>;
+  text?: () => Promise<string>;
+};
+
+async function readEmailOtpFunctionError(
+  err: unknown,
+): Promise<{
+  message?: string;
+  retryAfterSeconds?: number;
+  status?: number;
+  rawMessage?: string;
+}> {
+  const rawMessage = err instanceof Error
+    ? err.message
+    : typeof err === "string"
+      ? err
+      : undefined;
+
+  if (!err || typeof err !== "object" || !("context" in err)) {
+    return { rawMessage };
+  }
+
+  const context = (err as { context?: unknown }).context as ResponseLike | undefined;
+  if (!context || typeof context !== "object") {
+    return { rawMessage };
+  }
+
+  let message: string | undefined;
+  let retryAfterSeconds: number | undefined;
+
+  try {
+    if (typeof context.json === "function") {
+      const payload = (await context.json()) as EmailOtpFunctionErrorPayload;
+      if (typeof payload.error === "string" && payload.error.trim()) {
+        message = payload.error.trim();
+      }
+      if (typeof payload.retry_after_seconds === "number") {
+        retryAfterSeconds = payload.retry_after_seconds;
+      }
+    }
+  } catch {
+    try {
+      if (typeof context.text === "function") {
+        const textBody = await context.text();
+        if (textBody.trim()) {
+          message = textBody.trim();
+        }
+      }
+    } catch {
+      // Ignore unreadable response bodies and fall back to default mapping.
+    }
+  }
+
+  return {
+    message,
+    retryAfterSeconds,
+    status: typeof context.status === "number" ? context.status : undefined,
+    rawMessage,
+  };
+}
+
 function validateEmailValue(value: string): string | null {
   const normalized = value.trim().toLowerCase();
   if (!normalized) return "Enter your email address.";
@@ -64,7 +132,13 @@ function toEmailOtpErrorMessage(
 
 export function SignInModal() {
   const navigate = useNavigate();
-  const { state, closeSignInModal, openSignUpModal, openPhoneOtpModal } =
+  const {
+    state,
+    closeSignInModal,
+    openSignUpModal,
+    openPhoneOtpModal,
+    openEmailOtpModal,
+  } =
     useSignInModal();
   const {
     setPhoneNumber,
@@ -79,14 +153,10 @@ export function SignInModal() {
   const [loadingPasskey, setLoadingPasskey] = useState(false);
   const [loadingPhoneOtp, setLoadingPhoneOtp] = useState(false);
   const [loadingEmailOtp, setLoadingEmailOtp] = useState(false);
-  const [loadingEmailVerify, setLoadingEmailVerify] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailInputError, setEmailInputError] = useState<string | null>(null);
-  const [emailCode, setEmailCode] = useState("");
-  const [emailCodeSent, setEmailCodeSent] = useState(false);
-  const [emailResendCooldown, setEmailResendCooldown] = useState(0);
 
   const {
     register,
@@ -108,24 +178,16 @@ export function SignInModal() {
   const isOpen = state.isOpen && state.view === "signin";
   useEffect(() => {
     if (isOpen) {
-      setActiveTab("passkey");
+      setActiveTab(state.signInDefaultTab);
       setError(null);
       setSuccessMessage(null);
     }
-  }, [isOpen]);
+  }, [isOpen, state.signInDefaultTab]);
 
   useEffect(() => {
     setError(null);
     setSuccessMessage(null);
   }, [activeTab]);
-
-  useEffect(() => {
-    if (!emailCodeSent || emailResendCooldown <= 0) return;
-    const timer = window.setTimeout(() => {
-      setEmailResendCooldown((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => window.clearTimeout(timer);
-  }, [emailCodeSent, emailResendCooldown]);
 
   if (!isOpen) return null;
 
@@ -135,9 +197,6 @@ export function SignInModal() {
       phoneNumber: "",
     });
     setEmail("");
-    setEmailCode("");
-    setEmailCodeSent(false);
-    setEmailResendCooldown(0);
     setEmailInputError(null);
     setError(null);
     setSuccessMessage(null);
@@ -221,66 +280,88 @@ export function SignInModal() {
         throw fnError;
       }
 
-      setEmailCodeSent(true);
-      setEmailCode("");
-      setEmailResendCooldown(data?.cooldown_seconds ?? 60);
-      setSuccessMessage("We sent a 6-digit code to your email.");
+      if (data?.ok) {
+        setEmail("");
+        setEmailInputError(null);
+        openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
+        return;
+      }
+
+      throw new Error("Could not send email code.");
     } catch (err) {
       console.error("[Email OTP] send failed:", err);
+      const errorDetail = await readEmailOtpFunctionError(err);
+      const normalizedMessage = (errorDetail.message ?? "").toLowerCase();
+      const cooldownSeconds =
+        errorDetail.retryAfterSeconds ??
+        (errorDetail.status === 429 ? 60 : undefined);
+
+      if (
+        typeof cooldownSeconds === "number" &&
+        Number.isFinite(cooldownSeconds) &&
+        cooldownSeconds > 0
+      ) {
+        setEmail("");
+        setEmailInputError(null);
+        openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
+        return;
+      }
+
+      if (
+        errorDetail.status !== undefined &&
+        errorDetail.status >= 500 &&
+        errorDetail.status < 600
+      ) {
+        setEmail("");
+        setEmailInputError(null);
+        openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
+        return;
+      }
+
+      if (normalizedMessage.includes("wait before requesting another code")) {
+        setEmail("");
+        setEmailInputError(null);
+        openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
+        return;
+      }
+
+      if (
+        errorDetail.status === 404 ||
+        normalizedMessage.includes("account not found") ||
+        normalizedMessage.includes("sign in with phone otp")
+      ) {
+        setError("Account not found or incomplete. Sign in with Phone OTP.");
+        return;
+      }
+
+      if (
+        errorDetail.status === 403 ||
+        normalizedMessage.includes("phone otp first") ||
+        normalizedMessage.includes("complete your profile and phone verification") ||
+        normalizedMessage.includes("sign in with phone otp")
+      ) {
+        setError("Account not found or incomplete. Sign in with Phone OTP.");
+        return;
+      }
+
       setError(
-        toEmailOtpErrorMessage(
-          err,
-          "We couldn’t send an email code right now. Please try again.",
-        ),
+        errorDetail.message
+          ? toEmailOtpErrorMessage(
+            new Error(errorDetail.message),
+            "We couldn’t send an email code right now. Please try again.",
+          )
+          : errorDetail.rawMessage
+            ? toEmailOtpErrorMessage(
+              new Error(errorDetail.rawMessage),
+              "We couldn’t send an email code right now. Please try again.",
+            )
+          : toEmailOtpErrorMessage(
+            err,
+            "We couldn’t send an email code right now. Please try again.",
+          ),
       );
     } finally {
       setLoadingEmailOtp(false);
-    }
-  };
-
-  const handleVerifyEmailCode = async () => {
-    const normalized = email.trim().toLowerCase();
-    const emailValidationError = validateEmailValue(normalized);
-    if (emailValidationError) {
-      setEmailInputError(emailValidationError);
-      return;
-    }
-    if (!/^\d{6}$/.test(emailCode.trim())) {
-      setError("Enter the 6-digit email code.");
-      return;
-    }
-
-    setLoadingEmailVerify(true);
-    setError(null);
-    setSuccessMessage(null);
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke<{
-        ok?: boolean;
-        action_link?: string;
-      }>("verify-email-login-otp", {
-        body: { email: normalized, otp: emailCode.trim() },
-        method: "POST",
-      });
-
-      if (fnError) {
-        throw fnError;
-      }
-
-      if (!data?.action_link) {
-        throw new Error("Could not complete sign-in.");
-      }
-
-      window.location.href = data.action_link;
-    } catch (err) {
-      console.error("[Email OTP] verify failed:", err);
-      setError(
-        toEmailOtpErrorMessage(
-          err,
-          "We couldn’t verify your email code right now. Please try again.",
-        ),
-      );
-    } finally {
-      setLoadingEmailVerify(false);
     }
   };
 
@@ -434,59 +515,17 @@ export function SignInModal() {
                     ) : null}
                   </div>
                   <LineDivider heightClass="my-0" />
-                  {!emailCodeSent ? (
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="md"
-                      isBusy={loadingEmailOtp}
-                      disabled={loadingEmailOtp}
-                      onClick={() => void handleSendEmailCode()}
-                      className="w-full"
-                    >
-                      Send OTP
-                    </Button>
-                  ) : (
-                    <>
-                      <div className="flex flex-col gap-1.5">
-                        <CustomText as="label" textVariant="label" textSize="xs">
-                          Email code
-                        </CustomText>
-                        <input
-                          type="text"
-                          value={emailCode}
-                          onChange={(event) => setEmailCode(event.target.value)}
-                          placeholder="Enter 6-digit code"
-                          className="h-11 w-full rounded-xl border border-neutral-300 bg-white px-3 text-sm text-ink-primary outline-none transition-colors focus:border-primary-500"
-                          inputMode="numeric"
-                          maxLength={6}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="primary"
-                        size="md"
-                        isBusy={loadingEmailVerify}
-                        disabled={loadingEmailVerify}
-                        onClick={() => void handleVerifyEmailCode()}
-                        className="w-full"
-                      >
-                        Verify code
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={loadingEmailOtp || emailResendCooldown > 0}
-                        onClick={() => void handleSendEmailCode()}
-                        className="w-full"
-                      >
-                        {emailResendCooldown > 0
-                          ? `Resend code in ${emailResendCooldown}s`
-                          : "Resend code"}
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="md"
+                    isBusy={loadingEmailOtp}
+                    disabled={loadingEmailOtp}
+                    onClick={() => void handleSendEmailCode()}
+                    className="w-full"
+                  >
+                    Send OTP
+                  </Button>
                 </motion.div>
               ) : null}
             </AnimatePresence>

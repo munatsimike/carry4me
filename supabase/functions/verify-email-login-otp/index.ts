@@ -15,6 +15,16 @@ type OtpRow = {
   max_attempts: number;
 };
 
+type ProfileEligibilityRow = {
+  id: string;
+  full_name: string | null;
+  country_code: string | null;
+  city: string | null;
+  phone_number: string | null;
+  email: string | null;
+  phone_verified: boolean | null;
+};
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -59,45 +69,29 @@ function safeEquals(a: string, b: string): boolean {
   return diff === 0;
 }
 
-async function ensureUserExists(supabaseAdmin: ReturnType<typeof createClient>, email: string) {
-  const adminAuth = supabaseAdmin.auth.admin as unknown as {
-    getUserByEmail?: (email: string) => Promise<{ data?: { user?: { id: string } | null }; error?: unknown }>;
-    createUser: (payload: { email: string; email_confirm: boolean }) => Promise<{
-      data?: { user?: { id: string } | null };
-      error?: unknown;
-    }>;
-  };
+function hasCompletedProfile(profile: ProfileEligibilityRow | null): boolean {
+  if (!profile) return false;
 
-  if (typeof adminAuth.getUserByEmail === "function") {
-    const { data, error } = await adminAuth.getUserByEmail(email);
-    if (!error && data?.user?.id) {
-      return data.user.id;
-    }
-  }
+  const requiredFields = [
+    profile.full_name,
+    profile.country_code,
+    profile.city,
+    profile.phone_number,
+    profile.email,
+  ];
 
-  const { data: createdData, error: createError } = await adminAuth.createUser({
-    email,
-    email_confirm: true,
-  });
+  const hasAllRequiredText = requiredFields.every(
+    (value) => typeof value === "string" && value.trim().length > 0,
+  );
 
-  if (createError) {
-    // If user already exists race-condition-wise, continue without throwing here.
-    const message = createError instanceof Error
-      ? createError.message.toLowerCase()
-      : String(createError).toLowerCase();
-    if (!message.includes("already") && !message.includes("exists")) {
-      throw createError;
-    }
-  }
-
-  return createdData?.user?.id ?? null;
+  return hasAllRequiredText && profile.phone_verified === true;
 }
 
 async function createMagicLink(
   supabaseAdmin: ReturnType<typeof createClient>,
   email: string,
   redirectTo: string,
-): Promise<string> {
+): Promise<{ actionLink: string; userId: string | null }> {
   const adminAuth = supabaseAdmin.auth.admin as unknown as {
     generateLink: (payload: {
       type: "magiclink";
@@ -107,6 +101,7 @@ async function createMagicLink(
       data?: {
         properties?: { action_link?: string | null };
         action_link?: string | null;
+        user?: { id?: string | null } | null;
       };
       error?: unknown;
     }>;
@@ -127,7 +122,154 @@ async function createMagicLink(
     throw new Error("Failed to generate sign-in link.");
   }
 
-  return actionLink;
+  return {
+    actionLink,
+    userId: data?.user?.id ?? null,
+  };
+}
+
+async function getProfileById(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<ProfileEligibilityRow | null> {
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, full_name, country_code, city, phone_number, email, phone_verified")
+    .eq("id", userId)
+    .maybeSingle<ProfileEligibilityRow>();
+
+  if (error) {
+    console.error("verify-email-login-otp getProfileById failed", { userId, error });
+    throw error;
+  }
+
+  return data;
+}
+
+async function linkEmailToProfileUser(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  profileUserId: string,
+  email: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const adminAuth = supabaseAdmin.auth.admin as unknown as {
+    updateUserById?: (
+      id: string,
+      attributes: { email?: string; email_confirm?: boolean },
+    ) => Promise<{ error?: unknown }>;
+    listUsers?: (params?: { page?: number; perPage?: number }) => Promise<{
+      data?: { users?: Array<{ id: string; email?: string | null }> };
+      error?: unknown;
+    }>;
+    getUserByEmail?: (email: string) => Promise<{
+      data?: { user?: { id?: string | null; email?: string | null } | null };
+      error?: unknown;
+    }>;
+    deleteUser?: (
+      id: string,
+      shouldSoftDelete?: boolean,
+    ) => Promise<{ error?: unknown }>;
+  };
+
+  if (typeof adminAuth.updateUserById !== "function") {
+    return { ok: false, error: "Could not complete sign-in. Sign in with Phone OTP." };
+  }
+
+  const attempt = await adminAuth.updateUserById(profileUserId, {
+    email,
+    email_confirm: true,
+  });
+  if (!attempt.error) {
+    return { ok: true };
+  }
+
+  const message = attempt.error instanceof Error
+    ? attempt.error.message.toLowerCase()
+    : String(attempt.error).toLowerCase();
+  const duplicateEmail =
+    message.includes("already") || message.includes("exists") || message.includes("duplicate");
+
+  if (!duplicateEmail) {
+    console.error("verify-email-login-otp updateUserById failed", attempt.error);
+    return { ok: false, error: "Could not complete sign-in. Sign in with Phone OTP." };
+  }
+
+  let conflictingUser: { id: string; email?: string | null } | null = null;
+  if (typeof adminAuth.getUserByEmail === "function") {
+    const byEmailRes = await adminAuth.getUserByEmail(email);
+    if (byEmailRes.error) {
+      console.error("verify-email-login-otp getUserByEmail failed", byEmailRes.error);
+    } else if (byEmailRes.data?.user?.id && byEmailRes.data.user.id !== profileUserId) {
+      conflictingUser = {
+        id: byEmailRes.data.user.id,
+        email: byEmailRes.data.user.email,
+      };
+    }
+  }
+
+  if (!conflictingUser && typeof adminAuth.listUsers === "function") {
+    const normalizedEmail = normalizeEmail(email);
+    // listUsers can be paginated with low per-page defaults in some runtimes.
+    // Walk pages until we find a conflicting identity or exhaust results.
+    let page = 1;
+    while (!conflictingUser && page <= 30) {
+      const usersRes = await adminAuth.listUsers({ page, perPage: 100 });
+      if (usersRes.error) {
+        console.error("verify-email-login-otp listUsers failed", usersRes.error);
+        return { ok: false, error: "Could not complete sign-in. Sign in with Phone OTP." };
+      }
+
+      const users = usersRes.data?.users ?? [];
+      conflictingUser = users.find((user) =>
+        normalizeEmail(user.email ?? "") === normalizedEmail && user.id !== profileUserId
+      ) ?? null;
+
+      if (users.length < 100) {
+        break;
+      }
+      page += 1;
+    }
+  }
+
+  if (!conflictingUser) {
+    return { ok: false, error: "Could not complete sign-in. Sign in with Phone OTP." };
+  }
+
+  let conflictingProfile: ProfileEligibilityRow | null = null;
+  try {
+    conflictingProfile = await getProfileById(supabaseAdmin, conflictingUser.id);
+  } catch {
+    return { ok: false, error: "Could not complete sign-in. Sign in with Phone OTP." };
+  }
+
+  // Do not delete legitimate completed accounts.
+  if (conflictingProfile && hasCompletedProfile(conflictingProfile)) {
+    return { ok: false, error: "Account not found or incomplete. Sign in with Phone OTP." };
+  }
+
+  if (typeof adminAuth.deleteUser !== "function") {
+    return { ok: false, error: "Could not complete sign-in. Sign in with Phone OTP." };
+  }
+
+  let deleteRes = await adminAuth.deleteUser(conflictingUser.id, false);
+  if (deleteRes.error) {
+    // Some SDK variants accept single-argument deleteUser(id).
+    deleteRes = await adminAuth.deleteUser(conflictingUser.id);
+  }
+  if (deleteRes.error) {
+    console.error("verify-email-login-otp deleteUser failed", deleteRes.error);
+    return { ok: false, error: "Could not complete sign-in. Sign in with Phone OTP." };
+  }
+
+  const retry = await adminAuth.updateUserById(profileUserId, {
+    email,
+    email_confirm: true,
+  });
+  if (retry.error) {
+    console.error("verify-email-login-otp retry updateUserById failed", retry.error);
+    return { ok: false, error: "Could not complete sign-in. Sign in with Phone OTP." };
+  }
+
+  return { ok: true };
 }
 
 Deno.serve(async (req) => {
@@ -166,6 +308,24 @@ Deno.serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
     const nowIso = new Date().toISOString();
+
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, country_code, city, phone_number, email, phone_verified")
+      .ilike("email", email)
+      .maybeSingle<ProfileEligibilityRow>();
+
+    if (profileError) {
+      console.error("verify-email-login-otp profile load failed", profileError);
+      return jsonResponse({ error: "Could not verify email code" }, 500);
+    }
+
+    if (!profile || !hasCompletedProfile(profile)) {
+      return jsonResponse(
+        { error: "Account not found or incomplete. Sign in with Phone OTP." },
+        404,
+      );
+    }
 
     const { data: otpRow, error: rowError } = await supabaseAdmin
       .from("email_login_otps")
@@ -224,6 +384,37 @@ Deno.serve(async (req) => {
       );
     }
 
+    const linkage = await linkEmailToProfileUser(
+      supabaseAdmin,
+      profile.id,
+      email,
+    );
+    if (!linkage.ok) {
+      return jsonResponse({ error: linkage.error }, 403);
+    }
+
+    let actionLink: string;
+    try {
+      const magicLink = await createMagicLink(
+        supabaseAdmin,
+        email,
+        `${appUrl}/dashboard`,
+      );
+      if (magicLink.userId && magicLink.userId !== profile.id) {
+        return jsonResponse(
+          { error: "Account not found or incomplete. Sign in with Phone OTP." },
+          403,
+        );
+      }
+      actionLink = magicLink.actionLink;
+    } catch (linkError) {
+      console.error("verify-email-login-otp magic link failed", linkError);
+      const message = linkError instanceof Error
+        ? linkError.message
+        : "Could not complete sign-in. Sign in with Phone OTP.";
+      return jsonResponse({ error: message }, 500);
+    }
+
     const { error: markUsedError } = await supabaseAdmin
       .from("email_login_otps")
       .update({
@@ -235,25 +426,6 @@ Deno.serve(async (req) => {
     if (markUsedError) {
       console.error("verify-email-login-otp mark used failed", markUsedError);
       return jsonResponse({ error: "Could not finalize sign-in" }, 500);
-    }
-
-    try {
-      await ensureUserExists(supabaseAdmin, email);
-    } catch (ensureUserError) {
-      console.error("verify-email-login-otp ensure user failed", ensureUserError);
-      return jsonResponse({ error: "Could not prepare account for sign-in" }, 500);
-    }
-
-    let actionLink: string;
-    try {
-      actionLink = await createMagicLink(
-        supabaseAdmin,
-        email,
-        `${appUrl}/dashboard`,
-      );
-    } catch (linkError) {
-      console.error("verify-email-login-otp magic link failed", linkError);
-      return jsonResponse({ error: "Could not complete sign-in" }, 500);
     }
 
     return jsonResponse({

@@ -13,6 +13,16 @@ type LatestOtpRow = {
   cooldown_until: string;
 };
 
+type ProfileEligibilityRow = {
+  id: string;
+  full_name: string | null;
+  country_code: string | null;
+  city: string | null;
+  phone_number: string | null;
+  email: string | null;
+  phone_verified: boolean | null;
+};
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -60,6 +70,24 @@ async function hashOtp(saltHex: string, otp: string): Promise<string> {
   return await sha256Hex(`${saltHex}:${otp}`);
 }
 
+function hasCompletedProfile(profile: ProfileEligibilityRow | null): boolean {
+  if (!profile) return false;
+
+  const requiredFields = [
+    profile.full_name,
+    profile.country_code,
+    profile.city,
+    profile.phone_number,
+    profile.email,
+  ];
+
+  const hasAllRequiredText = requiredFields.every(
+    (value) => typeof value === "string" && value.trim().length > 0,
+  );
+
+  return hasAllRequiredText && profile.phone_verified === true;
+}
+
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
   if (preflight) return preflight;
@@ -90,6 +118,24 @@ Deno.serve(async (req) => {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, country_code, city, phone_number, email, phone_verified")
+      .ilike("email", email)
+      .maybeSingle<ProfileEligibilityRow>();
+
+    if (profileError) {
+      console.error("send-email-login-otp profile load failed", profileError);
+      return jsonResponse({ error: "Could not process request" }, 500);
+    }
+
+    if (!profile || !hasCompletedProfile(profile)) {
+      return jsonResponse(
+        { error: "Account not found or incomplete. Sign in with Phone OTP." },
+        404,
+      );
+    }
 
     const { data: latestRow, error: latestError } = await supabaseAdmin
       .from("email_login_otps")

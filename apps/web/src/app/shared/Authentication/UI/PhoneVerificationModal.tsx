@@ -2,6 +2,7 @@ import { AnimatePresence } from "framer-motion";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { PhoneEntryScreen } from "./PhoneEntryScreen";
 import { OTPVerificationScreen } from "./OTPVerificationScreen";
+import { EmailOTPVerificationScreen } from "./EmailOTPVerificationScreen";
 import CustomModal from "@/app/components/CustomModal";
 import { useSignInModal } from "../SignInModalContext";
 import { useNavigate } from "react-router-dom";
@@ -33,21 +34,23 @@ export function PhoneVerificationModal() {
 
   return (
     <AnimatePresence>
-      {state.isOpen && state.view === "phone-otp" && (
+      {state.isOpen && (state.view === "phone-otp" || state.view === "email-otp") && (
         <CustomModal onClose={handleClose} width="xl" scrollable={false}>
-          {step === "phone-entry" && (
+          {state.view === "phone-otp" && step === "phone-entry" && (
             <PhoneEntryScreen
               mode={state.phoneOtpMode}
               onPhoneSubmitted={handlePhoneSubmitted}
             />
           )}
 
-          {step === "otp-verification" && (
+          {state.view === "phone-otp" && step === "otp-verification" && (
             <OTPVerificationScreen
               onVerificationComplete={handleVerificationComplete}
               onPhoneEdit={handlePhoneEdit}
             />
           )}
+
+          {state.view === "email-otp" && <EmailOTPVerificationScreen />}
         </CustomModal>
       )}
     </AnimatePresence>

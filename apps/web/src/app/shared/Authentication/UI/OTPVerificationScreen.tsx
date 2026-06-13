@@ -5,7 +5,6 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
-import { CircleBadge } from "@/components/ui/CircleBadge";
 import FloatingInputField from "@/app/components/CustomInputField";
 import LineDivider from "@/app/components/LineDivider";
 import ErrorText from "@/app/components/text/ErrorText";
@@ -16,7 +15,6 @@ import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { useUniversalModal } from "../application/DialogBoxModalProvider";
 import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
-import { ShieldCheck } from "lucide-react";
 import { otpCodeSchema } from "@/app/shared/validation/formValidation";
 
 const otpSchema = z.object({
@@ -124,9 +122,6 @@ export function OTPVerificationScreen({
       <motion.div variants={item} className="flex items-center justify-center">
         <ErrorText error={submitError?.toString()}>
           <span className="inline-flex flex-col gap-1 items-center">
-            <CircleBadge size="lg">
-              <ShieldCheck className="text-primary-500" size={24} />
-            </CircleBadge>
             <CustomText as="h1" textVariant="primary" textSize="lg" className="font-medium">
               Verify your phone
             </CustomText>
