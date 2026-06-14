@@ -8,6 +8,7 @@ type ProfileEligibilityRow = {
   city: string | null;
   phone_number: string | null;
   email: string | null;
+  email_verified: boolean | null;
   phone_verified: boolean | null;
 };
 
@@ -47,7 +48,11 @@ function hasCompletedProfile(profile: ProfileEligibilityRow | null): boolean {
     (value) => typeof value === "string" && value.trim().length > 0,
   );
 
-  return hasAllRequiredText && profile.phone_verified === true;
+  return (
+    hasAllRequiredText &&
+    profile.email_verified === true &&
+    profile.phone_verified === true
+  );
 }
 
 Deno.serve(async (req) => {
@@ -82,7 +87,7 @@ Deno.serve(async (req) => {
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select(
-        "id, full_name, country_code, city, phone_number, email, phone_verified",
+        "id, full_name, country_code, city, phone_number, email, email_verified, phone_verified",
       )
       .ilike("email", email)
       .maybeSingle<ProfileEligibilityRow>();
