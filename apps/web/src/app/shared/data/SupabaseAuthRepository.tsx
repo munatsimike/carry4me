@@ -404,45 +404,54 @@ export class SupabaseAuthRepository implements AuthRepository {
 
   async sendEmailOTP(email: string): Promise<string> {
     const normalizedEmail = email.trim().toLowerCase();
-    
-    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+
+    if (
+      !normalizedEmail ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+    ) {
       throw new AppError({
         code: "INVALID_EMAIL",
         message: "A valid email is required",
       });
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, full_name, country_code, city, phone_number, email, phone_verified")
-      .ilike("email", normalizedEmail)
-      .maybeSingle();
-
-    throwIfSupabaseError(profileError);
-
-    if (!profile) {
-      throw new AppError({
-        code: "ACCOUNT_NOT_FOUND",
-        message: "Account not found or incomplete. Sign in with Phone OTP.",
+    // Ask Edge Function to verify profile eligibility using service role key
+    const { data: eligibilityData, error: fnError } =
+      await supabase.functions.invoke("check-email-login-eligibility", {
+        body: { email: normalizedEmail },
+        method: "POST",
       });
+
+    if (fnError) {
+      // Map 404/403 to friendly message for the user
+      const context = (fnError as any).context;
+      const response = context?.context as Response | undefined;
+      const status = response?.status ?? null;
+      if (status === 404 || status === 403) {
+        throw new AppError({
+          code: "ACCOUNT_NOT_FOUND",
+          message: "Account not found or incomplete. Sign in with Phone OTP.",
+          status,
+        });
+      }
+
+      throw AppError.fromUnknown(fnError);
     }
 
-    const requiredFields = [
-      profile.full_name,
-      profile.country_code,
-      profile.city,
-      profile.phone_number,
-      profile.email,
-    ];
-
-    const hasAllRequired = requiredFields.every(
-      (value) => typeof value === "string" && value.trim().length > 0,
-    );
-
-    if (!hasAllRequired || profile.phone_verified !== true) {
+    const ok =
+      eligibilityData &&
+      typeof eligibilityData === "object" &&
+      (eligibilityData as any).ok === true;
+    if (!ok) {
+      // If the function returned a payload with error message, surface it
+      const errMsg =
+        eligibilityData && typeof eligibilityData === "object"
+          ? (eligibilityData as any).error
+          : null;
       throw new AppError({
-        code: "PROFILE_INCOMPLETE",
-        message: "Account not found or incomplete. Sign in with Phone OTP.",
+        code: "ACCOUNT_NOT_FOUND",
+        message:
+          errMsg ?? "Account not found or incomplete. Sign in with Phone OTP.",
       });
     }
 
@@ -461,7 +470,10 @@ export class SupabaseAuthRepository implements AuthRepository {
   async verifyEmailOTP(email: string, token: string): Promise<User> {
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    if (
+      !normalizedEmail ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+    ) {
       throw new AppError({
         code: "INVALID_EMAIL",
         message: "A valid email is required",
@@ -483,7 +495,10 @@ export class SupabaseAuthRepository implements AuthRepository {
 
     throwIfSupabaseError(error);
 
-    const user = requireData(data.user, "No user returned after email verification");
+    const user = requireData(
+      data.user,
+      "No user returned after email verification",
+    );
     return user;
   }
 }
