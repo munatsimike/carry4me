@@ -438,6 +438,7 @@ export class SupabaseAuthRepository implements AuthRepository {
       throw AppError.fromUnknown(fnError);
     }
 
+    // Supabase handles OTP generation, delivery, and verification for email login.
     const ok =
       eligibilityData &&
       typeof eligibilityData === "object" &&
@@ -455,11 +456,12 @@ export class SupabaseAuthRepository implements AuthRepository {
       });
     }
 
+    // Send an email OTP via Supabase Auth. Use shouldCreateUser: false to prevent
+    // creating a new auth user on login.
     const { error } = await supabase.auth.signInWithOtp({
       email: normalizedEmail,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     });
 
