@@ -12,7 +12,6 @@ import {
   checkPasskeyBrowserSupport,
   signInWithPasskey,
 } from "../application/passkeyAuth";
-import { supabase } from "@/app/shared/supabase/client";
 import PhoneNumberWithCountryFields from "./components/PhoneNumberWithCountryFields";
 import {
   phoneWithCountrySchema,
@@ -26,74 +25,6 @@ import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
 
 type SignInTab = "passkey" | "phone" | "email";
 
-type EmailOtpFunctionErrorPayload = {
-  error?: string;
-  retry_after_seconds?: number;
-};
-
-type ResponseLike = {
-  status?: number;
-  json?: () => Promise<unknown>;
-  text?: () => Promise<string>;
-};
-
-async function readEmailOtpFunctionError(
-  err: unknown,
-): Promise<{
-  message?: string;
-  retryAfterSeconds?: number;
-  status?: number;
-  rawMessage?: string;
-}> {
-  const rawMessage = err instanceof Error
-    ? err.message
-    : typeof err === "string"
-      ? err
-      : undefined;
-
-  if (!err || typeof err !== "object" || !("context" in err)) {
-    return { rawMessage };
-  }
-
-  const context = (err as { context?: unknown }).context as ResponseLike | undefined;
-  if (!context || typeof context !== "object") {
-    return { rawMessage };
-  }
-
-  let message: string | undefined;
-  let retryAfterSeconds: number | undefined;
-
-  try {
-    if (typeof context.json === "function") {
-      const payload = (await context.json()) as EmailOtpFunctionErrorPayload;
-      if (typeof payload.error === "string" && payload.error.trim()) {
-        message = payload.error.trim();
-      }
-      if (typeof payload.retry_after_seconds === "number") {
-        retryAfterSeconds = payload.retry_after_seconds;
-      }
-    }
-  } catch {
-    try {
-      if (typeof context.text === "function") {
-        const textBody = await context.text();
-        if (textBody.trim()) {
-          message = textBody.trim();
-        }
-      }
-    } catch {
-      // Ignore unreadable response bodies and fall back to default mapping.
-    }
-  }
-
-  return {
-    message,
-    retryAfterSeconds,
-    status: typeof context.status === "number" ? context.status : undefined,
-    rawMessage,
-  };
-}
-
 function validateEmailValue(value: string): string | null {
   const normalized = value.trim().toLowerCase();
   if (!normalized) return "Enter your email address.";
@@ -101,33 +32,6 @@ function validateEmailValue(value: string): string | null {
     return "Enter a valid email address.";
   }
   return null;
-}
-
-function toEmailOtpErrorMessage(
-  err: unknown,
-  fallbackMessage: string,
-): string {
-  const fallback = fallbackMessage.trim();
-  const base = toFriendlyErrorMessage(err);
-  const normalized = base.toLowerCase();
-
-  if (normalized.includes("phone number")) {
-    return fallback;
-  }
-
-  if (
-    normalized.includes("rate limit") ||
-    normalized.includes("too many") ||
-    normalized.includes("wait a moment")
-  ) {
-    return "Please wait a moment before requesting another code.";
-  }
-
-  if (normalized.includes("not found") || normalized.includes("404")) {
-    return "Email OTP service is currently unavailable. Please try again shortly.";
-  }
-
-  return base || fallback;
 }
 
 export function SignInModal() {
@@ -268,97 +172,34 @@ export function SignInModal() {
     setSuccessMessage(null);
     setEmailInputError(null);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke<{
-        ok?: boolean;
-        cooldown_seconds?: number;
-      }>("send-email-login-otp", {
-        body: { email: normalized },
-        method: "POST",
-      });
-
-      if (fnError) {
-        throw fnError;
-      }
-
-      if (data?.ok) {
-        setEmail("");
-        setEmailInputError(null);
-        openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
-        return;
-      }
-
-      throw new Error("Could not send email code.");
+      await authRepo.sendEmailOTP(normalized);
+      setEmail("");
+      setEmailInputError(null);
+      openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
     } catch (err) {
       console.error("[Email OTP] send failed:", err);
-      const errorDetail = await readEmailOtpFunctionError(err);
-      const normalizedMessage = (errorDetail.message ?? "").toLowerCase();
-      const cooldownSeconds =
-        errorDetail.retryAfterSeconds ??
-        (errorDetail.status === 429 ? 60 : undefined);
+      const message = toFriendlyErrorMessage(err);
+      const normalizedMessage = message.toLowerCase();
 
       if (
-        typeof cooldownSeconds === "number" &&
-        Number.isFinite(cooldownSeconds) &&
-        cooldownSeconds > 0
-      ) {
-        setEmail("");
-        setEmailInputError(null);
-        openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
-        return;
-      }
-
-      if (
-        errorDetail.status !== undefined &&
-        errorDetail.status >= 500 &&
-        errorDetail.status < 600
-      ) {
-        setEmail("");
-        setEmailInputError(null);
-        openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
-        return;
-      }
-
-      if (normalizedMessage.includes("wait before requesting another code")) {
-        setEmail("");
-        setEmailInputError(null);
-        openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
-        return;
-      }
-
-      if (
-        errorDetail.status === 404 ||
         normalizedMessage.includes("account not found") ||
-        normalizedMessage.includes("sign in with phone otp")
+        normalizedMessage.includes("sign in with phone otp") ||
+        normalizedMessage.includes("incomplete")
       ) {
         setError("Account not found or incomplete. Sign in with Phone OTP.");
         return;
       }
 
       if (
-        errorDetail.status === 403 ||
-        normalizedMessage.includes("phone otp first") ||
-        normalizedMessage.includes("complete your profile and phone verification") ||
-        normalizedMessage.includes("sign in with phone otp")
+        normalizedMessage.includes("rate limit") ||
+        normalizedMessage.includes("too many")
       ) {
-        setError("Account not found or incomplete. Sign in with Phone OTP.");
+        setError("Please wait a moment before requesting another code.");
         return;
       }
 
       setError(
-        errorDetail.message
-          ? toEmailOtpErrorMessage(
-            new Error(errorDetail.message),
-            "We couldn’t send an email code right now. Please try again.",
-          )
-          : errorDetail.rawMessage
-            ? toEmailOtpErrorMessage(
-              new Error(errorDetail.rawMessage),
-              "We couldn’t send an email code right now. Please try again.",
-            )
-          : toEmailOtpErrorMessage(
-            err,
-            "We couldn’t send an email code right now. Please try again.",
-          ),
+        message || "We couldn't send an email code right now. Please try again.",
       );
     } finally {
       setLoadingEmailOtp(false);

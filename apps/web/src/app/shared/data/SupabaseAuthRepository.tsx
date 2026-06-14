@@ -401,6 +401,91 @@ export class SupabaseAuthRepository implements AuthRepository {
 
     return userId;
   }
+
+  async sendEmailOTP(email: string): Promise<string> {
+    const normalizedEmail = email.trim().toLowerCase();
+    
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      throw new AppError({
+        code: "INVALID_EMAIL",
+        message: "A valid email is required",
+      });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, full_name, country_code, city, phone_number, email, phone_verified")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+
+    throwIfSupabaseError(profileError);
+
+    if (!profile) {
+      throw new AppError({
+        code: "ACCOUNT_NOT_FOUND",
+        message: "Account not found or incomplete. Sign in with Phone OTP.",
+      });
+    }
+
+    const requiredFields = [
+      profile.full_name,
+      profile.country_code,
+      profile.city,
+      profile.phone_number,
+      profile.email,
+    ];
+
+    const hasAllRequired = requiredFields.every(
+      (value) => typeof value === "string" && value.trim().length > 0,
+    );
+
+    if (!hasAllRequired || profile.phone_verified !== true) {
+      throw new AppError({
+        code: "PROFILE_INCOMPLETE",
+        message: "Account not found or incomplete. Sign in with Phone OTP.",
+      });
+    }
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    throwIfSupabaseError(error);
+    return "Verification code sent";
+  }
+
+  async verifyEmailOTP(email: string, token: string): Promise<User> {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      throw new AppError({
+        code: "INVALID_EMAIL",
+        message: "A valid email is required",
+      });
+    }
+
+    if (!/^\d{6}$/.test(token.trim())) {
+      throw new AppError({
+        code: "INVALID_TOKEN",
+        message: "Enter the 6-digit email code.",
+      });
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: normalizedEmail,
+      token: token.trim(),
+      type: "email",
+    });
+
+    throwIfSupabaseError(error);
+
+    const user = requireData(data.user, "No user returned after email verification");
+    return user;
+  }
 }
 
 export function fetchPublicUrl(avatar_url: string | null): string | null {

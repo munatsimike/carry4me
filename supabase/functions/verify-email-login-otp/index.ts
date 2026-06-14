@@ -1,3 +1,8 @@
+// DEPRECATED: This function is no longer used.
+// Email OTP login now uses Supabase Auth directly with verifyOtp.
+// See: SupabaseAuthRepository.verifyEmailOTP()
+// Kept for backward compatibility only. Will be removed in a future version.
+
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { handleCorsPreflight } from "../_shared/cors.ts";
 

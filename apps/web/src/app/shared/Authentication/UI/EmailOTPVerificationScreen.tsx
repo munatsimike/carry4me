@@ -3,15 +3,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import FloatingInputField from "@/app/components/CustomInputField";
 import LineDivider from "@/app/components/LineDivider";
 import Spinner from "@/app/components/Spinner";
 import { otpCodeSchema } from "@/app/shared/validation/formValidation";
-import { supabase } from "@/app/shared/supabase/client";
 import { useSignInModal } from "../SignInModalContext";
 import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
+import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 
 const otpSchema = z.object({
   otpCode: otpCodeSchema,
@@ -19,72 +20,10 @@ const otpSchema = z.object({
 
 type OTPFormValues = z.infer<typeof otpSchema>;
 
-type EmailOtpFunctionErrorPayload = {
-  error?: string;
-  retry_after_seconds?: number;
-};
-
-type ResponseLike = {
-  status?: number;
-  json?: () => Promise<unknown>;
-  text?: () => Promise<string>;
-};
-
 const item = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { duration: 0.28 } },
 };
-
-async function readEmailOtpFunctionError(
-  err: unknown,
-): Promise<{ message?: string; retryAfterSeconds?: number; status?: number; rawMessage?: string }> {
-  const rawMessage = err instanceof Error
-    ? err.message
-    : typeof err === "string"
-      ? err
-      : undefined;
-
-  if (!err || typeof err !== "object" || !("context" in err)) {
-    return { rawMessage };
-  }
-
-  const context = (err as { context?: unknown }).context as ResponseLike | undefined;
-  if (!context || typeof context !== "object") {
-    return { rawMessage };
-  }
-
-  let message: string | undefined;
-  let retryAfterSeconds: number | undefined;
-  try {
-    if (typeof context.json === "function") {
-      const payload = (await context.json()) as EmailOtpFunctionErrorPayload;
-      if (typeof payload.error === "string") {
-        message = payload.error;
-      }
-      if (typeof payload.retry_after_seconds === "number") {
-        retryAfterSeconds = payload.retry_after_seconds;
-      }
-    }
-  } catch {
-    try {
-      if (typeof context.text === "function") {
-        const textBody = await context.text();
-        if (textBody.trim()) {
-          message = textBody.trim();
-        }
-      }
-    } catch {
-      // Ignore unreadable payloads and use fallbacks.
-    }
-  }
-
-  return {
-    message,
-    retryAfterSeconds,
-    status: typeof context.status === "number" ? context.status : undefined,
-    rawMessage,
-  };
-}
 
 function toEmailOtpErrorMessage(err: unknown, fallbackMessage: string): string {
   const fallback = fallbackMessage.trim();
@@ -106,15 +45,10 @@ function toEmailOtpErrorMessage(err: unknown, fallbackMessage: string): string {
 
   if (
     normalizedRaw.includes("invalid code") ||
-    normalizedRaw.includes("incorrect code")
+    normalizedRaw.includes("incorrect code") ||
+    normalizedBase.includes("invalid otp") ||
+    normalizedBase.includes("invalid token")
   ) {
-    const attemptsMatch = normalizedRaw.match(/(\d+)\s+attempt/);
-    if (attemptsMatch) {
-      const attempts = Number(attemptsMatch[1]);
-      if (Number.isFinite(attempts)) {
-        return `That email code is incorrect. ${attempts} attempt${attempts === 1 ? "" : "s"} remaining.`;
-      }
-    }
     return "That email code is incorrect. Please check and try again.";
   }
 
@@ -159,8 +93,10 @@ function toEmailOtpErrorMessage(err: unknown, fallbackMessage: string): string {
 }
 
 export function EmailOTPVerificationScreen() {
+  const navigate = useNavigate();
   const { state, openSignInModal } = useSignInModal();
   const email = (state.emailOtpAddress ?? "").trim().toLowerCase();
+  const authRepo = new SupabaseAuthRepository();
 
   const {
     register,
@@ -194,39 +130,14 @@ export function EmailOTPVerificationScreen() {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke<{
-        ok?: boolean;
-        action_link?: string;
-      }>("verify-email-login-otp", {
-        body: { email, otp: values.otpCode.trim() },
-        method: "POST",
-      });
-
-      if (error) {
-        const detail = await readEmailOtpFunctionError(error);
-        throw new Error(
-          toEmailOtpErrorMessage(
-            detail.message
-              ? new Error(detail.message)
-              : detail.rawMessage
-                ? new Error(detail.rawMessage)
-                : error,
-            "We couldn’t verify your email code right now. Please try again.",
-          ),
-        );
-      }
-
-      if (!data?.action_link) {
-        throw new Error("Could not complete sign-in.");
-      }
-
-      window.location.href = data.action_link;
+      await authRepo.verifyEmailOTP(email, values.otpCode.trim());
+      navigate(state.redirectTo || "/dashboard", { replace: true });
     } catch (err) {
       const message = err instanceof Error
         ? err.message
         : toEmailOtpErrorMessage(
           err,
-          "We couldn’t verify your email code right now. Please try again.",
+          "We couldn't verify your email code right now. Please try again.",
         );
       setSubmitError(message);
     }
@@ -241,34 +152,13 @@ export function EmailOTPVerificationScreen() {
     setResendLoading(true);
     setSubmitError(null);
     try {
-      const { data, error } = await supabase.functions.invoke<{
-        ok?: boolean;
-        cooldown_seconds?: number;
-      }>("send-email-login-otp", {
-        body: { email },
-        method: "POST",
-      });
-
-      if (error) {
-        const detail = await readEmailOtpFunctionError(error);
-        if (typeof detail.retryAfterSeconds === "number" && detail.retryAfterSeconds > 0) {
-          setResendTimer(Math.max(1, Math.ceil(detail.retryAfterSeconds)));
-          return;
-        }
-        throw new Error(
-          toEmailOtpErrorMessage(
-            detail.message ? new Error(detail.message) : error,
-            "We couldn’t send a new email code right now. Please try again.",
-          ),
-        );
-      }
-
-      setResendTimer(data?.cooldown_seconds ?? 60);
+      await authRepo.sendEmailOTP(email);
+      setResendTimer(60);
     } catch (err) {
       setSubmitError(
         toEmailOtpErrorMessage(
           err,
-          "We couldn’t send a new email code right now. Please try again.",
+          "We couldn't send a new email code right now. Please try again.",
         ),
       );
     } finally {

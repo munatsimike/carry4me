@@ -36,5 +36,10 @@ export interface AuthRepository {
     token: string,
     countryCode: string,
   ): Promise<string>;
+
+  // Email OTP Login Methods
+  sendEmailOTP(email: string): Promise<string>;
+  verifyEmailOTP(email: string, token: string): Promise<User>;
+
   deleteAccount(): Promise<void>;
 }

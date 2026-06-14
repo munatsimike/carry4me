@@ -1,9 +1,11 @@
+// DEPRECATED: This function is no longer used.
+// Email OTP login now uses Supabase Auth directly with shouldCreateUser: false.
+// See: SupabaseAuthRepository.sendEmailOTP()
+// Kept for backward compatibility only. Will be removed in a future version.
+
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { handleCorsPreflight } from "../_shared/cors.ts";
-import {
-  FROM_ADDRESS,
-  RESEND_API_URL,
-} from "../_shared/notificationEmail.ts";
+import { FROM_ADDRESS, RESEND_API_URL } from "../_shared/notificationEmail.ts";
 
 type RequestBody = {
   email?: string;
@@ -51,7 +53,9 @@ function generateNumericOtp(): string {
 }
 
 function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function generateSaltHex(byteLength = 16): string {
@@ -121,7 +125,9 @@ Deno.serve(async (req) => {
 
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, country_code, city, phone_number, email, phone_verified")
+      .select(
+        "id, full_name, country_code, city, phone_number, email, phone_verified",
+      )
       .ilike("email", email)
       .maybeSingle<ProfileEligibilityRow>();
 
@@ -204,8 +210,7 @@ Deno.serve(async (req) => {
         This code expires in 10 minutes. If you did not request this code, you can ignore this email.
       </p>
     `;
-    const text =
-      `Your Carry4Me sign-in code is ${otp}. This code expires in 10 minutes.`;
+    const text = `Your Carry4Me sign-in code is ${otp}. This code expires in 10 minutes.`;
 
     const resendResponse = await fetch(RESEND_API_URL, {
       method: "POST",
@@ -238,7 +243,8 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("send-email-login-otp error:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
     return jsonResponse({ error: message }, 500);
   }
 });
