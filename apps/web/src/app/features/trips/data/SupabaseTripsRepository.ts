@@ -14,6 +14,7 @@ import {
   type ListingPageParams,
   type PaginatedResult,
 } from "@/types/Pagination";
+import { todayLocalIsoDate } from "@/app/lib/todayLocalIsoDate";
 
 type BrowseQuery = {
   ilike(column: string, pattern: string): unknown;
@@ -76,19 +77,12 @@ export class SupabaseTripsRepository implements TripsRepository {
   }
 
   async isTripActive(tripId: string): Promise<boolean> {
-    const now = new Date();
-    const localMidnight = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
-    const todayLocalIsoDate = localMidnight.toISOString().slice(0, 10);
     const { data, error, status } = await supabase
       .from("trips")
       .select("id")
       .eq("id", tripId)
       .eq("status", TRIPSTATUSES.ACTIVE)
-      .gte("depart_date", todayLocalIsoDate)
+      .gte("depart_date", todayLocalIsoDate())
       .maybeSingle();
 
     throwIfSupabaseError(error, status);
@@ -137,6 +131,17 @@ export class SupabaseTripsRepository implements TripsRepository {
       return emptyPaginatedResult<TripListing>(params.page, params.pageSize);
     }
 
+    const isMarketplaceBrowse = !tripId && !shouldFilter;
+
+    if (isMarketplaceBrowse) {
+      // Best-effort DB sync when pg_cron is unavailable; ignore errors for anon users.
+      void supabase.rpc("archive_past_trips").then(({ error }) => {
+        if (error) {
+          console.warn("archive_past_trips failed:", error.message);
+        }
+      });
+    }
+
     const query = supabase.from("trips").select(
       `
       *,
@@ -160,6 +165,11 @@ export class SupabaseTripsRepository implements TripsRepository {
       query.eq("traveler_user_id", userId);
     }
     query.eq("status", TRIPSTATUSES.ACTIVE);
+
+    // Public marketplace: hide trips whose departure date has passed.
+    if (isMarketplaceBrowse && !params?.filters.departDate) {
+      query.gte("depart_date", todayLocalIsoDate());
+    }
 
     if (params) {
       this.applyTripBrowseFilters(query, params, categoryTripIds);
