@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import FloatingInputField from "@/app/components/CustomInputField";
@@ -92,8 +91,13 @@ function toEmailOtpErrorMessage(err: unknown, fallbackMessage: string): string {
   return base || fallback;
 }
 
-export function EmailOTPVerificationScreen() {
-  const navigate = useNavigate();
+interface EmailOTPVerificationScreenProps {
+  onVerificationComplete: () => void;
+}
+
+export function EmailOTPVerificationScreen({
+  onVerificationComplete,
+}: EmailOTPVerificationScreenProps) {
   const { state, openSignInModal } = useSignInModal();
   const email = (state.emailOtpAddress ?? "").trim().toLowerCase();
   const authRepo = new SupabaseAuthRepository();
@@ -131,7 +135,7 @@ export function EmailOTPVerificationScreen() {
 
     try {
       await authRepo.verifyEmailOTP(email, values.otpCode.trim());
-      navigate(state.redirectTo || "/dashboard", { replace: true });
+      onVerificationComplete();
     } catch (err) {
       const message = err instanceof Error
         ? err.message

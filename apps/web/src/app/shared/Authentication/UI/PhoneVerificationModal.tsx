@@ -6,10 +6,13 @@ import { EmailOTPVerificationScreen } from "./EmailOTPVerificationScreen";
 import CustomModal from "@/app/components/CustomModal";
 import { useSignInModal } from "../SignInModalContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { resolveAuthenticatedLandingPath } from "../application/postAuthNavigation";
 
 export function PhoneVerificationModal() {
   const { step, setStep, resetPhoneVerification } = usePhoneVerification();
   const { state, closeSignInModal } = useSignInModal();
+  const { refreshProfile } = useAuth();
   const navigate = useNavigate();
   const handleClose = () => {
     resetPhoneVerification();
@@ -24,11 +27,11 @@ export function PhoneVerificationModal() {
     setStep("phone-entry");
   };
 
-  const handleVerificationComplete = () => {
+  const handleVerificationComplete = async () => {
     resetPhoneVerification();
-    if (state.phoneOtpMode === "signin") {
-      navigate(state.redirectTo || "/dashboard", { replace: true });
-    }
+    await refreshProfile();
+    const destination = await resolveAuthenticatedLandingPath(state.redirectTo);
+    navigate(destination, { replace: true });
     closeSignInModal();
   };
 
@@ -50,7 +53,11 @@ export function PhoneVerificationModal() {
             />
           )}
 
-          {state.view === "email-otp" && <EmailOTPVerificationScreen />}
+          {state.view === "email-otp" && (
+            <EmailOTPVerificationScreen
+              onVerificationComplete={handleVerificationComplete}
+            />
+          )}
         </CustomModal>
       )}
     </AnimatePresence>

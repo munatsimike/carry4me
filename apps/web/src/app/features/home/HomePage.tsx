@@ -13,10 +13,9 @@ import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import {
-  getDefaultAuthedPath,
   isSuspended,
 } from "@/app/shared/Authentication/domain/accountStatus";
-import { COMPLETE_PROFILE_PATH, needsCompleteProfile } from "@/app/shared/Authentication/domain/profileCompletion";
+import { getAuthenticatedLandingPath } from "@/app/shared/Authentication/application/postAuthNavigation";
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,10 +27,8 @@ export default function HomePage() {
   useEffect(() => {
     if (isSuspended(profile)) return;
 
-    if (user && !loading) {
-      navigate(
-        needsCompleteProfile(profile) ? COMPLETE_PROFILE_PATH : getDefaultAuthedPath(profile),
-      );
+    if (user && !loading && profile) {
+      navigate(getAuthenticatedLandingPath(profile), { replace: true });
     }
   }, [user, loading, profile, navigate]);
 

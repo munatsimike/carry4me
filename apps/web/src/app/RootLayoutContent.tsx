@@ -40,6 +40,7 @@ export default function RootLayoutContent() {
     if (
       previousUserId === null &&
       currentUserId &&
+      profile &&
       needsCompleteProfile(profile) &&
       location.pathname !== COMPLETE_PROFILE_PATH
     ) {

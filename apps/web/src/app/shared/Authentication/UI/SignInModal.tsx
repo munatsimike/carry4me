@@ -22,6 +22,8 @@ import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { resolveAuthenticatedLandingPath } from "../application/postAuthNavigation";
 
 type SignInTab = "passkey" | "phone" | "email";
 
@@ -50,6 +52,7 @@ export function SignInModal() {
     setStep,
     setLoading: setPhoneLoading,
   } = usePhoneVerification();
+  const { refreshProfile } = useAuth();
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const sendOTPUseCase = useMemo(() => new SendPhoneOTPUseCase(authRepo), [authRepo]);
 
@@ -123,7 +126,10 @@ export function SignInModal() {
 
       await signInWithPasskey();
       closeSignInModal();
-      navigate(state.redirectTo || "/dashboard", { replace: true });
+      await refreshProfile();
+      navigate(await resolveAuthenticatedLandingPath(state.redirectTo), {
+        replace: true,
+      });
     } catch (err) {
       console.error("[Passkey] Sign-in failed:", err);
       const message = err instanceof Error ? err.message : "Passkey sign-in failed.";

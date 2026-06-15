@@ -59,6 +59,7 @@ export function ProtectedRoute({
 
   if (
     requireCompleteProfile &&
+    profile &&
     needsCompleteProfile(profile) &&
     location.pathname !== COMPLETE_PROFILE_PATH
   ) {
