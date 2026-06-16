@@ -20,7 +20,7 @@ export default function ScrollChipRow({
   };
 
   return (
-    <span className="flex gap-3 min-w-0 w-full items-start">
+    <span className="group/chips flex gap-3 min-w-0 w-full items-start">
       <CustomText
         as="span"
         textSize="sm"
@@ -31,7 +31,7 @@ export default function ScrollChipRow({
       </CustomText>
 
       {Array.isArray(items) && (
-        <div className="group relative min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1">
           <div
             ref={scrollRef}
             className="flex gap-2 min-w-0 overflow-x-auto whitespace-nowrap scroll-smooth scrollbar-hide px-2 pr-12"
@@ -55,11 +55,11 @@ export default function ScrollChipRow({
 
           {items.length > 2 && (
             <>
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-2 bg-gradient-to-l from-white to-transparent opacity-100 group-hover:opacity-0 transition-opacity" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-2 bg-gradient-to-l from-white to-transparent opacity-100 group-hover/chips:opacity-0 transition-opacity" />
               <button
                 type="button"
                 onClick={() => scrollByAmount(-120)}
-                className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur opacity-0 group-hover/chips:opacity-100 transition-opacity"
               >
                 <ChevronLeft className="h-4 w-4 text-neutral-600" />
               </button>
@@ -67,7 +67,7 @@ export default function ScrollChipRow({
               <button
                 type="button"
                 onClick={() => scrollByAmount(120)}
-                className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur opacity-0 group-hover/chips:opacity-100 transition-opacity"
               >
                 <ChevronRight className="h-4 w-4 text-neutral-600" />
               </button>

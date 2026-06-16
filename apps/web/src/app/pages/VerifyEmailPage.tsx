@@ -14,7 +14,8 @@ import {
 import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 
 const REDIRECT_DELAY_MS = 2200;
 
@@ -26,6 +27,7 @@ export default function VerifyEmailPage() {
   const navigate = useNavigate();
   const { user, profile, refreshProfile, loading } = useAuth();
   const { toast } = useToast();
+  const { openSignInModal } = useSignInModal();
   const toastShownRef = useRef(false);
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
 
@@ -145,7 +147,7 @@ export default function VerifyEmailPage() {
             {message}
           </CustomText>
 
-          {status !== "loading" && (
+          {status === "success" && (
             <Button
               type="button"
               variant="primary"
@@ -157,12 +159,13 @@ export default function VerifyEmailPage() {
           )}
 
           {status === "error" && errorAction === "signIn" && (
-            <Link
-              to="/signin"
+            <button
+              type="button"
+              onClick={() => openSignInModal()}
               className="text-sm text-primary-500 hover:underline"
             >
               Sign in
-            </Link>
+            </button>
           )}
         </motion.div>
       </Card>
