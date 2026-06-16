@@ -1,7 +1,7 @@
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { cn } from "@/app/lib/cn";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   footerCompanyLinks,
   footerLegalLinks,
@@ -80,10 +80,14 @@ export default function Footer({ isAuthed }: FooterProps) {
 function FooterLinkGroup({
   title,
   links,
+  scrollToTopOnSelect = false,
 }: {
   title: string;
   links: readonly { to: string; label: string }[];
+  scrollToTopOnSelect?: boolean;
 }) {
+  const location = useLocation();
+
   return (
     <div className="min-w-0 space-y-3">
       <h4 className="text-sm font-semibold tracking-tight text-slate-900">
@@ -92,7 +96,19 @@ function FooterLinkGroup({
       <ul className="space-y-2 text-sm leading-6">
         {links.map((link) => (
           <li key={link.to}>
-            <Link to={link.to} className={footerLinkClass}>
+            <Link
+              to={link.to}
+              className={footerLinkClass}
+              onClick={() => {
+                if (
+                  scrollToTopOnSelect &&
+                  (link.to === "/travelers" || link.to === "/parcels") &&
+                  location.pathname === link.to
+                ) {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+            >
               {link.label}
             </Link>
           </li>
@@ -129,7 +145,9 @@ function Brand({ isAuthed }: { isAuthed: boolean }) {
 }
 
 function Product() {
-  return <FooterLinkGroup title="Product" links={footerProductLinks} />;
+  return (
+    <FooterLinkGroup title="Product" links={footerProductLinks} scrollToTopOnSelect />
+  );
 }
 
 function OurLocation() {

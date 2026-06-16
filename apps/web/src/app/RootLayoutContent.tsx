@@ -22,6 +22,7 @@ import {
   useSignInModal,
 } from "./shared/Authentication/SignInModalContext";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
+const SCROLL_TO_TOP_PATHS = ["/travelers", "/parcels"];
 
 export default function RootLayoutContent() {
   const { loading, user, profile } = useAuth();
@@ -32,6 +33,12 @@ export default function RootLayoutContent() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { showBottomNavBar } = useUI();
   const isAuthed = !!user;
+
+  useEffect(() => {
+    if (SCROLL_TO_TOP_PATHS.includes(location.pathname)) {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, [location.pathname]);
 
   // Show phone verification modal if user is logged in and phone is not verified
 

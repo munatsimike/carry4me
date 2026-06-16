@@ -7,7 +7,7 @@ export const footerLegalLinks = [
 
 export const footerProductLinks = [
   { to: "/travelers", label: "Find travelers" },
-  { to: "/parcels", label: "Send a parcel" },
+  { to: "/parcels", label: "Find parcels" },
   { to: "/pricing", label: "Pricing" },
   { to: "/how-it-works", label: "How it works" },
 ] as const;
