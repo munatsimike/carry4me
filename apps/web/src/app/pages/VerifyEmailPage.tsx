@@ -1,6 +1,5 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import CustomText from "@/components/ui/CustomText";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
 import Spinner from "@/app/components/Spinner";
 import { useToast } from "@/app/components/Toast";
@@ -132,8 +131,6 @@ export default function VerifyEmailPage() {
     return () => window.clearTimeout(timeoutId);
   }, [navigate, profile, status]);
 
-  const continuePath = getDefaultAuthedPath(profile);
-
   return (
     <DefaultContainer center outerClassName="bg-canvas min-h-screen">
       <Card enableHover={false} sizeClass="max-w-lg" className="w-full">
@@ -149,18 +146,6 @@ export default function VerifyEmailPage() {
           <CustomText textVariant="secondary" textSize="sm">
             {message}
           </CustomText>
-
-          {status === "success" && (
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => navigate(continuePath, { replace: true })}
-            >
-              <CustomText textVariant="onDark">Go to dashboard</CustomText>
-            </Button>
-          )}
-
         </motion.div>
       </Card>
     </DefaultContainer>
