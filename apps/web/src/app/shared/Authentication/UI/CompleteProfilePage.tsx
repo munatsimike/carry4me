@@ -458,9 +458,19 @@ export default function CompleteProfile() {
                 </CustomText>
 
                 <CustomText textSize="sm" textVariant="secondary">
-                  {postSaveVerificationEmail
-                    ? `Your profile has been saved. We sent a verification link to ${postSaveVerificationEmail}. Please verify your email before posting parcels or trips.`
-                    : "Your profile has been saved."}
+                  {postSaveVerificationEmail ? (
+                    <>
+                      Your profile has been saved. We sent a verification link
+                      to{" "}
+                      <span className="font-medium text-neutral-800">
+                        {postSaveVerificationEmail}
+                      </span>
+                      . Please verify your email before posting parcels or
+                      trips.
+                    </>
+                  ) : (
+                    "Your profile has been saved."
+                  )}
                 </CustomText>
 
                 <div className="flex justify-end">
