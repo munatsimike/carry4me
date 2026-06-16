@@ -107,6 +107,52 @@ Deno.serve(async (req) => {
       );
     }
 
+    const profileEmail = normalizeEmail(profile.email ?? "");
+    if (profileEmail !== email) {
+      return jsonResponse(
+        { error: "Account not found or incomplete. Sign in with Phone OTP." },
+        403,
+      );
+    }
+
+    const { data: authData, error: authUserError } = await supabaseAdmin.auth
+      .admin.getUserById(profile.id);
+
+    if (authUserError || !authData.user) {
+      console.error(
+        "check-email-login-eligibility auth user load failed",
+        authUserError,
+      );
+      return jsonResponse({ error: "Could not verify eligibility" }, 500);
+    }
+
+    const authEmail = authData.user.email
+      ? normalizeEmail(authData.user.email)
+      : null;
+
+    if (authEmail && authEmail !== email) {
+      return jsonResponse(
+        { error: "Account not found or incomplete. Sign in with Phone OTP." },
+        403,
+      );
+    }
+
+    if (!authEmail && profileEmail) {
+      const { error: updateError } = await supabaseAdmin.auth.admin
+        .updateUserById(profile.id, {
+          email: profileEmail,
+          email_confirm: true,
+        });
+
+      if (updateError) {
+        console.error(
+          "check-email-login-eligibility auth email sync failed",
+          updateError,
+        );
+        return jsonResponse({ error: "Could not verify eligibility" }, 500);
+      }
+    }
+
     return jsonResponse({ ok: true });
   } catch (error) {
     console.error("check-email-login-eligibility error:", error);
