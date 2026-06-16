@@ -10,13 +10,11 @@ import { getDefaultAuthedPath } from "@/app/shared/Authentication/domain/account
 import { getAuthenticatedLandingPath } from "@/app/shared/Authentication/application/postAuthNavigation";
 import {
   normalizeEmailVerificationError,
-  type NormalizedError,
 } from "@/app/shared/Authentication/application/normalizeSupabaseError";
 import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 
 const REDIRECT_DELAY_MS = 2200;
 
@@ -28,7 +26,6 @@ export default function VerifyEmailPage() {
   const navigate = useNavigate();
   const { user, profile, refreshProfile, loading } = useAuth();
   const { toast } = useToast();
-  const { openSignInModal } = useSignInModal();
   const toastShownRef = useRef(false);
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
 
@@ -36,7 +33,6 @@ export default function VerifyEmailPage() {
   const [alreadyVerified, setAlreadyVerified] = useState(false);
   const [title, setTitle] = useState("Verifying email");
   const [message, setMessage] = useState("Verifying your email…");
-  const [errorAction, setErrorAction] = useState<NormalizedError["action"]>();
 
   const applySuccess = (isAlreadyVerified: boolean) => {
     const copy = normalizeEmailVerificationError(
@@ -46,7 +42,6 @@ export default function VerifyEmailPage() {
     setStatus("success");
     setTitle(copy.title);
     setMessage(copy.message);
-    setErrorAction(undefined);
   };
 
   const applyError = (errorCode?: string) => {
@@ -54,7 +49,6 @@ export default function VerifyEmailPage() {
     setStatus("error");
     setTitle(copy.title);
     setMessage(copy.message);
-    setErrorAction(copy.action);
   };
 
   useEffect(() => {
@@ -167,15 +161,6 @@ export default function VerifyEmailPage() {
             </Button>
           )}
 
-          {status === "error" && errorAction === "signIn" && (
-            <button
-              type="button"
-              onClick={() => openSignInModal()}
-              className="text-sm text-primary-500 hover:underline"
-            >
-              Sign in
-            </button>
-          )}
         </motion.div>
       </Card>
     </DefaultContainer>

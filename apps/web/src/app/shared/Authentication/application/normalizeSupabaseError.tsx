@@ -494,8 +494,8 @@ export function normalizeEmailVerificationError(
         category: "AUTH",
         title: "Link already used",
         message:
-          "This verification link has already been used. Request a new verification email from your profile if you still need to verify.",
-        action: "signIn",
+          "This verification link has already been used. If your email is verified, sign in. Otherwise request a new verification email from your profile.",
+        action: "close",
       };
 
     case "link_expired":
