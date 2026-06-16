@@ -59,6 +59,24 @@ export function normalizeSupabaseError(
   const normalizedCode = normalizeText(code);
 
   if (
+    normalizedCode === "account_not_found" ||
+    includesAny(normalizedMessage, [
+      "account not found",
+      "incomplete",
+      "sign in with phone otp",
+      "email not verified",
+      "signups not allowed",
+    ])
+  ) {
+    return {
+      category: "AUTH",
+      title: "Account unavailable",
+      message: "Account not found or incomplete. Sign in with Phone OTP.",
+      action: "signIn",
+    };
+  }
+
+  if (
     !error ||
     includesAny(normalizedMessage, [
       "failed to fetch",

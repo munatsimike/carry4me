@@ -16,6 +16,55 @@ import {
 } from "@/app/shared/domain/AppError";
 import { toCountryName } from "@/app/Mapper";
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
+import { EMAIL_OTP_USE_PHONE_MESSAGE } from "../Authentication/application/emailOtpLoginErrors";
+
+async function readEdgeFunctionInvokeError(
+  error: Error,
+): Promise<{ message: string; status: number | null }> {
+  const context = error as { context?: unknown };
+  const response =
+    typeof Response !== "undefined" && context.context instanceof Response
+      ? context.context
+      : null;
+
+  const status = response?.status ?? null;
+  let message = error.message;
+
+  if (response) {
+    try {
+      const payload = (await response.clone().json()) as { error?: string };
+      if (payload?.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Response body may be empty or non-JSON.
+    }
+  }
+
+  return { message, status };
+}
+
+function throwEmailOtpAccountUnavailable(status: number | null = null): never {
+  throw new AppError({
+    code: "ACCOUNT_NOT_FOUND",
+    message: EMAIL_OTP_USE_PHONE_MESSAGE,
+    status,
+  });
+}
+
+function isEmailOtpAccountUnavailableMessage(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("account not found") ||
+    normalized.includes("incomplete") ||
+    normalized.includes("sign in with phone otp") ||
+    normalized.includes("email not verified") ||
+    normalized.includes("not verified") ||
+    normalized.includes("signups not allowed") ||
+    normalized.includes("user not found") ||
+    normalized.includes("no user found")
+  );
+}
 
 function buildVerifiedPhoneProfileUpdate(
   phoneNumber: string,
@@ -423,36 +472,40 @@ export class SupabaseAuthRepository implements AuthRepository {
       });
 
     if (fnError) {
-      // Map 404/403 to friendly message for the user
-      const context = (fnError as any).context;
-      const response = context?.context as Response | undefined;
-      const status = response?.status ?? null;
-      if (status === 404 || status === 403) {
-        throw new AppError({
-          code: "ACCOUNT_NOT_FOUND",
-          message: "Account not found or incomplete. Sign in with Phone OTP.",
-          status,
-        });
+      const { message, status } = await readEdgeFunctionInvokeError(fnError);
+
+      if (
+        status === 404 ||
+        status === 403 ||
+        isEmailOtpAccountUnavailableMessage(message)
+      ) {
+        throwEmailOtpAccountUnavailable(status);
       }
 
-      throw AppError.fromUnknown(fnError);
+      throw new AppError({
+        message,
+        status,
+      });
     }
 
     // Supabase handles OTP generation, delivery, and verification for email login.
     const ok =
       eligibilityData &&
       typeof eligibilityData === "object" &&
-      (eligibilityData as any).ok === true;
+      (eligibilityData as { ok?: boolean }).ok === true;
     if (!ok) {
-      // If the function returned a payload with error message, surface it
       const errMsg =
         eligibilityData && typeof eligibilityData === "object"
-          ? (eligibilityData as any).error
+          ? (eligibilityData as { error?: string }).error
           : null;
+
+      if (errMsg && isEmailOtpAccountUnavailableMessage(errMsg)) {
+        throwEmailOtpAccountUnavailable(404);
+      }
+
       throw new AppError({
         code: "ACCOUNT_NOT_FOUND",
-        message:
-          errMsg ?? "Account not found or incomplete. Sign in with Phone OTP.",
+        message: errMsg ?? EMAIL_OTP_USE_PHONE_MESSAGE,
       });
     }
 
@@ -465,7 +518,15 @@ export class SupabaseAuthRepository implements AuthRepository {
       },
     });
 
-    throwIfSupabaseError(error);
+    if (error) {
+      if (
+        isEmailOtpAccountUnavailableMessage(error.message) ||
+        (error.code ?? "").toLowerCase().includes("signup")
+      ) {
+        throwEmailOtpAccountUnavailable();
+      }
+      throwIfSupabaseError(error);
+    }
     return "Verification code sent";
   }
 

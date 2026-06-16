@@ -29,11 +29,13 @@ const item = {
 };
 
 interface OTPVerificationScreenProps {
-  onVerificationComplete: () => void;
+  onVerified?: () => void;
+  onVerificationComplete: () => void | Promise<void>;
   onPhoneEdit: () => void;
 }
 
 export function OTPVerificationScreen({
+  onVerified,
   onVerificationComplete,
   onPhoneEdit,
 }: OTPVerificationScreenProps) {
@@ -55,7 +57,6 @@ export function OTPVerificationScreen({
     phoneNumber,
     selectedCountryCode,
     setStep,
-    setLoading,
     setError,
   } = usePhoneVerification();
   const { showSupabaseError } = useUniversalModal();
@@ -88,20 +89,19 @@ export function OTPVerificationScreen({
       return;
     }
 
-    setLoading(true);
+    setSubmitError(null);
     try {
       await verifyOTPUseCase.execute(
         phoneNumber,
         values.otpCode,
         selectedCountryCode,
       );
-      setStep("completed");
-      onVerificationComplete();
+      onVerified?.();
+      await onVerificationComplete();
     } catch (err) {
-      setError(toFriendlyErrorMessage(err));
-      showSupabaseError(err);
-    } finally {
-      setLoading(false);
+      const message = toFriendlyErrorMessage(err);
+      setSubmitError(message);
+      setError(message);
     }
   };
 

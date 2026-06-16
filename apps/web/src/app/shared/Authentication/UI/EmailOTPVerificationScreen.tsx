@@ -12,6 +12,10 @@ import { otpCodeSchema } from "@/app/shared/validation/formValidation";
 import { useSignInModal } from "../SignInModalContext";
 import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
 import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
+import {
+  EMAIL_OTP_USE_PHONE_MESSAGE,
+  isEmailOtpAccountUnavailableError,
+} from "../application/emailOtpLoginErrors";
 
 const otpSchema = z.object({
   otpCode: otpCodeSchema,
@@ -63,19 +67,19 @@ function toEmailOtpErrorMessage(err: unknown, fallbackMessage: string): string {
     normalizedRaw.includes("not linked to your existing account") ||
     normalizedRaw.includes("sign in with phone otp first")
   ) {
-    return "Account not found or incomplete. Sign in with Phone OTP.";
+    return EMAIL_OTP_USE_PHONE_MESSAGE;
   }
 
   if (normalizedRaw.includes("already linked to another account")) {
-    return "Account not found or incomplete. Sign in with Phone OTP.";
+    return EMAIL_OTP_USE_PHONE_MESSAGE;
   }
 
   if (normalizedRaw.includes("account not found")) {
-    return "Account not found or incomplete. Sign in with Phone OTP.";
+    return EMAIL_OTP_USE_PHONE_MESSAGE;
   }
 
   if (normalizedRaw.includes("could not complete sign-in")) {
-    return "Could not complete email sign-in. Please use Phone OTP.";
+    return EMAIL_OTP_USE_PHONE_MESSAGE;
   }
 
   if (normalizedBase.includes("phone number")) return fallback;
@@ -92,10 +96,12 @@ function toEmailOtpErrorMessage(err: unknown, fallbackMessage: string): string {
 }
 
 interface EmailOTPVerificationScreenProps {
-  onVerificationComplete: () => void;
+  onVerified?: () => void;
+  onVerificationComplete: () => void | Promise<void>;
 }
 
 export function EmailOTPVerificationScreen({
+  onVerified,
   onVerificationComplete,
 }: EmailOTPVerificationScreenProps) {
   const { state, openSignInModal } = useSignInModal();
@@ -114,6 +120,7 @@ export function EmailOTPVerificationScreen({
 
   const otpCode = watch("otpCode");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState<number>(60);
   const [resendLoading, setResendLoading] = useState<boolean>(false);
 
@@ -133,17 +140,23 @@ export function EmailOTPVerificationScreen({
       return;
     }
 
+    setVerifying(true);
     try {
       await authRepo.verifyEmailOTP(email, values.otpCode.trim());
-      onVerificationComplete();
+      onVerified?.();
+      await onVerificationComplete();
     } catch (err) {
-      const message = err instanceof Error
-        ? err.message
-        : toEmailOtpErrorMessage(
-          err,
-          "We couldn't verify your email code right now. Please try again.",
-        );
+      const message = isEmailOtpAccountUnavailableError(err)
+        ? EMAIL_OTP_USE_PHONE_MESSAGE
+        : err instanceof Error
+          ? err.message
+          : toEmailOtpErrorMessage(
+            err,
+            "We couldn't verify your email code right now. Please try again.",
+          );
       setSubmitError(message);
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -201,7 +214,7 @@ export function EmailOTPVerificationScreen({
               hasValue={!!otpCode}
               placeholder="000000"
               {...register("otpCode")}
-              disabled={isSubmitting}
+              disabled={isSubmitting || verifying}
               error={errors.otpCode?.message}
               isDirty={dirtyFields.otpCode ?? false}
               isTouched={!!touchedFields.otpCode}
@@ -220,15 +233,16 @@ export function EmailOTPVerificationScreen({
 
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || verifying}
+          isBusy={isSubmitting || verifying}
           className="w-full relative"
           variant="primary"
           size="sm"
         >
-          {isSubmitting ? (
+          {isSubmitting || verifying ? (
             <>
               <Spinner />
-              <span className="ml-2">Verifying...</span>
+              <span className="ml-2">Processing...</span>
             </>
           ) : (
             "Verify email code"

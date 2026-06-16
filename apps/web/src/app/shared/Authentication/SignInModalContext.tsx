@@ -4,6 +4,10 @@ export type PhoneOtpMode = "signin" | "signup";
 export type AuthModalView = "signin" | "phone-otp" | "email-otp" | null;
 export type SignInDefaultTab = "passkey" | "email" | "phone";
 
+export function isAuthModalActive(state: { isOpen: boolean }): boolean {
+  return state.isOpen;
+}
+
 type SignInModalState = {
   isOpen: boolean;
   view: AuthModalView;
@@ -34,6 +38,11 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
   });
 
   function openSignInModal(opts?: { redirectTo?: string; defaultTab?: SignInDefaultTab }) {
+    if (opts?.defaultTab === "phone") {
+      openPhoneOtpModal("signin", { redirectTo: opts?.redirectTo });
+      return;
+    }
+
     setState((prev) => ({
       ...prev,
       isOpen: true,
@@ -55,8 +64,8 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
       view: "phone-otp",
       phoneOtpMode: mode,
       emailOtpAddress: null,
-      signInDefaultTab: "passkey",
-      redirectTo: opts?.redirectTo,
+      signInDefaultTab: mode === "signin" ? "phone" : "passkey",
+      redirectTo: opts?.redirectTo ?? prev.redirectTo,
     }));
   }
 

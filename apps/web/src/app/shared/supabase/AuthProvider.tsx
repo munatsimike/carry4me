@@ -19,7 +19,7 @@ type AuthContextValue = {
   error: string | null;
   profile: UserProfile | null;
   profileIncomplete: boolean;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: (opts?: { silent?: boolean }) => Promise<void>;
 };
 
 const authRepository = new SupabaseAuthRepository();
@@ -142,15 +142,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [fetchProfile]);
 
-  const refreshProfile = useCallback(async () => {
-    const userId = user?.id; // snapshot
+  const refreshProfile = useCallback(async (opts?: { silent?: boolean }) => {
+    const userId = user?.id;
     if (!userId) return;
 
-    setLoading(true);
+    if (!opts?.silent) {
+      setLoading(true);
+    }
     try {
       await fetchProfile(userId);
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (!opts?.silent && mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [user?.id, fetchProfile]);
   

@@ -7,6 +7,7 @@ import CustomModal from "@/app/components/CustomModal";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import LineDivider from "@/app/components/LineDivider";
+import Spinner from "@/app/components/Spinner";
 import { useSignInModal } from "../SignInModalContext";
 import {
   checkPasskeyBrowserSupport,
@@ -22,6 +23,7 @@ import { SupabaseAuthRepository } from "../../data/SupabaseAuthRepository";
 import { SendPhoneOTPUseCase } from "../application/SendPhoneOTPUseCase";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
+import { toEmailOtpLoginErrorMessage } from "../application/emailOtpLoginErrors";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { resolveAuthenticatedLandingPath } from "../application/postAuthNavigation";
 
@@ -44,15 +46,14 @@ export function SignInModal() {
     openSignUpModal,
     openPhoneOtpModal,
     openEmailOtpModal,
-  } =
-    useSignInModal();
+  } = useSignInModal();
   const {
     setPhoneNumber,
     setSelectedCountryCode,
     setStep,
     setLoading: setPhoneLoading,
   } = usePhoneVerification();
-  const { refreshProfile } = useAuth();
+  const { refreshProfile, user } = useAuth();
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const sendOTPUseCase = useMemo(() => new SendPhoneOTPUseCase(authRepo), [authRepo]);
 
@@ -82,7 +83,7 @@ export function SignInModal() {
     mode: "onTouched",
   });
 
-  const isOpen = state.isOpen && state.view === "signin";
+  const isOpen = state.isOpen && state.view === "signin" && !user;
   useEffect(() => {
     if (isOpen) {
       setActiveTab(state.signInDefaultTab);
@@ -184,29 +185,7 @@ export function SignInModal() {
       openEmailOtpModal(normalized, { redirectTo: state.redirectTo });
     } catch (err) {
       console.error("[Email OTP] send failed:", err);
-      const message = toFriendlyErrorMessage(err);
-      const normalizedMessage = message.toLowerCase();
-
-      if (
-        normalizedMessage.includes("account not found") ||
-        normalizedMessage.includes("sign in with phone otp") ||
-        normalizedMessage.includes("incomplete")
-      ) {
-        setError("Account not found or incomplete. Sign in with Phone OTP.");
-        return;
-      }
-
-      if (
-        normalizedMessage.includes("rate limit") ||
-        normalizedMessage.includes("too many")
-      ) {
-        setError("Please wait a moment before requesting another code.");
-        return;
-      }
-
-      setError(
-        message || "We couldn't send an email code right now. Please try again.",
-      );
+      setError(toEmailOtpLoginErrorMessage(err));
     } finally {
       setLoadingEmailOtp(false);
     }
@@ -371,7 +350,14 @@ export function SignInModal() {
                     onClick={() => void handleSendEmailCode()}
                     className="w-full"
                   >
-                    Send OTP
+                    {loadingEmailOtp ? (
+                      <>
+                        <Spinner />
+                        <span className="ml-2">Processing...</span>
+                      </>
+                    ) : (
+                      "Send OTP"
+                    )}
                   </Button>
                 </motion.div>
               ) : null}

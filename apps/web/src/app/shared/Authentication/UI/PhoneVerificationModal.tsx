@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { usePhoneVerification } from "../PhoneVerificationContext";
 import { PhoneEntryScreen } from "./PhoneEntryScreen";
@@ -14,6 +15,31 @@ export function PhoneVerificationModal() {
   const { state, closeSignInModal } = useSignInModal();
   const { refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const phoneOtpFlowRef = useRef<"signin" | "signup" | null>(null);
+
+  const isPhoneOtpOpen =
+    state.isOpen && (state.view === "phone-otp" || state.view === "email-otp");
+
+  useEffect(() => {
+    if (!isPhoneOtpOpen || state.view !== "phone-otp") {
+      phoneOtpFlowRef.current = null;
+      return;
+    }
+
+    if (phoneOtpFlowRef.current !== state.phoneOtpMode) {
+      if (step === "phone-entry") {
+        resetPhoneVerification();
+      }
+      phoneOtpFlowRef.current = state.phoneOtpMode;
+    }
+  }, [
+    isPhoneOtpOpen,
+    resetPhoneVerification,
+    state.phoneOtpMode,
+    state.view,
+    step,
+  ]);
+
   const handleClose = () => {
     resetPhoneVerification();
     closeSignInModal();
@@ -27,17 +53,21 @@ export function PhoneVerificationModal() {
     setStep("phone-entry");
   };
 
-  const handleVerificationComplete = async () => {
-    resetPhoneVerification();
-    await refreshProfile();
-    const destination = await resolveAuthenticatedLandingPath(state.redirectTo);
-    navigate(destination, { replace: true });
+  const handleAuthModalClose = () => {
     closeSignInModal();
+  };
+
+  const handleVerificationComplete = async () => {
+    const redirectTo = state.redirectTo;
+
+    await refreshProfile({ silent: true });
+    resetPhoneVerification();
+    navigate(await resolveAuthenticatedLandingPath(redirectTo), { replace: true });
   };
 
   return (
     <AnimatePresence>
-      {state.isOpen && (state.view === "phone-otp" || state.view === "email-otp") && (
+      {isPhoneOtpOpen && (
         <CustomModal onClose={handleClose} width="xl" scrollable={false}>
           {state.view === "phone-otp" && step === "phone-entry" && (
             <PhoneEntryScreen
@@ -48,6 +78,7 @@ export function PhoneVerificationModal() {
 
           {state.view === "phone-otp" && step === "otp-verification" && (
             <OTPVerificationScreen
+              onVerified={handleAuthModalClose}
               onVerificationComplete={handleVerificationComplete}
               onPhoneEdit={handlePhoneEdit}
             />
@@ -55,6 +86,7 @@ export function PhoneVerificationModal() {
 
           {state.view === "email-otp" && (
             <EmailOTPVerificationScreen
+              onVerified={handleAuthModalClose}
               onVerificationComplete={handleVerificationComplete}
             />
           )}

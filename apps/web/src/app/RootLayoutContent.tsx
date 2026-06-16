@@ -17,10 +17,15 @@ import {
   COMPLETE_PROFILE_PATH,
   needsCompleteProfile,
 } from "./shared/Authentication/domain/profileCompletion";
+import {
+  isAuthModalActive,
+  useSignInModal,
+} from "./shared/Authentication/SignInModalContext";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
 
 export default function RootLayoutContent() {
   const { loading, user, profile } = useAuth();
+  const { state: authModalState } = useSignInModal();
   const location = useLocation();
   const navigate = useNavigate();
   const previousUserIdRef = useRef<string | null | undefined>(undefined);
@@ -32,6 +37,7 @@ export default function RootLayoutContent() {
 
   useEffect(() => {
     if (loading) return;
+    if (isAuthModalActive(authModalState)) return;
 
     const previousUserId = previousUserIdRef.current;
     const currentUserId = user?.id ?? null;
@@ -46,9 +52,9 @@ export default function RootLayoutContent() {
     ) {
       navigate(COMPLETE_PROFILE_PATH, { replace: true });
     }
-  }, [loading, profile, user?.id, location.pathname, navigate]);
+  }, [authModalState, loading, profile, user?.id, location.pathname, navigate]);
 
-  if (loading) {
+  if (loading && !user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
         <div className="relative h-10 w-10">
