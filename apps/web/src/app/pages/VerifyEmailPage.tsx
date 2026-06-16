@@ -7,6 +7,7 @@ import { useToast } from "@/app/components/Toast";
 import { verifyEmail } from "@/app/shared/supabase/verifyEmail";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { getDefaultAuthedPath } from "@/app/shared/Authentication/domain/accountStatus";
+import { getAuthenticatedLandingPath } from "@/app/shared/Authentication/application/postAuthNavigation";
 import {
   normalizeEmailVerificationError,
   type NormalizedError,
@@ -59,6 +60,14 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (loading) return;
 
+    if (user) {
+      const destination = getAuthenticatedLandingPath(profile);
+      if (!token.trim() || profile?.emailVerified) {
+        navigate(destination, { replace: true });
+        return;
+      }
+    }
+
     if (!token.trim()) {
       applyError("token_required");
       return;
@@ -107,7 +116,7 @@ export default function VerifyEmailPage() {
     return () => {
       cancelled = true;
     };
-  }, [authRepo, loading, profile?.emailVerified, refreshProfile, token, user?.id]);
+  }, [authRepo, loading, navigate, profile, profile?.emailVerified, refreshProfile, token, user, user?.id]);
 
   useEffect(() => {
     if (status !== "success" || toastShownRef.current) return;
