@@ -10,8 +10,8 @@ import { MyFavouritesPage } from "./features/my favourites/UI/MyFavouritesPage";
 import ProfilePage from "./shared/Authentication/profile/Profile";
 import { MyParcelsPage } from "./features/parcels/MyParcelsPage";
 import { MyTripsPage } from "./features/trips/MyTripsPage";
-import MobileTripShell from "./features/trips/ui/MobileTripShell";
-import MobileParcelShaell from "./features/parcels/ui/MobileParcelShell";
+import PostTripPage from "./features/trips/ui/PostTripPage";
+import PostParcelPage from "./features/parcels/ui/PostParcelPage";
 import { RootLayout } from "./shared/Authentication/application/RootLayout";
 import { AuthEntryPage } from "./shared/Authentication/UI/AuthEntryPage";
 import CompleteProfile from "./shared/Authentication/UI/CompleteProfilePage";
@@ -109,7 +109,7 @@ export const router = createBrowserRouter([
         path: "create-trip",
         element: (
           <ProtectedRoute blockPendingReviewActions>
-            <MobileTripShell />
+            <PostTripPage />
           </ProtectedRoute>
         ),
       },
@@ -117,7 +117,7 @@ export const router = createBrowserRouter([
         path: "create-parcel",
         element: (
           <ProtectedRoute blockPendingReviewActions>
-            <MobileParcelShaell />
+            <PostParcelPage />
           </ProtectedRoute>
         ),
       },

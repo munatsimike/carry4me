@@ -19,11 +19,10 @@ import EmptyState from "@/app/components/EmptyState";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import PaginationControls from "@/app/components/PaginationControls";
-import CreateTripModal from "./CreateTripModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
 import {
@@ -74,8 +73,8 @@ export default function TravelersPage() {
   });
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
-  const [tripModalState, setTripModalState] = useState<boolean>(false);
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
 
   const listingParams = useMemo<ListingPageParams>(
     () => ({
@@ -222,7 +221,7 @@ export default function TravelersPage() {
     }
 
     guardAction(() => {
-      setTripModalState(true);
+      navigate("/create-trip?mode=create&returnTo=/travelers");
     });
   };
 
@@ -272,11 +271,6 @@ export default function TravelersPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        <AnimatePresence>
-          {tripModalState && (
-            <CreateTripModal setModalState={() => setTripModalState(false)} />
-          )}
-        </AnimatePresence>
         {displayedTrips.length === 0 &&
           isFetched &&
           !hasFilter &&
@@ -333,7 +327,7 @@ export default function TravelersPage() {
         <FAB
           isAuthed={!!user?.id}
           variant="trip"
-          to="/create-trip?mode=create"
+          to="/create-trip?mode=create&returnTo=/travelers"
         />
       </DefaultContainer>
 

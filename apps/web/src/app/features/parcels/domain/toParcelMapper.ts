@@ -1,4 +1,3 @@
-import type { GoodsItem } from "@/types/Ui";
 import type { ParcelListing } from "./Parcel";
 import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
 
@@ -23,6 +22,8 @@ type ParcelRow = {
   items: {
     quantity: number;
     description: string;
+    size?: string;
+    condition?: string;
   }[];
 };
 
@@ -57,9 +58,11 @@ export function toParcelMapper(row: ParcelRow,  likedTripIds: Set<string> = new 
       destinationCountry: row.destination_country,
     },
     weightKg: row.weight_kg,
-    items: row.items.map((x: GoodsItem) => ({
+    items: row.items.map((x) => ({
       quantity: x.quantity,
       description: x.description,
+      size: x.size?.trim() ?? "",
+      condition: x.condition === "used" ? "used" : "new",
     })),
     status: row.status,
     isLiked: likedTripIds?.has(row.id) ?? false

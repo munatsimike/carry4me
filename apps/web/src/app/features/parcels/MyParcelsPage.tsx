@@ -1,11 +1,10 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { useToast } from "@/app/components/Toast";
-import { AnimatePresence } from "framer-motion";
-import CreateParcelModal from "./ui/CreateParcelModal";
 import ParcelCard from "./ui/ParcelCard";
 import CustomModal from "@/app/components/CustomModal";
 import type { FormValues } from "@/types/Ui";
@@ -21,7 +20,6 @@ import { useDeleteParcelMutation } from "@/app/hooks/mutations/useParcelMutation
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 
 export function MyParcelsPage() {
-  const [editParcel, setFormValues] = useState<FormValues | null>(null);
   const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
     null,
   );
@@ -29,7 +27,7 @@ export function MyParcelsPage() {
   const { guardAction } = useMarketplaceActionGuard();
   const { toast } = useToast();
   const isMobile = useMediaQuery();
-  const [showParcelModal, setParcelModalState] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const { data: myParcels = [], isLoading, error } = useMyParcels(user?.id);
   useQueryErrorEffect(error);
@@ -52,8 +50,15 @@ export function MyParcelsPage() {
 
   const handleOnClick = () => {
     guardAction(() => {
-      setParcelModalState(true);
+      navigate("/create-parcel?mode=create&returnTo=/my/parcels");
     });
+  };
+
+  const handleEdit = (values: FormValues) => {
+    if (!values.id) return;
+    navigate(
+      `/create-parcel?mode=edit&id=${values.id}&returnTo=/my/parcels`,
+    );
   };
 
   return (
@@ -85,40 +90,31 @@ export function MyParcelsPage() {
           <MobileListingCard
             setListingPreview={setParcelPreview}
             data={myParcels}
-            onEdit={setFormValues}
+            onEdit={handleEdit}
             onDelete={deleteParcel}
-            setModalState={setParcelModalState}
+            setModalState={() => {}}
           />
         ) : (
           <ListingTable
             setListingPreview={setParcelPreview}
             data={myParcels}
-            onEdit={setFormValues}
+            onEdit={handleEdit}
             onDelete={deleteParcel}
-            setModalState={setParcelModalState}
+            setModalState={() => {}}
           />
         )}
 
-        <AnimatePresence>
-          {showParcelModal && (
-            <CreateParcelModal
-              mode={editParcel ? "edit" : undefined}
-              initialFormValues={editParcel ? editParcel : undefined}
-              setModalState={() => setParcelModalState(false)}
+        {parcelPreview && (
+          <CustomModal onClose={() => setParcelPreview(null)} width="md">
+            <ParcelCard
+              toggleLike={() => null}
+              parcel={parcelPreview}
+              onClick={() => null}
+              mode="preview"
             />
-          )}
-          {parcelPreview && (
-            <CustomModal onClose={() => setParcelPreview(null)} width="md">
-              <ParcelCard
-                toggleLike={() => null}
-                parcel={parcelPreview}
-                onClick={() => null}
-                mode="preview"
-              />
-            </CustomModal>
-          )}{" "}
-        </AnimatePresence>
-        {sortedParcels.length > 0 && !showParcelModal && (
+          </CustomModal>
+        )}
+        {sortedParcels.length > 0 && (
           <FAB
             onClick={handleOnClick}
             isAuthed={!!user?.id}

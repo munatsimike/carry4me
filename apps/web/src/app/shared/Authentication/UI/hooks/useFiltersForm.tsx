@@ -54,10 +54,7 @@ export function useFiltersForm({
   const { data, error } = useGoodsCategories();
   useQueryErrorEffect(error);
 
-  const goodsCategory: GoodsCategory[] = useMemo(
-    () => data?.filter((item) => item.name !== "Other") ?? [],
-    [data],
-  );
+  const goodsCategory: GoodsCategory[] = useMemo(() => data ?? [], [data]);
 
   const form = useForm<FiltersFormValues>({
     defaultValues: filterDefaults,

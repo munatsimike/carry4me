@@ -1,13 +1,12 @@
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { ListingTable } from "../dashboard/components/ListingTable";
 import { useToast } from "@/app/components/Toast";
 import type { TripListing } from "./domain/Trip";
 import type { FormValues } from "@/types/Ui";
-import { AnimatePresence } from "framer-motion";
-import CreateTripModal from "./ui/CreateTripModal";
 import CustomModal from "@/app/components/CustomModal";
 import TravelerCard from "./ui/TravelerCard";
 import EmptyState from "@/app/components/EmptyState";
@@ -24,10 +23,8 @@ export function MyTripsPage() {
   const { user } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
-  const [showCreateTripModal, setCreatTripModalState] =
-    useState<boolean>(false);
-  const [editTrip, setEditTrip] = useState<FormValues | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data: myTrips = [], isLoading, error } = useMyTrips(user?.id);
   useQueryErrorEffect(error);
@@ -48,8 +45,13 @@ export function MyTripsPage() {
 
   const handleOnClick = () => {
     guardAction(() => {
-      setCreatTripModalState(true);
+      navigate("/create-trip?mode=create&returnTo=/my/trips");
     });
+  };
+
+  const handleEdit = (values: FormValues) => {
+    if (!values.id) return;
+    navigate(`/create-trip?mode=edit&id=${values.id}&returnTo=/my/trips`);
   };
 
   return (
@@ -76,41 +78,33 @@ export function MyTripsPage() {
       ) : isMobile ? (
         <MobileListingCard
           data={myTrips}
-          onEdit={setEditTrip}
+          onEdit={handleEdit}
           onDelete={deleteTrip}
           setListingPreview={setTripPreview}
-          setModalState={setCreatTripModalState}
+          setModalState={() => {}}
         />
       ) : (
         <ListingTable
           data={myTrips}
-          onEdit={setEditTrip}
+          onEdit={handleEdit}
           onDelete={deleteTrip}
           setListingPreview={setTripPreview}
-          setModalState={setCreatTripModalState}
+          setModalState={() => {}}
         />
       )}
 
-      <AnimatePresence>
-        {showCreateTripModal && (
-          <CreateTripModal
-            mode={editTrip ? "edit" : undefined}
-            initialFormValues={editTrip ? editTrip : undefined}
-            setModalState={() => setCreatTripModalState(false)}
+      {tripreview && (
+        <CustomModal onClose={() => setTripPreview(null)} width="md">
+          <TravelerCard
+            trip={tripreview}
+            onClick={() => null}
+            mode="preview"
+            setTrips={() => null}
           />
-        )}
-        {tripreview && (
-          <CustomModal onClose={() => setTripPreview(null)} width="md">
-            <TravelerCard
-              trip={tripreview}
-              onClick={() => null}
-              mode="preview"
-              setTrips={() => null}
-            />
-          </CustomModal>
-        )}{" "}
-      </AnimatePresence>
-      {sortedTrips.length > 0 && !showCreateTripModal && (
+        </CustomModal>
+      )}
+
+      {sortedTrips.length > 0 && (
         <FAB
           onClick={handleOnClick}
           isAuthed={!!user?.id}

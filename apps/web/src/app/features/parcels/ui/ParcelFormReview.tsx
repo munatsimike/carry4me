@@ -1,11 +1,14 @@
 import type { ReactNode } from "react";
+import type { GoodsItem } from "@/types/Ui";
 import type { SvgIconComponent } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
+import GoodsManifestTable from "@/app/components/GoodsManifestTable";
 import { toflag } from "@/app/Mapper";
 import {
   formatCurrencyByCountry,
   getCurrencySymbolByCountry,
 } from "@/app/lib/currency";
+import { calculateCarryRequestPricing } from "@/app/features/carry request/domain/carryRequestPricing";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import { FIXED_DESTINATION_COUNTRY } from "@/app/shared/locations/fixedDestination";
@@ -17,7 +20,7 @@ type ParcelFormReviewProps = {
   originCity: string;
   originCustomCity: string;
   destinationCountry: string;
-  itemDescription: string;
+  itemDescriptions: Partial<GoodsItem>[];
   selectedIds: string[];
   goodsCategory: GoodsCategory[];
   weight: number;
@@ -37,7 +40,7 @@ export default function ParcelFormReview({
   originCity,
   originCustomCity,
   destinationCountry,
-  itemDescription,
+  itemDescriptions,
   selectedIds = [],
   goodsCategory,
   weight,
@@ -46,13 +49,12 @@ export default function ParcelFormReview({
   const categoryNames = goodsCategory
     .filter((c) => selectedIds.includes(c.id))
     .map((c) => c.name);
-  const totalCost = pricePerKg * weight;
+  const { totalWithFee } = calculateCarryRequestPricing(pricePerKg, weight);
   const originLabel = formatOriginCity(originCity, originCustomCity);
   const originFlag = toflag(originCountry);
   const destination =
     destinationCountry?.trim() || FIXED_DESTINATION_COUNTRY;
   const priceLabel = `${getCurrencySymbolByCountry(originCountry)}${Number.isFinite(pricePerKg) ? pricePerKg : 0}`;
-  const description = itemDescription?.trim() || "—";
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-neutral-50/50 p-4">
@@ -70,7 +72,7 @@ export default function ParcelFormReview({
         </ReviewSection>
       </div>
 
-      <ReviewSection label="Items you are sending">
+      <ReviewSection label="Categories">
         {categoryNames.length > 0 ? (
           <ul className="flex flex-wrap gap-2">
             {categoryNames.map((name) => (
@@ -87,13 +89,13 @@ export default function ParcelFormReview({
         )}
       </ReviewSection>
 
-      <ReviewSection label="Parcel contents">
-        <ReviewValue>{description}</ReviewValue>
+      <ReviewSection label="Goods list">
+        <GoodsManifestTable items={itemDescriptions} />
       </ReviewSection>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <ReviewSection label="Weight">
-          <ReviewValue>{weight} Kg</ReviewValue>
+          <ReviewValue>{weight} kg</ReviewValue>
         </ReviewSection>
         <ReviewSection label="Price per kg">
           <ReviewValue>{priceLabel}</ReviewValue>
@@ -102,7 +104,7 @@ export default function ParcelFormReview({
 
       <div className="rounded-lg border border-primary-100 bg-primary-50/80 px-4 py-3">
         <CustomText as="p" textSize="xs" textVariant="label" className="mb-1">
-          Total you&apos;ll pay
+          Total you&apos;ll pay (incl. service fee)
         </CustomText>
         <CustomText
           as="p"
@@ -110,7 +112,7 @@ export default function ParcelFormReview({
           textVariant="primary"
           className="font-semibold text-primary-700"
         >
-          {formatCurrencyByCountry(originCountry, totalCost)}
+          {formatCurrencyByCountry(originCountry, totalWithFee)}
         </CustomText>
       </div>
     </div>

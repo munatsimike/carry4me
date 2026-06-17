@@ -6,8 +6,7 @@ export default function useGoodsCategory() {
   const { data, isLoading, error } = useGoodsCategories();
   useQueryErrorEffect(error);
 
-  const goodsCategory: GoodsCategory[] =
-    data?.filter((item) => item.name !== "Other") ?? [];
+  const goodsCategory: GoodsCategory[] = data ?? [];
 
   return { goodsCategory, isLoading };
 }

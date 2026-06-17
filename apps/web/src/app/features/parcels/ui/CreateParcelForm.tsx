@@ -1,4 +1,3 @@
-import type { GoodsItem } from "@/types/Ui";
 import { useState } from "react";
 import {
   type Control,
@@ -10,7 +9,6 @@ import {
   type UseFormWatch,
 } from "react-hook-form";
 import FormHeader from "../../dashboard/components/FormHeader";
-
 import {
   ReviewDetailsHeader,
   StepHeader,
@@ -18,20 +16,21 @@ import {
 } from "@/app/components/forms/formStepper";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Package } from "lucide-react";
+import { Package } from "lucide-react";
 import LineDivider from "@/app/components/LineDivider";
 import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
-import { WeightField } from "../../dashboard/components/WeightField";
 import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useParcelForm";
-import { PriceField } from "../../dashboard/components/PriceField";
-import CustomText from "@/components/ui/CustomText";
-import ParcelReviewConfirmations from "./ParcelReviewConfirmations";
-import { inputError, inputNeutral } from "@/app/lib/cn";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
-import { formatCurrencyByCountry } from "@/app/lib/currency";
+import ParcelReviewConfirmations from "./ParcelReviewConfirmations";
 import ParcelFormReview from "./ParcelFormReview";
-import { parcelStep1Fields, parcelStep2Fields } from "./parcelFormSteps";
+import GoodsManifestFields from "./GoodsManifestFields";
+import ParcelPricingSection from "./ParcelPricingSection";
+import {
+  parcelStep1Fields,
+  parcelStep2Fields,
+  parcelStep3Fields,
+} from "./parcelFormSteps";
 
 export type ParcelFormMode = "edit" | "create";
 
@@ -58,12 +57,18 @@ type ContentProps = {
   formProps: ParcelFormProps;
   selectedIds: string[];
   mode: ParcelFormMode;
+  variant?: "modal" | "page";
+  step?: Step;
+  onStepChange?: (step: Step) => void;
 };
 
 export default function CreateParcelForm({
   mode,
   formProps,
   selectedIds,
+  variant = "modal",
+  step: controlledStep,
+  onStepChange,
 }: ContentProps) {
   const {
     control,
@@ -83,14 +88,19 @@ export default function CreateParcelForm({
   const originCity = watch("originCity");
   const originCustomCity = watch("originCustomCity");
   const destinationCountry = watch("destinationCountry");
-  const itemDescription = watch("itemDescriptions.0.description");
+  const itemDescriptions = watch("itemDescriptions");
 
   const dividerHeight = "my-0";
-  const [step, setStep] = useState<Step>(1);
+  const [internalStep, setInternalStep] = useState<Step>(1);
+  const step = controlledStep ?? internalStep;
   const { goodsCategory } = useGoodsCategory();
   const isEditMode = mode === "edit";
+  const isPageVariant = variant === "page";
 
-  const goToStep = (next: Step) => setStep(next);
+  const goToStep = (next: Step) => {
+    if (controlledStep === undefined) setInternalStep(next);
+    onStepChange?.(next);
+  };
 
   const goNextFromStep1 = async () => {
     const ok = await trigger([...parcelStep1Fields], { shouldFocus: true });
@@ -104,26 +114,35 @@ export default function CreateParcelForm({
     goToStep(3);
   };
 
-  const goBack = () => {
-    if (step === 3) goToStep(2);
-    else if (step === 2) goToStep(1);
+  const goNextFromStep3 = async () => {
+    const ok = await trigger([...parcelStep3Fields], { shouldFocus: true });
+    if (!ok) return;
+    if (isEditMode) return;
+    goToStep(4);
   };
+
+  const showReviewHeader = step === 4;
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-4">
-        {step !== 3 && (
+        {!isPageVariant && !showReviewHeader && (
           <FormHeader
             heading={mode === "edit" ? "Edit parcel" : "Post parcel"}
             subHeading="Share your parcel details and get matched with travelers."
-            icon={<Package size={32} className=" text-primary-500"/>}
+            icon={<Package size={32} className=" text-primary-500" />}
           />
         )}
 
-        {step === 3 ? (
+        {showReviewHeader ? (
           <ReviewDetailsHeader />
         ) : (
-          <StepHeader currentStep={step} formType="parcel" />
+          <StepHeader
+            currentStep={step > 3 ? 3 : step}
+            formType="parcel"
+            className={isPageVariant ? "lg:hidden" : undefined}
+            onStepSelect={goToStep}
+          />
         )}
       </div>
 
@@ -172,81 +191,45 @@ export default function CreateParcelForm({
             {...stepMotion}
           >
             <LineDivider heightClass={dividerHeight} />
-            <PackageDescriptionField errors={errors} register={register} />
+            <GoodsManifestFields
+              control={control}
+              register={register}
+              errors={errors}
+            />
             <LineDivider heightClass={dividerHeight} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-[20px]">
-              <WeightField<ParcelFormFields>
-                label="Total weight"
-                register={register("weight", { valueAsNumber: true })}
-                id="weight"
-                error={errors.weight?.message}
-                isTouched={!!touchedFields.weight}
-                isDirty={!!dirtyFields.weight}
-                setValue={setValue}
-                value={weightValue}
-                name="weight"
-              />
-              <div className="flex flex-col gap-2">
-                <PriceField<ParcelFormFields>
-                  id="price"
-                  country={originCountry}
-                  error={errors.pricePerKg?.message}
-                  register={register("pricePerKg", { valueAsNumber: true })}
-                  isTouched={!!touchedFields.pricePerKg}
-                  isDirty={!!dirtyFields.pricePerKg}
-                  value={priceValue}
-                  setValue={setValue}
-                  name="pricePerKg"
-                />
-                <CustomText as="p" textSize="xs" className="text-neutral-500">
-                  Typical offers are $8–15 per kg.
-                </CustomText>
-              </div>
-              <div />
-              <div className="flex">
-                <span className="inline-flex items-center gap-3 rounded-lg border border-primary-100 bg-primary-50 px-4 py-2 shadow-sm w-fit">
-                  <CustomText as="span" textSize="xs" textVariant="label">
-                    You&apos;ll pay
-                  </CustomText>
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={priceValue * weightValue}
-                      initial={{ scale: 0.95, opacity: 0.8 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="inline-flex"
-                    >
-                      <CustomText
-                        as="span"
-                        textSize="sm"
-                        textVariant="primary"
-                        className={
-                          priceValue * weightValue > 0
-                            ? "font-semibold text-primary-600"
-                            : ""
-                        }
-                      >
-                        {formatCurrencyByCountry(
-                          originCountry,
-                          priceValue * weightValue,
-                        )}
-                      </CustomText>
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
-              </div>
-            </div>
+            <StepActions
+              primaryLabel="Next"
+              onPrimary={goNextFromStep2}
+            />
+          </motion.div>
+        )}
+
+        {step === 3 && (
+          <motion.div
+            key="parcel-step-3"
+            className="flex flex-col gap-4"
+            {...stepMotion}
+          >
+            <LineDivider heightClass={dividerHeight} />
+            <ParcelPricingSection
+              originCountry={originCountry}
+              weightValue={weightValue}
+              priceValue={priceValue}
+              register={register}
+              setValue={setValue}
+              errors={errors}
+              dirtyFields={dirtyFields}
+              touchedFields={touchedFields}
+            />
             {isEditMode ? (
               <>
                 <LineDivider heightClass={dividerHeight} />
                 <ParcelReviewConfirmations register={register} errors={errors} />
               </>
             ) : null}
-            <LineDivider heightClass={dividerHeight} />
             <StepActions
-              onBack={goBack}
               primaryLabel={isEditMode ? undefined : "Review"}
-              onPrimary={goNextFromStep2}
+              onPrimary={goNextFromStep3}
               submitLabel={
                 isEditMode
                   ? isSubmitting
@@ -260,9 +243,9 @@ export default function CreateParcelForm({
           </motion.div>
         )}
 
-        {step === 3 && !isEditMode && (
+        {step === 4 && !isEditMode && (
           <motion.div
-            key="parcel-step-3"
+            key="parcel-step-4"
             className="flex flex-col gap-3"
             {...stepMotion}
           >
@@ -271,7 +254,7 @@ export default function CreateParcelForm({
               originCity={originCity}
               originCustomCity={originCustomCity}
               destinationCountry={destinationCountry}
-              itemDescription={itemDescription}
+              itemDescriptions={itemDescriptions}
               selectedIds={selectedIds}
               goodsCategory={goodsCategory}
               weight={weightValue}
@@ -280,7 +263,6 @@ export default function CreateParcelForm({
             <ParcelReviewConfirmations register={register} errors={errors} />
             <LineDivider heightClass={dividerHeight} />
             <StepActions
-              onBack={goBack}
               submitLabel={isSubmitting ? "Posting..." : "Post parcel"}
               isSubmitting={isSubmitting}
               showSubmit
@@ -293,14 +275,12 @@ export default function CreateParcelForm({
 }
 
 function StepActions({
-  onBack,
   primaryLabel,
   onPrimary,
   submitLabel,
   isSubmitting,
   showSubmit,
 }: {
-  onBack: () => void;
   primaryLabel?: string;
   onPrimary?: () => void;
   submitLabel?: string;
@@ -309,17 +289,6 @@ function StepActions({
 }) {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
-      <Button
-        className="w-full sm:w-auto sm:min-w-[120px]"
-        type="button"
-        variant="neutral"
-        onClick={onBack}
-        size={"md"}
-      >
-        <span className="inline-flex gap-1 items-center justify-center">
-          <ArrowLeft className="w-4" /> Back
-        </span>
-      </Button>
       {showSubmit ? (
         <Button
           className="w-full flex-1"
@@ -343,60 +312,6 @@ function StepActions({
             {primaryLabel}
           </Button>
         )
-      )}
-    </div>
-  );
-}
-
-type DescriptionProps = {
-  fields: GoodsItem[];
-  onRemove: (index: number) => void;
-  register: UseFormRegister<ParcelFormFields>;
-  errors: FieldErrors<ParcelFormFields>;
-  dirty: FieldNamesMarkedBoolean<ParcelFormFields>;
-  touched: FieldNamesMarkedBoolean<ParcelFormFields>;
-  hasValueQty: boolean;
-  hasValueDescription: boolean;
-};
-
-function PackageDescriptionField({
-  errors,
-  register,
-}: Pick<DescriptionProps, "errors" | "register">) {
-  return (
-    <div className="flex flex-col gap-2 w-full">
-      <CustomText textSize="sm" textVariant="label">
-        Parcel contents
-      </CustomText>
-
-      <textarea
-        {...register("itemDescriptions.0.description", {
-          setValueAs: (value) =>
-            typeof value === "string" ? value.trimStart() : value,
-        })}
-        placeholder="e.g. clothes, shoes, documents, small electronics"
-        maxLength={160}
-        className={`
-          min-h-[120px]
-          w-full
-          rounded-xl
-          p-4
-          text-sm
-          outline-none
-          resize-none
-          transition-colors
-          ${
-            errors.itemDescriptions?.[0]?.description
-              ? inputError
-              : inputNeutral
-          }
-        `}
-      />
-
-      {errors.itemDescriptions?.[0]?.description?.message && (
-        <CustomText textSize="xs" className="text-ink-error">
-          {errors.itemDescriptions[0].description.message}
-        </CustomText>
       )}
     </div>
   );

@@ -88,12 +88,14 @@ type ListingFormProps = {
   initialFormValues?: FormValues;
   mode: FormMode;
   setModalState?: () => void;
+  returnPath?: string;
 };
 
 export function useTripForm({
   initialFormValues,
   mode,
   setModalState,
+  returnPath,
 }: ListingFormProps) {
   const invalidateTrips = useInvalidateTrips();
   const [toDasshboard, setToDashBoard] = useState<boolean>(false);
@@ -187,6 +189,12 @@ export function useTripForm({
       }
       await refreshProfile();
       await invalidateTrips();
+
+      if (setModalState) {
+        setModalState();
+      } else if (returnPath) {
+        navigate(returnPath);
+      }
     } catch (err) {
       showSupabaseError(err);
     }
@@ -234,6 +242,8 @@ export function useTripForm({
       await invalidateTrips();
       if (setModalState) {
         setModalState();
+      } else if (returnPath) {
+        navigate(returnPath);
       } else {
         setToDashBoard(true);
       }

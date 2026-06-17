@@ -26,6 +26,7 @@ import type { CreateParcelUseCase } from "@/app/features/parcels/application/Cre
 import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
 import toCreateParcelMapper from "@/app/features/goods/domain/toCreatParcelMapper";
 import type { FormMode, FormValues } from "@/types/Ui";
+import { normalizeGoodsItem } from "@/app/components/GoodsManifestTable";
 import { toParcelDtoMapper } from "@/app/features/parcels/application/toParcelDtoMapper";
 import { useToast } from "@/app/components/Toast";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
@@ -33,6 +34,7 @@ import {
   parcelStep1Fields,
   parcelStep2Fields,
   parcelStep3Fields,
+  parcelStep4Fields,
 } from "@/app/features/parcels/ui/parcelFormSteps";
 import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import { useNavigate } from "react-router-dom";
@@ -88,7 +90,9 @@ const emptyDefaultsValues = {
   destinationCountry: FIXED_DESTINATION_COUNTRY,
   destinationCity: FIXED_DESTINATION_CITY,
   goodsCategoryIds: [],
-  itemDescriptions: [{ quantity: 1, description: "" }],
+  itemDescriptions: [
+    { quantity: 1, description: "", size: "", condition: "new" as const },
+  ],
   weight: 0,
   pricePerKg: 0,
   confirmNoProhibitedItems: false,
@@ -99,12 +103,14 @@ type UseParcelFormProps = {
   mode: FormMode;
   initialFormValues?: FormValues;
   setModalState?: () => void;
+  returnPath?: string;
 };
 
 export default function useParcelForm({
   mode,
   initialFormValues,
   setModalState,
+  returnPath,
 }: UseParcelFormProps) {
   const invalidateParcels = useInvalidateParcels();
   const { showSupabaseError, openInfo } = useUniversalModal();
@@ -185,6 +191,10 @@ export default function useParcelForm({
       }
       await refreshProfile();
       await invalidateParcels();
+
+      if (returnPath) {
+        navigate(returnPath);
+      }
     } catch (err) {
       showSupabaseError(err);
     }
@@ -199,6 +209,7 @@ export default function useParcelForm({
         ...parcelStep1Fields,
         ...parcelStep2Fields,
         ...parcelStep3Fields,
+        ...parcelStep4Fields,
       ] as (keyof ParcelFormFields)[],
       { shouldFocus: true },
     );
@@ -234,6 +245,8 @@ export default function useParcelForm({
       await invalidateParcels();
       if (setModalState) {
         setModalState();
+      } else if (returnPath) {
+        navigate(returnPath);
       } else {
         setToDashBoard(true);
       }
@@ -244,7 +257,16 @@ export default function useParcelForm({
 
   useEffect(() => {
     if (mode === "edit" && initialFormValues) {
-      reset(initialFormValues);
+      reset({
+        ...initialFormValues,
+        itemDescriptions: initialFormValues.itemDescriptions.map((item) =>
+          normalizeGoodsItem(item),
+        ),
+        confirmNoProhibitedItems:
+          initialFormValues.confirmNoProhibitedItems ?? false,
+        understandTravelerInspection:
+          initialFormValues.understandTravelerInspection ?? false,
+      });
       return;
     }
     if (mode === "create") {

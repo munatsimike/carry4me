@@ -110,6 +110,13 @@ export const parcelItemSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(2, "Describe what is in your parcel")
+    .min(2, "Describe the item")
     .max(160, "Description must be 160 characters or fewer"),
+  size: z
+    .string()
+    .trim()
+    .min(1, "Enter a size (e.g. S, M, shoe box)"),
+  condition: z.enum(["new", "used"], {
+    error: "Select new or used",
+  }),
 });

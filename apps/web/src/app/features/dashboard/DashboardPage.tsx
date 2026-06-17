@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/supabase/AuthProvider";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
@@ -8,9 +8,7 @@ import CustomText, { type TextVariant } from "@/components/ui/CustomText";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import type { SvgIconComponent } from "@/types/Ui";
-import CreatParcelModal from "../parcels/ui/CreateParcelModal";
-import CreateTripModal from "../trips/ui/CreateTripModal";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
 import StatsSection from "./components/StatsSection";
 import SuggestedMatchesTabs, {
@@ -32,7 +30,6 @@ import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
 import { iconForActivity } from "./application/iconForActivity";
 import Greeting from "@/app/components/Greeting";
-import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 
 /**
  * Dashboard Page
@@ -55,13 +52,8 @@ import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuer
  */
 
 export default function DashboardPage() {
-  //Create get goods use case
-
-  const [createParcel, setCreateParcel] = useState<boolean>(false);
-  const [createTrip, setCreateTrip] = useState<boolean>(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const isMobile = useMediaQuery();
   const { user, profile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
 
@@ -97,24 +89,14 @@ export default function DashboardPage() {
 
     guardAction(() => {
       if (action === "trip") {
-        setCreateTrip(true);
+        navigate("/create-trip?mode=create&returnTo=/dashboard");
       }
 
       if (action === "parcel") {
-        setCreateParcel(true);
+        navigate("/create-parcel?mode=create&returnTo=/dashboard");
       }
     });
   };
-
-  useEffect(() => {
-    if (!createTrip || !isMobile) return;
-    navigate("/create-trip?mode=create");
-  }, [createTrip, isMobile, navigate]);
-
-  useEffect(() => {
-    if (!createParcel || !isMobile) return;
-    navigate("/create-parcel?mode=create");
-  }, [createParcel, isMobile, navigate]);
 
   const tabFromSearch = new URLSearchParams(location.search).get("tab");
   const suggestedMatchTabFromUrl: SuggestedMatchTabId | undefined =
@@ -169,16 +151,6 @@ export default function DashboardPage() {
           />
         </div>
       </section>
-
-      <AnimatePresence>
-        {createTrip && !isMobile && (
-          <CreateTripModal setModalState={() => setCreateTrip(false)} />
-        )}
-
-        {createParcel && !isMobile && (
-          <CreatParcelModal setModalState={() => setCreateParcel(false)} />
-        )}
-      </AnimatePresence>
     </>
   );
 }

@@ -8,7 +8,7 @@ import { WeightField } from "../../dashboard/components/WeightField";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
 import { DateField } from "../../dashboard/components/DateField";
 import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
-import { ArrowLeft, Plane } from "lucide-react";
+import { Plane } from "lucide-react";
 import {
   ReviewDetailsHeader,
   StepHeader,
@@ -55,9 +55,19 @@ type ContentProps = {
   formProps: FormProps;
   selectedIds: string[];
   mode: FormMode;
+  variant?: "modal" | "page";
+  step?: Step;
+  onStepChange?: (step: Step) => void;
 };
 
-export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
+export function CreateTripForm({
+  mode,
+  formProps,
+  selectedIds,
+  variant = "modal",
+  step: controlledStep,
+  onStepChange,
+}: ContentProps) {
   const {
     control,
     watch,
@@ -70,8 +80,15 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
     trigger,
   } = formProps;
 
-  const [step, setStep] = useState<Step>(1);
+  const [internalStep, setInternalStep] = useState<Step>(1);
+  const step = controlledStep ?? internalStep;
   const { goodsCategory } = useGoodsCategory();
+  const isPageVariant = variant === "page";
+
+  const goToStep = (next: Step) => {
+    if (controlledStep === undefined) setInternalStep(next);
+    onStepChange?.(next);
+  };
 
   const weightValue = watch("weight");
   const priceValue = watch("pricePerKg");
@@ -83,8 +100,6 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
 
   const dividerHeight = "my-0";
   const isEditMode = mode === "edit";
-
-  const goToStep = (next: Step) => setStep(next);
 
   const goNextFromStep1 = async () => {
     const ok = await trigger([...tripStep1Fields], { shouldFocus: true });
@@ -98,15 +113,10 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
     goToStep(3);
   };
 
-  const goBack = () => {
-    if (step === 3) goToStep(2);
-    else if (step === 2) goToStep(1);
-  };
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-4">
-        {step !== 3 && (
+        {!isPageVariant && step !== 3 && (
           <FormHeader
             size="sm"
             heading={mode === "edit" ? "Edit trip" : "Post your trip"}
@@ -118,7 +128,12 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
         {step === 3 ? (
           <ReviewDetailsHeader />
         ) : (
-          <StepHeader currentStep={step} formType="trip" />
+          <StepHeader
+            currentStep={step}
+            formType="trip"
+            className={isPageVariant ? "lg:hidden" : undefined}
+            onStepSelect={goToStep}
+          />
         )}
       </div>
 
@@ -205,7 +220,6 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
             </div>
             <LineDivider heightClass={dividerHeight} />
             <StepActions
-              onBack={goBack}
               primaryLabel={isEditMode ? undefined : "Review"}
               onPrimary={goNextFromStep2}
               submitLabel={
@@ -240,7 +254,6 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
             />
             <LineDivider heightClass={dividerHeight} />
             <StepActions
-              onBack={goBack}
               submitLabel={isSubmitting ? "Posting..." : "Post trip"}
               isSubmitting={isSubmitting}
               showSubmit
@@ -253,14 +266,12 @@ export function CreateTripForm({ mode, formProps, selectedIds }: ContentProps) {
 }
 
 function StepActions({
-  onBack,
   primaryLabel,
   onPrimary,
   submitLabel,
   isSubmitting,
   showSubmit,
 }: {
-  onBack: () => void;
   primaryLabel?: string;
   onPrimary?: () => void;
   submitLabel?: string;
@@ -269,17 +280,6 @@ function StepActions({
 }) {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
-      <Button
-        className="w-full sm:w-auto sm:min-w-[120px]"
-        type="button"
-        variant="neutral"
-        onClick={onBack}
-        size={"md"}
-      >
-        <span className="inline-flex gap-1 items-center justify-center">
-          <ArrowLeft className="w-4" /> Back
-        </span>
-      </Button>
       {showSubmit ? (
         <Button
           className="w-full flex-1"

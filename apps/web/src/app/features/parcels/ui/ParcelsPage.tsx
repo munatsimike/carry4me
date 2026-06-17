@@ -27,11 +27,10 @@ import EmptyState from "@/app/components/EmptyState";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import PaginationControls from "@/app/components/PaginationControls";
-import CreateParcelModal from "./CreateParcelModal";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import FAB from "@/app/components/FAB";
 import type { ListingPageParams } from "@/types/Pagination";
@@ -74,8 +73,8 @@ export default function ParcelsPage() {
   const [, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
-  const [parcelModalState, setParcelModalState] = useState<boolean>(false);
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
 
   const listingParams = useMemo<ListingPageParams>(() => ({
     page,
@@ -212,7 +211,7 @@ export default function ParcelsPage() {
     }
 
     guardAction(() => {
-      setParcelModalState(true);
+      navigate("/create-parcel?mode=create&returnTo=/parcels");
     });
   };
 
@@ -262,13 +261,6 @@ export default function ParcelsPage() {
         />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        <AnimatePresence>
-          {parcelModalState && (
-            <CreateParcelModal
-              setModalState={() => setParcelModalState(false)}
-            />
-          )}
-        </AnimatePresence>
         {displayedParcels.length > 0 && (
           <Parcels
             parcels={displayedParcels}
@@ -316,7 +308,7 @@ export default function ParcelsPage() {
         <FAB
           isAuthed={!!user?.id}
           variant="parcel"
-          to="/create-parcel?mode=create"
+          to="/create-parcel?mode=create&returnTo=/parcels"
         />
       </DefaultContainer>
 

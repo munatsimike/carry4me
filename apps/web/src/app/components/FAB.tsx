@@ -64,8 +64,9 @@ export default function FAB({ onClick, to, isAuthed, variant }: FABProps) {
           key="fab"
           role="presentation"
           className={cn(
-            "fixed z-[60] sm:hidden",
+            "fixed z-[60]",
             "bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-4",
+            "sm:bottom-6 sm:right-6",
           )}
           {...fabMotion}
         >

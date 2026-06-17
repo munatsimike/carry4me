@@ -42,9 +42,14 @@ export type Route = {
   acceptedParcels: Category[];
 };
 
+export const GOODS_CONDITIONS = ["new", "used"] as const;
+export type GoodsCondition = (typeof GOODS_CONDITIONS)[number];
+
 export type GoodsItem = {
   quantity: number;
   description: string;
+  size: string;
+  condition: GoodsCondition;
 };
 
 export type FormValues = {
