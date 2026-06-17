@@ -14,6 +14,7 @@ import type {
   UseFormSetValue,
 } from "react-hook-form";
 import CustomText from "@/components/ui/CustomText";
+import InfoTooltip from "@/app/components/InfoTooltip";
 
 export type NumberInputFieldProps<TFieldValues extends FieldValues> = {
   id: string;
@@ -22,6 +23,7 @@ export type NumberInputFieldProps<TFieldValues extends FieldValues> = {
   register: UseFormRegisterReturn;
   error?: string;
   label?: string;
+  labelHint?: string;
   prefix?: string;
   suffix?: string;
   setValue: UseFormSetValue<TFieldValues>;
@@ -36,6 +38,7 @@ export function NumberInputField<TFieldValues extends FieldValues>({
   isDirty,
   isTouched,
   label = "",
+  labelHint,
   prefix,
   suffix,
   value,
@@ -48,9 +51,12 @@ export function NumberInputField<TFieldValues extends FieldValues>({
   return (
     <ErrorText error={error}>
       <div className="flex flex-col gap-2">
-        <CustomText textSize="sm" textVariant="label">
-          {label}
-        </CustomText>
+        <div className="flex items-center gap-1.5">
+          <CustomText textSize="sm" textVariant="label">
+            {label}
+          </CustomText>
+          {labelHint ? <InfoTooltip content={labelHint} /> : null}
+        </div>
         <div className="flex items-center gap-2">
         {prefix ? (
           <CustomText as="span" textSize="sm" className="text-neutral-600">

@@ -11,6 +11,7 @@ import {
   calculateCarryRequestPricing,
   SERVICE_FEE_TOOLTIP,
 } from "@/app/features/carry request/domain/carryRequestPricing";
+import { PARCEL_BUDGET_PER_KG_HINT } from "@/app/shared/listingFormHints";
 import {
   type FieldErrors,
   type FieldNamesMarkedBoolean,
@@ -71,6 +72,8 @@ export default function ParcelPricingSection({
       <div className="flex flex-col gap-3">
         <PriceField<ParcelFormFields>
           id="price"
+          label="Budget per kg"
+          hint={PARCEL_BUDGET_PER_KG_HINT}
           country={originCountry}
           error={errors.pricePerKg?.message}
           register={register("pricePerKg", { valueAsNumber: true })}

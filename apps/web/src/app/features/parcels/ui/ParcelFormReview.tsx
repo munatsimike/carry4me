@@ -97,7 +97,7 @@ export default function ParcelFormReview({
         <ReviewSection label="Weight">
           <ReviewValue>{weight} kg</ReviewValue>
         </ReviewSection>
-        <ReviewSection label="Price per kg">
+        <ReviewSection label="Budget per kg">
           <ReviewValue>{priceLabel}</ReviewValue>
         </ReviewSection>
       </div>

@@ -6,6 +6,7 @@ import LineDivider from "../LineDivider";
 import RouteRow from "../RouteRow";
 import Stack from "../Stack";
 import DateRow from "../DateRow";
+import ParcelSendingRow from "@/app/features/parcels/ui/ParcelSendingRow";
 import { WeightAndPrice } from "./WeightAndPrice";
 import CategoryRow from "../CategoryRow";
 import SendRequestBtn from "./SendRequestBtn";
@@ -127,18 +128,18 @@ export function ListingCard<T extends Listing>({
           destination={listing.route.destinationCountry}
         />
 
-        <DateRow
-          date={
-            listing.type === "trip"
-              ? format(new Date(listing.departDate), dateFormat)
-              : "Flexible"
-          }
-        />
-
         <CategoryRow
           tag={isTripListing ? "traveler" : "sender"}
           category={goodsCategories}
         />
+
+        {isTripListing ? (
+          <DateRow
+            date={format(new Date(listing.departDate), dateFormat)}
+          />
+        ) : (
+          <ParcelSendingRow items={listing.items} />
+        )}
       </Stack>
       <LineDivider heightClass="my-2" className="group-hover/card:border-white" />
       <WeightAndPrice

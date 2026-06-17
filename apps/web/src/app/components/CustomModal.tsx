@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { createPortal } from "react-dom";
 import { CloseBackBtn } from "./CloseBtn";
 import { useMediaQuery } from "../shared/Authentication/UI/hooks/useMediaQuery";
 import { useUI } from "../shared/Authentication/UI/hooks/useUI";
@@ -60,7 +61,7 @@ export default function CustomModal({
         transition: { duration: 0.24, ease: "easeOut" as const },
       };
 
-  return (
+  return createPortal(
     <motion.div
       className="fixed inset-0 z-50 flex items-end justify-center px-2 py-2 sm:items-center sm:px-4"
       initial={{ opacity: 0 }}
@@ -90,6 +91,7 @@ export default function CustomModal({
         <CloseBackBtn onClose={onClose} />
         {children}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }

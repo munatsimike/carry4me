@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 const STEPS = [
   { id: 1 as const, title: "Route & goods", description: "Where it goes and what type" },
   { id: 2 as const, title: "Goods list", description: "Items, quantity, size, and condition" },
-  { id: 3 as const, title: "Weight & price", description: "Parcel weight and your offer" },
+  { id: 3 as const, title: "Weight & budget", description: "Parcel weight and budget per kg" },
   { id: 4 as const, title: "Review", description: "Confirm and post" },
 ];
 

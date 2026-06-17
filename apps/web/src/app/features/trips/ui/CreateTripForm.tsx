@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { PriceField } from "../../dashboard/components/PriceField";
+import { TRIP_PRICE_PER_KG_HINT } from "@/app/shared/listingFormHints";
 import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { WeightField } from "../../dashboard/components/WeightField";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
@@ -205,6 +206,7 @@ export function CreateTripForm({
                 <PriceField<TripFormFields>
                   id="price"
                   country={originCountry}
+                  hint={TRIP_PRICE_PER_KG_HINT}
                   register={register("pricePerKg", { valueAsNumber: true })}
                   error={errors.pricePerKg?.message}
                   isDirty={!!dirtyFields.pricePerKg}

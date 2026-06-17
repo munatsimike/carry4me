@@ -49,7 +49,7 @@ import {
   goodsCategoriesSchema,
   listingWeightSchema,
   parcelItemSchema,
-  pricePerKgSchema,
+  budgetPerKgSchema,
 } from "@/app/shared/validation/formValidation";
 
 const parcelSchema = z
@@ -64,7 +64,7 @@ const parcelSchema = z
       .array(parcelItemSchema)
       .min(1, "Enter item quantity and description"),
     weight: listingWeightSchema,
-    pricePerKg: pricePerKgSchema,
+    pricePerKg: budgetPerKgSchema,
     confirmNoProhibitedItems: confirmNoProhibitedItemsSchema,
     understandTravelerInspection: understandTravelerInspectionSchema,
   })
