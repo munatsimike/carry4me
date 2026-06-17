@@ -12,6 +12,7 @@ import { MyParcelsIdUseCase } from "../application/MyParcelsUseCase";
 import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 import CreateParcelForm from "./CreateParcelForm";
 import ParcelFormStepSidebar from "./ParcelFormStepSidebar";
+import { normalizeGoodsItem } from "@/app/components/GoodsManifestTable";
 import Spinner from "@/app/components/Spinner";
 
 export default function PostParcelPage() {
@@ -60,12 +61,7 @@ export default function PostParcelPage() {
           destinationCity: data.route.destinationCity,
           goodsCategoryIds: data.goodsCategory.map((category) => category.id),
           itemDescriptions: data.items.length
-            ? data.items.map((item) => ({
-                quantity: item.quantity,
-                description: item.description,
-                size: item.size?.trim() ?? "",
-                condition: (item.condition === "used" ? "used" : "new") as const,
-              }))
+            ? data.items.map((item) => normalizeGoodsItem(item))
             : [{ quantity: 1, description: "", size: "", condition: "new" as const }],
           weight: data.weightKg,
           pricePerKg: data.pricePerKg,
