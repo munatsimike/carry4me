@@ -140,7 +140,7 @@ export function useTripForm({
 
   useEffect(() => {
     if (isEditMode && initialFormValues) {
-      reset(initialFormValues);
+      reset(initialFormValues, { keepDefaultValues: false });
       return;
     }
     if (mode === "create") {

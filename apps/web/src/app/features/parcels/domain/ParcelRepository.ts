@@ -9,7 +9,7 @@ export interface ParcelRepository {
     userId?: string,
     params?: ListingPageParams,
   ): Promise<ParcelListing[] | PaginatedResult<ParcelListing>>;
-  parcelsById(userId: string): Promise<ParcelListing[]>;
+  parcelsById(userId: string, parcelId?: string): Promise<ParcelListing[]>;
   /** OPEN parcels only — for send-request / match selection. */
   parcelsForMatching(userId: string): Promise<ParcelListing[]>;
   deleteParcel(parcelId: string): Promise<string>;

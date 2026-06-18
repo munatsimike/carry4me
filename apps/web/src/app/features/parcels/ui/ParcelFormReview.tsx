@@ -1,8 +1,15 @@
-import type { ReactNode } from "react";
 import type { GoodsItem } from "@/types/Ui";
 import type { SvgIconComponent } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import GoodsManifestTable from "@/app/components/GoodsManifestTable";
+import { CategoryChipList } from "@/app/components/CategoryChip";
+import LineDivider from "@/app/components/LineDivider";
+import {
+  FormReviewSection,
+  FormReviewPrimaryValue,
+  FormReviewValue,
+} from "@/app/components/forms/FormReviewSection";
+import type { Step } from "@/app/components/forms/formStepper";
 import { toflag } from "@/app/Mapper";
 import {
   formatCurrencyByCountry,
@@ -25,6 +32,7 @@ type ParcelFormReviewProps = {
   goodsCategory: GoodsCategory[];
   weight: number;
   pricePerKg: number;
+  onEditStep?: (step: Step) => void;
 };
 
 function formatOriginCity(city: string, customCity: string): string {
@@ -45,6 +53,7 @@ export default function ParcelFormReview({
   goodsCategory,
   weight,
   pricePerKg,
+  onEditStep,
 }: ParcelFormReviewProps) {
   const categoryNames = goodsCategory
     .filter((c) => selectedIds.includes(c.id))
@@ -55,65 +64,79 @@ export default function ParcelFormReview({
   const destination =
     destinationCountry?.trim() || FIXED_DESTINATION_COUNTRY;
   const priceLabel = `${getCurrencySymbolByCountry(originCountry)}${Number.isFinite(pricePerKg) ? pricePerKg : 0}`;
+  const editStep = (step: Step) => onEditStep?.(step);
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-neutral-50/50 p-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
-        <ReviewSection label="Origin">
+        <FormReviewSection label="Origin">
           <LocationValue
             flag={originFlag}
             primary={originLabel}
             secondary={originCountry || undefined}
           />
-        </ReviewSection>
+        </FormReviewSection>
 
-        <ReviewSection label="Destination">
+        <FormReviewSection
+          label="Destination"
+          onEdit={onEditStep ? () => editStep(1) : undefined}
+        >
           <LocationValue flag={META_ICONS.zimFlag} primary={destination} />
-        </ReviewSection>
+        </FormReviewSection>
       </div>
 
-      <ReviewSection label="Categories">
-        {categoryNames.length > 0 ? (
-          <ul className="flex flex-wrap gap-2">
-            {categoryNames.map((name) => (
-              <li
-                key={name}
-                className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-ink-primary"
-              >
-                {name}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <ReviewValue>—</ReviewValue>
-        )}
-      </ReviewSection>
+      <LineDivider heightClass="my-0" />
 
-      <ReviewSection label="Goods list">
+      <FormReviewSection
+        label="Categories"
+        onEdit={onEditStep ? () => editStep(1) : undefined}
+      >
+        {categoryNames.length > 0 ? (
+          <CategoryChipList items={categoryNames} />
+        ) : (
+          <FormReviewValue>—</FormReviewValue>
+        )}
+      </FormReviewSection>
+
+      <LineDivider heightClass="my-0" />
+
+      <FormReviewSection
+        label="Goods list"
+        onEdit={onEditStep ? () => editStep(2) : undefined}
+      >
         <GoodsManifestTable items={itemDescriptions} />
-      </ReviewSection>
+      </FormReviewSection>
+
+      <LineDivider heightClass="my-0" />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <ReviewSection label="Weight">
-          <ReviewValue>{weight} kg</ReviewValue>
-        </ReviewSection>
-        <ReviewSection label="Budget per kg">
-          <ReviewValue>{priceLabel}</ReviewValue>
-        </ReviewSection>
+        <FormReviewSection label="Weight">
+          <FormReviewPrimaryValue>{weight} kg</FormReviewPrimaryValue>
+        </FormReviewSection>
+        <FormReviewSection
+          label="Budget per kg"
+          onEdit={onEditStep ? () => editStep(3) : undefined}
+        >
+          <FormReviewPrimaryValue textSize="md">{priceLabel}</FormReviewPrimaryValue>
+        </FormReviewSection>
       </div>
 
+      <LineDivider heightClass="my-0" />
+
       <div className="rounded-lg border border-primary-100 bg-primary-50/80 px-4 py-3">
-        <CustomText as="p" textSize="xs" textVariant="label" className="mb-1">
-          Total you&apos;ll pay (incl. service fee)
-        </CustomText>
-        <CustomText
-          as="p"
-          textSize="sm"
-          textVariant="primary"
-          className="font-semibold text-primary-700"
+        <FormReviewSection
+          label="Total you'll pay (incl. service fee)"
+          className="mb-0"
         >
-          {formatCurrencyByCountry(originCountry, totalWithFee)}
-        </CustomText>
+          <CustomText
+            as="p"
+            textSize="sm"
+            textVariant="primary"
+            className="font-semibold text-primary-700"
+          >
+            {formatCurrencyByCountry(originCountry, totalWithFee)}
+          </CustomText>
+        </FormReviewSection>
       </div>
     </div>
   );
@@ -131,35 +154,10 @@ function LocationValue({
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
       {flag ? <SvgIcon size="xs" Icon={flag} /> : null}
-      <ReviewValue>
+      <FormReviewPrimaryValue>
         {primary}
         {secondary ? `, ${secondary}` : ""}
-      </ReviewValue>
+      </FormReviewPrimaryValue>
     </span>
-  );
-}
-
-function ReviewSection({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <CustomText as="p" textSize="xs" textVariant="label" className="whitespace-nowrap">
-        {label}
-      </CustomText>
-      {children}
-    </div>
-  );
-}
-
-function ReviewValue({ children }: { children: ReactNode }) {
-  return (
-    <CustomText as="p" textSize="sm" className="font-medium text-ink-primary">
-      {children}
-    </CustomText>
   );
 }

@@ -63,6 +63,7 @@ export function mapTripRowToTrip(
     })),
     pricePerKg: row.price_per_kg,
     weightKg: row.capacity_kg - (row.reserved_weight_kg + row.used_weight_kg),
+    capacityKg: row.capacity_kg,
     departDate: row.depart_date,
     arriveDate: row.arrive_date,
     status: row.status,

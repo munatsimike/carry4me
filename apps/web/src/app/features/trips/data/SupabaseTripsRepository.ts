@@ -164,7 +164,10 @@ export class SupabaseTripsRepository implements TripsRepository {
     if (shouldFilter && userId) {
       query.eq("traveler_user_id", userId);
     }
-    query.eq("status", TRIPSTATUSES.ACTIVE);
+
+    if (!tripId) {
+      query.eq("status", TRIPSTATUSES.ACTIVE);
+    }
 
     // Public marketplace: hide trips whose departure date has passed.
     if (isMarketplaceBrowse && !params?.filters.departDate) {

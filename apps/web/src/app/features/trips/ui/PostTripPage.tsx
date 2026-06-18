@@ -7,15 +7,17 @@ import type { FormValues } from "@/types/Ui";
 import type { Step } from "@/app/components/forms/formStepper";
 import { useTripForm } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { SupabaseTripsRepository } from "../data/SupabaseTripsRepository";
 import { MyTripsUseCase } from "../application/MyTripsUseCase";
-import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
+import { tripListingToFormValues } from "@/app/shared/listingFormMappers";
 import { CreateTripForm } from "./CreateTripForm";
 import TripFormStepSidebar from "./TripFormStepSidebar";
 import Spinner from "@/app/components/Spinner";
 
 export default function PostTripPage() {
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const { showSupabaseError } = useUniversalModal();
   const tripRepo = useMemo(() => new SupabaseTripsRepository(), []);
   const tripByIdUseCase = useMemo(
@@ -37,34 +39,22 @@ export default function PostTripPage() {
 
   useEffect(() => {
     if (mode !== "edit" || !id) {
+      setInitialFormValues(undefined);
       setLoadingEdit(false);
       return;
     }
 
+    if (!user?.id) return;
+
     let cancelled = false;
+    setLoadingEdit(true);
 
     (async () => {
       try {
-        const trips = await tripByIdUseCase.execute(id);
+        const trips = await tripByIdUseCase.execute(user.id, id);
         if (cancelled || trips.length !== 1) return;
 
-        const data = trips[0];
-        setInitialFormValues({
-          id: data.id,
-          originCountry: data.route.originCountry,
-          ...toOriginCityFormFields(
-            data.route.originCity,
-            data.route.originCityIsCustom,
-          ),
-          destinationCountry: data.route.destinationCountry,
-          destinationCity: data.route.destinationCity,
-          goodsCategoryIds: data.goodsCategory.map((category) => category.id),
-          itemDescriptions: [],
-          weight: data.weightKg,
-          pricePerKg: data.pricePerKg,
-          senderId: data.user.id ?? "",
-          departureDate: data.departDate,
-        });
+        setInitialFormValues(tripListingToFormValues(trips[0]));
       } catch (err) {
         if (!cancelled) showSupabaseError(err);
       } finally {
@@ -75,7 +65,7 @@ export default function PostTripPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, mode, showSupabaseError, tripByIdUseCase]);
+  }, [id, mode, showSupabaseError, tripByIdUseCase, user?.id]);
 
   const {
     selectedIds,
@@ -102,6 +92,8 @@ export default function PostTripPage() {
       ? "Update your listing so senders see accurate trip details."
       : "Share your route, set your rate, and get matched with senders on your trip.";
 
+  const showForm = mode === "create" || !!initialFormValues;
+
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen py-6 sm:py-10">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -126,7 +118,7 @@ export default function PostTripPage() {
           </div>
         </div>
 
-        {loadingEdit ? (
+        {loadingEdit || !showForm ? (
           <Card
             enableHover={false}
             className="flex min-h-[320px] items-center justify-center"

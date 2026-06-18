@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type { SvgIconComponent } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import { toflag } from "@/app/Mapper";
@@ -11,6 +10,14 @@ import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import { FIXED_DESTINATION_COUNTRY } from "@/app/shared/locations/fixedDestination";
 import SvgIcon from "@/components/ui/SvgIcon";
 import CustomText from "@/components/ui/CustomText";
+import { CategoryChipList } from "@/app/components/CategoryChip";
+import LineDivider from "@/app/components/LineDivider";
+import {
+  FormReviewSection,
+  FormReviewPrimaryValue,
+  FormReviewValue,
+} from "@/app/components/forms/FormReviewSection";
+import type { Step } from "@/app/components/forms/formStepper";
 import { format, isValid, parseISO } from "date-fns";
 
 type TripFormReviewProps = {
@@ -23,6 +30,7 @@ type TripFormReviewProps = {
   goodsCategory: GoodsCategory[];
   weight: number;
   pricePerKg: number;
+  onEditStep?: (step: Step) => void;
 };
 
 function formatOriginCity(city: string, customCity: string): string {
@@ -50,6 +58,7 @@ export default function TripFormReview({
   goodsCategory,
   weight,
   pricePerKg,
+  onEditStep,
 }: TripFormReviewProps) {
   const categoryNames = goodsCategory
     .filter((c) => selectedIds.includes(c.id))
@@ -60,70 +69,76 @@ export default function TripFormReview({
   const destination =
     destinationCountry?.trim() || FIXED_DESTINATION_COUNTRY;
   const priceLabel = `${getCurrencySymbolByCountry(originCountry)}${Number.isFinite(pricePerKg) ? pricePerKg : 0}`;
+  const editStep = (step: Step) => onEditStep?.(step);
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-neutral-50/50 p-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
-        <ReviewSection label="Origin">
+        <FormReviewSection label="Origin">
           <LocationValue
             flag={originFlag}
             primary={originLabel}
             secondary={originCountry || undefined}
           />
-        </ReviewSection>
+        </FormReviewSection>
 
-        <ReviewSection label="Destination">
+        <FormReviewSection
+          label="Destination"
+          onEdit={onEditStep ? () => editStep(1) : undefined}
+        >
           <LocationValue flag={META_ICONS.zimFlag} primary={destination} />
-        </ReviewSection>
+        </FormReviewSection>
       </div>
 
-      <ReviewSection label="Departure">
-        <ReviewValue>{formatDepartureDate(departureDate)}</ReviewValue>
-      </ReviewSection>
+      <LineDivider heightClass="my-0" />
 
-      <ReviewSection label="Items you carry">
+      <FormReviewSection
+        label="Departure"
+        onEdit={onEditStep ? () => editStep(1) : undefined}
+      >
+        <FormReviewPrimaryValue>{formatDepartureDate(departureDate)}</FormReviewPrimaryValue>
+      </FormReviewSection>
+
+      <LineDivider heightClass="my-0" />
+
+      <FormReviewSection
+        label="Items you carry"
+        onEdit={onEditStep ? () => editStep(2) : undefined}
+      >
         {categoryNames.length > 0 ? (
-          <ul className="flex flex-wrap gap-2">
-            {categoryNames.map((name) => (
-              <li
-                key={name}
-                className="rounded-full bg-white px-3 py-1 text-xs font-medium text-ink-primary border border-neutral-200"
-              >
-                {name}
-              </li>
-            ))}
-          </ul>
+          <CategoryChipList items={categoryNames} />
         ) : (
-          <ReviewValue>—</ReviewValue>
+          <FormReviewValue>—</FormReviewValue>
         )}
-      </ReviewSection>
+      </FormReviewSection>
+
+      <LineDivider heightClass="my-0" />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <ReviewSection label="Available space">
-          <ReviewValue>{weight} Kg</ReviewValue>
-        </ReviewSection>
-        <ReviewSection label="Price per kg">
-          <ReviewValue>{priceLabel}</ReviewValue>
-        </ReviewSection>
+        <FormReviewSection label="Available space">
+          <FormReviewPrimaryValue>{weight} Kg</FormReviewPrimaryValue>
+        </FormReviewSection>
+        <FormReviewSection
+          label="Price per kg"
+          onEdit={onEditStep ? () => editStep(2) : undefined}
+        >
+          <FormReviewPrimaryValue textSize="md">{priceLabel}</FormReviewPrimaryValue>
+        </FormReviewSection>
       </div>
 
+      <LineDivider heightClass="my-0" />
+
       <div className="rounded-lg border border-green-100 bg-green-50/80 px-4 py-3">
-        <CustomText
-          as="p"
-          textSize="xs"
-          textVariant="label"
-          className="mb-1 whitespace-nowrap"
-        >
-          Potential earnings
-        </CustomText>
-        <CustomText
-          as="p"
-          textSize="sm"
-          textVariant="success"
-          className="font-semibold text-green-700"
-        >
-          Up to {formatCurrencyByCountry(originCountry, maxEarnings)}
-        </CustomText>
+        <FormReviewSection label="Potential earnings" className="mb-0">
+          <CustomText
+            as="p"
+            textSize="sm"
+            textVariant="success"
+            className="font-semibold text-green-700"
+          >
+            Up to {formatCurrencyByCountry(originCountry, maxEarnings)}
+          </CustomText>
+        </FormReviewSection>
       </div>
     </div>
   );
@@ -141,35 +156,10 @@ function LocationValue({
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
       {flag ? <SvgIcon size="xs" Icon={flag} /> : null}
-      <ReviewValue>
+      <FormReviewPrimaryValue>
         {primary}
         {secondary ? `, ${secondary}` : ""}
-      </ReviewValue>
+      </FormReviewPrimaryValue>
     </span>
-  );
-}
-
-function ReviewSection({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <CustomText as="p" textSize="xs" textVariant="label" className="whitespace-nowrap">
-        {label}
-      </CustomText>
-      {children}
-    </div>
-  );
-}
-
-function ReviewValue({ children }: { children: ReactNode }) {
-  return (
-    <CustomText as="p" textSize="sm" className="font-medium text-ink-primary">
-      {children}
-    </CustomText>
   );
 }

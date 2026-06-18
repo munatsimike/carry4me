@@ -6,14 +6,14 @@ import type { FormValues } from "@/types/Ui";
 import { useSearchParams } from "react-router-dom";
 import { SupabaseParcelRepository } from "../data/SupabaseParcelRepository";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { MyParcelsIdUseCase } from "../application/MyParcelsUseCase";
-import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
+import { parcelListingToFormValues } from "@/app/shared/listingFormMappers";
+import Spinner from "@/app/components/Spinner";
 
- 
- 
- export default function MobileParcelShaell(){
- 
- const [searchParams] = useSearchParams();
+export default function MobileParcelShaell() {
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
   const { showSupabaseError } = useUniversalModal();
   const parcelByIdUseCase = useMemo(
@@ -25,41 +25,38 @@ import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
   const id = searchParams.get("id");
 
   const [initialFormValues, setInitialFormValues] = useState<
-    FormValues | undefined>(undefined);
+    FormValues | undefined
+  >(undefined);
+  const [loadingEdit, setLoadingEdit] = useState(mode === "edit" && !!id);
 
   useEffect(() => {
-    if (mode === "edit" && id) {
-      async function fetchParcel() {
-        try {
-          const parcels = await parcelByIdUseCase.execute(id!);
-          if (parcels.length !== 1) return;
-          const data = parcels[0];
-          setInitialFormValues({
-            id: data.id,
-            originCountry: data.route.originCountry,
-            ...toOriginCityFormFields(
-              data.route.originCity,
-              data.route.originCityIsCustom,
-            ),
-            destinationCountry: data.route.destinationCountry,
-            destinationCity: data.route.destinationCity,
-            goodsCategoryIds: [],
-            itemDescriptions: [],
-            weight: data.weightKg,
-            pricePerKg: data.pricePerKg,
-            confirmNoProhibitedItems: false,
-            understandTravelerInspection: false,
-            senderId: data.user.id!,
-            departureDate: data.departDate,
-          });
-        } catch (err) {
-          showSupabaseError(err);
-        }
-      }
-
-      fetchParcel();
+    if (mode !== "edit" || !id) {
+      setInitialFormValues(undefined);
+      setLoadingEdit(false);
+      return;
     }
-  }, [mode, id]);
+
+    if (!user?.id) return;
+
+    let cancelled = false;
+    setLoadingEdit(true);
+
+    (async () => {
+      try {
+        const parcels = await parcelByIdUseCase.execute(user.id, id);
+        if (cancelled || parcels.length !== 1) return;
+        setInitialFormValues(parcelListingToFormValues(parcels[0]));
+      } catch (err) {
+        if (!cancelled) showSupabaseError(err);
+      } finally {
+        if (!cancelled) setLoadingEdit(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, mode, parcelByIdUseCase, showSupabaseError, user?.id]);
 
   const {
     selectedIds,
@@ -75,6 +72,16 @@ import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
     onSubmit,
     handleSubmit,
   } = useParcelForm({ initialFormValues, mode });
+
+  if (loadingEdit || (mode === "edit" && !initialFormValues)) {
+    return (
+      <MobileForm submit={() => undefined}>
+        <div className="flex min-h-[240px] items-center justify-center">
+          <Spinner />
+        </div>
+      </MobileForm>
+    );
+  }
 
   const content = (
     <CreateParcelForm

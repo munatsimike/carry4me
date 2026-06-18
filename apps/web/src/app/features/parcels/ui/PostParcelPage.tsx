@@ -7,16 +7,17 @@ import type { FormValues } from "@/types/Ui";
 import type { Step } from "@/app/components/forms/formStepper";
 import useParcelForm from "@/app/shared/Authentication/UI/hooks/useParcelForm";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { SupabaseParcelRepository } from "../data/SupabaseParcelRepository";
 import { MyParcelsIdUseCase } from "../application/MyParcelsUseCase";
-import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
+import { parcelListingToFormValues } from "@/app/shared/listingFormMappers";
 import CreateParcelForm from "./CreateParcelForm";
 import ParcelFormStepSidebar from "./ParcelFormStepSidebar";
-import { normalizeGoodsItem } from "@/app/components/GoodsManifestTable";
 import Spinner from "@/app/components/Spinner";
 
 export default function PostParcelPage() {
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const { showSupabaseError } = useUniversalModal();
   const parcelRepo = useMemo(() => new SupabaseParcelRepository(), []);
   const parcelByIdUseCase = useMemo(
@@ -38,37 +39,22 @@ export default function PostParcelPage() {
 
   useEffect(() => {
     if (mode !== "edit" || !id) {
+      setInitialFormValues(undefined);
       setLoadingEdit(false);
       return;
     }
 
+    if (!user?.id) return;
+
     let cancelled = false;
+    setLoadingEdit(true);
 
     (async () => {
       try {
-        const parcels = await parcelByIdUseCase.execute(id);
+        const parcels = await parcelByIdUseCase.execute(user.id, id);
         if (cancelled || parcels.length !== 1) return;
 
-        const data = parcels[0];
-        setInitialFormValues({
-          id: data.id,
-          originCountry: data.route.originCountry,
-          ...toOriginCityFormFields(
-            data.route.originCity,
-            data.route.originCityIsCustom,
-          ),
-          destinationCountry: data.route.destinationCountry,
-          destinationCity: data.route.destinationCity,
-          goodsCategoryIds: data.goodsCategory.map((category) => category.id),
-          itemDescriptions: data.items.length
-            ? data.items.map((item) => normalizeGoodsItem(item))
-            : [{ quantity: 1, description: "", size: "", condition: "new" as const }],
-          weight: data.weightKg,
-          pricePerKg: data.pricePerKg,
-          confirmNoProhibitedItems: false,
-          understandTravelerInspection: false,
-          senderId: data.user.id ?? "",
-        });
+        setInitialFormValues(parcelListingToFormValues(parcels[0]));
       } catch (err) {
         if (!cancelled) showSupabaseError(err);
       } finally {
@@ -79,7 +65,7 @@ export default function PostParcelPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, mode, parcelByIdUseCase, showSupabaseError]);
+  }, [id, mode, parcelByIdUseCase, showSupabaseError, user?.id]);
 
   const {
     selectedIds,
@@ -106,6 +92,8 @@ export default function PostParcelPage() {
       ? "Update your listing so travelers see accurate parcel details."
       : "List your parcel, set your price, and get matched with travelers on your route.";
 
+  const showForm = mode === "create" || !!initialFormValues;
+
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen py-6 sm:py-10">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -130,7 +118,7 @@ export default function PostParcelPage() {
           </div>
         </div>
 
-        {loadingEdit ? (
+        {loadingEdit || !showForm ? (
           <Card enableHover={false} className="flex min-h-[320px] items-center justify-center">
             <Spinner />
           </Card>

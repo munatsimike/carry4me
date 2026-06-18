@@ -10,5 +10,6 @@ export type TripStatuses = (typeof TRIPSTATUSES)[keyof typeof TRIPSTATUSES];
 export interface TripListing extends Listing {
   departDate: string;
   arriveDate?: string;
- 
+  /** Total trip capacity — used when prefilling the edit form. */
+  capacityKg?: number;
 }

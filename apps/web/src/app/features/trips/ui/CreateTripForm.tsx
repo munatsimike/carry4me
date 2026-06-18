@@ -1,5 +1,4 @@
 import LineDivider from "@/app/components/LineDivider";
-import { Button } from "@/components/ui/Button";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { PriceField } from "../../dashboard/components/PriceField";
@@ -29,9 +28,11 @@ import type {
 
 import type { FormMode } from "@/types/Ui";
 import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
 import TripFormReview from "./TripFormReview";
 import { tripStep1Fields, tripStep2Fields } from "./tripFormSteps";
+import { FormStepActions } from "@/app/components/forms/FormStepActions";
 
 const stepMotion = {
   initial: { opacity: 0, x: 12 },
@@ -101,6 +102,12 @@ export function CreateTripForm({
 
   const dividerHeight = "my-0";
   const isEditMode = mode === "edit";
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const handleCancel = () => {
+    const returnTo = searchParams.get("returnTo");
+    navigate(returnTo ?? "/my/trips");
+  };
 
   const goNextFromStep1 = async () => {
     const ok = await trigger([...tripStep1Fields], { shouldFocus: true });
@@ -156,17 +163,11 @@ export function CreateTripForm({
               maxFutureMonths={12}
             />
             <LineDivider heightClass={dividerHeight} />
-            <div className="flex justify-end">
-              <Button
-                className="w-full"
-                type="button"
-                variant="primary"
-                onClick={goNextFromStep1}
-                size={"md"}
-              >
-                Next
-              </Button>
-            </div>
+            <FormStepActions
+              primaryLabel="Next"
+              onPrimary={goNextFromStep1}
+              onCancel={isEditMode ? handleCancel : undefined}
+            />
           </motion.div>
         )}
 
@@ -221,7 +222,7 @@ export function CreateTripForm({
               </div>
             </div>
             <LineDivider heightClass={dividerHeight} />
-            <StepActions
+            <FormStepActions
               primaryLabel={isEditMode ? undefined : "Review"}
               onPrimary={goNextFromStep2}
               submitLabel={
@@ -233,6 +234,7 @@ export function CreateTripForm({
               }
               isSubmitting={isSubmitting}
               showSubmit={isEditMode}
+              onCancel={isEditMode ? handleCancel : undefined}
             />
           </motion.div>
         )}
@@ -253,9 +255,9 @@ export function CreateTripForm({
               goodsCategory={goodsCategory}
               weight={weightValue}
               pricePerKg={priceValue}
+              onEditStep={goToStep}
             />
-            <LineDivider heightClass={dividerHeight} />
-            <StepActions
+            <FormStepActions
               submitLabel={isSubmitting ? "Posting..." : "Post trip"}
               isSubmitting={isSubmitting}
               showSubmit
@@ -263,49 +265,6 @@ export function CreateTripForm({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-function StepActions({
-  primaryLabel,
-  onPrimary,
-  submitLabel,
-  isSubmitting,
-  showSubmit,
-}: {
-  primaryLabel?: string;
-  onPrimary?: () => void;
-  submitLabel?: string;
-  isSubmitting?: boolean;
-  showSubmit?: boolean;
-}) {
-  return (
-    <div className="flex flex-col sm:flex-row gap-3">
-      {showSubmit ? (
-        <Button
-          className="w-full flex-1"
-          type="submit"
-          variant="primary"
-          disabled={isSubmitting}
-          size={"md"}
-        >
-          {submitLabel}
-        </Button>
-      ) : (
-        primaryLabel &&
-        onPrimary && (
-          <Button
-            className="w-full flex-1"
-            type="button"
-            variant="primary"
-            onClick={onPrimary}
-            size={"md"}
-          >
-            {primaryLabel}
-          </Button>
-        )
-      )}
     </div>
   );
 }

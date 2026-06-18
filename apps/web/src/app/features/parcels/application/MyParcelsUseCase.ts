@@ -7,7 +7,10 @@ export class MyParcelsIdUseCase {
     this.repo = repo;
   }
 
-  async execute(userId: string): Promise<ParcelListing[]> {
-    return await this.repo.parcelsById(userId);
+  async execute(
+    userId: string,
+    parcelId?: string,
+  ): Promise<ParcelListing[]> {
+    return await this.repo.parcelsById(userId, parcelId);
   }
 }

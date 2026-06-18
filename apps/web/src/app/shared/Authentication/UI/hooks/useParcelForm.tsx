@@ -257,16 +257,19 @@ export default function useParcelForm({
 
   useEffect(() => {
     if (mode === "edit" && initialFormValues) {
-      reset({
-        ...initialFormValues,
-        itemDescriptions: initialFormValues.itemDescriptions.map((item) =>
-          normalizeGoodsItem(item),
-        ),
-        confirmNoProhibitedItems:
-          initialFormValues.confirmNoProhibitedItems ?? false,
-        understandTravelerInspection:
-          initialFormValues.understandTravelerInspection ?? false,
-      });
+      reset(
+        {
+          ...initialFormValues,
+          itemDescriptions: initialFormValues.itemDescriptions.map((item) =>
+            normalizeGoodsItem(item),
+          ),
+          confirmNoProhibitedItems:
+            initialFormValues.confirmNoProhibitedItems ?? false,
+          understandTravelerInspection:
+            initialFormValues.understandTravelerInspection ?? false,
+        },
+        { keepDefaultValues: false },
+      );
       return;
     }
     if (mode === "create") {

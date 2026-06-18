@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   type Control,
   type FieldErrors,
@@ -15,7 +16,6 @@ import {
   type Step,
 } from "@/app/components/forms/formStepper";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button } from "@/components/ui/Button";
 import { Package } from "lucide-react";
 import LineDivider from "@/app/components/LineDivider";
 import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
@@ -31,6 +31,7 @@ import {
   parcelStep2Fields,
   parcelStep3Fields,
 } from "./parcelFormSteps";
+import { FormStepActions } from "@/app/components/forms/FormStepActions";
 
 export type ParcelFormMode = "edit" | "create";
 
@@ -96,6 +97,12 @@ export default function CreateParcelForm({
   const { goodsCategory } = useGoodsCategory();
   const isEditMode = mode === "edit";
   const isPageVariant = variant === "page";
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const handleCancel = () => {
+    const returnTo = searchParams.get("returnTo");
+    navigate(returnTo ?? "/my/parcels");
+  };
 
   const goToStep = (next: Step) => {
     if (controlledStep === undefined) setInternalStep(next);
@@ -170,17 +177,11 @@ export default function CreateParcelForm({
               }
             />
             <LineDivider heightClass={dividerHeight} />
-            <div className="flex justify-end">
-              <Button
-                className="w-full"
-                type="button"
-                variant="primary"
-                onClick={goNextFromStep1}
-                size={"md"}
-              >
-                Next
-              </Button>
-            </div>
+            <FormStepActions
+              primaryLabel="Next"
+              onPrimary={goNextFromStep1}
+              onCancel={isEditMode ? handleCancel : undefined}
+            />
           </motion.div>
         )}
 
@@ -197,9 +198,10 @@ export default function CreateParcelForm({
               errors={errors}
             />
             <LineDivider heightClass={dividerHeight} />
-            <StepActions
+            <FormStepActions
               primaryLabel="Next"
               onPrimary={goNextFromStep2}
+              onCancel={isEditMode ? handleCancel : undefined}
             />
           </motion.div>
         )}
@@ -227,7 +229,7 @@ export default function CreateParcelForm({
                 <ParcelReviewConfirmations register={register} errors={errors} />
               </>
             ) : null}
-            <StepActions
+            <FormStepActions
               primaryLabel={isEditMode ? undefined : "Review"}
               onPrimary={goNextFromStep3}
               submitLabel={
@@ -239,6 +241,7 @@ export default function CreateParcelForm({
               }
               isSubmitting={isSubmitting}
               showSubmit={isEditMode}
+              onCancel={isEditMode ? handleCancel : undefined}
             />
           </motion.div>
         )}
@@ -259,10 +262,10 @@ export default function CreateParcelForm({
               goodsCategory={goodsCategory}
               weight={weightValue}
               pricePerKg={priceValue}
+              onEditStep={goToStep}
             />
             <ParcelReviewConfirmations register={register} errors={errors} />
-            <LineDivider heightClass={dividerHeight} />
-            <StepActions
+            <FormStepActions
               submitLabel={isSubmitting ? "Posting..." : "Post parcel"}
               isSubmitting={isSubmitting}
               showSubmit
@@ -270,49 +273,6 @@ export default function CreateParcelForm({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-function StepActions({
-  primaryLabel,
-  onPrimary,
-  submitLabel,
-  isSubmitting,
-  showSubmit,
-}: {
-  primaryLabel?: string;
-  onPrimary?: () => void;
-  submitLabel?: string;
-  isSubmitting?: boolean;
-  showSubmit?: boolean;
-}) {
-  return (
-    <div className="flex flex-col sm:flex-row gap-3">
-      {showSubmit ? (
-        <Button
-          className="w-full flex-1"
-          type="submit"
-          variant="primary"
-          disabled={isSubmitting}
-          size={"md"}
-        >
-          {submitLabel}
-        </Button>
-      ) : (
-        primaryLabel &&
-        onPrimary && (
-          <Button
-            className="w-full flex-1"
-            type="button"
-            variant="primary"
-            onClick={onPrimary}
-            size={"md"}
-          >
-            {primaryLabel}
-          </Button>
-        )
-      )}
     </div>
   );
 }
