@@ -26,6 +26,7 @@ import { toFriendlyErrorMessage } from "../application/normalizeSupabaseError";
 import { toEmailOtpLoginErrorMessage } from "../application/emailOtpLoginErrors";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { resolveAuthenticatedLandingPath } from "../application/postAuthNavigation";
+import { usePasskeyPrompt } from "./PasskeyPromptProvider";
 
 type SignInTab = "passkey" | "phone" | "email";
 
@@ -54,6 +55,7 @@ export function SignInModal() {
     setLoading: setPhoneLoading,
   } = usePhoneVerification();
   const { refreshProfile, user } = useAuth();
+  const { requestPasskeyPromptCheck } = usePasskeyPrompt();
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const sendOTPUseCase = useMemo(() => new SendPhoneOTPUseCase(authRepo), [authRepo]);
 
@@ -128,6 +130,7 @@ export function SignInModal() {
       await signInWithPasskey();
       closeSignInModal();
       await refreshProfile();
+      requestPasskeyPromptCheck();
       navigate(await resolveAuthenticatedLandingPath(state.redirectTo), {
         replace: true,
       });

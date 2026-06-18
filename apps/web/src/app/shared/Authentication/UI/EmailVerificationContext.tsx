@@ -155,7 +155,7 @@ export function EmailVerificationProvider({
               >
                 {isCheckEmail
                   ? isProfileSaved
-                    ? "Profile saved"
+                    ? "Profile saved successfully"
                     : "Check your email"
                   : "Verify your email"}
               </CustomText>
@@ -177,11 +177,27 @@ export function EmailVerificationProvider({
                 )
               ) : (
                 <CustomText textVariant="secondary" textSize="sm">
-                  {isCheckEmail
-                    ? isProfileSaved
-                      ? "Your profile has been saved. We sent a verification link to your email address. Please verify it before posting parcels or trips."
-                      : "We sent a verification link to your email. Please verify it before posting parcels or trips."
-                    : ""}
+                  {isCheckEmail ? (
+                    isProfileSaved ? (
+                      checkEmailModal?.email ? (
+                        <>
+                          Your profile has been saved. We sent a verification
+                          link to{" "}
+                          <span className="font-medium text-neutral-800">
+                            {checkEmailModal.email}
+                          </span>
+                          . Please verify your email before posting parcels or
+                          trips.
+                        </>
+                      ) : (
+                        "Your profile has been saved. We sent a verification link to your email address. Please verify it before posting parcels or trips."
+                      )
+                    ) : (
+                      "We sent a verification link to your email. Please verify it before posting parcels or trips."
+                    )
+                  ) : (
+                    ""
+                  )}
                 </CustomText>
               )}
 

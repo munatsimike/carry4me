@@ -37,6 +37,48 @@ function requireBrowserPasskeySupport() {
   }
 }
 
+/** Whether we can offer passkey enrollment (less strict than sign-in support). */
+export function canOfferPasskeyEnrollment(): PasskeySupportCheck {
+  if (typeof window === "undefined") {
+    return {
+      supported: false,
+      reason: "window_unavailable",
+      detail: "Window object is not available.",
+    };
+  }
+
+  if (!window.isSecureContext) {
+    return {
+      supported: false,
+      reason: "insecure_context",
+      detail:
+        "Passkeys require a secure connection. Use https://, or open the app at http://localhost during local development.",
+    };
+  }
+
+  if (!("PublicKeyCredential" in window)) {
+    return {
+      supported: false,
+      reason: "webauthn_unavailable",
+      detail: "PublicKeyCredential is not available in this browser.",
+    };
+  }
+
+  const auth = supabase.auth as unknown as {
+    registerPasskey?: () => Promise<{ data: unknown; error: unknown }>;
+  };
+
+  if (!auth.registerPasskey) {
+    return {
+      supported: false,
+      reason: "passkey_api_unavailable",
+      detail: "Passkey enrollment API is not available in this app build.",
+    };
+  }
+
+  return { supported: true };
+}
+
 export async function checkPasskeyBrowserSupport(): Promise<PasskeySupportCheck> {
   if (typeof window === "undefined") {
     return {

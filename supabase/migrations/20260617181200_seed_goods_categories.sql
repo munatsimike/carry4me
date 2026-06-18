@@ -10,7 +10,7 @@ values
   ('beauty-perfumes', 'Beauty & Perfumes'),
   ('bags-accessories', 'Bags & Accessories'),
   ('household-items', 'Household Items'),
-  ('other', 'Other')
+  ('other', 'Miscellaneous')
 on conflict (slug) do update
 set name = excluded.name;
 

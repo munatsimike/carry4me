@@ -9,11 +9,13 @@ import { useSignInModal } from "../SignInModalContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { resolveAuthenticatedLandingPath } from "../application/postAuthNavigation";
+import { usePasskeyPrompt } from "./PasskeyPromptProvider";
 
 export function PhoneVerificationModal() {
   const { step, setStep, resetPhoneVerification } = usePhoneVerification();
   const { state, closeSignInModal } = useSignInModal();
   const { refreshProfile } = useAuth();
+  const { requestPasskeyPromptCheck } = usePasskeyPrompt();
   const navigate = useNavigate();
   const phoneOtpFlowRef = useRef<"signin" | "signup" | null>(null);
 
@@ -62,6 +64,7 @@ export function PhoneVerificationModal() {
 
     await refreshProfile({ silent: true });
     resetPhoneVerification();
+    requestPasskeyPromptCheck();
     navigate(await resolveAuthenticatedLandingPath(redirectTo), { replace: true });
   };
 

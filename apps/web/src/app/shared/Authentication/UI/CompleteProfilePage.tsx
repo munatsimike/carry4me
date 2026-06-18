@@ -64,9 +64,6 @@ import {
   lastNameSchema,
 } from "@/app/shared/validation/formValidation";
 import EmailVerificationBadge from "./EmailVerificationBadge";
-import { enrollPasskey, listPasskeys } from "../application/passkeyAuth";
-
-type PostSaveModalStep = "success" | "passkey";
 
 export const profileDetailsSchema = z.object({
   firstName: firstNameSchema,
@@ -143,18 +140,13 @@ export default function CompleteProfile() {
   const [showEmailVerificationBadge, setShowEmailVerificationBadge] = useState(
     false,
   );
-  const [postSaveModalStep, setPostSaveModalStep] =
-    useState<PostSaveModalStep | null>(null);
-  const [postSaveVerificationEmail, setPostSaveVerificationEmail] = useState<
-    string | null
-  >(null);
-  const [passkeyPromptLoading, setPasskeyPromptLoading] = useState(false);
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const signupUseCase = useMemo(() => new SignUpUseCase(authRepo), [authRepo]);
   const { user, profile, refreshProfile } = useAuth();
   const { openSignInModal } = useSignInModal();
   const { toast } = useToast();
-  const { setPostProfileSaveFlowActive } = useEmailVerification();
+  const { setPostProfileSaveFlowActive, openCheckEmailModal } =
+    useEmailVerification();
   const navigate = useNavigate();
   const isMobile = useMediaQuery();
   const {
@@ -263,43 +255,7 @@ export default function CompleteProfile() {
 
   const finishProfileSaveFlow = () => {
     setPostProfileSaveFlowActive(false);
-    setPostSaveModalStep(null);
-    setPostSaveVerificationEmail(null);
     navigate(getDefaultAuthedPath(profile), { replace: true });
-  };
-
-  const handlePostSaveSuccessContinue = async () => {
-    try {
-      const existingPasskeys = await listPasskeys();
-      if (existingPasskeys.length === 0) {
-        setPostSaveModalStep("passkey");
-        return;
-      }
-    } catch (passkeyListError) {
-      console.error(
-        "[Passkey] Could not list existing passkeys after profile completion:",
-        passkeyListError,
-      );
-    }
-
-    finishProfileSaveFlow();
-  };
-
-  const handleMaybeLaterPasskey = () => {
-    finishProfileSaveFlow();
-  };
-
-  const handleSetPasskey = async () => {
-    setPasskeyPromptLoading(true);
-    try {
-      await enrollPasskey();
-      toast("Passkey successfully added.", { variant: "success" });
-      finishProfileSaveFlow();
-    } catch (passkeyError) {
-      showSupabaseError(passkeyError);
-    } finally {
-      setPasskeyPromptLoading(false);
-    }
   };
 
   const onSubmit = async (values: CompleteProfileFields) => {
@@ -350,19 +306,25 @@ export default function CompleteProfile() {
       if (shouldSendVerification) {
         try {
           await sendEmailVerification();
-          setPostSaveVerificationEmail(email);
+          openCheckEmailModal({
+            email,
+            source: "profile-saved",
+            onDismiss: finishProfileSaveFlow,
+          });
         } catch (verificationError) {
           console.error(
             "Failed to send verification email:",
             verificationError,
           );
-          setPostSaveVerificationEmail(null);
+          toast("Profile saved, but we could not send a verification email.", {
+            variant: "warning",
+          });
+          finishProfileSaveFlow();
         }
       } else {
-        setPostSaveVerificationEmail(null);
+        toast("Profile saved successfully.", { variant: "success" });
+        finishProfileSaveFlow();
       }
-
-      setPostSaveModalStep("success");
     } catch (err) {
       setPostProfileSaveFlowActive(false);
 
@@ -434,96 +396,6 @@ export default function CompleteProfile() {
               await refreshProfile();
             }}
           />
-        )}
-        {postSaveModalStep && (
-          <CustomModal
-            onClose={() => {
-              if (postSaveModalStep === "success") {
-                void handlePostSaveSuccessContinue();
-              } else {
-                handleMaybeLaterPasskey();
-              }
-            }}
-            width="lg"
-          >
-            {postSaveModalStep === "success" ? (
-              <div className="flex flex-col gap-4">
-                <CustomText
-                  as="h2"
-                  textSize="lg"
-                  textVariant="primary"
-                  className="font-medium"
-                >
-                  Profile saved successfully
-                </CustomText>
-
-                <CustomText textSize="sm" textVariant="secondary">
-                  {postSaveVerificationEmail ? (
-                    <>
-                      Your profile has been saved. We sent a verification link
-                      to{" "}
-                      <span className="font-medium text-neutral-800">
-                        {postSaveVerificationEmail}
-                      </span>
-                      . Please verify your email before posting parcels or
-                      trips.
-                    </>
-                  ) : (
-                    "Your profile has been saved."
-                  )}
-                </CustomText>
-
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={() => void handlePostSaveSuccessContinue()}
-                  >
-                    Continue
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <CustomText
-                  as="h2"
-                  textSize="lg"
-                  textVariant="primary"
-                  className="font-medium"
-                >
-                  Secure your account with a passkey
-                </CustomText>
-
-                <CustomText textSize="sm" textVariant="secondary">
-                  Passkeys let you sign in faster with Face ID, fingerprint,
-                  Windows Hello, or your device PIN.
-                </CustomText>
-
-                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={passkeyPromptLoading}
-                    onClick={handleMaybeLaterPasskey}
-                  >
-                    Maybe later
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    isBusy={passkeyPromptLoading}
-                    disabled={passkeyPromptLoading}
-                    onClick={() => void handleSetPasskey()}
-                  >
-                    Set passkey
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CustomModal>
         )}
       </Card>
     </DefaultContainer>
