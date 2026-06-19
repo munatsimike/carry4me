@@ -56,13 +56,13 @@ export function ListingCard<T extends Listing>({
     ? formatTripAcceptedCategoryLabels(listing.goodsCategory)
     : listing.goodsCategory.map((x: GoodsCategory) => x.name);
   const borderClass = isTripListing
-    ? "border border-primary-200"
-    : "border border-purple-200";
+    ? "border border-primary-200 hover:border-primary-300"
+    : "border border-orange-200 hover:border-orange-300";
   const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
   const hoverBackgroundClass = isDisplayMode
     ? isTripListing
       ? "hover:bg-blue-50"
-      : "hover:bg-purple-50"
+      : "hover:bg-orange-50"
     : "";
 
   const handleToggleLike = () => {

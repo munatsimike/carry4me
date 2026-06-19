@@ -1,5 +1,13 @@
 type CircleSize = "sm" | "md" | "lg" | "xl"| "xxl";
-export type CirleBgColor = "success" | "secondary" | "neutral" | "primary" | "onDark"| "transparent"|"tonal";
+export type CirleBgColor =
+  | "success"
+  | "secondary"
+  | "neutral"
+  | "primary"
+  | "parcel"
+  | "onDark"
+  | "transparent"
+  | "tonal";
 
 type CirleBadgeProps = {
   size?: CircleSize;
@@ -30,9 +38,10 @@ export function CircleBadge({
     secondary: "bg-secondary-100",
     neutral: "bg-neutral-100",
     primary: "bg-primary-100",
+    parcel: "bg-orange-100",
     onDark: "bg-white",
     transparent: "bg-transparent",
-    tonal:"bg-slate-200"
+    tonal: "bg-slate-200",
   };
   return (
     <span

@@ -28,6 +28,7 @@ import {
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
+import { cn } from "@/app/lib/cn";
 import { iconForActivity } from "./application/iconForActivity";
 import Greeting from "@/app/components/Greeting";
 
@@ -399,9 +400,13 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
         <ActionButton
           onClick={onPostTrip}
           btnText="Post a trip"
-          iconColor="onDark"
-          iconSize="lg"
+          btnVariant="ghost"
           icon={META_ICONS.planeFilled}
+          iconSize="lg"
+          textVariant="primary"
+          buttonClassName="border border-primary-200 bg-primary-50 shadow-sm hover:border-primary-300 hover:bg-primary-100 hover:shadow-md"
+          iconClassName="text-primary-600"
+          textClassName="text-primary-800"
         />
       </motion.div>
 
@@ -409,34 +414,46 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
         <ActionButton
           onClick={onPostParcel}
           btnText="Post a parcel"
-          btnVariant="secondary"
+          btnVariant="ghost"
+          icon={META_ICONS.parcelBox}
+          iconSize="lg"
           textVariant="primary"
+          buttonClassName="border border-orange-200 bg-orange-50 shadow-sm hover:border-orange-300 hover:bg-orange-100 hover:shadow-md"
+          iconClassName="text-orange-600"
+          textClassName="text-orange-900"
         />
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <Link to={"/travelers"}>
+        <Link to="/travelers" className="block w-full">
           <ActionButton
             btnText="Browse trips"
-            btnVariant="outline"
+            btnVariant="ghost"
+            icon={META_ICONS.planeIcon}
             iconColor="primary"
             iconSize="lg"
-            icon={META_ICONS.planeFilled}
-            showArrow
             textVariant="primary"
+            showArrow
+            buttonClassName="border border-primary-200 bg-primary-50 shadow-sm hover:border-primary-300 hover:bg-primary-100 hover:shadow-md"
+            iconClassName="text-primary-600"
+            textClassName="text-primary-800"
           />
         </Link>
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <Link to={"/parcels"}>
+        <Link to="/parcels" className="block w-full">
           <ActionButton
-            showArrow
             btnText="Browse parcels"
-            btnVariant="outline"
-            icon={META_ICONS.parcelBox}
-            iconColor="primary"
+            btnVariant="ghost"
+            icon={META_ICONS.parcelBoxOutlined}
+            iconColor="dark"
+            iconSize="lg"
             textVariant="primary"
+            showArrow
+            buttonClassName="border border-orange-200 bg-orange-50 shadow-sm hover:border-orange-300 hover:bg-orange-100 hover:shadow-md"
+            iconClassName="text-orange-600"
+            textClassName="text-orange-900"
           />
         </Link>
       </motion.div>
@@ -453,6 +470,9 @@ type ActionButtonsProps = {
   btnText: string;
   iconSize?: "lg" | "xl";
   icon?: SvgIconComponent;
+  buttonClassName?: string;
+  iconClassName?: string;
+  textClassName?: string;
   onClick?: () => void;
 };
 
@@ -464,6 +484,9 @@ function ActionButton({
   iconSize = "xl",
   btnText,
   icon = META_ICONS.parcelBox,
+  buttonClassName,
+  iconClassName,
+  textClassName,
   onClick,
 }: ActionButtonsProps) {
   return (
@@ -471,19 +494,30 @@ function ActionButton({
       onClick={onClick ? () => onClick() : () => {}}
       variant={btnVariant}
       size={"xxl"}
+      className={cn("w-full", buttonClassName)}
       trailingIcon={
         showArrow && (
-          <SvgIcon size={"sm"} Icon={META_ICONS.arrowSmall} color="primary" />
+          <SvgIcon
+            size={"sm"}
+            Icon={META_ICONS.arrowSmall}
+            color="primary"
+            className={iconClassName}
+          />
         )
       }
     >
-      <span className="flex flex-col gap-1.5 items-center">
-        <SvgIcon color={iconColor} size={iconSize} Icon={icon} />
+      <span className="flex flex-col items-center gap-1.5">
+        <SvgIcon
+          color={iconColor}
+          size={iconSize}
+          Icon={icon}
+          className={iconClassName}
+        />
         <CustomText
           as="span"
           textVariant={textVariant}
           textSize="lg"
-          className="whitespace-nowrap pr-3"
+          className={cn("whitespace-nowrap pr-3", textClassName)}
         >
           {btnText}
         </CustomText>

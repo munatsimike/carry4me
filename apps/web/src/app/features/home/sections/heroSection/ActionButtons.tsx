@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/Button";
-import { CircleBadge } from "@/components/ui/CircleBadge";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import ArrowIcon from "@/assets/arrow.svg?react";
 import CustomText from "@/components/ui/CustomText";
+import { cn } from "@/app/lib/cn";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -36,35 +36,40 @@ export default function ActionButtons() {
       initial="hidden"
       animate="show"
     >
-      {/* Browse Parcels */}
       <motion.div variants={itemVariants} className="w-full">
-        <Link to={"/parcels"} className="w-full">
+        <Link to="/parcels" className="block w-full">
           <Button
-            className="w-full min-w-0 px-4"
+            className={cn(
+              "w-full min-w-0 border border-orange-200 bg-orange-50 px-4 shadow-sm",
+              "hover:border-orange-300 hover:bg-orange-100 hover:shadow-md",
+            )}
             subtitle={
               <CustomText
-                textVariant="onDark"
-                className="text-center leading-snug"
                 as="span"
                 textSize={subtitleSize}
+                className="text-center leading-snug text-orange-700"
               >
                 See what people need sent home.
               </CustomText>
             }
-            variant="primary"
+            variant="ghost"
             size={size}
             leadingIcon={
-              <CircleBadge size={size} bgColor="transparent">
-                <SvgIcon size="xxl" Icon={META_ICONS.parcelBox} color="onDark" />
-              </CircleBadge>
+              <SvgIcon
+                size="xl"
+                Icon={META_ICONS.parcelBox}
+                className="text-orange-600"
+              />
             }
-            trailingIcon={<SvgIcon size="sm" Icon={ArrowIcon} color="grey" />}
+            trailingIcon={
+              <SvgIcon size="sm" Icon={ArrowIcon} className="text-orange-500" />
+            }
           >
             <CustomText
               as="span"
               textSize={titleSize}
-              textVariant="onDark"
-              className="leading-snug"
+              textVariant="primary"
+              className="leading-snug text-orange-900"
             >
               Browse parcels
             </CustomText>
@@ -72,41 +77,40 @@ export default function ActionButtons() {
         </Link>
       </motion.div>
 
-      {/* Browse Trips */}
       <motion.div variants={itemVariants} className="w-full">
-        <Link to={"/travelers"} className="w-full">
+        <Link to="/travelers" className="block w-full">
           <Button
-            className="w-full min-w-0 px-4"
+            className={cn(
+              "w-full min-w-0 border border-primary-200 bg-primary-50 px-4 shadow-sm",
+              "hover:border-primary-300 hover:bg-primary-100 hover:shadow-md",
+            )}
             subtitle={
               <CustomText
-                className="text-center leading-snug"
-                textVariant="secondary"
                 as="span"
                 textSize={subtitleSize}
+                className="text-center leading-snug text-primary-700"
               >
                 See who is traveling home soon.
               </CustomText>
             }
-            variant="secondary"
+            variant="ghost"
             size={size}
             leadingIcon={
-              <CircleBadge size={size} bgColor="transparent">
-                <SvgIcon
-                  size="lg"
-                  Icon={META_ICONS.planeFilled}
-                  color="primary"
-                />
-              </CircleBadge>
+              <SvgIcon
+                size="xl"
+                Icon={META_ICONS.planeFilled}
+                className="text-primary-600"
+              />
             }
             trailingIcon={
-              <SvgIcon size="sm" Icon={ArrowIcon} color="neutral" />
+              <SvgIcon size="sm" Icon={ArrowIcon} className="text-primary-500" />
             }
           >
             <CustomText
               as="span"
               textSize={titleSize}
               textVariant="primary"
-              className="leading-snug"
+              className="leading-snug text-primary-800"
             >
               Browse trips
             </CustomText>

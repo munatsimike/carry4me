@@ -4,7 +4,7 @@ import type { InfoItem, InfoItemsProps, Tag } from "@/types/Ui";
 import SectionItem from "./SectionItem";
 import SvgIcon from "@/components/ui/SvgIcon";
 import SectionContainer from "./SectionContainer1";
-import { DEFAULT_VARIANT, tagToVariant } from "@/app/Mapper";
+import { cn } from "@/app/lib/cn";
 
 // Displays icon + text items for Safety and Benefits sections
 
@@ -20,7 +20,9 @@ export default function InfoList({ items }: InfoItemsProps) {
 }
 
 function InfoItems({ items, tag }: { items: InfoItem[]; tag: Tag }) {
-  const variant = tag ? tagToVariant[tag] : DEFAULT_VARIANT;
+  const isSender = tag === "sender";
+  const badgeBgColor = isSender ? "parcel" : "primary";
+  const iconClassName = isSender ? "text-orange-600" : "text-primary-600";
   const title = tag.substring(0, 1).toLocaleUpperCase() + tag.substring(1);
   return (
     <div>
@@ -40,11 +42,19 @@ function InfoItems({ items, tag }: { items: InfoItem[]; tag: Tag }) {
           <SectionItem
             key={index}
             icon={
-              <CircleBadge size="lg" bgColor={variant}>
+              <CircleBadge size="lg" bgColor={badgeBgColor}>
                 {item.Icon ? (
-                  <SvgIcon size="lg" Icon={item.Icon} color={variant} />
+                  <SvgIcon
+                    size="lg"
+                    Icon={item.Icon}
+                    className={iconClassName}
+                  />
                 ) : (
-                  <CustomText textVariant={variant} textSize="md">
+                  <CustomText
+                    as="span"
+                    textSize="md"
+                    className={cn("font-medium", iconClassName)}
+                  >
                     {index + 1}
                   </CustomText>
                 )}

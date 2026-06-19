@@ -1,3 +1,5 @@
+import { cn } from "@/app/lib/cn";
+
 export type ButtonVariant =
   | "primary"
   | "secondary"
@@ -70,7 +72,7 @@ export function Button({
     <button
       type={type}
       {...props}
-      className={`group ${base} ${sizes[size]} ${variants[variant]} ${className}`}
+      className={cn("group", base, sizes[size], variants[variant], className)}
     >
       <span
         className="pointer-events-none absolute inset-0 rounded-[inherit] bg-white/20 opacity-0
