@@ -10,15 +10,14 @@ export function CategoryChip({ children, className }: CategoryChipProps) {
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-[2px]",
+        "inline-flex shrink-0 rounded-full border border-[#334155]/15 bg-[#334155]/10 px-2 py-[2px]",
         className,
       )}
     >
       <CustomText
         as="span"
-        textVariant="tonal"
         textSize="xs"
-        className="leading-tight font-light"
+        className="leading-tight font-light text-[#475569]"
       >
         {children}
       </CustomText>
