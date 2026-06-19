@@ -3,6 +3,7 @@ import type { ListingTableProps } from "./ListingTable";
 import { motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
+import { formatTripAcceptedCategoryLabels } from "../../goods/domain/goodsCategoryConstants";
 import CardLabel from "@/app/components/card/CardLabel";
 import { MoveRight } from "lucide-react";
 import { Card } from "@/app/components/card/Card";
@@ -24,10 +25,10 @@ export function MobileListingCard<T extends Listing>({
         const formattedStatus =
           row.status.charAt(0).toUpperCase() +
           row.status.slice(1).toLowerCase();
-        const goodsCategories = row.goodsCategory.map(
-          (x: GoodsCategory) => x.name,
-        );
         const isTrip = row.type === "trip";
+        const goodsCategories = isTrip
+          ? formatTripAcceptedCategoryLabels(row.goodsCategory)
+          : row.goodsCategory.map((x: GoodsCategory) => x.name);
 
         return (
           <Card sizeClass="w-full" className="flex flex-col">

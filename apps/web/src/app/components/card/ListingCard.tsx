@@ -12,6 +12,7 @@ import CategoryRow from "../CategoryRow";
 import SendRequestBtn from "./SendRequestBtn";
 import { dateFormat, type CardMode } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
+import { formatTripAcceptedCategoryLabels } from "@/app/features/goods/domain/goodsCategoryConstants";
 import User from "./User";
 import { format } from "date-fns";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
@@ -45,16 +46,15 @@ export function ListingCard<T extends Listing>({
   onClick,
   toggleLike,
 }: ListingCardProps<T>) {
-  const goodsCategories = listing.goodsCategory.map(
-    (x: GoodsCategory) => x.name,
-  );
-
   const { user } = useAuth();
   const { toast } = useToast();
   const toggleFavourite = useToggleFavouriteMutation();
 
   const isDisplayMode = mode === "display";
   const isTripListing = listing.type === "trip";
+  const goodsCategories = isTripListing
+    ? formatTripAcceptedCategoryLabels(listing.goodsCategory)
+    : listing.goodsCategory.map((x: GoodsCategory) => x.name);
   const borderClass = isTripListing
     ? "border border-primary-200"
     : "border border-purple-200";

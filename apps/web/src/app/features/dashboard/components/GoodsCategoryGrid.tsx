@@ -1,8 +1,9 @@
 import { InlineRow } from "@/app/components/InlineRow";
 import ErrorText from "@/app/components/text/ErrorText";
 import CustomText from "@/components/ui/CustomText";
+import { isAllGoodsCategory } from "../../goods/domain/goodsCategoryConstants";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
-import { checkBox, checkBoxSvg } from "@/app/lib/cn";
+import { checkBox, checkBoxSvg, cn } from "@/app/lib/cn";
 
 export default function GoodsCategoryGrid({
   label,
@@ -10,14 +11,41 @@ export default function GoodsCategoryGrid({
   selectedIds,
   onChange,
   error,
+  includeAllOption = false,
 }: {
   label: string;
   error?: string;
   goods: GoodsCategory[];
   selectedIds: string[];
   onChange: (selectedIds: string[]) => void;
+  /** When true, selecting "All" clears other categories and vice versa. */
+  includeAllOption?: boolean;
 }) {
+  const allCategoryId = includeAllOption
+    ? goods.find(isAllGoodsCategory)?.id
+    : undefined;
+  const allSelected = Boolean(
+    allCategoryId && selectedIds.includes(allCategoryId),
+  );
+
   const toggle = (id: string, checked: boolean) => {
+    if (allCategoryId && id === allCategoryId) {
+      onChange(checked ? [allCategoryId] : []);
+      return;
+    }
+
+    if (allSelected) {
+      return;
+    }
+
+    if (allCategoryId && checked) {
+      onChange([
+        ...selectedIds.filter((selectedId) => selectedId !== allCategoryId),
+        id,
+      ]);
+      return;
+    }
+
     const next = checked
       ? [...selectedIds, id]
       : selectedIds.filter((x) => x !== id);
@@ -37,15 +65,24 @@ export default function GoodsCategoryGrid({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {goods.map((item) => {
             const checked = selectedIds.includes(item.id);
+            const isAllItem = allCategoryId === item.id;
+            const isDisabled = allSelected && !isAllItem;
+
             return (
               <label
                 key={item.id}
-                className="flex items-center gap-2 cursor-pointer select-none"
+                className={cn(
+                  "flex items-center gap-2 select-none",
+                  isDisabled
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer",
+                )}
               >
                 <span className="relative inline-flex">
                   <input
                     type="checkbox"
                     checked={checked}
+                    disabled={isDisabled}
                     onChange={(e) => toggle(item.id, e.target.checked)}
                     className={checkBox}
                   />
@@ -64,7 +101,11 @@ export default function GoodsCategoryGrid({
                   </svg>
                 </span>
 
-                <CustomText textVariant="primary" textSize="sm">
+                <CustomText
+                  textVariant="primary"
+                  textSize="sm"
+                  className={isDisabled ? "text-neutral-400" : undefined}
+                >
                   {item.name}
                 </CustomText>
               </label>

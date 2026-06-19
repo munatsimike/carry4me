@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   type Control,
@@ -22,6 +22,7 @@ import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
 import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useParcelForm";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
+import { isAllGoodsCategory } from "@/app/features/goods/domain/goodsCategoryConstants";
 import ParcelReviewConfirmations from "./ParcelReviewConfirmations";
 import ParcelFormReview from "./ParcelFormReview";
 import GoodsManifestFields from "./GoodsManifestFields";
@@ -95,6 +96,10 @@ export default function CreateParcelForm({
   const [internalStep, setInternalStep] = useState<Step>(1);
   const step = controlledStep ?? internalStep;
   const { goodsCategory } = useGoodsCategory();
+  const parcelGoodsCategories = useMemo(
+    () => goodsCategory.filter((category) => !isAllGoodsCategory(category)),
+    [goodsCategory],
+  );
   const isEditMode = mode === "edit";
   const isPageVariant = variant === "page";
   const navigate = useNavigate();
@@ -166,7 +171,7 @@ export default function CreateParcelForm({
             <GoodsCategoryGrid
               label="What items are you sending?"
               error={errors.goodsCategoryIds?.message}
-              goods={goodsCategory}
+              goods={parcelGoodsCategories}
               selectedIds={selectedIds}
               onChange={(next) =>
                 setValue("goodsCategoryIds", next, {

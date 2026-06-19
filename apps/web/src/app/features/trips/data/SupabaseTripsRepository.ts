@@ -231,14 +231,27 @@ export class SupabaseTripsRepository implements TripsRepository {
   ): Promise<string[] | null> {
     if (categories.length === 0) return null;
 
-    const { data, error, status } = await supabase
-      .from("trip_accepted_categories")
-      .select("trip_id, category:goods_categories!inner(name)")
-      .in("category.name", categories);
+    const [{ data: matchingData, error: matchingError, status: matchingStatus }, { data: allData, error: allError, status: allStatus }] =
+      await Promise.all([
+        supabase
+          .from("trip_accepted_categories")
+          .select("trip_id, category:goods_categories!inner(name)")
+          .in("category.name", categories),
+        supabase
+          .from("trip_accepted_categories")
+          .select("trip_id, category:goods_categories!inner(slug)")
+          .eq("category.slug", "all"),
+      ]);
 
-    throwIfSupabaseError(error, status);
+    throwIfSupabaseError(matchingError, matchingStatus);
+    throwIfSupabaseError(allError, allStatus);
 
-    return [...new Set((data ?? []).map((row) => row.trip_id))];
+    return [
+      ...new Set([
+        ...(matchingData ?? []).map((row) => row.trip_id),
+        ...(allData ?? []).map((row) => row.trip_id),
+      ]),
+    ];
   }
 
   private applyTripBrowseFilters(

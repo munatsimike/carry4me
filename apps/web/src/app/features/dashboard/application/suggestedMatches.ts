@@ -3,6 +3,7 @@ import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import { PARCELSTATUSES } from "@/app/features/parcels/domain/Parcel";
 import type { TripListing } from "@/app/features/trips/domain/Trip";
 import { TRIPSTATUSES } from "@/app/features/trips/domain/Trip";
+import { tripAcceptsAllCategories } from "@/app/features/goods/domain/goodsCategoryConstants";
 
 export type DashboardSuggestedMatches = {
   activeParcels: ParcelListing[];
@@ -90,6 +91,10 @@ function categoryKeys(category: { id: string; slug: string; name: string }) {
 
 /** At least one parcel category must be accepted on the trip (by id, slug, or name). */
 function categoriesMatch(parcel: ParcelListing, trip: TripListing) {
+  if (tripAcceptsAllCategories(trip.goodsCategory)) {
+    return true;
+  }
+
   if (parcel.goodsCategory.length === 0 || trip.goodsCategory.length === 0) {
     return true;
   }

@@ -11,6 +11,7 @@ import { FIXED_DESTINATION_COUNTRY } from "@/app/shared/locations/fixedDestinati
 import SvgIcon from "@/components/ui/SvgIcon";
 import CustomText from "@/components/ui/CustomText";
 import { CategoryChipList } from "@/app/components/CategoryChip";
+import { formatTripAcceptedCategoryLabels } from "@/app/features/goods/domain/goodsCategoryConstants";
 import LineDivider from "@/app/components/LineDivider";
 import {
   FormReviewSection,
@@ -60,9 +61,9 @@ export default function TripFormReview({
   pricePerKg,
   onEditStep,
 }: TripFormReviewProps) {
-  const categoryNames = goodsCategory
-    .filter((c) => selectedIds.includes(c.id))
-    .map((c) => c.name);
+  const categoryNames = formatTripAcceptedCategoryLabels(
+    goodsCategory.filter((category) => selectedIds.includes(category.id)),
+  );
   const maxEarnings = pricePerKg * weight;
   const originLabel = formatOriginCity(originCity, originCustomCity);
   const originFlag = toflag(originCountry);

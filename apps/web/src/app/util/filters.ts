@@ -1,6 +1,7 @@
 import type { CustomRange } from "@/types/Ui";
 import type { TripListing } from "../features/trips/domain/Trip";
 import type { Listing } from "../shared/Authentication/domain/Listing";
+import { tripAcceptsAllCategories } from "../features/goods/domain/goodsCategoryConstants";
 
 export function filterByCountryCity<T extends Listing>(
   city: string,
@@ -71,9 +72,15 @@ export function filterByGoodsCategory<T extends Listing>(
   goodsCategories: string[],
   listings: T[],
 ): T[] {
-  return listings.filter((listing) =>
-    listing.goodsCategory.some((item) =>
+  if (goodsCategories.length === 0) return listings;
+
+  return listings.filter((listing) => {
+    if (listing.type === "trip" && tripAcceptsAllCategories(listing.goodsCategory)) {
+      return true;
+    }
+
+    return listing.goodsCategory.some((item) =>
       goodsCategories.some((selected) => selected === item.name),
-    ),
-  );
+    );
+  });
 }

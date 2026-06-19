@@ -1,4 +1,5 @@
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
+import { isAllGoodsCategory } from "@/app/features/goods/domain/goodsCategoryConstants";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useGoodsCategories } from "@/app/hooks/queries/useGoodsQueries";
@@ -54,7 +55,10 @@ export function useFiltersForm({
   const { data, error } = useGoodsCategories();
   useQueryErrorEffect(error);
 
-  const goodsCategory: GoodsCategory[] = useMemo(() => data ?? [], [data]);
+  const goodsCategory: GoodsCategory[] = useMemo(
+    () => (data ?? []).filter((category) => !isAllGoodsCategory(category)),
+    [data],
+  );
 
   const form = useForm<FiltersFormValues>({
     defaultValues: filterDefaults,

@@ -27,9 +27,10 @@ import type {
 } from "react-hook-form";
 
 import type { FormMode } from "@/types/Ui";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useGoodsCategory from "@/app/shared/Authentication/UI/hooks/useGoodsCategory";
+import { sortTripGoodsCategories } from "@/app/features/goods/domain/goodsCategoryConstants";
 import TripFormReview from "./TripFormReview";
 import { tripStep1Fields, tripStep2Fields } from "./tripFormSteps";
 import { FormStepActions } from "@/app/components/forms/FormStepActions";
@@ -85,6 +86,10 @@ export function CreateTripForm({
   const [internalStep, setInternalStep] = useState<Step>(1);
   const step = controlledStep ?? internalStep;
   const { goodsCategory } = useGoodsCategory();
+  const tripGoodsCategories = useMemo(
+    () => sortTripGoodsCategories(goodsCategory),
+    [goodsCategory],
+  );
   const isPageVariant = variant === "page";
 
   const goToStep = (next: Step) => {
@@ -181,8 +186,9 @@ export function CreateTripForm({
             <GoodsCategoryGrid
               label="What items do you prefer to carry?"
               error={errors.goodsCategoryIds?.message}
-              goods={goodsCategory}
+              goods={tripGoodsCategories}
               selectedIds={selectedIds}
+              includeAllOption
               onChange={(next) =>
                 setValue("goodsCategoryIds", next, {
                   shouldValidate: true,
