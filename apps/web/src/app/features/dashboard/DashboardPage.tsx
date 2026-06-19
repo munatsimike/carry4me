@@ -403,10 +403,10 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           btnVariant="ghost"
           icon={META_ICONS.planeFilled}
           iconSize="lg"
-          textVariant="primary"
-          buttonClassName="border border-primary-200 bg-primary-50 shadow-sm hover:border-primary-300 hover:bg-primary-100 hover:shadow-md"
-          iconClassName="text-primary-600"
-          textClassName="text-primary-800"
+          textVariant="onDark"
+          buttonClassName="border border-primary-600 bg-primary-500 shadow-sm hover:border-primary-700 hover:bg-primary-600 hover:shadow-md"
+          iconClassName="text-white"
+          textClassName="text-white"
         />
       </motion.div>
 
@@ -417,10 +417,10 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           btnVariant="ghost"
           icon={META_ICONS.parcelBox}
           iconSize="lg"
-          textVariant="primary"
-          buttonClassName="border border-orange-200 bg-orange-50 shadow-sm hover:border-orange-300 hover:bg-orange-100 hover:shadow-md"
-          iconClassName="text-orange-600"
-          textClassName="text-orange-900"
+          textVariant="onDark"
+          buttonClassName="border border-orange-600 bg-orange-500 shadow-sm hover:border-orange-700 hover:bg-orange-600 hover:shadow-md"
+          iconClassName="text-white"
+          textClassName="text-white"
         />
       </motion.div>
 
