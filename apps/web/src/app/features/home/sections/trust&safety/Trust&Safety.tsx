@@ -5,6 +5,13 @@ import { CircleBadge } from "@/components/ui/CircleBadge";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 
+const safetyIconColors = [
+  "text-primary-600",
+  "text-rose-600",
+  "text-emerald-600",
+  "text-violet-600",
+];
+
 export default function TrustAndSafety({ items }: InfoItemsProps) {
   const variant = "primary";
 
@@ -14,7 +21,7 @@ export default function TrustAndSafety({ items }: InfoItemsProps) {
 
       <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[0.65fr_1.35fr] lg:gap-10">
         <div className="flex flex-col gap-3">
-          <span className="w-fit rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 border border-primary-100">
+          <span className="w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
             Safety first
           </span>
           <CustomText
@@ -32,13 +39,19 @@ export default function TrustAndSafety({ items }: InfoItemsProps) {
         </div>
 
         <div className="grid gap-x-8 sm:grid-cols-2">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <div
               key={item.label}
               className="flex gap-4 border-t border-slate-200 py-5 first:border-t-0 sm:first:border-t lg:odd:border-r lg:odd:pr-8 lg:even:pl-2"
             >
               <CircleBadge size="lg" bgColor={variant}>
-                <SvgIcon size="lg" Icon={item.Icon!} color={variant} />
+                <SvgIcon
+                  size="lg"
+                  Icon={item.Icon!}
+                  className={
+                    safetyIconColors[index % safetyIconColors.length]
+                  }
+                />
               </CircleBadge>
               <div className="flex min-w-0 flex-col gap-1">
                 <CustomText

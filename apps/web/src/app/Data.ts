@@ -2,7 +2,7 @@ import ParcelIcon from "@/assets/parcelIcon.svg?react";
 import TravelIcon from "@/assets/travelerIcon.svg?react";
 import Eye from "@/assets/eye.svg?react";
 import Globe from "@/assets/globe.svg?react";
-import Hands from "@/assets/hand.svg?react";
+import Prohibited from "@/assets/prohibited.svg?react";
 
 import Wallet from "@/assets/wallet.svg?react";
 import Rocket from "@/assets/rocket.svg?react";
@@ -69,7 +69,7 @@ export const safetyRules: InfoItem[] = [
     value: "Travelers only carry items they can inspect and confirm.",
   },
   {
-    Icon: Hands,
+    Icon: Prohibited,
     label: "No prohibited items",
     value: "Illegal drugs, weapons, cash, and hazardous goods are not allowed.",
   },

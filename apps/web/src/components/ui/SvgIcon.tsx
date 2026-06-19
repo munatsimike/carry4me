@@ -1,4 +1,5 @@
 import type { SvgIconComponent } from "@/types/Ui";
+import { cn } from "@/app/lib/cn";
 
 export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 export type IconColor =
@@ -47,9 +48,7 @@ export default function SvgIcon({ size, Icon, color, className }: IconProps) {
 
   return (
     <Icon
-      className={`${sizes[size]} ${color && iconColors[color]} ${
-        className ?? ""
-      }`}
+      className={cn(sizes[size], color && iconColors[color], className)}
     />
   );
 }
