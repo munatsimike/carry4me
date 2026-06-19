@@ -22,7 +22,7 @@ export default function InfoList({ items }: InfoItemsProps) {
 function InfoItems({ items, tag }: { items: InfoItem[]; tag: Tag }) {
   const isSender = tag === "sender";
   const badgeBgColor = isSender ? "parcel" : "primary";
-  const iconClassName = isSender ? "text-orange-600" : "text-primary-600";
+  const iconClassName = isSender ? "text-[#475569]" : "text-primary-600";
   const title = tag.substring(0, 1).toLocaleUpperCase() + tag.substring(1);
   return (
     <div>

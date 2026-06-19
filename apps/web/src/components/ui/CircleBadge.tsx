@@ -38,7 +38,7 @@ export function CircleBadge({
     secondary: "bg-secondary-100",
     neutral: "bg-neutral-100",
     primary: "bg-primary-100",
-    parcel: "bg-orange-100",
+    parcel: "bg-[#334155]/10",
     onDark: "bg-white",
     transparent: "bg-transparent",
     tonal: "bg-slate-200",

@@ -38,7 +38,11 @@ export default function RouteRow({
   return (
     <InlineRow className="relative overflow-visible">
       <span>
-        <SvgIcon size="sm" Icon={META_ICONS.planeIcon} />
+        <SvgIcon
+          size="sm"
+          Icon={META_ICONS.planeIcon}
+          className="text-[#72777C]"
+        />
       </span>
 
       <InlineRow

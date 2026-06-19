@@ -40,14 +40,14 @@ export default function ActionButtons() {
         <Link to="/parcels" className="block w-full">
           <Button
             className={cn(
-              "w-full min-w-0 border border-orange-200 bg-orange-50 px-4 shadow-sm",
-              "hover:border-orange-300 hover:bg-orange-100 hover:shadow-md",
+              "w-full min-w-0 border border-[#334155]/20 bg-[#334155]/10 px-4 shadow-sm",
+              "hover:border-[#334155]/30 hover:bg-[#334155]/15 hover:shadow-md",
             )}
             subtitle={
               <CustomText
                 as="span"
                 textSize={subtitleSize}
-                className="text-center leading-snug text-orange-700"
+                className="text-center leading-snug text-[#475569]"
               >
                 See what people need sent home.
               </CustomText>
@@ -58,18 +58,18 @@ export default function ActionButtons() {
               <SvgIcon
                 size="xl"
                 Icon={META_ICONS.parcelBox}
-                className="text-orange-600"
+                className="text-[#475569]"
               />
             }
             trailingIcon={
-              <SvgIcon size="sm" Icon={ArrowIcon} className="text-orange-500" />
+              <SvgIcon size="sm" Icon={ArrowIcon} className="text-[#64748b]" />
             }
           >
             <CustomText
               as="span"
               textSize={titleSize}
               textVariant="primary"
-              className="leading-snug text-orange-900"
+              className="leading-snug text-[#334155]"
             >
               Browse parcels
             </CustomText>
@@ -88,7 +88,7 @@ export default function ActionButtons() {
               <CustomText
                 as="span"
                 textSize={subtitleSize}
-                className="text-center leading-snug text-primary-700"
+                className="text-center leading-snug text-[#475569]"
               >
                 See who is traveling home soon.
               </CustomText>

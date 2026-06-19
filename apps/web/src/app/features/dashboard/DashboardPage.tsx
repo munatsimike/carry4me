@@ -418,7 +418,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           icon={META_ICONS.parcelBox}
           iconSize="lg"
           textVariant="onDark"
-          buttonClassName="border border-orange-600 bg-orange-500 shadow-sm hover:border-orange-700 hover:bg-orange-600 hover:shadow-md"
+          buttonClassName="border border-[#475569] bg-[#334155] shadow-sm hover:border-[#64748b] hover:bg-[#475569] hover:shadow-md"
           iconClassName="text-white"
           textClassName="text-white"
         />
@@ -451,9 +451,9 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
             iconSize="lg"
             textVariant="primary"
             showArrow
-            buttonClassName="border border-orange-200 bg-orange-50 shadow-sm hover:border-orange-300 hover:bg-orange-100 hover:shadow-md"
-            iconClassName="text-orange-600"
-            textClassName="text-orange-900"
+            buttonClassName="border border-[#334155]/20 bg-[#334155]/10 shadow-sm hover:border-[#334155]/30 hover:bg-[#334155]/15 hover:shadow-md"
+            iconClassName="text-[#475569]"
+            textClassName="text-[#334155]"
           />
         </Link>
       </motion.div>

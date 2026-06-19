@@ -16,7 +16,7 @@ function faqTagClass(tag: string): string {
     return "border border-primary-100 bg-primary-50 text-primary-500";
   }
   if (normalized === "sender") {
-    return "border border-orange-100 bg-orange-50 text-orange-500";
+    return "border border-[#334155]/15 bg-[#334155]/10 text-[#475569]";
   }
   return "bg-slate-100 text-slate-500";
 }
