@@ -10,6 +10,11 @@ import { getAuthenticatedLandingPath } from "@/app/shared/Authentication/applica
 import {
   normalizeEmailVerificationError,
 } from "@/app/shared/Authentication/application/normalizeSupabaseError";
+import {
+  isEstablishedAppTab,
+  markTabInitialized,
+  requestEmailVerificationHandoff,
+} from "@/app/shared/Authentication/application/emailVerificationTabCoordination";
 import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,6 +23,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 const REDIRECT_DELAY_MS = 2200;
 
 type VerifyUiStatus = "loading" | "success" | "error";
+type HandoffStatus = "pending" | "self" | "delegated";
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
@@ -28,6 +34,7 @@ export default function VerifyEmailPage() {
   const toastShownRef = useRef(false);
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
 
+  const [handoffStatus, setHandoffStatus] = useState<HandoffStatus>("pending");
   const [status, setStatus] = useState<VerifyUiStatus>("loading");
   const [alreadyVerified, setAlreadyVerified] = useState(false);
   const [title, setTitle] = useState("Verifying email");
@@ -51,6 +58,42 @@ export default function VerifyEmailPage() {
   };
 
   useEffect(() => {
+    markTabInitialized();
+  }, []);
+
+  useEffect(() => {
+    if (!token.trim()) {
+      setHandoffStatus("self");
+      return;
+    }
+
+    if (isEstablishedAppTab()) {
+      setHandoffStatus("self");
+      return;
+    }
+
+    let cancelled = false;
+
+    void requestEmailVerificationHandoff(token).then((result) => {
+      if (cancelled) return;
+      setHandoffStatus(result === "other-tab" ? "delegated" : "self");
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  useEffect(() => {
+    if (handoffStatus === "delegated") {
+      window.setTimeout(() => {
+        window.close();
+      }, 400);
+    }
+  }, [handoffStatus]);
+
+  useEffect(() => {
+    if (handoffStatus !== "self") return;
     if (loading) return;
 
     if (user) {
@@ -109,7 +152,18 @@ export default function VerifyEmailPage() {
     return () => {
       cancelled = true;
     };
-  }, [authRepo, loading, navigate, profile, profile?.emailVerified, refreshProfile, token, user, user?.id]);
+  }, [
+    authRepo,
+    handoffStatus,
+    loading,
+    navigate,
+    profile,
+    profile?.emailVerified,
+    refreshProfile,
+    token,
+    user,
+    user?.id,
+  ]);
 
   useEffect(() => {
     if (status !== "success" || toastShownRef.current) return;
@@ -130,6 +184,42 @@ export default function VerifyEmailPage() {
 
     return () => window.clearTimeout(timeoutId);
   }, [navigate, profile, status]);
+
+  if (handoffStatus === "pending") {
+    return (
+      <DefaultContainer center outerClassName="bg-canvas min-h-screen">
+        <Card enableHover={false} sizeClass="max-w-lg" className="w-full">
+          <motion.div className="flex flex-col items-center gap-4 p-6 text-center">
+            <Spinner />
+            <CustomText textVariant="primary" textSize="lg" className="font-medium">
+              Opening verification
+            </CustomText>
+            <CustomText textVariant="secondary" textSize="sm">
+              Checking for an open Carry4Me tab…
+            </CustomText>
+          </motion.div>
+        </Card>
+      </DefaultContainer>
+    );
+  }
+
+  if (handoffStatus === "delegated") {
+    return (
+      <DefaultContainer center outerClassName="bg-canvas min-h-screen">
+        <Card enableHover={false} sizeClass="max-w-lg" className="w-full">
+          <motion.div className="flex flex-col items-center gap-4 p-6 text-center">
+            <CustomText textVariant="primary" textSize="lg" className="font-medium">
+              Continuing in your open tab
+            </CustomText>
+            <CustomText textVariant="secondary" textSize="sm">
+              Email verification is running in your existing Carry4Me tab. You
+              can close this one.
+            </CustomText>
+          </motion.div>
+        </Card>
+      </DefaultContainer>
+    );
+  }
 
   return (
     <DefaultContainer center outerClassName="bg-canvas min-h-screen">

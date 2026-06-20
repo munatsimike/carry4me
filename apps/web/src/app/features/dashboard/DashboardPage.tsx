@@ -308,11 +308,7 @@ function RequestProgress({ activityList }: { activityList: StatsItem[] }) {
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <ClipboardList className="h-5 w-5" strokeWidth={1.75} />
             </span>
-            <CustomText
-              textVariant="primary"
-              textSize="md"
-              className="truncate font-medium"
-            >
+            <CustomText textVariant="primary" textSize="md" className="truncate">
               Request progress
             </CustomText>
           </span>
@@ -404,6 +400,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           icon={META_ICONS.planeFilled}
           iconSize="lg"
           textVariant="onDark"
+          showArrow
           buttonClassName="border border-primary-600 bg-primary-500 shadow-sm hover:border-primary-700 hover:bg-primary-600 hover:shadow-md"
           iconClassName="text-white"
           textClassName="text-white"
@@ -418,6 +415,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           icon={META_ICONS.parcelBox}
           iconSize="lg"
           textVariant="onDark"
+          showArrow
           buttonClassName="border border-[#475569] bg-[#334155] shadow-sm hover:border-[#64748b] hover:bg-[#475569] hover:shadow-md"
           iconClassName="text-white"
           textClassName="text-white"
@@ -500,8 +498,7 @@ function ActionButton({
           <SvgIcon
             size={"sm"}
             Icon={META_ICONS.arrowSmall}
-            color="primary"
-            className={iconClassName}
+            className={cn(textClassName, iconClassName)}
           />
         )
       }

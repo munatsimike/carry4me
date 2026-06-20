@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import InfoTooltip from "@/app/components/InfoTooltip";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 export function ReviewEditButton({
@@ -26,11 +27,13 @@ export function ReviewEditButton({
 
 export function FormReviewSection({
   label,
+  labelHint,
   children,
   onEdit,
   className,
 }: {
   label: string;
+  labelHint?: string;
   children: ReactNode;
   onEdit?: () => void;
   className?: string;
@@ -38,14 +41,17 @@ export function FormReviewSection({
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <div className="flex items-center justify-between gap-3">
-        <CustomText
-          as="p"
-          textSize="xs"
-          textVariant="label"
-          className="whitespace-nowrap"
-        >
-          {label}
-        </CustomText>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <CustomText
+            as="p"
+            textSize="xs"
+            textVariant="label"
+            className="whitespace-nowrap"
+          >
+            {label}
+          </CustomText>
+          {labelHint ? <InfoTooltip content={labelHint} /> : null}
+        </div>
         {onEdit ? <ReviewEditButton onClick={onEdit} /> : null}
       </div>
       {children}

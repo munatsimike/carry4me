@@ -11,7 +11,10 @@ import {
   calculateCarryRequestPricing,
   SERVICE_FEE_TOOLTIP,
 } from "@/app/features/carry request/domain/carryRequestPricing";
-import { PARCEL_BUDGET_PER_KG_HINT } from "@/app/shared/listingFormHints";
+import {
+  PARCEL_BUDGET_PER_KG_HINT,
+  PARCEL_WEIGHT_MIN_HINT,
+} from "@/app/shared/listingFormHints";
 import {
   type FieldErrors,
   type FieldNamesMarkedBoolean,
@@ -59,6 +62,7 @@ export default function ParcelPricingSection({
 
       <WeightField<ParcelFormFields>
         label="Total weight"
+        labelHint={PARCEL_WEIGHT_MIN_HINT}
         register={register("weight", { valueAsNumber: true })}
         id="weight"
         error={errors.weight?.message}

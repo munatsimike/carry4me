@@ -2,6 +2,7 @@ import LineDivider from "@/app/components/LineDivider";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { PriceField } from "../../dashboard/components/PriceField";
+import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { TRIP_PRICE_PER_KG_HINT } from "@/app/shared/listingFormHints";
 import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { WeightField } from "../../dashboard/components/WeightField";
@@ -105,6 +106,12 @@ export function CreateTripForm({
   const destinationCountry = watch("destinationCountry");
   const departureDate = watch("departureDate");
 
+  const weight = Number(weightValue);
+  const price = Number(priceValue);
+  const hasWeight = Number.isFinite(weight) && weight > 0;
+  const hasPrice = Number.isFinite(price) && price > 0;
+  const totalEarnings = hasWeight && hasPrice ? weight * price : 0;
+
   const dividerHeight = "my-0";
   const isEditMode = mode === "edit";
   const navigate = useNavigate();
@@ -198,18 +205,20 @@ export function CreateTripForm({
               }
             />
             <LineDivider heightClass={dividerHeight} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-[20px]">
-              <WeightField<TripFormFields>
-                id="weight"
-                register={register("weight", { valueAsNumber: true })}
-                error={errors.weight?.message}
-                isDirty={!!dirtyFields.weight}
-                isTouched={!!touchedFields.weight}
-                name="weight"
-                setValue={setValue}
-                value={weightValue}
-              />
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-6 sm:flex-row sm:flex-nowrap sm:items-start sm:gap-x-24">
+              <div className="w-full shrink-0 sm:w-[13.5rem]">
+                <WeightField<TripFormFields>
+                  id="weight"
+                  register={register("weight", { valueAsNumber: true })}
+                  error={errors.weight?.message}
+                  isDirty={!!dirtyFields.weight}
+                  isTouched={!!touchedFields.weight}
+                  name="weight"
+                  setValue={setValue}
+                  value={weightValue}
+                />
+              </div>
+              <div className="flex shrink-0 flex-col gap-2">
                 <PriceField<TripFormFields>
                   id="price"
                   country={originCountry}
@@ -226,6 +235,41 @@ export function CreateTripForm({
                   Most travelers charge $8–15 per kg.
                 </CustomText>
               </div>
+            </div>
+            <div className="rounded-xl border border-neutral-200 bg-neutral-50/60 p-4">
+              <CustomText textSize="sm" className="mb-3 text-neutral-600">
+                Earnings estimate
+              </CustomText>
+              <dl className="flex flex-col gap-2 text-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-neutral-600">
+                    {hasWeight ? (
+                      <>
+                        {weight} kg ×{" "}
+                        {formatCurrencyByCountry(
+                          originCountry,
+                          hasPrice ? price : 0,
+                        )}
+                        /kg
+                      </>
+                    ) : (
+                      "Enter available weight to see your estimate"
+                    )}
+                  </dt>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-4 border-t border-neutral-200 pt-2">
+                  <dt className="text-ink-primary">Total potential earnings</dt>
+                  <motion.dd
+                    key={totalEarnings}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="font-semibold tabular-nums text-emerald-700"
+                  >
+                    {formatCurrencyByCountry(originCountry, totalEarnings)}
+                  </motion.dd>
+                </div>
+              </dl>
             </div>
             <LineDivider heightClass={dividerHeight} />
             <FormStepActions

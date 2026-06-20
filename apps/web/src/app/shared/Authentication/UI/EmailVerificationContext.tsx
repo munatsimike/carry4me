@@ -160,6 +160,8 @@ export function EmailVerificationProvider({
                   : "Verify your email"}
               </CustomText>
 
+              <LineDivider heightClass="my-1" />
+
               {isVerifyRequired ? (
                 verificationEmail ? (
                   <CustomText textVariant="secondary" textSize="sm">

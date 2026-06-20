@@ -21,6 +21,7 @@ import {
   isAuthModalActive,
   useSignInModal,
 } from "./shared/Authentication/SignInModalContext";
+import { useEmailVerificationTabListener } from "./shared/Authentication/UI/hooks/useEmailVerificationTabListener";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
 const SCROLL_TO_TOP_PATHS = ["/travelers", "/parcels"];
 
@@ -33,6 +34,8 @@ export default function RootLayoutContent() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { showBottomNavBar } = useUI();
   const isAuthed = !!user;
+
+  useEmailVerificationTabListener();
 
   useEffect(() => {
     if (SCROLL_TO_TOP_PATHS.includes(location.pathname)) {

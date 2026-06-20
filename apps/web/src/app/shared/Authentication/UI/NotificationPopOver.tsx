@@ -1,10 +1,14 @@
 import LineDivider from "@/app/components/LineDivider";
+import { CloseBackBtn } from "@/app/components/CloseBtn";
 import type { CarryRequestNotification } from "@/app/features/carry request/carry request events/domain/CarryRequestNotification";
 import { formatRelativeTime } from "@/app/features/dashboard/application/formatRelativeTime";
+import { iconForActivity } from "@/app/features/dashboard/application/iconForActivity";
 import { cn } from "@/app/lib/cn";
 import CustomText from "@/components/ui/CustomText";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { Bell } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 type PopoverProps = {
   notifications: CarryRequestNotification[];
@@ -12,17 +16,23 @@ type PopoverProps = {
   triggerRef: React.RefObject<HTMLButtonElement | null>;
 };
 
+const INITIAL_COUNT = 5;
+
 export default function NotificationPopover({
   notifications,
   onClosePopOver,
   triggerRef,
 }: PopoverProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const initialCount = 4;
-  const [count, setCount] = useState(initialCount);
+  const [count, setCount] = useState(INITIAL_COUNT);
 
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => item.readAt === null).length,
+    [notifications],
+  );
   const visibleNotifications = notifications.slice(0, count);
   const isExpanded = count >= notifications.length;
+  const hasNotifications = notifications.length > 0;
 
   useEffect(() => {
     function handleEscape(e: KeyboardEvent) {
@@ -64,63 +74,114 @@ export default function NotificationPopover({
   return (
     <motion.div
       ref={ref}
+      role="dialog"
+      aria-label="Notifications"
       layout
       initial={{ opacity: 0, y: -7 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       exit={{ opacity: 0, y: 7 }}
-      className="fixed left-3 right-3 top-16 z-20 rounded-xl border border-neutral-200 bg-white pl-4 pt-4 shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[min(420px,calc(100vw-2rem))]"
+      className="fixed left-3 right-3 top-16 z-30 flex max-h-[min(70vh,520px)] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[min(420px,calc(100vw-2rem))]"
     >
-      <div className="pl-1">
-        <CustomText
-          textSize="lg"
-          textVariant="primary"
-          className="font-medium"
-        >
-          Notifications
-        </CustomText>
-        <LineDivider heightClass="my-1" />
+      <div className="relative border-b border-neutral-100 px-4 py-3">
+        <CloseBackBtn onClose={onClosePopOver} />
+        <div className="pr-8">
+          <CustomText
+            textSize="lg"
+            textVariant="primary"
+            className="font-medium"
+          >
+            Notifications
+          </CustomText>
+          {unreadCount > 0 ? (
+            <CustomText as="p" textSize="xs" textVariant="secondary">
+              {unreadCount} unread
+            </CustomText>
+          ) : hasNotifications ? (
+            <CustomText as="p" textSize="xs" textVariant="secondary">
+              You&apos;re all caught up
+            </CustomText>
+          ) : null}
+        </div>
       </div>
 
-      <div className="max-h-[320px] overflow-y-auto pr-2">
-        {visibleNotifications.map((item, index) => (
-          <div key={item.id}>
-            <div
-              className={cn(
-                "flex flex-col rounded-lg p-2 hover:bg-neutral-100 ",
-                index === visibleNotifications.length - 1 ? "mb-8" : "",
-              )}
-            >
-              <CustomText textVariant="primary">{item.title}</CustomText>
-              <CustomText textSize="xs" textVariant="secondary">
-                {item.body}
-              </CustomText>
-              <p className="text-[12px] text-neutral-400 mt-0.5 text-right font-extralight">
-                {formatRelativeTime(item.createdAt)}
-              </p>
-            </div>
-            {index !== visibleNotifications.length - 1 && (
-              <LineDivider heightClass="my-0" />
-            )}
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+        {!hasNotifications ? (
+          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100">
+              <Bell className="h-5 w-5 text-neutral-400" strokeWidth={1.75} />
+            </span>
+            <CustomText textVariant="primary" className="font-medium">
+              No notifications yet
+            </CustomText>
+            <CustomText as="p" textSize="xs" textVariant="secondary">
+              Updates about your carry requests will appear here.
+            </CustomText>
           </div>
-        ))}
+        ) : (
+          visibleNotifications.map((item, index) => (
+            <div key={item.id}>
+              <Link
+                to={item.link}
+                onClick={() => onClosePopOver(false)}
+                className={cn(
+                  "flex gap-3 rounded-lg p-3 transition-colors hover:bg-neutral-50",
+                  item.readAt === null && "bg-primary-50/50",
+                )}
+              >
+                <span className="inline-flex shrink-0 pt-0.5">
+                  {iconForActivity(item.type)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-start justify-between gap-2">
+                    <CustomText
+                      textVariant="primary"
+                      className="line-clamp-2 font-medium"
+                    >
+                      {item.title}
+                    </CustomText>
+                    {item.readAt === null ? (
+                      <span
+                        aria-hidden
+                        className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-500"
+                      />
+                    ) : null}
+                  </span>
+                  <CustomText
+                    textSize="xs"
+                    textVariant="secondary"
+                    className="mt-0.5 line-clamp-2"
+                  >
+                    {item.body}
+                  </CustomText>
+                  <p className="mt-1 text-[11px] text-neutral-400">
+                    {formatRelativeTime(item.createdAt)}
+                  </p>
+                </span>
+              </Link>
+              {index !== visibleNotifications.length - 1 ? (
+                <LineDivider heightClass="my-0 mx-3" />
+              ) : null}
+            </div>
+          ))
+        )}
       </div>
 
-      {notifications.length > initialCount && (
-        <button
-          type="button"
-          onClick={() =>
-            setCount((prev) =>
-              prev >= notifications.length
-                ? initialCount
-                : notifications.length,
-            )
-          }
-          className="py-4 text-sm font-medium text-primary-500 hover:underline"
-        >
-          {isExpanded ? "Show less" : "View all notifications"}
-        </button>
-      )}
+      {notifications.length > INITIAL_COUNT ? (
+        <div className="border-t border-neutral-100 px-4 py-2">
+          <button
+            type="button"
+            onClick={() =>
+              setCount((prev) =>
+                prev >= notifications.length ? INITIAL_COUNT : notifications.length,
+              )
+            }
+            className="w-full rounded-lg py-2 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+          >
+            {isExpanded ? "Show less" : `View all (${notifications.length})`}
+          </button>
+        </div>
+      ) : null}
     </motion.div>
   );
 }

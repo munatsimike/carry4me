@@ -16,6 +16,7 @@ import {
   getCurrencySymbolByCountry,
 } from "@/app/lib/currency";
 import { calculateCarryRequestPricing } from "@/app/features/carry request/domain/carryRequestPricing";
+import { PARCEL_WEIGHT_MIN_HINT } from "@/app/shared/listingFormHints";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import { FIXED_DESTINATION_COUNTRY } from "@/app/shared/locations/fixedDestination";
@@ -100,19 +101,24 @@ export default function ParcelFormReview({
 
       <LineDivider heightClass="my-0" />
 
-      <FormReviewSection
-        label="Goods list"
-        onEdit={onEditStep ? () => editStep(2) : undefined}
-      >
-        <GoodsManifestTable items={itemDescriptions} />
-      </FormReviewSection>
+      <div className="rounded-lg border border-neutral-200 bg-white p-4">
+        <FormReviewSection
+          label="Goods list"
+          onEdit={onEditStep ? () => editStep(2) : undefined}
+          className="gap-3"
+        >
+          <GoodsManifestTable variant="review" items={itemDescriptions} />
+        </FormReviewSection>
+      </div>
 
       <LineDivider heightClass="my-0" />
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <FormReviewSection label="Weight">
-          <FormReviewPrimaryValue>{weight} kg</FormReviewPrimaryValue>
-        </FormReviewSection>
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-nowrap sm:items-start sm:gap-x-24">
+        <div className="shrink-0 sm:min-w-[6rem]">
+          <FormReviewSection label="Weight" labelHint={PARCEL_WEIGHT_MIN_HINT}>
+            <FormReviewPrimaryValue>{weight} kg</FormReviewPrimaryValue>
+          </FormReviewSection>
+        </div>
         <FormReviewSection
           label="Budget per kg"
           onEdit={onEditStep ? () => editStep(3) : undefined}

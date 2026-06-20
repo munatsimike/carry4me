@@ -1,4 +1,5 @@
 import CustomModal from "@/app/components/CustomModal";
+import LineDivider from "@/app/components/LineDivider";
 import { useToast } from "@/app/components/Toast";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
@@ -186,7 +187,7 @@ export function PasskeyPromptProvider({ children }: { children: ReactNode }) {
             width="lg"
             onClose={() => closePrompt(true)}
           >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               <CustomText
                 as="h2"
                 textSize="lg"
@@ -196,6 +197,8 @@ export function PasskeyPromptProvider({ children }: { children: ReactNode }) {
                 Secure your account with a passkey
               </CustomText>
 
+              <LineDivider heightClass="my-1" />
+
               <CustomText textSize="sm" textVariant="secondary">
                 Passkeys let you sign in faster with Face ID, fingerprint,
                 Windows Hello, or your device PIN.
@@ -203,7 +206,7 @@ export function PasskeyPromptProvider({ children }: { children: ReactNode }) {
 
               <label
                 htmlFor="passkey-prompt-never-show"
-                className="flex cursor-pointer items-start gap-3"
+                className="flex cursor-pointer items-center justify-start gap-3"
               >
                 <span className="relative inline-flex shrink-0">
                   <input
@@ -232,6 +235,8 @@ export function PasskeyPromptProvider({ children }: { children: ReactNode }) {
                   Never show this again
                 </CustomText>
               </label>
+
+              <LineDivider heightClass="my-1" />
 
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
