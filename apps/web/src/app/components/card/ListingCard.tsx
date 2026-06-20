@@ -64,6 +64,11 @@ export function ListingCard<T extends Listing>({
       ? "hover:bg-blue-50"
       : "hover:bg-[#334155]/5"
     : "";
+  const dividerHoverClass = isDisplayMode
+    ? isTripListing
+      ? "transition-colors duration-200 group-hover/card:border-primary-200"
+      : "transition-colors duration-200 group-hover/card:border-[#334155]/25"
+    : "";
 
   const handleToggleLike = () => {
     if (!user?.id) {
@@ -120,7 +125,7 @@ export function ListingCard<T extends Listing>({
         userName={formatListingCardUserName(listing.user.fullName)}
         avatar={listing.user.avatarUrl}
       />
-      <LineDivider heightClass="my-2" className="group-hover/card:border-white" />
+      <LineDivider heightClass="my-2" className={dividerHoverClass} />
       <Stack>
         <RouteRow
           origin={listing.route.originCountry}
@@ -141,7 +146,7 @@ export function ListingCard<T extends Listing>({
           <ParcelSendingRow items={listing.items} />
         )}
       </Stack>
-      <LineDivider heightClass="my-2" className="group-hover/card:border-white" />
+      <LineDivider heightClass="my-2" className={dividerHoverClass} />
       <WeightAndPrice
         weightLabel={isTripListing ? "Available space" : "Parcel weight"}
         weight={listing.weightKg}
@@ -149,7 +154,7 @@ export function ListingCard<T extends Listing>({
         price={listing.pricePerKg}
         country={listing.route.originCountry}
       />
-      <LineDivider heightClass="my-2" className="group-hover/card:border-white" />
+      <LineDivider heightClass="my-2" className={dividerHoverClass} />
       <SendRequestBtn
         isActive={!isDisplayMode}
         buttonTextVariant="onDark"
