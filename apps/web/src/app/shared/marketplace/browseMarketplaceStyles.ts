@@ -52,4 +52,35 @@ export const browseMarketplaceButtonClass: Record<BrowseMarketplaceTone, string>
     ),
   };
 
+const listingCardTransition =
+  "transition-[background-color,border-color,box-shadow] duration-200 ease-out";
+
+/** Marketplace listing cards (trips / parcels browse grids). */
+export const listingCardHoverClass: Record<BrowseMarketplaceTone, string> = {
+  trips: cn(
+    "border border-primary-200 bg-white shadow-sm",
+    listingCardTransition,
+    "hover:border-primary-300 hover:bg-primary-50 hover:shadow-lg hover:shadow-primary-100/40",
+  ),
+  parcels: cn(
+    "border border-[#334155]/25 bg-white shadow-sm",
+    listingCardTransition,
+    "hover:border-slate-700/30 hover:bg-slate-700/10 hover:shadow-lg hover:shadow-slate-300/30",
+  ),
+};
+
+export const listingCardPreviewClass: Record<BrowseMarketplaceTone, string> = {
+  trips: "border border-primary-200 bg-white",
+  parcels: "border border-[#334155]/25 bg-white",
+};
+
+export const listingCardDividerHoverClass: Record<
+  BrowseMarketplaceTone,
+  string
+> = {
+  trips: "transition-colors duration-200 group-hover/card:border-primary-200",
+  parcels:
+    "transition-colors duration-200 group-hover/card:border-[#334155]/25",
+};
+
 export const browseMarketplaceTextClass = browseMarketplaceTitleClass;

@@ -18,6 +18,12 @@ import { format } from "date-fns";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "../Toast";
 import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
+import {
+  listingCardDividerHoverClass,
+  listingCardHoverClass,
+  listingCardPreviewClass,
+  type BrowseMarketplaceTone,
+} from "@/app/shared/marketplace/browseMarketplaceStyles";
 
 function formatListingCardUserName(fullName: string | null | undefined): string {
   if (!fullName?.trim()) return "";
@@ -52,22 +58,15 @@ export function ListingCard<T extends Listing>({
 
   const isDisplayMode = mode === "display";
   const isTripListing = listing.type === "trip";
+  const cardTone: BrowseMarketplaceTone = isTripListing ? "trips" : "parcels";
   const goodsCategories = isTripListing
     ? formatTripAcceptedCategoryLabels(listing.goodsCategory)
     : listing.goodsCategory.map((x: GoodsCategory) => x.name);
-  const borderClass = isTripListing
-    ? "border border-primary-200 hover:border-primary-300"
-    : "border border-[#334155]/25 hover:border-[#334155]/40";
-  const shadowClass = isDisplayMode ? "shadow-sm hover:shadow-md" : "";
-  const hoverBackgroundClass = isDisplayMode
-    ? isTripListing
-      ? "hover:bg-blue-50"
-      : "hover:bg-[#334155]/5"
-    : "";
+  const cardSurfaceClass = isDisplayMode
+    ? listingCardHoverClass[cardTone]
+    : listingCardPreviewClass[cardTone];
   const dividerHoverClass = isDisplayMode
-    ? isTripListing
-      ? "transition-colors duration-200 group-hover/card:border-primary-200"
-      : "transition-colors duration-200 group-hover/card:border-[#334155]/25"
+    ? listingCardDividerHoverClass[cardTone]
     : "";
 
   const handleToggleLike = () => {
@@ -93,9 +92,9 @@ export function ListingCard<T extends Listing>({
   return (
     <Card
       enableHover={isDisplayMode}
-      className={`group/card transition-colors ${hoverBackgroundClass}`}
-      borderClass={borderClass}
-      shadowClass={shadowClass}
+      className={`group/card ${cardSurfaceClass}`}
+      borderClass=""
+      shadowClass=""
     >
       <div className="flex min-w-0 justify-between gap-3 pb-1">
         <span className="flex min-w-0 flex-col gap-2">
