@@ -4,6 +4,7 @@ import { GetTripUseCase } from "@/app/features/trips/application/GetTripUseCase"
 import { DeleteTripUseCase } from "@/app/features/trips/application/DeleteTripUseCase";
 import { CreateTripUseCase } from "@/app/features/trips/application/CreateTripUsecase";
 import { EditTripUsecase } from "@/app/features/trips/application/EditTripUsecase";
+import { UpdateTripStatusUseCase } from "@/app/features/trips/application/UpdateTripStatusUseCase";
 import { SupabaseTripsRepository } from "@/app/features/trips/data/SupabaseTripsRepository";
 
 import { GetParcelsUseCase } from "@/app/features/parcels/application/GetParcelsUseCase";
@@ -12,6 +13,7 @@ import { GetParcelUseCase } from "@/app/features/parcels/application/GetParcelUs
 import { DeleteParcelUseCase } from "@/app/features/parcels/application/DeleteParcelUseCase";
 import { CreateParcelUseCase } from "@/app/features/parcels/application/CreateParcelUseCase";
 import { EditParcelUsecase } from "@/app/features/parcels/application/EditParcelUsecase";
+import { UpdateParcelStatusUseCase } from "@/app/features/parcels/application/UpdateParcelStatusUseCase";
 import { SupabaseParcelRepository } from "@/app/features/parcels/data/SupabaseParcelRepository";
 
 import { FetchCarryRequestsUseCase } from "@/app/features/carry request/application/FetchCarryRequestsUseCase";
@@ -53,6 +55,7 @@ export const getTripUseCase = new GetTripUseCase(tripsRepository);
 export const deleteTripUseCase = new DeleteTripUseCase(tripsRepository);
 export const createTripUseCase = new CreateTripUseCase(tripsRepository);
 export const editTripUseCase = new EditTripUsecase(tripsRepository);
+export const updateTripStatusUseCase = new UpdateTripStatusUseCase(tripsRepository);
 
 export const getParcelsUseCase = new GetParcelsUseCase(parcelsRepository);
 export const myParcelsUseCase = new MyParcelsIdUseCase(parcelsRepository);
@@ -60,6 +63,9 @@ export const getParcelUseCase = new GetParcelUseCase(parcelsRepository);
 export const deleteParcelUseCase = new DeleteParcelUseCase(parcelsRepository);
 export const createParcelUseCase = new CreateParcelUseCase(parcelsRepository);
 export const editParcelUseCase = new EditParcelUsecase(parcelsRepository);
+export const updateParcelStatusUseCase = new UpdateParcelStatusUseCase(
+  parcelsRepository,
+);
 
 export const fetchCarryRequestsUseCase = new FetchCarryRequestsUseCase(
   carryRequestsRepository,

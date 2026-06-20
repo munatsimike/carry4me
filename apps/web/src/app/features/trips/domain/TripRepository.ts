@@ -15,4 +15,5 @@ export interface TripsRepository {
   tripsById(userId: string, tripId?: string): Promise<TripListing[]>;
   deleteTrip(parcelId: string): Promise<string>;
   editTrip(editTrip: Partial<TripDto>): Promise<string>;
+  setTripListingActive(tripId: string, active: boolean): Promise<string>;
 }

@@ -4,6 +4,7 @@ export const TRIPSTATUSES = {
   ARCHIVED: "ARCHIVED",
   FULL: "FULL",
   ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
 };
 
 export type TripStatuses = (typeof TRIPSTATUSES)[keyof typeof TRIPSTATUSES];

@@ -11,27 +11,32 @@ import LineDivider from "@/app/components/LineDivider";
 import CategoryRow from "@/app/components/CategoryRow";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
+import {
+  formatListingStatus,
+  getListingStatusToggleLabel,
+  statusBadgeClass,
+} from "@/app/shared/listings/listingStatusPresentation";
 
 export function MobileListingCard<T extends Listing>({
   data,
   onEdit,
   onDelete,
+  onToggleStatus,
   setListingPreview,
   setModalState,
 }: ListingTableProps<T>) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex w-full min-w-0 flex-col gap-3 sm:gap-4">
       {data.map((row) => {
-        const formattedStatus =
-          row.status.charAt(0).toUpperCase() +
-          row.status.slice(1).toLowerCase();
+        const formattedStatus = formatListingStatus(row.status);
+        const toggleLabel = getListingStatusToggleLabel(row);
         const isTrip = row.type === "trip";
         const goodsCategories = isTrip
           ? formatTripAcceptedCategoryLabels(row.goodsCategory)
           : row.goodsCategory.map((x: GoodsCategory) => x.name);
 
         return (
-          <Card sizeClass="w-full" className="flex flex-col">
+          <Card key={row.id} sizeClass="w-full" className="flex min-w-0 flex-col">
             {/* Header */}
             <div className="flex flex-col">
               <div className="flex items-center w-full justify-between mb-2">
@@ -41,14 +46,7 @@ export function MobileListingCard<T extends Listing>({
                 />
 
                 <span
-                  className={[
-                    "inline-flex rounded-full border px-2.5 py-1 text-[12px] font-medium",
-                    row.status.toLowerCase() === "active"
-                      ? "border-success-200 bg-success-50 text-success-600"
-                      : row.status.toLowerCase() === "pending"
-                        ? "border-amber-200 bg-amber-50 text-amber-600"
-                        : "border-neutral-200 bg-neutral-50 text-neutral-600",
-                  ].join(" ")}
+                  className={`inline-flex rounded-full border px-2.5 py-1 text-[12px] font-medium ${statusBadgeClass(row.status)}`}
                 >
                   {formattedStatus}
                 </span>
@@ -79,7 +77,7 @@ export function MobileListingCard<T extends Listing>({
               {isTrip && (
                 <span className="flex gap-2 mb-2">
                   <CustomText textVariant="label" textSize="sm">
-                    Date
+                    Departure
                   </CustomText>
                   <CustomText
                     textVariant="primary"
@@ -116,7 +114,7 @@ export function MobileListingCard<T extends Listing>({
 
             {/* Footer actions */}
             <LineDivider heightClass="my-0" />
-            <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className="grid grid-cols-2 gap-2 mt-2 sm:grid-cols-4">
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 type="button"
@@ -156,6 +154,19 @@ export function MobileListingCard<T extends Listing>({
               >
                 Edit
               </motion.button>
+
+              {toggleLabel && onToggleStatus ? (
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={() =>
+                    onToggleStatus(row, toggleLabel === "Activate")
+                  }
+                  className="rounded-xl border border-primary-200 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-800 hover:bg-primary-100"
+                >
+                  {toggleLabel}
+                </motion.button>
+              ) : null}
 
               <motion.button
                 whileTap={{ scale: 0.98 }}

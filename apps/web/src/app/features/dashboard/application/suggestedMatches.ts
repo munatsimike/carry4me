@@ -3,7 +3,7 @@ import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import { PARCELSTATUSES } from "@/app/features/parcels/domain/Parcel";
 import type { TripListing } from "@/app/features/trips/domain/Trip";
 import { TRIPSTATUSES } from "@/app/features/trips/domain/Trip";
-import { tripAcceptsAllCategories } from "@/app/features/goods/domain/goodsCategoryConstants";
+import { tripAcceptsAnyParcelCategory } from "@/app/features/goods/domain/goodsCategoryConstants";
 
 export type DashboardSuggestedMatches = {
   activeParcels: ParcelListing[];
@@ -53,10 +53,6 @@ const MAX_SUGGESTIONS = 5;
 
 type Listing = ParcelListing | TripListing;
 
-function normalize(value: string | null | undefined) {
-  return value?.trim().toLowerCase() ?? "";
-}
-
 /** Canonical country key so UK/United Kingdom/GB and Zimbabwe/ZW match. */
 function canonicalCountry(value: string | null | undefined) {
   const code = (normalizeCountryCode(value) ?? value?.trim() ?? "").toLowerCase();
@@ -81,32 +77,8 @@ function countriesMatch(a: Listing, b: Listing) {
   );
 }
 
-function categoryKeys(category: { id: string; slug: string; name: string }) {
-  return [
-    normalize(category.id),
-    normalize(category.slug),
-    normalize(category.name),
-  ].filter(Boolean);
-}
-
-/** At least one parcel category must be accepted on the trip (by id, slug, or name). */
 function categoriesMatch(parcel: ParcelListing, trip: TripListing) {
-  if (tripAcceptsAllCategories(trip.goodsCategory)) {
-    return true;
-  }
-
-  if (parcel.goodsCategory.length === 0 || trip.goodsCategory.length === 0) {
-    return true;
-  }
-
-  const tripCategoryKeys = new Set(
-    trip.goodsCategory.flatMap((category) => categoryKeys(category)),
-  );
-
-  return parcel.goodsCategory.some((parcelCategory) => {
-    const keys = categoryKeys(parcelCategory);
-    return keys.some((key) => tripCategoryKeys.has(key));
-  });
+  return tripAcceptsAnyParcelCategory(trip.goodsCategory, parcel.goodsCategory);
 }
 
 /** Parcel weight must fit within the trip's available capacity. */

@@ -6,6 +6,11 @@ import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import type { FormValues } from "@/types/Ui";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
+import {
+  formatListingStatus,
+  getListingStatusToggleLabel,
+  statusBadgeClass,
+} from "@/app/shared/listings/listingStatusPresentation";
 
 // 1) Variants
 const tableWrap = {
@@ -40,6 +45,8 @@ export interface ListingTableProps<T extends Listing> {
   data: T[];
   onEdit: (v: FormValues) => void;
   onDelete: (s: string) => void;
+  onToggleStatus?: (listing: Listing, active: boolean) => void;
+  showDateColumn?: boolean;
   setListingPreview: (p: T) => void;
   setModalState: (b: boolean) => void;
 }
@@ -48,12 +55,15 @@ export function ListingTable<T extends Listing>({
   data,
   onEdit,
   onDelete,
+  onToggleStatus,
+  showDateColumn = true,
   setListingPreview,
   setModalState,
 }: ListingTableProps<T>) {
   const textStyle = "font-medium text-ink-primary py-4";
   const headerStyle = `pl-4 ${textStyle}`;
   const [hoverId, setHoverId] = useState<string | null>(null);
+  const columnCount = showDateColumn ? 6 : 5;
 
   return (
     <motion.div
@@ -61,17 +71,24 @@ export function ListingTable<T extends Listing>({
       initial="hidden"
       animate="show"
       style={{ marginTop: 16 }}
-      className="bg-white shadow-md rounded-xl"
+      className="w-full min-w-0 overflow-hidden rounded-xl bg-white shadow-md"
     >
-      <table className="w-full border-collapse table-fixed">
+      <div className="w-full overflow-x-auto">
+      <table className="w-full min-w-[720px] border-collapse table-fixed">
         <thead>
           <tr className="text-left border border-b-neutral-200">
-            <TableTd className={`w-[38%] ${headerStyle}`}>Route</TableTd>
-            <TableTd className={`w-[14%] ${headerStyle}`}>Date</TableTd>
+            <TableTd
+              className={`${showDateColumn ? "w-[38%]" : "w-[52%]"} ${headerStyle}`}
+            >
+              Route
+            </TableTd>
+            {showDateColumn ? (
+              <TableTd className={`w-[14%] ${headerStyle}`}>Departure</TableTd>
+            ) : null}
             <TableTd className={`w-[10%] ${headerStyle}`}>Space</TableTd>
             <TableTd className={`w-[14%] ${headerStyle}`}>Price per kg</TableTd>
             <TableTd className={`w-[10%] ${headerStyle}`}>Status</TableTd>
-            <TableTd className={`w-[14%] pl-6 ${textStyle}`}>Actions</TableTd>
+            <TableTd className={`w-[18%] pl-6 ${textStyle}`}>Actions</TableTd>
           </tr>
         </thead>
 
@@ -79,7 +96,7 @@ export function ListingTable<T extends Listing>({
         <motion.tbody variants={tbodyVariants} initial="hidden" animate="show">
           {data.length === 0 ? (
             <tr>
-              <TableTd className="px-4 py-6 text-center text-slate-500" colSpan={6}>
+              <TableTd className="px-4 py-6 text-center text-slate-500" colSpan={columnCount}>
                 No listings yet.
               </TableTd>
             </tr>
@@ -95,7 +112,9 @@ export function ListingTable<T extends Listing>({
               className="hover:bg-neutral-100 border border-b-neutral-100 hover:shadow-sm"
               style={{ transformOrigin: "center" }}
             >
-              <TableTd className="pl-4 py-2 w-[38%]">
+              <TableTd
+                className={`pl-4 py-2 ${showDateColumn ? "w-[38%]" : "w-[52%]"}`}
+              >
                 <span className="relative inline-flex items-center w-full max-w-lg pr-4">
                   {/* Left text stays stable */}
                   <span className="inline-flex gap-2 min-w-0">
@@ -129,11 +148,11 @@ export function ListingTable<T extends Listing>({
                 </span>
               </TableTd>
 
-              <TableTd className="pl-4 py-2 w-[14%] whitespace-nowrap">
-                <TableText
-                  text={row.type === "trip" ? formatListingDate(row.departDate) : "—"}
-                />
-              </TableTd>
+              {showDateColumn ? (
+                <TableTd className="pl-4 py-2 w-[14%] whitespace-nowrap">
+                  <TableText text={formatListingDate(row.departDate)} />
+                </TableTd>
+              ) : null}
 
               <TableTd>
                 <TableText text={`${row.weightKg.toString()}kg`} />
@@ -159,7 +178,24 @@ export function ListingTable<T extends Listing>({
               </TableTd>
 
               <TableTd>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const toggleLabel = getListingStatusToggleLabel(row);
+                    return toggleLabel && onToggleStatus ? (
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                        aria-label={`${toggleLabel} listing`}
+                        className="rounded-md px-3 py-1 text-sm text-primary-700 transition hover:bg-primary-50"
+                        onClick={() =>
+                          onToggleStatus(row, toggleLabel === "Activate")
+                        }
+                      >
+                        {toggleLabel}
+                      </motion.button>
+                    ) : null;
+                  })()}
+
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
@@ -209,6 +245,7 @@ export function ListingTable<T extends Listing>({
           ))}
         </motion.tbody>
       </table>
+      </div>
     </motion.div>
   );
 }
@@ -246,26 +283,4 @@ function formatListingDate(value: string | null | undefined): string {
   const month = parsed.toLocaleString("en-GB", { month: "short" });
   const year = parsed.getFullYear();
   return `${day} ${month} ${year}`;
-}
-
-function formatListingStatus(status: string): string {
-  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-}
-
-function statusBadgeClass(status: string): string {
-  const normalized = status.trim().toUpperCase();
-
-  if (normalized === "ACTIVE" || normalized === "OPEN") {
-    return "bg-success-50 text-success-500 border-success-200";
-  }
-
-  if (normalized === "FULL" || normalized === "MATCHED") {
-    return "bg-primary-50 text-primary-500 border-primary-200";
-  }
-
-  if (normalized === "ARCHIVED") {
-    return "bg-neutral-100 text-neutral-500 border-neutral-200";
-  }
-
-  return "bg-neutral-100 text-neutral-600 border-neutral-200";
 }

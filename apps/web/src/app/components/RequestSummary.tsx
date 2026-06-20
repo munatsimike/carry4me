@@ -28,6 +28,7 @@ import {
   RequestTripDetailsSection,
 } from "../features/carry request/ui/RequestDetailsLayout";
 import { formatPersonDisplayName } from "../shared/application/formatPersonDisplayName";
+import { tripAcceptsParcelCategories } from "../features/goods/domain/goodsCategoryConstants";
 
 type RequestSummaryProps = {
   loggedInUserId: string;
@@ -85,10 +86,9 @@ export default function RequestSummary({
       issues.push(getWeightCapacityIssue(isSenderRequesting));
     }
 
-    const categoriesAccepted = parcel.goodsCategory.every((parcelCategory) =>
-      trip.goodsCategory.some(
-        (tripCategory) => tripCategory.name === parcelCategory.name,
-      ),
+    const categoriesAccepted = tripAcceptsParcelCategories(
+      trip.goodsCategory,
+      parcel.goodsCategory,
     );
 
     if (!categoriesAccepted) {

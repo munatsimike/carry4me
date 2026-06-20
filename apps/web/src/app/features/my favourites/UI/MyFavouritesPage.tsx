@@ -12,9 +12,12 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
 import { useMemo, useState } from "react";
 import EmptyState from "@/app/components/EmptyState";
+import BrowseMarketplaceActions from "@/app/components/BrowseMarketplaceActions";
+import PageLoadingSpinner from "@/app/components/PageLoadingSpinner";
 import { useFavourites } from "@/app/hooks/queries/useFavouritesQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import FavouritesList from "./FavouritesList";
+import { toFavouritesEmptyState } from "../application/toFavouritesEmptyStateMapper";
 import {
   HorizontalMenu,
   type TabItem,
@@ -26,8 +29,9 @@ import CustomModal from "@/app/components/CustomModal";
 import { useOutletContext } from "react-router-dom";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
+import type { MyFavTabs } from "../domain/types";
 
-export type MyFavTabs = "all" | "trip" | "parcel";
+export type { MyFavTabs };
 
 const tabs: TabItem<MyFavTabs>[] = [
   { id: "all", label: "All" },
@@ -57,7 +61,7 @@ export function MyFavouritesPage() {
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
-  const { data: favListing = [], error } = useFavourites(user?.id);
+  const { data: favListing = [], isLoading, error } = useFavourites(user?.id);
   useQueryErrorEffect(error);
   const [selectedTab, setSelectedTab] = useState<MyFavTabs>("all");
   const { isSearchOpen, setIsSearchOpen } = useOutletContext<LayoutContext>();
@@ -70,6 +74,7 @@ export function MyFavouritesPage() {
     setGoodsCategory,
     setSortOption,
   });
+  const { clearFilters, hasFilter } = filterForm;
 
   const visibleFavourites = useMemo(
     () => favListing.filter((item) => !removedIds.has(item.id)),
@@ -130,7 +135,22 @@ export function MyFavouritesPage() {
     />
   );
 
-  const { clearFilters, hasFilter } = filterForm;
+  const emptyState = useMemo(() => {
+    if (displayedFavourites.length > 0) return null;
+    return toFavouritesEmptyState({
+      selectedTab,
+      hasFilter,
+      isSearchActive,
+      hasAnyFavourites: visibleFavourites.length > 0,
+    });
+  }, [
+    displayedFavourites.length,
+    selectedTab,
+    hasFilter,
+    isSearchActive,
+    visibleFavourites.length,
+  ]);
+
   const scrollDirection = useScrollDirection();
   const searchContent = (
     <Search
@@ -195,19 +215,25 @@ export function MyFavouritesPage() {
           />
         </div>
 
-        {displayedFavourites && (
+        {isLoading ? (
+          <PageLoadingSpinner />
+        ) : displayedFavourites.length > 0 ? (
           <FavouritesList
             listings={displayedFavourites}
             onClick={() => null}
             toggleLike={handleLikeUpdate}
           />
-        )}
-        {hasFilter && displayedFavourites.length === 0 && (
+        ) : emptyState ? (
           <EmptyState
-            title="No matching parcels"
-            description="Try adjusting your search or filters to find more saved listings."
+            title={emptyState.title}
+            description={emptyState.body}
+            action={
+              emptyState.actions ? (
+                <BrowseMarketplaceActions actions={emptyState.actions} />
+              ) : undefined
+            }
           />
-        )}
+        ) : null}
       </DefaultContainer>
     </>
   );

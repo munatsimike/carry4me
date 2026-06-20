@@ -52,11 +52,14 @@ import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import EmptyState from "@/app/components/EmptyState";
+import BrowseMarketplaceActions, {
+  BrowseMarketplaceButton,
+} from "@/app/components/BrowseMarketplaceActions";
 import {
   toEmptyStateForMapper,
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Package } from "lucide-react";
 import { dialogIconStyle } from "@/app/lib/cn";
 import {
@@ -761,25 +764,9 @@ export default function CarryRequestsPage() {
               title={emptyStateMessage.title}
               description={emptyStateMessage.body}
               action={
-                emptyStateMessage.actions && (
-                  <div className="flex flex-wrap items-center justify-around gap-4">
-                    {emptyStateMessage.actions.map((action) => (
-                      <Link
-                        key={action.href}
-                        to={action.href}
-                        className="w-full sm:flex-1"
-                      >
-                        <Button
-                          variant={action.variant}
-                          size="sm"
-                          className="w-full whitespace-nowrap"
-                        >
-                          {action.label}
-                        </Button>
-                      </Link>
-                    ))}
-                  </div>
-                )
+                emptyStateMessage.actions ? (
+                  <BrowseMarketplaceActions actions={emptyStateMessage.actions} />
+                ) : undefined
               }
             />
           )}
@@ -1011,7 +998,24 @@ function RequestActions({
       {!showDisplayInfo && secondaryButton}
 
       {actions.primary &&
-        actions.primary.key !== UIACTIONKEYS.RELEASE_PAYMENT && (
+        actions.primary.key !== UIACTIONKEYS.RELEASE_PAYMENT &&
+        (actions.primary.key === UIACTIONKEYS.BROWSE_TRIPS ||
+        actions.primary.key === UIACTIONKEYS.BROWSE_PARCELS ? (
+          <BrowseMarketplaceButton
+            tone={
+              actions.primary.key === UIACTIONKEYS.BROWSE_TRIPS
+                ? "trips"
+                : "parcels"
+            }
+            size="md"
+            className="w-full sm:w-auto"
+            disabled={actionsDisabled}
+            isBusy={isPrimaryPending}
+            onClick={() => onPrimaryAction(actions, request)}
+          >
+            {actionButtonLabel(actions.primary.label, isPrimaryPending)}
+          </BrowseMarketplaceButton>
+        ) : (
           <Button
             className="w-full sm:w-auto"
             onClick={() => onPrimaryAction(actions, request)}
@@ -1023,7 +1027,7 @@ function RequestActions({
           >
             {actionButtonLabel(actions.primary.label, isPrimaryPending)}
           </Button>
-        )}
+        ))}
 
       {actions.infoBlock?.mode === INFOMODES.INPUT && (
         <InfoBlockInput

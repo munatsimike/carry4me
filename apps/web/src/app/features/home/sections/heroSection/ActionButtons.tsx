@@ -6,6 +6,13 @@ import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import {
+  browseMarketplaceArrowClass,
+  browseMarketplaceIconClass,
+  browseMarketplaceSubtitleClass,
+  browseMarketplaceSurfaceClass,
+  browseMarketplaceTitleClass,
+} from "@/app/shared/marketplace/browseMarketplaceStyles";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -31,7 +38,7 @@ export default function ActionButtons() {
 
   return (
     <motion.section
-      className="mx-auto flex w-full max-w-3xl flex-col gap-3 py-6 sm:gap-4 sm:py-8 md:flex-row md:justify-center md:py-10"
+      className="mx-auto flex w-full max-w-3xl flex-col gap-4 py-6 sm:gap-5 sm:py-8 md:flex-row md:justify-center md:gap-6 md:py-10"
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -40,14 +47,17 @@ export default function ActionButtons() {
         <Link to="/parcels" className="block w-full">
           <Button
             className={cn(
-              "w-full min-w-0 border border-[#334155]/20 bg-[#334155]/10 px-4 shadow-sm",
-              "hover:border-[#334155]/30 hover:bg-[#334155]/15 hover:shadow-md",
+              "w-full min-w-0 px-4",
+              browseMarketplaceSurfaceClass.parcels,
             )}
             subtitle={
               <CustomText
                 as="span"
                 textSize={subtitleSize}
-                className="text-center leading-snug text-[#475569]"
+                className={cn(
+                  "text-center leading-snug",
+                  browseMarketplaceSubtitleClass,
+                )}
               >
                 See what people need sent home.
               </CustomText>
@@ -58,18 +68,22 @@ export default function ActionButtons() {
               <SvgIcon
                 size="xl"
                 Icon={META_ICONS.parcelBox}
-                className="text-[#475569]"
+                className={browseMarketplaceIconClass.parcels}
               />
             }
             trailingIcon={
-              <SvgIcon size="sm" Icon={ArrowIcon} className="text-[#64748b]" />
+              <SvgIcon
+                size="sm"
+                Icon={ArrowIcon}
+                className={browseMarketplaceArrowClass.parcels}
+              />
             }
           >
             <CustomText
               as="span"
               textSize={titleSize}
               textVariant="primary"
-              className="leading-snug text-[#334155]"
+              className={cn("leading-snug", browseMarketplaceTitleClass.parcels)}
             >
               Browse parcels
             </CustomText>
@@ -81,14 +95,17 @@ export default function ActionButtons() {
         <Link to="/travelers" className="block w-full">
           <Button
             className={cn(
-              "w-full min-w-0 border border-primary-200 bg-primary-50 px-4 shadow-sm",
-              "hover:border-primary-300 hover:bg-primary-100 hover:shadow-md",
+              "w-full min-w-0 px-4",
+              browseMarketplaceSurfaceClass.trips,
             )}
             subtitle={
               <CustomText
                 as="span"
                 textSize={subtitleSize}
-                className="text-center leading-snug text-[#475569]"
+                className={cn(
+                  "text-center leading-snug",
+                  browseMarketplaceSubtitleClass,
+                )}
               >
                 See who is traveling home soon.
               </CustomText>
@@ -99,18 +116,22 @@ export default function ActionButtons() {
               <SvgIcon
                 size="xl"
                 Icon={META_ICONS.planeFilled}
-                className="text-primary-600"
+                className={browseMarketplaceIconClass.trips}
               />
             }
             trailingIcon={
-              <SvgIcon size="sm" Icon={ArrowIcon} className="text-primary-500" />
+              <SvgIcon
+                size="sm"
+                Icon={ArrowIcon}
+                className={browseMarketplaceArrowClass.trips}
+              />
             }
           >
             <CustomText
               as="span"
               textSize={titleSize}
               textVariant="primary"
-              className="leading-snug text-primary-800"
+              className={cn("leading-snug", browseMarketplaceTitleClass.trips)}
             >
               Browse trips
             </CustomText>

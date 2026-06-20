@@ -12,6 +12,10 @@ import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 import { resolveModalIcon } from "./modalIcons";
+import {
+  BrowseMarketplaceButton,
+  resolveBrowseMarketplaceTone,
+} from "@/app/components/BrowseMarketplaceActions";
 
 export function UniversalModalHost({
   modal,
@@ -117,34 +121,65 @@ export function UniversalModalHost({
 
               <ModalFooter>
                 {action.secondaryLabel ? (
-                  <Button
-                    className="w-full sm:min-w-[120px] sm:w-auto"
+                  <ModalFooterButton
+                    label={action.secondaryLabel}
+                    slot="secondary"
                     onClick={() => {
                       action.secondaryAction?.();
                       onRequestClose();
                     }}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <CustomText textVariant="primary">
-                      {action.secondaryLabel}
-                    </CustomText>
-                  </Button>
+                  />
                 ) : null}
 
-                <Button
-                  className="w-full sm:min-w-[120px] sm:w-auto"
+                <ModalFooterButton
+                  label={action.label}
+                  slot="primary"
                   onClick={action.onClick}
-                  variant="primary"
-                  size="sm"
-                >
-                  <CustomText textVariant="onDark">{action.label}</CustomText>
-                </Button>
+                />
               </ModalFooter>
             </div>
           </CustomModal>
         </div>
       )}
     </AnimatePresence>
+  );
+}
+
+function ModalFooterButton({
+  label,
+  slot,
+  onClick,
+}: {
+  label: string;
+  slot: "primary" | "secondary";
+  onClick: () => void;
+}) {
+  const browseTone = resolveBrowseMarketplaceTone(label);
+  const className = "w-full sm:min-w-[120px] sm:w-auto";
+
+  if (browseTone) {
+    return (
+      <BrowseMarketplaceButton
+        tone={browseTone}
+        size="sm"
+        className={className}
+        onClick={onClick}
+      >
+        {label}
+      </BrowseMarketplaceButton>
+    );
+  }
+
+  return (
+    <Button
+      className={className}
+      onClick={onClick}
+      variant={slot === "secondary" ? "outline" : "primary"}
+      size="sm"
+    >
+      <CustomText textVariant={slot === "secondary" ? "primary" : "onDark"}>
+        {label}
+      </CustomText>
+    </Button>
   );
 }

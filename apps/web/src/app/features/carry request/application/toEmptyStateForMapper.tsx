@@ -1,11 +1,9 @@
+import type { BrowseMarketplaceAction } from "@/app/components/BrowseMarketplaceActions";
+
 export type EmptyStateConfig = {
   title: string;
   body: string;
-  actions?: {
-    label: string;
-    href: string;
-    variant: "primary" | "secondary";
-  }[];
+  actions?: BrowseMarketplaceAction[];
 };
 
 export function toEmptyStateForMapper(navTab: string): EmptyStateConfig {
@@ -15,17 +13,9 @@ export function toEmptyStateForMapper(navTab: string): EmptyStateConfig {
         title: "No ongoing requests",
         body: "You have no ongoing requests yet. Browse trips or parcels to get started.",
         actions: [
-          {
-            label: "Browse trips",
-            href: "/travelers",
-            variant: "secondary",
-          },
-          {
-            label: "Browse parcels",
-            href: "/parcels",
-            variant: "primary",
-          },
-        ]
+          { label: "Browse trips", href: "/travelers", tone: "trips" },
+          { label: "Browse parcels", href: "/parcels", tone: "parcels" },
+        ],
       };
 
     case "declined":
@@ -45,17 +35,9 @@ export function toEmptyStateForMapper(navTab: string): EmptyStateConfig {
         title: "No completed requests",
         body: "You haven’t completed any deliveries yet.",
         actions: [
-          {
-            label: "Browse trips",
-            href: "/travelers",
-            variant: "secondary",
-          },
-          {
-            label: "Browse parcels",
-            href: "/parcels",
-            variant: "primary",
-          },
-        ]
+          { label: "Browse trips", href: "/travelers", tone: "trips" },
+          { label: "Browse parcels", href: "/parcels", tone: "parcels" },
+        ],
       };
 
     default:

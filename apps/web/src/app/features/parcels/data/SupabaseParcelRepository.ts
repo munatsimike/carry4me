@@ -29,6 +29,23 @@ export class SupabaseParcelRepository implements ParcelRepository {
     return deleteById(parcelId, "parcels");
   }
 
+  async setParcelListingActive(
+    parcelId: string,
+    active: boolean,
+  ): Promise<string> {
+    const { data, error, status } = await supabase.rpc(
+      "set_parcel_listing_active",
+      {
+        p_parcel_id: parcelId,
+        p_active: active,
+      },
+    );
+
+    throwIfSupabaseError(error, status);
+
+    return String(data ?? parcelId);
+  }
+
   async editParcel(editParcel: Partial<ParcelDto>): Promise<string> {
     const { data, error, status } = await supabase
       .from("parcels")
@@ -116,8 +133,12 @@ export class SupabaseParcelRepository implements ParcelRepository {
       // Send-request picker: only marketplace-active parcels.
       query.eq("status", PARCELSTATUSES.OPEN);
     } else if (shouldFilter && userId) {
-      // My parcels: active shipments (off marketplace but visible to owner).
-      query.in("status", [PARCELSTATUSES.OPEN, PARCELSTATUSES.MATCHED]);
+      query.in("status", [
+        PARCELSTATUSES.OPEN,
+        PARCELSTATUSES.MATCHED,
+        PARCELSTATUSES.INACTIVE,
+        PARCELSTATUSES.ARCHIVED,
+      ]);
     } else {
       // Marketplace browse: only listings available to match.
       query.eq("status", PARCELSTATUSES.OPEN);

@@ -7,29 +7,37 @@ import { ListingTable } from "../dashboard/components/ListingTable";
 import { useToast } from "@/app/components/Toast";
 import type { TripListing } from "./domain/Trip";
 import type { FormValues } from "@/types/Ui";
+import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import CustomModal from "@/app/components/CustomModal";
 import TravelerCard from "./ui/TravelerCard";
 import EmptyState from "@/app/components/EmptyState";
-import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
+import PageHeading from "@/app/components/PageHeading";
+import PageLoadingSpinner from "@/app/components/PageLoadingSpinner";
 import { MobileListingCard } from "../dashboard/components/MobileListingCard";
 import FAB from "@/app/components/FAB";
 import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
-import { useDeleteTripMutation } from "@/app/hooks/mutations/useTripMutations";
+import {
+  useDeleteTripMutation,
+  useUpdateTripStatusMutation,
+} from "@/app/hooks/mutations/useTripMutations";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
+import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { confirmListingStatusChange } from "@/app/shared/listings/listingStatusConfirmation";
 
 export function MyTripsPage() {
-  const isMobile = useMediaQuery();
   const { user } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { confirm } = useUniversalModal();
 
   const { data: myTrips = [], isLoading, error } = useMyTrips(user?.id);
   useQueryErrorEffect(error);
 
   const deleteTripMutation = useDeleteTripMutation();
+  const updateTripStatusMutation = useUpdateTripStatusMutation();
 
   const sortedTrips = useMemo(() => {
     return [...myTrips].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
@@ -41,6 +49,26 @@ export function MyTripsPage() {
         toast("Trip deleted successfully.", { variant: "success" });
       },
     });
+  };
+
+  const toggleTripStatus = async (listing: Listing, active: boolean) => {
+    const shouldProceed = await confirmListingStatusChange(
+      listing,
+      active,
+      confirm,
+    );
+    if (!shouldProceed) return;
+
+    updateTripStatusMutation.mutate(
+      { tripId: listing.id, active },
+      {
+        onSuccess: () => {
+          toast(active ? "Trip activated." : "Trip deactivated.", {
+            variant: "success",
+          });
+        },
+      },
+    );
   };
 
   const handleOnClick = () => {
@@ -55,9 +83,15 @@ export function MyTripsPage() {
   };
 
   return (
-    <DefaultContainer outerClassName="bg-canvas min-h-screen">
+    <DefaultContainer outerClassName="bg-canvas min-h-screen py-4 sm:py-6 lg:py-8">
+      <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:gap-4">
+        <PageHeading
+          title="My trips"
+          subtitle="Manage the trips you've posted. Edit details or deactivate a trip to hide it from senders."
+        />
+      </div>
       {isLoading ? (
-        <p>Loading…</p>
+        <PageLoadingSpinner />
       ) : sortedTrips.length === 0 ? (
         <EmptyState
           title="No trips yet"
@@ -75,22 +109,29 @@ export function MyTripsPage() {
             </Button>
           }
         />
-      ) : isMobile ? (
-        <MobileListingCard
-          data={myTrips}
-          onEdit={handleEdit}
-          onDelete={deleteTrip}
-          setListingPreview={setTripPreview}
-          setModalState={() => {}}
-        />
       ) : (
-        <ListingTable
-          data={myTrips}
-          onEdit={handleEdit}
-          onDelete={deleteTrip}
-          setListingPreview={setTripPreview}
-          setModalState={() => {}}
-        />
+        <>
+          <div className="w-full min-w-0 pb-24 lg:hidden">
+            <MobileListingCard
+              data={myTrips}
+              onEdit={handleEdit}
+              onDelete={deleteTrip}
+              onToggleStatus={toggleTripStatus}
+              setListingPreview={setTripPreview}
+              setModalState={() => {}}
+            />
+          </div>
+          <div className="hidden min-w-0 lg:block">
+            <ListingTable
+              data={myTrips}
+              onEdit={handleEdit}
+              onDelete={deleteTrip}
+              onToggleStatus={toggleTripStatus}
+              setListingPreview={setTripPreview}
+              setModalState={() => {}}
+            />
+          </div>
+        </>
       )}
 
       {tripreview && (

@@ -38,3 +38,57 @@ export function formatTripAcceptedCategoryLabels(
 export function tripAcceptsAllCategories(categories: GoodsCategory[]): boolean {
   return categories.some(isAllGoodsCategory);
 }
+
+function categoryMatchKeys(
+  category: Pick<GoodsCategory, "id" | "slug" | "name">,
+): string[] {
+  return [category.id, category.slug, category.name]
+    .map((value) => value?.trim().toLowerCase() ?? "")
+    .filter(Boolean);
+}
+
+/** Every parcel category must be accepted on the trip (by id, slug, or name). */
+export function tripAcceptsParcelCategories(
+  tripCategories: GoodsCategory[],
+  parcelCategories: GoodsCategory[],
+): boolean {
+  if (tripAcceptsAllCategories(tripCategories)) {
+    return true;
+  }
+
+  if (parcelCategories.length === 0 || tripCategories.length === 0) {
+    return true;
+  }
+
+  const tripCategoryKeys = new Set(
+    tripCategories.flatMap((category) => categoryMatchKeys(category)),
+  );
+
+  return parcelCategories.every((parcelCategory) => {
+    const keys = categoryMatchKeys(parcelCategory);
+    return keys.some((key) => tripCategoryKeys.has(key));
+  });
+}
+
+/** At least one parcel category must be accepted on the trip (by id, slug, or name). */
+export function tripAcceptsAnyParcelCategory(
+  tripCategories: GoodsCategory[],
+  parcelCategories: GoodsCategory[],
+): boolean {
+  if (tripAcceptsAllCategories(tripCategories)) {
+    return true;
+  }
+
+  if (parcelCategories.length === 0 || tripCategories.length === 0) {
+    return true;
+  }
+
+  const tripCategoryKeys = new Set(
+    tripCategories.flatMap((category) => categoryMatchKeys(category)),
+  );
+
+  return parcelCategories.some((parcelCategory) => {
+    const keys = categoryMatchKeys(parcelCategory);
+    return keys.some((key) => tripCategoryKeys.has(key));
+  });
+}

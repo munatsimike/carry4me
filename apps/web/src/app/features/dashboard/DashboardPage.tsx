@@ -10,6 +10,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import type { SvgIconComponent } from "@/types/Ui";
 import { motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
+import PageLoadingSpinner from "@/app/components/PageLoadingSpinner";
 import StatsSection from "./components/StatsSection";
 import SuggestedMatchesTabs, {
   type SuggestedMatchesData,
@@ -31,6 +32,11 @@ import { formatRelativeTime } from "./application/formatRelativeTime";
 import { cn } from "@/app/lib/cn";
 import { iconForActivity } from "./application/iconForActivity";
 import Greeting from "@/app/components/Greeting";
+import {
+  browseMarketplaceIconClass,
+  browseMarketplaceSurfaceClass,
+  browseMarketplaceTitleClass,
+} from "@/app/shared/marketplace/browseMarketplaceStyles";
 
 /**
  * Dashboard Page
@@ -178,7 +184,9 @@ function DashboardSuggestedMatchesSection({
         <CustomText textVariant="primary" textSize="lg" className="font-medium">
           Suggested matches
         </CustomText>
-        <p className="text-sm text-neutral-500">Loading suggested matches...</p>
+        <div className="py-2 sm:py-4">
+          <PageLoadingSpinner />
+        </div>
       </section>
     );
   }
@@ -432,9 +440,9 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
             iconSize="lg"
             textVariant="primary"
             showArrow
-            buttonClassName="border border-primary-200 bg-primary-50 shadow-sm hover:border-primary-300 hover:bg-primary-100 hover:shadow-md"
-            iconClassName="text-primary-600"
-            textClassName="text-primary-800"
+            buttonClassName={browseMarketplaceSurfaceClass.trips}
+            iconClassName={browseMarketplaceIconClass.trips}
+            textClassName={browseMarketplaceTitleClass.trips}
           />
         </Link>
       </motion.div>
@@ -449,9 +457,9 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
             iconSize="lg"
             textVariant="primary"
             showArrow
-            buttonClassName="border border-[#334155]/20 bg-[#334155]/10 shadow-sm hover:border-[#334155]/30 hover:bg-[#334155]/15 hover:shadow-md"
-            iconClassName="text-[#475569]"
-            textClassName="text-[#334155]"
+            buttonClassName={browseMarketplaceSurfaceClass.parcels}
+            iconClassName={browseMarketplaceIconClass.parcels}
+            textClassName={browseMarketplaceTitleClass.parcels}
           />
         </Link>
       </motion.div>

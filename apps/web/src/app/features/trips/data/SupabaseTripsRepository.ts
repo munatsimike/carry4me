@@ -44,6 +44,17 @@ export class SupabaseTripsRepository implements TripsRepository {
     return deleteById(parcelId, "trips");
   }
 
+  async setTripListingActive(tripId: string, active: boolean): Promise<string> {
+    const { data, error, status } = await supabase.rpc("set_trip_listing_active", {
+      p_trip_id: tripId,
+      p_active: active,
+    });
+
+    throwIfSupabaseError(error, status);
+
+    return String(data ?? tripId);
+  }
+
   async tripsById(userId: string, tripId: string): Promise<TripListing[]> {
     return this.listTrips(userId, tripId, true);
   }
@@ -166,7 +177,16 @@ export class SupabaseTripsRepository implements TripsRepository {
     }
 
     if (!tripId) {
-      query.eq("status", TRIPSTATUSES.ACTIVE);
+      if (shouldFilter && userId) {
+        query.in("status", [
+          TRIPSTATUSES.ACTIVE,
+          TRIPSTATUSES.FULL,
+          TRIPSTATUSES.INACTIVE,
+          TRIPSTATUSES.ARCHIVED,
+        ]);
+      } else {
+        query.eq("status", TRIPSTATUSES.ACTIVE);
+      }
     }
 
     // Public marketplace: hide trips whose departure date has passed.

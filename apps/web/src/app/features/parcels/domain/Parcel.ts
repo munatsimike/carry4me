@@ -3,6 +3,7 @@ export const PARCELSTATUSES = {
   OPEN: "OPEN",
   ARCHIVED: "ARCHIVED",
   MATCHED: "MATCHED",
+  INACTIVE: "INACTIVE",
 } as const;
 
 export type ParcelStatuses =

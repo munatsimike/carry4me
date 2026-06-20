@@ -14,4 +14,5 @@ export interface ParcelRepository {
   parcelsForMatching(userId: string): Promise<ParcelListing[]>;
   deleteParcel(parcelId: string): Promise<string>;
   editParcel(editParcel: Partial<ParcelDto>): Promise<string>;
+  setParcelListingActive(parcelId: string, active: boolean): Promise<string>;
 }
