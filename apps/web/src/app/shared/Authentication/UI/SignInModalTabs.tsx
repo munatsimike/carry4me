@@ -1,4 +1,5 @@
 import { cn } from "@/app/lib/cn";
+import { Fingerprint, Mail, Smartphone, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
 export type SignInTab = "passkey" | "phone" | "email";
@@ -6,10 +7,16 @@ export type SignInTab = "passkey" | "phone" | "email";
 /** Set to `1`, `2`, or `3` to compare tab navigation styles. */
 export const SIGN_IN_TAB_NAV_STYLE: 1 | 2 | 3 = 2;
 
-const SIGN_IN_TABS: { id: SignInTab; label: string }[] = [
-  { id: "passkey", label: "Passkey" },
-  { id: "email", label: "Email OTP" },
-  { id: "phone", label: "Phone OTP" },
+type SignInTabConfig = {
+  id: SignInTab;
+  label: string;
+  icon: LucideIcon;
+};
+
+const SIGN_IN_TABS: SignInTabConfig[] = [
+  { id: "passkey", label: "Passkey", icon: Fingerprint },
+  { id: "email", label: "Email Code", icon: Mail },
+  { id: "phone", label: "SMS Code", icon: Smartphone },
 ];
 
 type SignInModalTabsProps = {
@@ -37,27 +44,79 @@ export function SignInModalTabs({
   }
 }
 
+function SignInTabIcon({
+  icon: Icon,
+  isActive,
+  layout = "stacked",
+}: {
+  icon: LucideIcon;
+  isActive: boolean;
+  layout?: "stacked" | "inline";
+}) {
+  return (
+    <Icon
+      className={cn(
+        "shrink-0",
+        layout === "stacked" ? "h-4 w-4" : "h-3.5 w-3.5",
+        isActive ? "text-primary-600" : "text-neutral-400",
+      )}
+      strokeWidth={1.75}
+      aria-hidden
+    />
+  );
+}
+
+function SignInTabLabel({
+  tab,
+  isActive,
+  layout = "stacked",
+}: {
+  tab: SignInTabConfig;
+  isActive: boolean;
+  layout?: "stacked" | "inline";
+}) {
+  if (layout === "inline") {
+    return (
+      <span className="inline-flex items-center justify-center gap-1.5">
+        <SignInTabIcon icon={tab.icon} isActive={isActive} layout="inline" />
+        <span className={cn(isActive && "font-semibold")}>{tab.label}</span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="flex flex-col items-center gap-1">
+      <SignInTabIcon icon={tab.icon} isActive={isActive} layout="stacked" />
+      <span className={cn(isActive && "font-semibold")}>{tab.label}</span>
+    </span>
+  );
+}
+
 function SignInModalTabsStyle1({
   activeTab,
   onTabChange,
 }: SignInModalTabsProps) {
   return (
     <div className="grid grid-cols-3 gap-1 rounded-xl bg-neutral-100 p-1">
-      {SIGN_IN_TABS.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onTabChange(tab.id)}
-          className={cn(
-            "rounded-lg px-2 py-2 text-sm font-medium transition-colors",
-            activeTab === tab.id
-              ? "bg-white font-semibold text-primary-800 shadow ring-1 ring-primary-200/90"
-              : "text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-600",
-          )}
-        >
-          {tab.label}
-        </button>
-      ))}
+      {SIGN_IN_TABS.map((tab) => {
+        const isActive = activeTab === tab.id;
+
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onTabChange(tab.id)}
+            className={cn(
+              "rounded-lg px-2 py-2 text-sm font-medium transition-colors",
+              isActive
+                ? "bg-white text-primary-800 shadow ring-1 ring-primary-200/90"
+                : "text-neutral-500 hover:bg-neutral-200/60 hover:text-neutral-600",
+            )}
+          >
+            <SignInTabLabel tab={tab} isActive={isActive} layout="stacked" />
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -85,7 +144,7 @@ function SignInModalTabsStyle2({
                   : "text-neutral-500 hover:text-neutral-700",
               )}
             >
-              <span className={cn(isActive && "font-semibold")}>{tab.label}</span>
+              <SignInTabLabel tab={tab} isActive={isActive} layout="stacked" />
               {isActive ? (
                 <motion.span
                   layoutId="sign-in-tab-indicator"
@@ -120,11 +179,11 @@ function SignInModalTabsStyle3({
               "rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-200",
               isActive
-                ? "border border-primary-200 bg-primary-50 font-semibold text-primary-800 shadow-sm"
+                ? "border border-primary-200 bg-primary-50 text-primary-800 shadow-sm"
                 : "border border-transparent text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700",
             )}
           >
-            {tab.label}
+            <SignInTabLabel tab={tab} isActive={isActive} layout="inline" />
           </button>
         );
       })}

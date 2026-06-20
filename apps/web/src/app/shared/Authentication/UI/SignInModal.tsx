@@ -205,7 +205,7 @@ export function SignInModal() {
               Sign in
             </CustomText>
             <CustomText textSize="sm" textVariant="secondary">
-              Sign in using a passkey, email, or phone verification.
+              Choose how you want to sign in.
             </CustomText>
           </div>
 
@@ -272,7 +272,7 @@ export function SignInModal() {
                     disabled={loadingPhoneOtp}
                     className="w-full"
                   >
-                    Send OTP
+                    Send code
                   </Button>
                 </motion.form>
               ) : null}
@@ -333,7 +333,7 @@ export function SignInModal() {
                         <span className="ml-2">Processing...</span>
                       </>
                     ) : (
-                      "Send OTP"
+                      "Send code"
                     )}
                   </Button>
                 </motion.div>
