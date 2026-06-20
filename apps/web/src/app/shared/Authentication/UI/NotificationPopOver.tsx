@@ -2,12 +2,11 @@ import LineDivider from "@/app/components/LineDivider";
 import { CloseBackBtn } from "@/app/components/CloseBtn";
 import type { CarryRequestNotification } from "@/app/features/carry request/carry request events/domain/CarryRequestNotification";
 import { formatRelativeTime } from "@/app/features/dashboard/application/formatRelativeTime";
-import { iconForActivity } from "@/app/features/dashboard/application/iconForActivity";
 import { cn } from "@/app/lib/cn";
 import CustomText from "@/components/ui/CustomText";
 import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 type PopoverProps = {
@@ -26,10 +25,6 @@ export default function NotificationPopover({
   const ref = useRef<HTMLDivElement | null>(null);
   const [count, setCount] = useState(INITIAL_COUNT);
 
-  const unreadCount = useMemo(
-    () => notifications.filter((item) => item.readAt === null).length,
-    [notifications],
-  );
   const visibleNotifications = notifications.slice(0, count);
   const isExpanded = count >= notifications.length;
   const hasNotifications = notifications.length > 0;
@@ -76,12 +71,11 @@ export default function NotificationPopover({
       ref={ref}
       role="dialog"
       aria-label="Notifications"
-      layout
       initial={{ opacity: 0, y: -7 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       exit={{ opacity: 0, y: 7 }}
-      className="fixed left-3 right-3 top-16 z-30 flex max-h-[min(70vh,520px)] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[min(420px,calc(100vw-2rem))]"
+      className="fixed left-3 right-3 top-16 z-30 flex max-h-[min(70vh,520px)] w-auto max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[min(420px,calc(100vw-2rem))]"
     >
       <div className="relative border-b border-neutral-100 px-4 py-3">
         <CloseBackBtn onClose={onClosePopOver} />
@@ -93,19 +87,10 @@ export default function NotificationPopover({
           >
             Notifications
           </CustomText>
-          {unreadCount > 0 ? (
-            <CustomText as="p" textSize="xs" textVariant="secondary">
-              {unreadCount} unread
-            </CustomText>
-          ) : hasNotifications ? (
-            <CustomText as="p" textSize="xs" textVariant="secondary">
-              You&apos;re all caught up
-            </CustomText>
-          ) : null}
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2 py-2">
         {!hasNotifications ? (
           <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100">
@@ -125,14 +110,11 @@ export default function NotificationPopover({
                 to={item.link}
                 onClick={() => onClosePopOver(false)}
                 className={cn(
-                  "flex gap-3 rounded-lg p-3 transition-colors hover:bg-neutral-50",
+                  "block min-w-0 w-full rounded-lg p-3 transition-colors hover:bg-neutral-50",
                   item.readAt === null && "bg-primary-50/50",
                 )}
               >
-                <span className="inline-flex shrink-0 pt-0.5">
-                  {iconForActivity(item.type)}
-                </span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0">
                   <span className="flex items-start justify-between gap-2">
                     <CustomText
                       textVariant="primary"
@@ -160,7 +142,7 @@ export default function NotificationPopover({
                 </span>
               </Link>
               {index !== visibleNotifications.length - 1 ? (
-                <LineDivider heightClass="my-0 mx-3" />
+                <LineDivider heightClass="my-0" />
               ) : null}
             </div>
           ))

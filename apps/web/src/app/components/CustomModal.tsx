@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 import { CloseBackBtn } from "./CloseBtn";
 import { useMediaQuery } from "../shared/Authentication/UI/hooks/useMediaQuery";
 import { useUI } from "../shared/Authentication/UI/hooks/useUI";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { claimModalSlot, releaseModal, waitForModalSlot } from "./modalCoordinator";
 
 type Width = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 
@@ -26,6 +27,7 @@ const sizes: Record<Width, string> = {
   "3xl": "max-w-3xl",
   "4xl": "max-w-4xl",
 };
+
 export default function CustomModal({
   children,
   onClose,
@@ -33,29 +35,18 @@ export default function CustomModal({
   scrollable = true,
   closeOnBackdropClick = true,
 }: Props) {
+  const modalId = useId();
   const isMobile = useMediaQuery();
+  const [isReady, setIsReady] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const closeTimeoutRef = useRef<number | null>(null);
+  const onCloseRef = useRef(onClose);
+  const isClosingRef = useRef(false);
+
+  onCloseRef.current = onClose;
+  isClosingRef.current = isClosing;
 
   const { incrementOverlayCount, decrementOverlayCount } = useUI();
-
-  useEffect(() => {
-    if (!isMobile) return;
-
-    incrementOverlayCount();
-
-    return () => {
-      decrementOverlayCount();
-    };
-  }, [isMobile, incrementOverlayCount, decrementOverlayCount]);
-
-  useEffect(() => {
-    return () => {
-      if (closeTimeoutRef.current !== null) {
-        window.clearTimeout(closeTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const modalAnimation = isMobile
     ? {
@@ -71,15 +62,58 @@ export default function CustomModal({
         transition: { duration: 0.24, ease: "easeOut" as const },
       };
 
-  const closeDurationMs = Math.max(modalAnimation.transition.duration * 1000, 300);
+  const closeDurationMs = Math.max(
+    modalAnimation.transition.duration * 1000,
+    300,
+  );
 
-  const requestClose = () => {
-    if (isClosing) return;
+  const requestClose = useCallback(() => {
+    if (isClosingRef.current) return;
+
     setIsClosing(true);
     closeTimeoutRef.current = window.setTimeout(() => {
-      onClose();
+      onCloseRef.current();
     }, closeDurationMs);
-  };
+  }, [closeDurationMs]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    incrementOverlayCount();
+
+    return () => {
+      decrementOverlayCount();
+    };
+  }, [isMobile, incrementOverlayCount, decrementOverlayCount]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      await waitForModalSlot(modalId);
+      if (cancelled) return;
+
+      claimModalSlot(modalId, requestClose);
+      setIsReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+      releaseModal(modalId);
+    };
+  }, [modalId, requestClose]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current !== null) {
+        window.clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  if (!isReady) {
+    return null;
+  }
 
   return createPortal(
     <motion.div

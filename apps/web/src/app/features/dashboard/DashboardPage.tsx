@@ -256,15 +256,12 @@ function RecentActivity({
           {recentActivities.length > 0 &&
             recentActivities.map((activity, index) => (
               <div key={activity.id} className="flex w-full min-w-0 flex-col">
-                <div className="flex gap-3 hover:bg-neutral-100 p-2 rounded-lg">
+                <div className="flex gap-3 rounded-lg p-2 hover:bg-neutral-100">
                   <span className="inline-flex pt-1">
                     {iconForActivity(activity.type)}
                   </span>
 
-                  <div
-                    key={activity.id}
-                    className="flex w-full min-w-0 flex-col"
-                  >
+                  <div className="flex w-full min-w-0 flex-col">
                     <div className="flex flex-col items-stretch justify-between md:flex-row md:items-center">
                       <CustomText
                         textVariant="secondary"

@@ -66,6 +66,7 @@ import {
   getListingUnavailableOnAccept,
   toListingUnavailableInfoModal,
 } from "../application/listingAvailabilityForRequest";
+import { confirmCarryRequestAction } from "../application/carryRequestActionConfirmation";
 import { useToast } from "@/app/components/Toast";
 import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
 import { format } from "date-fns";
@@ -456,16 +457,15 @@ export default function CarryRequestsPage() {
       return;
     }
 
-    if (actions.primary.key === UIACTIONKEYS.MARK_DELIVERED) {
-      const shouldConfirmDelivery = await confirm({
-        title: "Confirm delivery?",
-        message:
-          "Have you successfully delivered the package? Only confirm once the recipient has received it.",
-        confirmText: "Yes, confirm delivery",
-        cancelText: "Not yet",
-      });
-      if (!shouldConfirmDelivery) return;
-    }
+    const viewerRole =
+      user.id === carryRequest.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
+
+    const shouldProceed = await confirmCarryRequestAction(
+      actions.primary.key,
+      { viewerRole, status: carryRequest.status },
+      confirm,
+    );
+    if (!shouldProceed) return;
 
     setPendingAction({
       requestId: carryRequest.carryRequestId,
@@ -614,32 +614,12 @@ export default function CarryRequestsPage() {
     const viewerRole =
       user.id === carryRequest.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
 
-    if (actions.secondary.key === UIACTIONKEYS.CANCEL) {
-      const senderPaidCancellation = viewerRole === ROLES.SENDER &&
-        carryRequest.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER;
-      const shouldCancel = await confirm({
-        title: "Cancel this request?",
-        message: senderPaidCancellation
-          ? "This will cancel the request and process a partial refund. The service fee is non-refundable. Continue?"
-          : "This action cancels the carry request and cannot be undone. You can send a new request later.",
-        confirmText: "Yes, cancel request",
-        cancelText: "Keep request",
-        destructive: true,
-      });
-      if (!shouldCancel) return;
-    }
-
-    if (actions.secondary.key === UIACTIONKEYS.REJECT) {
-      const shouldReject = await confirm({
-        title: "Reject this request?",
-        message:
-          "This will decline the carry request. The other party will be notified and this cannot be undone.",
-        confirmText: "Yes, reject request",
-        cancelText: "Keep request",
-        destructive: true,
-      });
-      if (!shouldReject) return;
-    }
+    const shouldProceed = await confirmCarryRequestAction(
+      actions.secondary.key,
+      { viewerRole, status: carryRequest.status },
+      confirm,
+    );
+    if (!shouldProceed) return;
 
     if (actions.secondary.key === UIACTIONKEYS.RESEND_DELIVERY_OTP) {
       setPendingAction({
