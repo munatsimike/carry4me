@@ -46,7 +46,7 @@ async function ensureDeliveryOtpNotification(
 
   const otpText = input.otp
     ? `Share this 6-digit code with the recipient. They must provide it to the traveler when receiving the package: ${input.otp}.`
-    : "Your payment release OTP is ready. Open Carry4Me to view and share it with the recipient.";
+    : "Your payment release code is ready. Open Carry4Me to view and share it with the recipient.";
 
   const { error: insertError } = await supabaseAdmin
     .from("notifications")

@@ -177,11 +177,15 @@ export async function enrichNotificationForEmail(
       const senderMustPay = recipientIsSender;
       return {
         ...base,
+        body: senderMustPay
+          ? "The traveler accepted your request to carry your parcel."
+          : base.body,
         link: base.link?.trim() ? base.link : "/requests",
         paymentRequired: senderMustPay,
         ctaLabel: senderMustPay ? "Make payment" : "View request",
         extraParagraphs: senderMustPay
           ? [
+              "Make payment to continue with your carry request.",
               "Your payment will be held securely until delivery is complete.",
             ]
           : undefined,

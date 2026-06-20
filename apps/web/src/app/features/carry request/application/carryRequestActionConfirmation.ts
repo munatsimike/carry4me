@@ -24,7 +24,6 @@ export type CarryRequestActionConfirmContext = {
 const ACTIONS_WITHOUT_CONFIRM: ReadonlySet<UIActionKey> = new Set([
   UIACTIONKEYS.BROWSE_TRIPS,
   UIACTIONKEYS.BROWSE_PARCELS,
-  UIACTIONKEYS.PAY,
 ]);
 
 function getConfirmOptions(
@@ -71,7 +70,9 @@ function getConfirmOptions(
       return {
         title: "Confirm handover?",
         message:
-          "Confirm that the parcel has been handed over. Both parties must confirm before the trip can move to delivery.",
+          context.viewerRole === ROLES.SENDER
+            ? "Confirm that you have handed over the package to the traveler. Both parties must confirm."
+            : "Confirm that you received the package from sender. Both parties must confirm.",
         confirmText: "Yes, confirm handover",
         cancelText: "Not yet",
       };
@@ -89,9 +90,18 @@ function getConfirmOptions(
       return {
         title: "Release payment?",
         message:
-          "This transfers the payment to the traveler. Only continue if you have verified the delivery code and the parcel was delivered.",
+          "This will release the payment to your account and mark the request as completed.",
         confirmText: "Yes, release payment",
         cancelText: "Not yet",
+      };
+
+    case UIACTIONKEYS.PAY:
+      return {
+        title: "Make payment?",
+        message:
+          "You are about to pay for this carry request. Your payment will be held securely until delivery is complete.",
+        confirmText: "Continue to payment",
+        cancelText: "Not now",
       };
 
     case UIACTIONKEYS.RESEND_DELIVERY_OTP:

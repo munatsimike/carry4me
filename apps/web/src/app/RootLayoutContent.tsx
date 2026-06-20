@@ -11,7 +11,6 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "./lib/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUI } from "./shared/Authentication/UI/hooks/useUI";
-import { PhoneVerificationModal } from "./shared/Authentication/UI/PhoneVerificationModal";
 import { SignInModal } from "./shared/Authentication/UI/SignInModal";
 import {
   COMPLETE_PROFILE_PATH,
@@ -92,7 +91,6 @@ export default function RootLayoutContent() {
         <Outlet context={{ isSearchOpen, setIsSearchOpen }} />
       </main>
 
-      <PhoneVerificationModal />
       <SignInModal />
 
       <AnimatePresence>

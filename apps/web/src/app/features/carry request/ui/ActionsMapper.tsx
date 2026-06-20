@@ -123,7 +123,7 @@ function displayPaymentCodeReady(): InfoBlock {
     mode: INFOMODES.DISPLAY,
     label: "Payment code",
     helperText:
-      "Check your email or in-app notifications for the payment OTP.",
+      "Check your email or in-app notifications for the payment code.",
   };
 }
 
@@ -199,7 +199,7 @@ function pendingPayout(viewerRole: Role): UIActions {
         mode: INFOMODES.DISPLAY,
         label: "Payment code",
         helperText:
-          "Check your email or in-app notifications for the payment OTP.",
+          "Check your email or in-app notifications for the payment code.",
       },
     };
   } else {

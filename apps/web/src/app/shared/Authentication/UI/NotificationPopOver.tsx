@@ -6,7 +6,7 @@ import { cn } from "@/app/lib/cn";
 import CustomText from "@/components/ui/CustomText";
 import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 type PopoverProps = {
@@ -16,6 +16,80 @@ type PopoverProps = {
 };
 
 const INITIAL_COUNT = 5;
+
+function NotificationRow({
+  item,
+  onClosePopOver,
+}: {
+  item: CarryRequestNotification;
+  onClosePopOver: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  const bodyRef = useRef<HTMLParagraphElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (!el || isExpanded) return;
+
+    setIsTruncated(el.scrollHeight > el.clientHeight + 1);
+  }, [item.body, isExpanded]);
+
+  const showToggle = isExpanded || isTruncated;
+
+  return (
+    <div
+      className={cn(
+        "min-w-0 w-full rounded-lg p-3 transition-colors hover:bg-neutral-50",
+        item.readAt === null && "bg-primary-50/50",
+      )}
+    >
+      <Link
+        to={item.link}
+        onClick={() => onClosePopOver(false)}
+        className="block min-w-0"
+      >
+        <span className="flex items-start justify-between gap-2">
+          <CustomText
+            textVariant="primary"
+            className="line-clamp-2 font-medium"
+          >
+            {item.title}
+          </CustomText>
+          {item.readAt === null ? (
+            <span
+              aria-hidden
+              className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-500"
+            />
+          ) : null}
+        </span>
+        <p
+          ref={bodyRef}
+          className={cn(
+            "mt-0.5 text-xs leading-relaxed text-ink-secondary",
+            !isExpanded && "line-clamp-2",
+          )}
+        >
+          {item.body}
+        </p>
+      </Link>
+
+      {showToggle ? (
+        <button
+          type="button"
+          onClick={() => setIsExpanded((prev) => !prev)}
+          className="mt-1 text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 hover:underline"
+        >
+          {isExpanded ? "Show less" : "Show more"}
+        </button>
+      ) : null}
+
+      <p className="mt-1 text-[11px] text-neutral-400">
+        {formatRelativeTime(item.createdAt)}
+      </p>
+    </div>
+  );
+}
 
 export default function NotificationPopover({
   notifications,
@@ -106,41 +180,7 @@ export default function NotificationPopover({
         ) : (
           visibleNotifications.map((item, index) => (
             <div key={item.id}>
-              <Link
-                to={item.link}
-                onClick={() => onClosePopOver(false)}
-                className={cn(
-                  "block min-w-0 w-full rounded-lg p-3 transition-colors hover:bg-neutral-50",
-                  item.readAt === null && "bg-primary-50/50",
-                )}
-              >
-                <span className="min-w-0">
-                  <span className="flex items-start justify-between gap-2">
-                    <CustomText
-                      textVariant="primary"
-                      className="line-clamp-2 font-medium"
-                    >
-                      {item.title}
-                    </CustomText>
-                    {item.readAt === null ? (
-                      <span
-                        aria-hidden
-                        className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-500"
-                      />
-                    ) : null}
-                  </span>
-                  <CustomText
-                    textSize="xs"
-                    textVariant="secondary"
-                    className="mt-0.5 line-clamp-2"
-                  >
-                    {item.body}
-                  </CustomText>
-                  <p className="mt-1 text-[11px] text-neutral-400">
-                    {formatRelativeTime(item.createdAt)}
-                  </p>
-                </span>
-              </Link>
+              <NotificationRow item={item} onClosePopOver={onClosePopOver} />
               {index !== visibleNotifications.length - 1 ? (
                 <LineDivider heightClass="my-0" />
               ) : null}

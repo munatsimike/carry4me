@@ -358,7 +358,7 @@ export default function CarryRequestsPage() {
       openInfo({
         title: "Payment success",
         message:
-          "Payment was successful. We sent the traveler's details by email and in-app notification. Please arrange package handover and confirm once done.",
+          "Payment received. The traveler's contact details have been shared via email and in-app notifications. Arrange the package handover and confirm when it is done.",
         label: "Close",
       });
     } finally {
