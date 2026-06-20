@@ -27,8 +27,7 @@ import { toEmailOtpLoginErrorMessage } from "../application/emailOtpLoginErrors"
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { resolveAuthenticatedLandingPath } from "../application/postAuthNavigation";
 import { usePasskeyPrompt } from "./PasskeyPromptProvider";
-
-type SignInTab = "passkey" | "phone" | "email";
+import { SignInModalTabs, type SignInTab } from "./SignInModalTabs";
 
 function validateEmailValue(value: string): string | null {
   const normalized = value.trim().toLowerCase();
@@ -206,38 +205,13 @@ export function SignInModal() {
               Sign in
             </CustomText>
             <CustomText textSize="sm" textVariant="secondary">
-              Use a passkey for the fastest and safest sign-in.
+              Sign in using a passkey, email, or phone verification.
             </CustomText>
           </div>
 
           <LineDivider heightClass="my-0" />
 
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              type="button"
-              variant={activeTab === "passkey" ? "primary" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("passkey")}
-            >
-              Passkey
-            </Button>
-            <Button
-              type="button"
-              variant={activeTab === "email" ? "primary" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("email")}
-            >
-              Email OTP
-            </Button>
-            <Button
-              type="button"
-              variant={activeTab === "phone" ? "primary" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("phone")}
-            >
-              Phone OTP
-            </Button>
-          </div>
+          <SignInModalTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           <div>
             <AnimatePresence mode="wait" initial={false}>
@@ -264,7 +238,7 @@ export function SignInModal() {
                     onClick={() => void handlePasskeySignIn()}
                     className="w-full"
                   >
-                    Continue with Passkey
+                    Use Passkey
                   </Button>
                 </motion.div>
               ) : null}
