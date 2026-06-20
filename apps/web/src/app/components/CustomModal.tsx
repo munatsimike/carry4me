@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { CloseBackBtn } from "./CloseBtn";
 import { useMediaQuery } from "../shared/Authentication/UI/hooks/useMediaQuery";
 import { useUI } from "../shared/Authentication/UI/hooks/useUI";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Width = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 
@@ -34,6 +34,8 @@ export default function CustomModal({
   closeOnBackdropClick = true,
 }: Props) {
   const isMobile = useMediaQuery();
+  const [isClosing, setIsClosing] = useState(false);
+  const closeTimeoutRef = useRef<number | null>(null);
 
   const { incrementOverlayCount, decrementOverlayCount } = useUI();
 
@@ -46,6 +48,14 @@ export default function CustomModal({
       decrementOverlayCount();
     };
   }, [isMobile, incrementOverlayCount, decrementOverlayCount]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current !== null) {
+        window.clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const modalAnimation = isMobile
     ? {
@@ -61,18 +71,29 @@ export default function CustomModal({
         transition: { duration: 0.24, ease: "easeOut" as const },
       };
 
+  const closeDurationMs = Math.max(modalAnimation.transition.duration * 1000, 300);
+
+  const requestClose = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    closeTimeoutRef.current = window.setTimeout(() => {
+      onClose();
+    }, closeDurationMs);
+  };
+
   return createPortal(
     <motion.div
       className="fixed inset-0 z-50 flex items-end justify-center px-2 py-2 sm:items-center sm:px-4"
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      animate={{ opacity: isClosing ? 0 : 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
     >
       <motion.div
         className="absolute inset-0 z-[100] bg-slate-600/40 backdrop-blur-[1px]"
-        onClick={closeOnBackdropClick ? onClose : undefined}
+        onClick={closeOnBackdropClick ? requestClose : undefined}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={{ opacity: isClosing ? 0 : 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       />
@@ -84,11 +105,11 @@ export default function CustomModal({
             : "max-h-none overflow-visible"
         }`}
         initial={modalAnimation.initial}
-        animate={modalAnimation.animate}
+        animate={isClosing ? modalAnimation.exit : modalAnimation.animate}
         exit={modalAnimation.exit}
         transition={modalAnimation.transition}
       >
-        <CloseBackBtn onClose={onClose} />
+        <CloseBackBtn onClose={requestClose} />
         {children}
       </motion.div>
     </motion.div>,

@@ -98,8 +98,6 @@ export function SignInModal() {
     setSuccessMessage(null);
   }, [activeTab]);
 
-  if (!isOpen) return null;
-
   const handleCloseModal = () => {
     reset({
       countryCode: "",
@@ -194,7 +192,8 @@ export function SignInModal() {
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence initial={false}>
+      {isOpen ? (
       <CustomModal
         onClose={handleCloseModal}
         width="lg"
@@ -362,6 +361,7 @@ export function SignInModal() {
           </button>
         </div>
       </CustomModal>
+      ) : null}
     </AnimatePresence>
   );
 }
