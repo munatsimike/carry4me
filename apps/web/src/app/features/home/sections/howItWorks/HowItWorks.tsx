@@ -10,7 +10,7 @@ import type { Step } from "@/types/Ui";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 
 export default function HowItWorks({ steps }: StepsPros) {
-  const { openSignInModal } = useSignInModal();
+  const { openSignUpModal } = useSignInModal();
   const howItWorksContainer = {
     hidden: { opacity: 0, y: 18 },
     show: {
@@ -68,7 +68,7 @@ export default function HowItWorks({ steps }: StepsPros) {
           <motion.div>
             <Button
               type="button"
-              onClick={() => openSignInModal({ redirectTo: "/dashboard" })}
+              onClick={() => openSignUpModal({ redirectTo: "/dashboard" })}
               className="w-full sm:w-[250px]"
               variant="secondary"
               size="lg"
