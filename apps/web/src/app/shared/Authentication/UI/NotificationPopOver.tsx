@@ -51,6 +51,7 @@ function NotificationRow({
       >
         <span className="flex items-start justify-between gap-2">
           <CustomText
+            textSize="md"
             textVariant="primary"
             className="line-clamp-2 font-medium"
           >
@@ -66,7 +67,7 @@ function NotificationRow({
         <p
           ref={bodyRef}
           className={cn(
-            "mt-0.5 text-xs leading-relaxed text-ink-secondary",
+            "mt-1 text-sm leading-relaxed text-ink-secondary",
             !isExpanded && "line-clamp-2",
           )}
         >
@@ -78,13 +79,13 @@ function NotificationRow({
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="mt-1 text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 hover:underline"
+          className="mt-1.5 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 hover:underline"
         >
           {isExpanded ? "Show less" : "Show more"}
         </button>
       ) : null}
 
-      <p className="mt-1 text-[11px] text-neutral-400">
+      <p className="mt-1.5 text-xs text-neutral-400">
         {formatRelativeTime(item.createdAt)}
       </p>
     </div>
@@ -149,7 +150,7 @@ export default function NotificationPopover({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       exit={{ opacity: 0, y: 7 }}
-      className="fixed left-3 right-3 top-16 z-30 flex max-h-[min(70vh,520px)] w-auto max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[min(420px,calc(100vw-2rem))]"
+      className="fixed left-3 right-3 top-16 z-30 flex max-h-[min(70vh,520px)] w-auto max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[min(480px,calc(100vw-2rem))]"
     >
       <div className="relative border-b border-neutral-100 px-4 py-3">
         <CloseBackBtn onClose={onClosePopOver} />
@@ -173,7 +174,7 @@ export default function NotificationPopover({
             <CustomText textVariant="primary" className="font-medium">
               No notifications yet
             </CustomText>
-            <CustomText as="p" textSize="xs" textVariant="secondary">
+            <CustomText as="p" textSize="sm" textVariant="secondary">
               Updates about your carry requests will appear here.
             </CustomText>
           </div>
@@ -198,7 +199,7 @@ export default function NotificationPopover({
                 prev >= notifications.length ? INITIAL_COUNT : notifications.length,
               )
             }
-            className="w-full rounded-lg py-2 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+            className="w-full rounded-lg py-2.5 text-base font-medium text-primary-600 transition-colors hover:bg-primary-50"
           >
             {isExpanded ? "Show less" : `View all (${notifications.length})`}
           </button>

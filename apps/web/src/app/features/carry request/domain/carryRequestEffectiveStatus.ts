@@ -1,4 +1,5 @@
 import type { CarryRequest } from "./CarryRequest";
+import { isPastPaymentWindowWithCheckoutGrace } from "./carryRequestPaymentGrace";
 import {
   CARRY_REQUEST_STATUSES,
   type CarryRequestStatus,
@@ -9,11 +10,11 @@ export function isCarryRequestPaymentExpired(request: CarryRequest): boolean {
     return false;
   }
 
-  if (!request.paymentExpiresAt) {
-    return false;
-  }
-
-  return new Date(request.paymentExpiresAt).getTime() <= Date.now();
+  return isPastPaymentWindowWithCheckoutGrace({
+    paymentExpiresAt: request.paymentExpiresAt,
+    stripePaymentIntentId: request.stripePaymentIntentId,
+    paymentStatus: request.paymentStatus,
+  });
 }
 
 export function getEffectiveCarryRequestStatus(

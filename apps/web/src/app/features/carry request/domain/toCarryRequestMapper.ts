@@ -46,6 +46,8 @@ export interface RawCarryRequestRow {
   initiator_role: CarryRequest["initiatorRole"];
   status: CarryRequest["status"];
   payment_expires_at?: string | null;
+  stripe_payment_intent_id?: string | null;
+  payment_status?: string | null;
   handover_confirmations: RawConfirmation[];
   parcel_snapshot: RawParcelSnapshot;
   trip_snapshot: RawTripSnapshot;
@@ -121,6 +123,8 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
     initiatorRole: row.initiator_role,
     status: row.status,
     paymentExpiresAt: row.payment_expires_at ?? null,
+    stripePaymentIntentId: row.stripe_payment_intent_id ?? null,
+    paymentStatus: row.payment_status ?? null,
 
     handoverState: {
       senderConfirmed,

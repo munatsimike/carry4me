@@ -14,6 +14,8 @@ export type CarryRequest = {
   initiatorRole: Role;
   status: CarryRequestStatus;
   paymentExpiresAt: string | null;
+  stripePaymentIntentId: string | null;
+  paymentStatus: string | null;
   parcelSnapshot: ParcelSnapshot;
   tripSnapshot: TripSnapshot;
   events: CarryRequestEvent;

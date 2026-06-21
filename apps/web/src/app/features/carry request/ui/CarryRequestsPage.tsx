@@ -339,31 +339,36 @@ export default function CarryRequestsPage() {
   } | null>(null);
   const [paymentRequest, setPaymentRequest] = useState<CarryRequest | null>(null);
 
+  const openPaymentExpiredInfo = (carryRequest: CarryRequest) => {
+    openInfo({
+      title: "Request expired",
+      message: "This request has expired. You can send a new one.",
+      label:
+        carryRequest.initiatorRole === ROLES.SENDER
+          ? "Browse trips"
+          : "Browse parcels",
+      onClick: () =>
+        navigate(
+          carryRequest.initiatorRole === ROLES.SENDER ? "/travelers" : "/parcels",
+        ),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.carryRequests.all,
+    });
+  };
+
   const completePaymentAfterStripe = async (carryRequestId: string) => {
     setPendingAction({
       requestId: carryRequestId,
       slot: "primary",
     });
 
-    try {
-      const response = await performRequestActions.execute(
-        UIACTIONKEYS.PAY,
-        carryRequestId,
-      );
-
-      if (!response.ok) {
-        if (response.reason === "PAYMENT_NOT_CONFIRMED") {
-          openInfo({
-            title: "Payment not confirmed",
-            message:
-              "Stripe payment is still processing. Wait a moment and try again.",
-            label: "Close",
-          });
-        }
-        return;
+    const showPaymentSuccess = async (
+      response?: PerformActionResponse,
+    ) => {
+      if (response) {
+        processActionEmailQueue(response, carryRequestId);
       }
-
-      processActionEmailQueue(response, carryRequestId);
 
       await queryClient.refetchQueries({
         queryKey: queryKeys.carryRequests.all,
@@ -377,6 +382,52 @@ export default function CarryRequestsPage() {
           "Payment received. The traveler's contact details have been shared via email and in-app notifications. Arrange the package handover and confirm when it is done.",
         label: "Close",
       });
+    };
+
+    const findLatestRequest = () => {
+      const cachedLists = queryClient.getQueriesData<CarryRequest[]>({
+        queryKey: queryKeys.carryRequests.all,
+      });
+
+      return cachedLists
+        .flatMap(([, data]) => data ?? [])
+        .find((request) => request.carryRequestId === carryRequestId);
+    };
+
+    try {
+      const response = await performRequestActions.execute(
+        UIACTIONKEYS.PAY,
+        carryRequestId,
+      );
+
+      if (response.ok) {
+        await showPaymentSuccess(response);
+        return;
+      }
+
+      if (response.reason === "PAYMENT_NOT_CONFIRMED") {
+        openInfo({
+          title: "Payment not confirmed",
+          message:
+            "Stripe payment is still processing. Wait a moment and try again.",
+          label: "Close",
+        });
+        return;
+      }
+
+      await queryClient.refetchQueries({
+        queryKey: queryKeys.carryRequests.all,
+      });
+
+      const latestRequest = findLatestRequest();
+      if (latestRequest?.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER) {
+        await showPaymentSuccess();
+        return;
+      }
+
+      if (response.reason === "PAYMENT_EXPIRED" && latestRequest) {
+        openPaymentExpiredInfo(latestRequest);
+      }
     } finally {
       setPendingAction(null);
     }
@@ -448,24 +499,6 @@ export default function CarryRequestsPage() {
       }
     })();
   }, [searchParams, navigate, showSupabaseError, toast]);
-
-  const openPaymentExpiredInfo = (carryRequest: CarryRequest) => {
-    openInfo({
-      title: "Request expired",
-      message: "This request has expired. You can send a new one.",
-      label:
-        carryRequest.initiatorRole === ROLES.SENDER
-          ? "Browse trips"
-          : "Browse parcels",
-      onClick: () =>
-        navigate(
-          carryRequest.initiatorRole === ROLES.SENDER ? "/travelers" : "/parcels",
-        ),
-    });
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.carryRequests.all,
-    });
-  };
 
   const handlePrimaryActions = async (
     actions: UIActions,

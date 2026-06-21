@@ -8,8 +8,36 @@ import {
   type CarryRequestStatus,
   type CreateCarryRequest,
 } from "../domain/CreateCarryRequest";
+import { isPastPaymentWindowWithCheckoutGrace } from "../domain/carryRequestPaymentGrace";
 import { toCarryRequestMapper } from "../domain/toCarryRequestMapper";
 import type { CarryRequest } from "../domain/CarryRequest";
+
+type PaymentExpiryRow = {
+  status: string;
+  payment_expires_at: string | null;
+  stripe_payment_intent_id: string | null;
+  payment_status: string | null;
+};
+
+function isStoredPaymentUnavailable(row: PaymentExpiryRow | null): boolean {
+  if (!row) {
+    return true;
+  }
+
+  if (row.status === "PENDING_HANDOVER") {
+    return false;
+  }
+
+  if (row.status !== "PENDING_PAYMENT") {
+    return true;
+  }
+
+  return isPastPaymentWindowWithCheckoutGrace({
+    paymentExpiresAt: row.payment_expires_at,
+    stripePaymentIntentId: row.stripe_payment_intent_id,
+    paymentStatus: row.payment_status,
+  });
+}
 
 export class SupabaseCarryRequestRepository implements CarryRequestRepository {
   async updateCarryRequestStatus(
@@ -34,26 +62,26 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
   async isPaymentExpired(requestId: string): Promise<boolean> {
     const { data, error, status } = await supabase
       .from("carry_requests")
-      .select("status, payment_expires_at")
+      .select(
+        "status, payment_expires_at, stripe_payment_intent_id, payment_status",
+      )
       .eq("id", requestId)
-      .maybeSingle();
+      .maybeSingle<PaymentExpiryRow>();
 
     throwIfSupabaseError(error, status);
 
-    // Treat missing/non-payable requests as unavailable so UI won't open payment modal
-    // and then fail with create-payment-intent 404/invalid-status errors.
-    if (!data || data.status !== "PENDING_PAYMENT") {
-      return true;
-    }
-
-    if (!data.payment_expires_at) {
+    if (!isStoredPaymentUnavailable(data)) {
       return false;
     }
 
-    const expired =
-      new Date(data.payment_expires_at).getTime() <= Date.now();
-
-    if (expired) {
+    if (
+      data?.status === "PENDING_PAYMENT" &&
+      isPastPaymentWindowWithCheckoutGrace({
+        paymentExpiresAt: data.payment_expires_at,
+        stripePaymentIntentId: data.stripe_payment_intent_id,
+        paymentStatus: data.payment_status,
+      })
+    ) {
       const { error: expireError } = await supabase.rpc("expire_carry_request", {
         p_request_id: requestId,
       });
@@ -62,7 +90,18 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       }
     }
 
-    return expired;
+    const { data: refreshed, error: refreshError, status: refreshStatus } =
+      await supabase
+        .from("carry_requests")
+        .select(
+          "status, payment_expires_at, stripe_payment_intent_id, payment_status",
+        )
+        .eq("id", requestId)
+        .maybeSingle<PaymentExpiryRow>();
+
+    throwIfSupabaseError(refreshError, refreshStatus);
+
+    return isStoredPaymentUnavailable(refreshed);
   }
 
   async fetchCarryRequestsForUser(userId: string): Promise<CarryRequest[]> {
