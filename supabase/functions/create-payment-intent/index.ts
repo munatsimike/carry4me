@@ -76,19 +76,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Request is not awaiting payment" }, 400);
     }
 
-    if (
-      carryRequest.payment_expires_at &&
-      new Date(carryRequest.payment_expires_at).getTime() <= Date.now()
-    ) {
-      const { error: expireError } = await supabaseAdmin.rpc(
-        "expire_carry_request",
-        { p_request_id: carryRequestId },
-      );
-      if (expireError) {
-        console.error("expire_carry_request failed", expireError.message);
-      }
-      return jsonResponse({ error: "Payment window has expired" }, 400);
-    }
+    // Do not expire here: opening checkout refreshes payment_expires_at below.
 
     const travelerProfile = await loadTravelerProfile(
       supabaseAdmin,
