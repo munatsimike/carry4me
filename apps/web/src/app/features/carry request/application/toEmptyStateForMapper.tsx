@@ -40,6 +40,16 @@ export function toEmptyStateForMapper(navTab: string): EmptyStateConfig {
         ],
       };
 
+    case "expired":
+      return {
+        title: "No expired requests",
+        body: "Requests that pass the payment window without payment will appear here.",
+        actions: [
+          { label: "Browse trips", href: "/travelers", tone: "trips" },
+          { label: "Browse parcels", href: "/parcels", tone: "parcels" },
+        ],
+      };
+
     default:
       return {
         title: "No requests found",

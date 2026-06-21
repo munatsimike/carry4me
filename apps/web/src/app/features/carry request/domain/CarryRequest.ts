@@ -13,6 +13,7 @@ export type CarryRequest = {
   travelerUserId: string;
   initiatorRole: Role;
   status: CarryRequestStatus;
+  paymentExpiresAt: string | null;
   parcelSnapshot: ParcelSnapshot;
   tripSnapshot: TripSnapshot;
   events: CarryRequestEvent;

@@ -18,6 +18,7 @@ export default function statusColor(status: CarryRequestStatus) {
       break;
     case CARRY_REQUEST_STATUSES.REJECTED:
     case CARRY_REQUEST_STATUSES.CANCELLED:
+    case CARRY_REQUEST_STATUSES.EXPIRED:
       color = "bg-status-inactive";
       break;
   }

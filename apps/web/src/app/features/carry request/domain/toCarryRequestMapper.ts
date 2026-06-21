@@ -45,6 +45,7 @@ export interface RawCarryRequestRow {
   traveler_user_id: string;
   initiator_role: CarryRequest["initiatorRole"];
   status: CarryRequest["status"];
+  payment_expires_at?: string | null;
   handover_confirmations: RawConfirmation[];
   parcel_snapshot: RawParcelSnapshot;
   trip_snapshot: RawTripSnapshot;
@@ -119,6 +120,7 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
     travelerUserId: row.traveler_user_id,
     initiatorRole: row.initiator_role,
     status: row.status,
+    paymentExpiresAt: row.payment_expires_at ?? null,
 
     handoverState: {
       senderConfirmed,

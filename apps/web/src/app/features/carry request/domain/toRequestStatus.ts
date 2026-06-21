@@ -17,5 +17,7 @@ export function toRequestStatus(navTab: SelectedTab): CarryRequestStatus[] {
       return ["REJECTED"];
     case "cancelled":
       return ["CANCELLED"];
+    case "expired":
+      return ["EXPIRED"];
   }
 }

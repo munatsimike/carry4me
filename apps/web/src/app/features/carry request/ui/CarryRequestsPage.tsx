@@ -70,6 +70,7 @@ import { confirmCarryRequestAction } from "../application/carryRequestActionConf
 import { useToast } from "@/app/components/Toast";
 import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
 import { format } from "date-fns";
+import { getEffectiveCarryRequestStatus } from "../domain/carryRequestEffectiveStatus";
 import {
   HorizontalMenu,
   type TabItem,
@@ -86,8 +87,19 @@ import {
   RequestParcelDetailsSection,
   RequestTripDetailsSection,
 } from "./RequestDetailsLayout";
+import CustomModal from "@/app/components/CustomModal";
+import RequestSummary from "@/app/components/RequestSummary";
+import {
+  loadListingsForNewRequest,
+  type ListingsForNewRequest,
+} from "../application/loadListingsForNewRequest";
 
-export type SelectedTab = "ongoing" | "completed" | "declined" | "cancelled";
+export type SelectedTab =
+  | "ongoing"
+  | "completed"
+  | "declined"
+  | "cancelled"
+  | "expired";
 
 const statusToTab: Record<CarryRequestStatus, SelectedTab> = {
   PENDING_ACCEPTANCE: "ongoing",
@@ -97,7 +109,7 @@ const statusToTab: Record<CarryRequestStatus, SelectedTab> = {
   PENDING_PAYOUT: "ongoing",
   PAID_OUT: "completed",
   CANCELLED: "cancelled",
-  EXPIRED: "cancelled",
+  EXPIRED: "expired",
   REJECTED: "declined",
 };
 
@@ -190,11 +202,12 @@ export default function CarryRequestsPage() {
       ongoing: 0,
       completed: 0,
       cancelled: 0,
+      expired: 0,
       declined: 0,
     };
 
     for (const request of carryRequestsList) {
-      const tab = statusToTab[request.status as CarryRequestStatus];
+      const tab = statusToTab[getEffectiveCarryRequestStatus(request)];
       if (tab) counts[tab]++;
     }
 
@@ -209,6 +222,7 @@ export default function CarryRequestsPage() {
   const tabs: TabItem<SelectedTab>[] = [
     { id: "ongoing", label: "Ongoing", count: tabCounts.ongoing },
     { id: "completed", label: "Completed", count: tabCounts.completed },
+    { id: "expired", label: "Expired", count: tabCounts.expired },
     { id: "cancelled", label: "Cancelled", count: tabCounts.cancelled },
     { id: "declined", label: "Declined", count: tabCounts.declined },
   ];
@@ -224,7 +238,7 @@ export default function CarryRequestsPage() {
           "PENDING_HANDOVER",
           "IN_TRANSIT",
           "PENDING_PAYOUT",
-        ]).has(item.status),
+        ]).has(getEffectiveCarryRequestStatus(item)),
       );
     }
 
@@ -237,8 +251,16 @@ export default function CarryRequestsPage() {
     if (selectedTab === "cancelled") {
       result = result.filter(
         (item) =>
-          item.status === CARRY_REQUEST_STATUSES.CANCELLED ||
-          item.status === CARRY_REQUEST_STATUSES.EXPIRED,
+          getEffectiveCarryRequestStatus(item) ===
+          CARRY_REQUEST_STATUSES.CANCELLED,
+      );
+    }
+
+    if (selectedTab === "expired") {
+      result = result.filter(
+        (item) =>
+          getEffectiveCarryRequestStatus(item) ===
+          CARRY_REQUEST_STATUSES.EXPIRED,
       );
     }
 
@@ -263,6 +285,8 @@ export default function CarryRequestsPage() {
 
   const [inputValue, setValue] = useState<string>("");
   const [otpErrorRequestId, setOtpErrorRequestId] = useState<string | null>(null);
+  const [resendRequestListings, setResendRequestListings] =
+    useState<ListingsForNewRequest | null>(null);
 
 
   const checkTravelersWeight = async (carryRequest: CarryRequest) => {
@@ -433,6 +457,24 @@ export default function CarryRequestsPage() {
     })();
   }, [searchParams, navigate, showSupabaseError, toast]);
 
+  const openPaymentExpiredInfo = (carryRequest: CarryRequest) => {
+    openInfo({
+      title: "Request expired",
+      message: "This request has expired. You can send a new one.",
+      label:
+        carryRequest.initiatorRole === ROLES.SENDER
+          ? "Browse trips"
+          : "Browse parcels",
+      onClick: () =>
+        navigate(
+          carryRequest.initiatorRole === ROLES.SENDER ? "/travelers" : "/parcels",
+        ),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.carryRequests.all,
+    });
+  };
+
   const handlePrimaryActions = async (
     actions: UIActions,
     carryRequest: CarryRequest,
@@ -442,7 +484,8 @@ export default function CarryRequestsPage() {
     if (
       paymentRequest?.carryRequestId === carryRequest.carryRequestId &&
       actions.primary.key !== UIACTIONKEYS.BROWSE_TRIPS &&
-      actions.primary.key !== UIACTIONKEYS.BROWSE_PARCELS
+      actions.primary.key !== UIACTIONKEYS.BROWSE_PARCELS &&
+      actions.primary.key !== UIACTIONKEYS.SEND_NEW_REQUEST
     ) {
       return;
     }
@@ -457,8 +500,67 @@ export default function CarryRequestsPage() {
       return;
     }
 
+    if (actions.primary.key === UIACTIONKEYS.SEND_NEW_REQUEST) {
+      if (!guardAction(() => undefined, "send_request")) {
+        return;
+      }
+
+      setPendingAction({
+        requestId: carryRequest.carryRequestId,
+        slot: "primary",
+      });
+
+      try {
+        const listingsAvailable =
+          await ensureListingsAvailableOnAccept(carryRequest);
+        if (!listingsAvailable) return;
+
+        const listings = await loadListingsForNewRequest(carryRequest);
+        if (!listings) {
+          openInfo({
+            title: "Unable to send a new request",
+            message:
+              "The trip or parcel from this request is no longer available. Browse the marketplace to find another match.",
+            label:
+              carryRequest.initiatorRole === ROLES.SENDER
+                ? "Browse trips"
+                : "Browse parcels",
+            onClick: () =>
+              navigate(
+                carryRequest.initiatorRole === ROLES.SENDER
+                  ? "/travelers"
+                  : "/parcels",
+              ),
+          });
+          return;
+        }
+
+        setResendRequestListings(listings);
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
+        setPendingAction(null);
+      }
+      return;
+    }
+
     const viewerRole =
       user.id === carryRequest.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
+
+    if (actions.primary.key === UIACTIONKEYS.PAY) {
+      try {
+        const paymentExpired = await performRequestActions.isPaymentExpired(
+          carryRequest.carryRequestId,
+        );
+        if (paymentExpired) {
+          openPaymentExpiredInfo(carryRequest);
+          return;
+        }
+      } catch (err) {
+        showSupabaseError(err);
+        return;
+      }
+    }
 
     const shouldProceed = await confirmCarryRequestAction(
       actions.primary.key,
@@ -529,28 +631,6 @@ export default function CarryRequestsPage() {
       }
 
       if (actions.primary.key === UIACTIONKEYS.PAY) {
-        try {
-          const paymentExpired = await performRequestActions.isPaymentExpired(
-            carryRequest.carryRequestId,
-          );
-
-          if (paymentExpired) {
-            openInfo({
-              title: "Request expired",
-              message: "This request has expired. You can send a new one.",
-              label:
-                carryRequest.initiatorRole === ROLES.SENDER
-                  ? "Browse trips"
-                  : "Browse parcels",
-            });
-
-            return;
-          }
-        } catch (err) {
-          showSupabaseError(err);
-          return;
-        }
-
         setPendingAction(null);
         setPaymentRequest(carryRequest);
         return;
@@ -616,6 +696,17 @@ export default function CarryRequestsPage() {
     ) {
       return;
     }
+
+    if (actions.secondary.key === UIACTIONKEYS.BROWSE_TRIPS) {
+      navigate("/travelers");
+      return;
+    }
+
+    if (actions.secondary.key === UIACTIONKEYS.BROWSE_PARCELS) {
+      navigate("/parcels");
+      return;
+    }
+
     const viewerRole =
       user.id === carryRequest.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
 
@@ -796,6 +887,22 @@ export default function CarryRequestsPage() {
           }}
         />
       ) : null}
+
+      {resendRequestListings && user ? (
+        <CustomModal
+          width="4xl"
+          scrollable={false}
+          onClose={() => setResendRequestListings(null)}
+        >
+          <RequestSummary
+            loggedInUserId={user.id}
+            trip={resendRequestListings.trip}
+            parcel={resendRequestListings.parcel}
+            isSenderRequesting={user.id === resendRequestListings.parcel.user.id}
+            onClose={() => setResendRequestListings(null)}
+          />
+        </CustomModal>
+      ) : null}
     </>
   );
 }
@@ -830,11 +937,12 @@ function CarryRequestCard({
   const viewerRole =
     user?.id === request.senderUserId ? ROLES.SENDER : ROLES.TRAVELER;
 
+  const effectiveStatus = getEffectiveCarryRequestStatus(request);
   const requestUI = mapCarryRequestToUI(request, viewerRole);
 
   const actions = actionsMapper(
     viewerRole,
-    request.status,
+    effectiveStatus,
     request.initiatorRole,
     handoverState ?? undefined,
   );
@@ -860,7 +968,7 @@ function CarryRequestCard({
             title={requestUI.title}
             description={requestUI.description}
               requestId={request.carryRequestId.slice(-6)}
-            status={request.status}
+            status={effectiveStatus}
           />
           <LineDivider heightClass="my-0" />
 
@@ -961,17 +1069,35 @@ function RequestActions({
     actions.infoBlock.displayText !== null;
 
   const secondaryButton = actions.secondary ? (
-    <Button
-      className="w-full sm:w-auto"
-      onClick={() => onSecondaryAction(actions, request)}
-      variant="outline"
-      size="md"
-      leadingIcon={undefined}
-      disabled={actionsDisabled}
-      isBusy={isSecondaryPending}
-    >
-      {actionButtonLabel(actions.secondary.label, isSecondaryPending)}
-    </Button>
+    actions.secondary.key === UIACTIONKEYS.BROWSE_TRIPS ||
+    actions.secondary.key === UIACTIONKEYS.BROWSE_PARCELS ? (
+      <BrowseMarketplaceButton
+        tone={
+          actions.secondary.key === UIACTIONKEYS.BROWSE_TRIPS
+            ? "trips"
+            : "parcels"
+        }
+        size="md"
+        className="w-full sm:w-auto"
+        disabled={actionsDisabled}
+        isBusy={isSecondaryPending}
+        onClick={() => onSecondaryAction(actions, request)}
+      >
+        {actionButtonLabel(actions.secondary.label, isSecondaryPending)}
+      </BrowseMarketplaceButton>
+    ) : (
+      <Button
+        className="w-full sm:w-auto"
+        onClick={() => onSecondaryAction(actions, request)}
+        variant="outline"
+        size="md"
+        leadingIcon={undefined}
+        disabled={actionsDisabled}
+        isBusy={isSecondaryPending}
+      >
+        {actionButtonLabel(actions.secondary.label, isSecondaryPending)}
+      </Button>
+    )
   ) : null;
 
   return (

@@ -50,7 +50,19 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
       return false;
     }
 
-    return new Date(data.payment_expires_at).getTime() <= Date.now();
+    const expired =
+      new Date(data.payment_expires_at).getTime() <= Date.now();
+
+    if (expired) {
+      const { error: expireError } = await supabase.rpc("expire_carry_request", {
+        p_request_id: requestId,
+      });
+      if (expireError) {
+        console.error("expire_carry_request failed:", expireError);
+      }
+    }
+
+    return expired;
   }
 
   async fetchCarryRequestsForUser(userId: string): Promise<CarryRequest[]> {

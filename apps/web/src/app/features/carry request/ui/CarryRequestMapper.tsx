@@ -4,6 +4,7 @@ import {
   ROLES,
   type Role,
 } from "../domain/CreateCarryRequest";
+import { getEffectiveCarryRequestStatus } from "../domain/carryRequestEffectiveStatus";
 
 export type CarryRequestUI = {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
@@ -23,7 +24,7 @@ export function mapCarryRequestToUI(
   const roleText =
     request.initiatorRole === ROLES.TRAVELER ? "sender" : "traveler";
 
-  switch (request.status) {
+  switch (getEffectiveCarryRequestStatus(request)) {
     case CARRY_REQUEST_STATUSES.PENDING_ACCEPTANCE:
       currentStep = 1;
       title = isInitiator ? "Pending response" : "Request pending";
@@ -106,6 +107,13 @@ export function mapCarryRequestToUI(
       title = "Request cancelled";
       description =
         "You’ve canceled this request. The traveler has been notified.";
+      break;
+
+    case CARRY_REQUEST_STATUSES.EXPIRED:
+      currentStep = 2;
+      title = "Request expired";
+      description =
+        "Payment was not completed in time. You can send a new request.";
       break;
   }
 
