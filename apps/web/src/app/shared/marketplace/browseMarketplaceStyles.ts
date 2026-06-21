@@ -53,21 +53,25 @@ export const browseMarketplaceButtonClass: Record<BrowseMarketplaceTone, string>
   };
 
 /** Listing card hover: `1` = tinted fill, `2` = outline ring + lift (white bg). */
-export const LISTING_CARD_HOVER_STYLE: 1 | 2 = 2;
+export const LISTING_CARD_HOVER_STYLE: 1 | 2 = 1;
 
 const listingCardTransition =
   "transition-[background-color,border-color,box-shadow,ring-color] duration-200 ease-out";
+
+/** Parcel card hover: lighter than browse button (/15), still visible on white. */
+const listingCardParcelHoverClass =
+  "hover:border-slate-700/28 hover:bg-slate-700/10 hover:shadow-md hover:shadow-slate-200/50";
 
 const listingCardHoverTinted: Record<BrowseMarketplaceTone, string> = {
   trips: cn(
     "border border-primary-200 bg-white shadow-sm",
     listingCardTransition,
-    "hover:border-primary-300 hover:bg-primary-50 hover:shadow-lg hover:shadow-primary-100/40",
+    "hover:border-primary-300 hover:bg-primary-100 hover:shadow-md hover:shadow-primary-100/40",
   ),
   parcels: cn(
-    "border border-[#334155]/25 bg-white shadow-sm",
+    "border border-slate-700/20 bg-white shadow-sm",
     listingCardTransition,
-    "hover:border-slate-700/30 hover:bg-slate-700/10 hover:shadow-lg hover:shadow-slate-300/30",
+    listingCardParcelHoverClass,
   ),
 };
 
@@ -94,13 +98,13 @@ export const listingCardHoverClass: Record<BrowseMarketplaceTone, string> =
 
 export const listingCardPreviewClass: Record<BrowseMarketplaceTone, string> = {
   trips: "border border-primary-200 bg-white",
-  parcels: "border border-[#334155]/25 bg-white",
+  parcels: "border border-slate-700/20 bg-white",
 };
 
 const listingCardDividerHoverTinted: Record<BrowseMarketplaceTone, string> = {
   trips: "transition-colors duration-200 group-hover/card:border-primary-200",
   parcels:
-    "transition-colors duration-200 group-hover/card:border-[#334155]/25",
+    "transition-colors duration-200 group-hover/card:border-slate-700/25",
 };
 
 const listingCardDividerHoverOutline: Record<BrowseMarketplaceTone, string> = {
