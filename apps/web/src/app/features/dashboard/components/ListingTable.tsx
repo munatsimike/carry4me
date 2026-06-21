@@ -64,6 +64,7 @@ export function ListingTable<T extends Listing>({
   const headerStyle = `pl-4 ${textStyle}`;
   const [hoverId, setHoverId] = useState<string | null>(null);
   const columnCount = showDateColumn ? 6 : 5;
+  const compactLayout = !showDateColumn;
 
   return (
     <motion.div
@@ -73,22 +74,34 @@ export function ListingTable<T extends Listing>({
       style={{ marginTop: 16 }}
       className="w-full min-w-0 overflow-hidden rounded-xl bg-white shadow-md"
     >
-      <div className="w-full overflow-x-auto">
-      <table className="w-full min-w-[720px] border-collapse table-fixed">
+      <div className={compactLayout ? "w-full min-w-0" : "w-full overflow-x-auto"}>
+      <table
+        className={`w-full border-collapse table-fixed ${
+          compactLayout ? "min-w-0" : "min-w-[720px]"
+        }`}
+      >
         <thead>
           <tr className="text-left border border-b-neutral-200">
             <TableTd
-              className={`${showDateColumn ? "w-[38%]" : "w-[52%]"} ${headerStyle}`}
+              className={`${compactLayout ? "w-[40%]" : showDateColumn ? "w-[38%]" : "w-[52%]"} ${headerStyle}`}
             >
               Route
             </TableTd>
             {showDateColumn ? (
               <TableTd className={`w-[14%] ${headerStyle}`}>Departure</TableTd>
             ) : null}
-            <TableTd className={`w-[10%] ${headerStyle}`}>Space</TableTd>
-            <TableTd className={`w-[14%] ${headerStyle}`}>Price per kg</TableTd>
-            <TableTd className={`w-[10%] ${headerStyle}`}>Status</TableTd>
-            <TableTd className={`w-[18%] pl-6 ${textStyle}`}>Actions</TableTd>
+            <TableTd className={`${compactLayout ? "w-[10%]" : "w-[10%]"} ${headerStyle}`}>
+              Space
+            </TableTd>
+            <TableTd className={`${compactLayout ? "w-[14%]" : "w-[14%]"} ${headerStyle}`}>
+              Price per kg
+            </TableTd>
+            <TableTd className={`${compactLayout ? "w-[12%]" : "w-[10%]"} ${headerStyle}`}>
+              Status
+            </TableTd>
+            <TableTd className={`${compactLayout ? "w-[24%]" : "w-[18%]"} pl-6 ${textStyle}`}>
+              Actions
+            </TableTd>
           </tr>
         </thead>
 
@@ -113,17 +126,14 @@ export function ListingTable<T extends Listing>({
               style={{ transformOrigin: "center" }}
             >
               <TableTd
-                className={`pl-4 py-2 ${showDateColumn ? "w-[38%]" : "w-[52%]"}`}
+                className={`pl-4 py-2 ${compactLayout ? "w-[40%]" : showDateColumn ? "w-[38%]" : "w-[52%]"}`}
               >
-                <span className="relative inline-flex items-center w-full max-w-lg pr-4">
-                  {/* Left text stays stable */}
-                  <span className="inline-flex gap-2 min-w-0">
-                    <TableText
-                      text={`${row.route.originCountry} / ${row.route.originCity} → `}
-                    />
-                    <TableText
-                      text={`${row.route.destinationCountry ?? ""} / ${row.route.destinationCity}`}
-                    />
+                <span className="relative inline-flex w-full min-w-0 items-center pr-4">
+                  <span
+                    className="block min-w-0 truncate text-sm text-ink-primary"
+                    title={`${row.route.originCountry} / ${row.route.originCity} → ${row.route.destinationCountry ?? ""} / ${row.route.destinationCity}`}
+                  >
+                    {`${row.route.originCountry} / ${row.route.originCity} → ${row.route.destinationCountry ?? ""} / ${row.route.destinationCity}`}
                   </span>
 
                   {/* Preview floats on the right, doesn't affect layout */}

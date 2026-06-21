@@ -473,24 +473,29 @@ export default function CarryRequestsPage() {
     });
 
     try {
-      // ACCEPT checks
+      // ACCEPT checks — only travelers need Stripe + trip capacity validation.
       if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
         if (!guardAction(() => undefined, "send_request")) {
           return;
         }
 
-        try {
-          const stripeReady = await ensureTravelerStripeReady({ openInfo });
-          if (!stripeReady) {
+        const accepterIsTraveler =
+          user.id === carryRequest.travelerUserId;
+
+        if (accepterIsTraveler) {
+          try {
+            const stripeReady = await ensureTravelerStripeReady({ openInfo });
+            if (!stripeReady) {
+              return;
+            }
+          } catch (err) {
+            showSupabaseError(err);
             return;
           }
-        } catch (err) {
-          showSupabaseError(err);
-          return;
-        }
 
-        const weightResult = await checkTravelersWeight(carryRequest);
-        if (!weightResult) return;
+          const weightResult = await checkTravelersWeight(carryRequest);
+          if (!weightResult) return;
+        }
 
         const listingsAvailable =
           await ensureListingsAvailableOnAccept(carryRequest);

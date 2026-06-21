@@ -52,11 +52,13 @@ export const browseMarketplaceButtonClass: Record<BrowseMarketplaceTone, string>
     ),
   };
 
-const listingCardTransition =
-  "transition-[background-color,border-color,box-shadow] duration-200 ease-out";
+/** Listing card hover: `1` = tinted fill, `2` = outline ring + lift (white bg). */
+export const LISTING_CARD_HOVER_STYLE: 1 | 2 = 2;
 
-/** Marketplace listing cards (trips / parcels browse grids). */
-export const listingCardHoverClass: Record<BrowseMarketplaceTone, string> = {
+const listingCardTransition =
+  "transition-[background-color,border-color,box-shadow,ring-color] duration-200 ease-out";
+
+const listingCardHoverTinted: Record<BrowseMarketplaceTone, string> = {
   trips: cn(
     "border border-primary-200 bg-white shadow-sm",
     listingCardTransition,
@@ -69,18 +71,49 @@ export const listingCardHoverClass: Record<BrowseMarketplaceTone, string> = {
   ),
 };
 
+const listingCardHoverOutline: Record<BrowseMarketplaceTone, string> = {
+  trips: cn(
+    "border border-primary-200 bg-white shadow-sm ring-0 ring-offset-0",
+    listingCardTransition,
+    "hover:border-primary-400 hover:shadow-xl hover:shadow-primary-900/5",
+    "hover:ring-2 hover:ring-primary-200/90 hover:ring-offset-2",
+  ),
+  parcels: cn(
+    "border border-[#334155]/20 bg-white shadow-sm ring-0 ring-offset-0",
+    listingCardTransition,
+    "hover:border-[#334155]/45 hover:shadow-xl hover:shadow-slate-900/5",
+    "hover:ring-2 hover:ring-slate-300/90 hover:ring-offset-2",
+  ),
+};
+
+/** Marketplace listing cards (trips / parcels browse grids). */
+export const listingCardHoverClass: Record<BrowseMarketplaceTone, string> =
+  LISTING_CARD_HOVER_STYLE === 2
+    ? listingCardHoverOutline
+    : listingCardHoverTinted;
+
 export const listingCardPreviewClass: Record<BrowseMarketplaceTone, string> = {
   trips: "border border-primary-200 bg-white",
   parcels: "border border-[#334155]/25 bg-white",
 };
 
-export const listingCardDividerHoverClass: Record<
-  BrowseMarketplaceTone,
-  string
-> = {
+const listingCardDividerHoverTinted: Record<BrowseMarketplaceTone, string> = {
   trips: "transition-colors duration-200 group-hover/card:border-primary-200",
   parcels:
     "transition-colors duration-200 group-hover/card:border-[#334155]/25",
 };
+
+const listingCardDividerHoverOutline: Record<BrowseMarketplaceTone, string> = {
+  trips: "transition-colors duration-200 group-hover/card:border-primary-100",
+  parcels: "transition-colors duration-200 group-hover/card:border-slate-200",
+};
+
+export const listingCardDividerHoverClass: Record<
+  BrowseMarketplaceTone,
+  string
+> =
+  LISTING_CARD_HOVER_STYLE === 2
+    ? listingCardDividerHoverOutline
+    : listingCardDividerHoverTinted;
 
 export const browseMarketplaceTextClass = browseMarketplaceTitleClass;
