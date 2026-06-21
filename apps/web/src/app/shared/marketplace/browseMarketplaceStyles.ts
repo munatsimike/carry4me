@@ -53,7 +53,7 @@ export const browseMarketplaceButtonClass: Record<BrowseMarketplaceTone, string>
   };
 
 /** Listing card hover: `1` = tinted fill, `2` = outline ring + lift (white bg). */
-export const LISTING_CARD_HOVER_STYLE: 1 | 2 = 1;
+export const LISTING_CARD_HOVER_STYLE = 1 as 1 | 2;
 
 const listingCardTransition =
   "transition-[background-color,border-color,box-shadow,ring-color] duration-200 ease-out";
