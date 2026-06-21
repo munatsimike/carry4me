@@ -121,3 +121,9 @@ export const listingCardDividerHoverClass: Record<
     : listingCardDividerHoverTinted;
 
 export const browseMarketplaceTextClass = browseMarketplaceTitleClass;
+
+/** Carry request cards on /requests — same hover as trip listing cards. */
+export const carryRequestCardHoverClass = listingCardHoverClass.trips;
+
+export const carryRequestCardDividerHoverClass =
+  listingCardDividerHoverClass.trips;

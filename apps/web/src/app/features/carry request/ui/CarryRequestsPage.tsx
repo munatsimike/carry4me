@@ -61,7 +61,11 @@ import {
 } from "../application/toEmptyStateForMapper";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Package } from "lucide-react";
-import { dialogIconStyle } from "@/app/lib/cn";
+import { cn, dialogIconStyle } from "@/app/lib/cn";
+import {
+  carryRequestCardDividerHoverClass,
+  carryRequestCardHoverClass,
+} from "@/app/shared/marketplace/browseMarketplaceStyles";
 import {
   getListingUnavailableOnAccept,
   toListingUnavailableInfoModal,
@@ -925,7 +929,12 @@ function CarryRequestCard({
       <Card
         sizeClass="max-w-5xl"
         key={request.carryRequestId}
-        className="mx-auto w-full px-4 sm:px-6 flex flex-col gap-3"
+        className={cn(
+          "group/card mx-auto w-full flex flex-col gap-3 px-4 sm:px-6",
+          carryRequestCardHoverClass,
+        )}
+        borderClass=""
+        shadowClass=""
       >
         <div className="flex flex-col gap-4">
           <Header
@@ -934,7 +943,10 @@ function CarryRequestCard({
               requestId={request.carryRequestId.slice(-6)}
             status={effectiveStatus}
           />
-          <LineDivider heightClass="my-0" />
+          <LineDivider
+            heightClass="my-0"
+            className={carryRequestCardDividerHoverClass}
+          />
 
           <div className="block md:hidden">
             <MobileFirstHeader
@@ -952,7 +964,10 @@ function CarryRequestCard({
             isInitiator={viewerRole === request.initiatorRole}
           />
 
-          <LineDivider heightClass="my-0" />
+          <LineDivider
+            heightClass="my-0"
+            className={carryRequestCardDividerHoverClass}
+          />
 
           <DetailsSection
             trip={request.tripSnapshot}
@@ -963,7 +978,10 @@ function CarryRequestCard({
         {/**requestUI.title !== "Request cancelled" && (
           <LineDivider heightClass="my-0" />
         )*/}
-        <LineDivider heightClass="my-0" />
+        <LineDivider
+          heightClass="my-0"
+          className={carryRequestCardDividerHoverClass}
+        />
         {actions.infoBlock?.displayText ? (
           <RequestCompleted actions={actions} />
         ) : (
