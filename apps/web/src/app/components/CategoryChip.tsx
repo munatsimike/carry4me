@@ -11,6 +11,7 @@ export function CategoryChip({ children, className }: CategoryChipProps) {
     <span
       className={cn(
         "inline-flex shrink-0 rounded-full border border-[#E8DDD2] bg-[#FAF6F1] px-2 py-[2px]",
+        "transition-colors duration-200 group-hover/card:bg-white",
         className,
       )}
     >
