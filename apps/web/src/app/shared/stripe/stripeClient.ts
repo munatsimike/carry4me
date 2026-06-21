@@ -14,6 +14,10 @@ export function getStripePublishableKey(): string {
   return key;
 }
 
+export function isStripeLiveMode(): boolean {
+  return getStripePublishableKey().startsWith("pk_live_");
+}
+
 export function getStripePromise(): Promise<Stripe | null> {
   if (!stripePromise) {
     stripePromise = loadStripe(getStripePublishableKey());

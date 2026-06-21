@@ -24,7 +24,6 @@ export type CarryRequestActionConfirmContext = {
 const ACTIONS_WITHOUT_CONFIRM: ReadonlySet<UIActionKey> = new Set([
   UIACTIONKEYS.BROWSE_TRIPS,
   UIACTIONKEYS.BROWSE_PARCELS,
-  UIACTIONKEYS.SEND_NEW_REQUEST,
 ]);
 
 function getConfirmOptions(

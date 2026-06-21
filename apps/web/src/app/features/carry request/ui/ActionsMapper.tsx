@@ -18,7 +18,6 @@ export const UIACTIONKEYS = {
   RESEND_DELIVERY_OTP: "RESEND_DELIVERY_OTP",
   BROWSE_TRIPS: "BROWSE_TRIPS",
   BROWSE_PARCELS: "BROWSE_PARCELS",
-  SEND_NEW_REQUEST: "SEND_NEW_REQUEST",
 } as const;
 export type UIActionKey = (typeof UIACTIONKEYS)[keyof typeof UIACTIONKEYS];
 
@@ -152,7 +151,7 @@ export default function actionsMapper(
     case CARRY_REQUEST_STATUSES.CANCELLED:
      return {};
     case CARRY_REQUEST_STATUSES.EXPIRED:
-      return requestExpired(viewerRole);
+      return requestRejected(viewerRole);
     default:
       return {};
   }
@@ -163,33 +162,11 @@ function requestRejected(viewerRole: Role): UIActions {
   return {
     primary: {
       kind: ACTIONKINDS.NAVIGATE,
-      variant: "primary",
-      label: label,
-      key: viewerRole === ROLES.SENDER ? "BROWSE_TRIPS" : "BROWSE_PARCELS",
-    },
-  };
-}
-
-function requestExpired(viewerRole: Role): UIActions {
-  const browseLabel =
-    viewerRole === ROLES.SENDER ? "Browse trips" : "Browse parcels";
-  const browseKey =
-    viewerRole === ROLES.SENDER
-      ? UIACTIONKEYS.BROWSE_TRIPS
-      : UIACTIONKEYS.BROWSE_PARCELS;
-
-  return {
-    primary: {
-      kind: ACTIONKINDS.NAVIGATE,
       variant: VARIANTS.PRIMARY,
-      label: "Send new request",
-      key: UIACTIONKEYS.SEND_NEW_REQUEST,
-    },
-    secondary: {
-      kind: ACTIONKINDS.NAVIGATE,
-      variant: VARIANTS.PRIMARY,
-      label: browseLabel,
-      key: browseKey,
+      label,
+      key: viewerRole === ROLES.SENDER
+        ? UIACTIONKEYS.BROWSE_TRIPS
+        : UIACTIONKEYS.BROWSE_PARCELS,
     },
   };
 }

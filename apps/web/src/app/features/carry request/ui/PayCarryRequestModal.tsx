@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import type { Stripe } from "@stripe/stripe-js";
 import CustomModal from "@/app/components/CustomModal";
 import { ModalBody, ModalFooter } from "@/app/components/ModalFooter";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
-import { getStripePromise } from "@/app/shared/stripe/stripeClient";
+import { getStripePromise, isStripeLiveMode } from "@/app/shared/stripe/stripeClient";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import {
   createCarryRequestPaymentIntent,
@@ -84,8 +85,9 @@ function PaymentForm({
     <div className="flex flex-col">
       <ModalBody className="gap-4">
         <CustomText textSize="sm" textVariant="secondary">
-          Pay securely with Stripe test mode. Your card will not be charged in production
-          until go-live.
+          {isStripeLiveMode()
+            ? "Pay securely with Stripe. Your card will be charged when you confirm payment."
+            : "Pay securely with Stripe test mode. Use a test card — no real charge."}
         </CustomText>
         <PaymentElement />
         {errorMessage ? (
@@ -121,9 +123,34 @@ function PaymentForm({
 
 export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
   const [platformFeeAmount, setPlatformFeeAmount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getStripePromise()
+      .then((stripe) => {
+        if (!cancelled) {
+          if (!stripe) {
+            setLoadError("Stripe failed to load. Check your payment configuration.");
+            return;
+          }
+          setStripeInstance(stripe);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setLoadError(AppError.fromUnknown(err).message);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,7 +177,7 @@ export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
 
   return (
     <CustomModal
-      width="lg"
+      width="3xl"
       scrollable
       closeOnBackdropClick={false}
       onClose={props.onClose}
@@ -186,9 +213,10 @@ export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
             </div>
           </div>
         ) : null}
-        {clientSecret ? (
+        {clientSecret && stripeInstance ? (
           <Elements
-            stripe={getStripePromise()}
+            key={clientSecret}
+            stripe={stripeInstance}
             options={{ clientSecret, appearance: { theme: "stripe" } }}
           >
             <PaymentForm {...props} clientSecret={clientSecret} />

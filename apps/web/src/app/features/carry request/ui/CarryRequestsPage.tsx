@@ -87,12 +87,6 @@ import {
   RequestParcelDetailsSection,
   RequestTripDetailsSection,
 } from "./RequestDetailsLayout";
-import CustomModal from "@/app/components/CustomModal";
-import RequestSummary from "@/app/components/RequestSummary";
-import {
-  loadListingsForNewRequest,
-  type ListingsForNewRequest,
-} from "../application/loadListingsForNewRequest";
 
 export type SelectedTab =
   | "ongoing"
@@ -285,8 +279,6 @@ export default function CarryRequestsPage() {
 
   const [inputValue, setValue] = useState<string>("");
   const [otpErrorRequestId, setOtpErrorRequestId] = useState<string | null>(null);
-  const [resendRequestListings, setResendRequestListings] =
-    useState<ListingsForNewRequest | null>(null);
 
 
   const checkTravelersWeight = async (carryRequest: CarryRequest) => {
@@ -484,8 +476,7 @@ export default function CarryRequestsPage() {
     if (
       paymentRequest?.carryRequestId === carryRequest.carryRequestId &&
       actions.primary.key !== UIACTIONKEYS.BROWSE_TRIPS &&
-      actions.primary.key !== UIACTIONKEYS.BROWSE_PARCELS &&
-      actions.primary.key !== UIACTIONKEYS.SEND_NEW_REQUEST
+      actions.primary.key !== UIACTIONKEYS.BROWSE_PARCELS
     ) {
       return;
     }
@@ -497,50 +488,6 @@ export default function CarryRequestsPage() {
 
     if (actions.primary.key === UIACTIONKEYS.BROWSE_PARCELS) {
       navigate("/parcels");
-      return;
-    }
-
-    if (actions.primary.key === UIACTIONKEYS.SEND_NEW_REQUEST) {
-      if (!guardAction(() => undefined, "send_request")) {
-        return;
-      }
-
-      setPendingAction({
-        requestId: carryRequest.carryRequestId,
-        slot: "primary",
-      });
-
-      try {
-        const listingsAvailable =
-          await ensureListingsAvailableOnAccept(carryRequest);
-        if (!listingsAvailable) return;
-
-        const listings = await loadListingsForNewRequest(carryRequest);
-        if (!listings) {
-          openInfo({
-            title: "Unable to send a new request",
-            message:
-              "The trip or parcel from this request is no longer available. Browse the marketplace to find another match.",
-            label:
-              carryRequest.initiatorRole === ROLES.SENDER
-                ? "Browse trips"
-                : "Browse parcels",
-            onClick: () =>
-              navigate(
-                carryRequest.initiatorRole === ROLES.SENDER
-                  ? "/travelers"
-                  : "/parcels",
-              ),
-          });
-          return;
-        }
-
-        setResendRequestListings(listings);
-      } catch (err) {
-        showSupabaseError(err);
-      } finally {
-        setPendingAction(null);
-      }
       return;
     }
 
@@ -886,22 +833,6 @@ export default function CarryRequestsPage() {
             setPaymentRequest(null);
           }}
         />
-      ) : null}
-
-      {resendRequestListings && user ? (
-        <CustomModal
-          width="4xl"
-          scrollable={false}
-          onClose={() => setResendRequestListings(null)}
-        >
-          <RequestSummary
-            loggedInUserId={user.id}
-            trip={resendRequestListings.trip}
-            parcel={resendRequestListings.parcel}
-            isSenderRequesting={user.id === resendRequestListings.parcel.user.id}
-            onClose={() => setResendRequestListings(null)}
-          />
-        </CustomModal>
       ) : null}
     </>
   );

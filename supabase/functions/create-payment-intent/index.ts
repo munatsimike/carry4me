@@ -5,7 +5,7 @@ import {
   isResponse,
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
-import { getStripe } from "../_shared/stripe/client.ts";
+import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
 import { isTravelerStripeVerified, loadTravelerProfile } from "../_shared/stripe/profiles.ts";
 
 type RequestBody = {
@@ -150,31 +150,43 @@ Deno.serve(async (req) => {
 
     const appUrl = Deno.env.get("APP_URL")?.trim() || "http://localhost:5173";
 
-    // Reuse existing pending intent when possible.
+    const stripeLiveMode = isStripeLiveMode();
+
+    // Reuse existing pending intent when possible (skip stale test intents after go-live).
     if (
       carryRequest.stripe_payment_intent_id &&
       (carryRequest.payment_status === "PENDING" ||
         carryRequest.payment_status === "FAILED")
     ) {
-      const existing = await stripe.paymentIntents.retrieve(
-        carryRequest.stripe_payment_intent_id,
-      );
+      try {
+        const existing = await stripe.paymentIntents.retrieve(
+          carryRequest.stripe_payment_intent_id,
+        );
 
-      if (
-        existing.status === "requires_payment_method" ||
-        existing.status === "requires_confirmation" ||
-        existing.status === "requires_action"
-      ) {
-        await extendPaymentWindow();
+        const canReuse =
+          existing.livemode === stripeLiveMode &&
+          (existing.status === "requires_payment_method" ||
+            existing.status === "requires_confirmation" ||
+            existing.status === "requires_action");
 
-        return jsonResponse({
-          client_secret: existing.client_secret,
-          payment_intent_id: existing.id,
-          payment_amount: amounts.paymentAmount,
-          payment_currency: amounts.currency,
-          traveler_payout_amount: amounts.travelerPayoutAmount,
-          platform_fee_amount: amounts.platformFeeAmount,
-        });
+        if (canReuse && existing.client_secret) {
+          await extendPaymentWindow();
+
+          return jsonResponse({
+            client_secret: existing.client_secret,
+            payment_intent_id: existing.id,
+            payment_amount: amounts.paymentAmount,
+            payment_currency: amounts.currency,
+            traveler_payout_amount: amounts.travelerPayoutAmount,
+            platform_fee_amount: amounts.platformFeeAmount,
+          });
+        }
+      } catch (retrieveErr) {
+        console.warn(
+          "create-payment-intent stale payment intent cleared",
+          carryRequest.stripe_payment_intent_id,
+          retrieveErr,
+        );
       }
     }
 
