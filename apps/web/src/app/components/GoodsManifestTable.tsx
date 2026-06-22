@@ -22,6 +22,8 @@ type GoodsManifestTableProps = {
   compact?: boolean;
   className?: string;
   variant?: "default" | "review";
+  /** Hide the Size column on small screens (e.g. view-items modal on mobile). */
+  hideSizeOnMobile?: boolean;
 };
 
 function ManifestTable({
@@ -99,6 +101,7 @@ export default function GoodsManifestTable({
   compact = false,
   className,
   variant = "default",
+  hideSizeOnMobile = false,
 }: GoodsManifestTableProps) {
   const rows = items.map(normalizeGoodsItem).filter((item) => item.description);
 
@@ -122,15 +125,28 @@ export default function GoodsManifestTable({
             key={`${item.description}-${index}-mobile`}
             className="rounded-xl border border-neutral-200 bg-neutral-50/40 p-3"
           >
-            <ManifestField label="Item" value={item.description} />
-            <div className="mt-3 grid grid-cols-3 gap-3">
-              <ManifestField label="Qty" value={item.quantity} />
-              <ManifestField label="Size" value={item.size || "—"} />
-              <ManifestField
-                label="Condition"
-                value={formatGoodsCondition(item.condition)}
-              />
-            </div>
+            {hideSizeOnMobile ? (
+              <div className="grid grid-cols-3 gap-3">
+                <ManifestField label="Item" value={item.description} />
+                <ManifestField label="Qty" value={item.quantity} />
+                <ManifestField
+                  label="Condition"
+                  value={formatGoodsCondition(item.condition)}
+                />
+              </div>
+            ) : (
+              <>
+                <ManifestField label="Item" value={item.description} />
+                <div className="mt-3 grid grid-cols-3 gap-3">
+                  <ManifestField label="Qty" value={item.quantity} />
+                  <ManifestField label="Size" value={item.size || "—"} />
+                  <ManifestField
+                    label="Condition"
+                    value={formatGoodsCondition(item.condition)}
+                  />
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>

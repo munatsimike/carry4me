@@ -62,7 +62,7 @@ export default function ParcelSendingRow({ items }: ParcelSendingRowProps) {
             >
               Items list
             </CustomText>
-            <GoodsManifestTable items={visibleItems} />
+            <GoodsManifestTable items={visibleItems} hideSizeOnMobile />
           </CustomModal>
         ) : null}
       </AnimatePresence>
