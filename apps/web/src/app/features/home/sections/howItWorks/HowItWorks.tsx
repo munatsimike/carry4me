@@ -69,7 +69,7 @@ export default function HowItWorks({ steps }: StepsPros) {
             <Button
               type="button"
               onClick={() => openSignUpModal({ redirectTo: "/dashboard" })}
-              className="w-full sm:w-[250px]"
+              className="w-full border border-primary-200 sm:w-[250px]"
               variant="secondary"
               size="lg"
               leadingIcon={
