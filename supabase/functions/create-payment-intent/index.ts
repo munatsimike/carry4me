@@ -191,7 +191,10 @@ Deno.serve(async (req) => {
         traveler_user_id: carryRequest.traveler_user_id,
       },
       description: `Carry4Me carry request ${carryRequestId.slice(0, 8)}`,
-      automatic_payment_methods: { enabled: true },
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: "always",
+      },
     });
 
     const { error: updateError } = await supabaseAdmin

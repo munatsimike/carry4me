@@ -4,7 +4,7 @@
   "installCommand": "cd apps/web && npm ci",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!\\.well-known/).*)",
       "destination": "/index.html"
     }
   ]

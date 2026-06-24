@@ -89,7 +89,19 @@ function PaymentForm({
             ? "Pay securely with Stripe. Your card will be charged when you confirm payment."
             : "Pay securely with Stripe test mode. Use a test card — no real charge."}
         </CustomText>
-        <PaymentElement />
+        <PaymentElement
+          options={{
+            layout: {
+              type: "tabs",
+              defaultCollapsed: false,
+            },
+            wallets: {
+              applePay: "auto",
+              googlePay: "auto",
+            },
+            paymentMethodOrder: ["apple_pay", "google_pay", "card"],
+          }}
+        />
         {errorMessage ? (
           <CustomText textSize="sm" className="text-red-600">
             {errorMessage}
@@ -217,7 +229,10 @@ export default function PayCarryRequestModal(props: PayCarryRequestModalProps) {
           <Elements
             key={clientSecret}
             stripe={stripeInstance}
-            options={{ clientSecret, appearance: { theme: "stripe" } }}
+            options={{
+              clientSecret,
+              appearance: { theme: "stripe" },
+            }}
           >
             <PaymentForm {...props} clientSecret={clientSecret} />
           </Elements>
