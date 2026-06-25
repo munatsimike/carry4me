@@ -5,6 +5,7 @@ import {
   type Role,
 } from "../domain/CreateCarryRequest";
 import { getEffectiveCarryRequestStatus } from "../domain/carryRequestEffectiveStatus";
+import { formatPaymentWindowLabel } from "../domain/carryRequestPaymentWindow";
 
 export type CarryRequestUI = {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
@@ -38,7 +39,7 @@ export function mapCarryRequestToUI(
       title = "Waiting for payment";
       description =
         viewerRole === ROLES.SENDER
-          ? "This trip is reserved for 60 minutes. Make payment before the reservation expires."
+          ? `This trip is reserved for ${formatPaymentWindowLabel()}. Make payment before the reservation expires.`
           : "We’re waiting for payment from the sender. You’ll be notified once payment is made.";
       break;
 

@@ -91,6 +91,7 @@ import {
   RequestParcelDetailsSection,
   RequestTripDetailsSection,
 } from "./RequestDetailsLayout";
+import { usePaymentTimeRemaining } from "../hooks/usePaymentTimeRemaining";
 
 export type SelectedTab =
   | "ongoing"
@@ -940,8 +941,12 @@ function CarryRequestCard({
           <Header
             title={requestUI.title}
             description={requestUI.description}
-              requestId={request.carryRequestId.slice(-6)}
+            requestId={request.carryRequestId.slice(-6)}
             status={effectiveStatus}
+            paymentExpiresAt={request.paymentExpiresAt}
+            requestStatus={request.status}
+            stripePaymentIntentId={request.stripePaymentIntentId}
+            paymentStatus={request.paymentStatus}
           />
           <LineDivider
             heightClass="my-0"
@@ -1293,12 +1298,33 @@ type HeaderProps = {
   description: string;
   requestId: string;
   status: CarryRequestStatus;
+  paymentExpiresAt: string | null;
+  requestStatus: CarryRequestStatus;
+  stripePaymentIntentId?: string | null;
+  paymentStatus?: string | null;
 };
 
-function Header({ title, description, requestId, status }: HeaderProps) {
+function Header({
+  title,
+  description,
+  requestId,
+  status,
+  paymentExpiresAt,
+  requestStatus,
+  stripePaymentIntentId,
+  paymentStatus,
+}: HeaderProps) {
   return (
     <SpaceBetweenRow>
-      <CurrentStatus title={title} description={description} status={status} />
+      <CurrentStatus
+        title={title}
+        description={description}
+        status={status}
+        paymentExpiresAt={paymentExpiresAt}
+        requestStatus={requestStatus}
+        stripePaymentIntentId={stripePaymentIntentId}
+        paymentStatus={paymentStatus}
+      />
       <div className="inline-flex flex-col items-end gap-1">
         <CustomText textSize="xs" textVariant="secondary" className="tracking-wide">
           ID {requestId}
@@ -1311,11 +1337,31 @@ function CurrentStatus({
   title,
   description,
   status,
+  paymentExpiresAt,
+  requestStatus,
+  stripePaymentIntentId,
+  paymentStatus,
 }: {
   title: string;
   description: string;
   status: CarryRequestStatus;
+  paymentExpiresAt: string | null;
+  requestStatus: CarryRequestStatus;
+  stripePaymentIntentId?: string | null;
+  paymentStatus?: string | null;
 }) {
+  const showTimer =
+    requestStatus === CARRY_REQUEST_STATUSES.PENDING_PAYMENT &&
+    !!paymentExpiresAt;
+  const remainingLabel = usePaymentTimeRemaining(
+    {
+      paymentExpiresAt,
+      stripePaymentIntentId,
+      paymentStatus,
+    },
+    showTimer,
+  );
+
   return (
     <div className="flex flex-col gap-1">
       <div className="inline-flex items-center gap-2">
@@ -1330,6 +1376,16 @@ function CurrentStatus({
       <span className="text-ink-secondary whitespace-normal text-base">
         {description}
       </span>
+      {showTimer && remainingLabel ? (
+        <CustomText
+          as="p"
+          textSize="sm"
+          textVariant="error"
+          className="font-medium"
+        >
+          {remainingLabel}
+        </CustomText>
+      ) : null}
     </div>
   );
 }

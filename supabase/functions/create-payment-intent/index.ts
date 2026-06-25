@@ -6,7 +6,17 @@ import {
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
 import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
-import { isTravelerStripeVerified, loadTravelerProfile } from "../_shared/stripe/profiles.ts";
+import {
+  isStaleStripeConnectAccountError,
+  stripeErrorMessage,
+} from "../_shared/stripe/errors.ts";
+import {
+  isTravelerStripeVerified,
+  loadTravelerProfile,
+  mapStripeVerificationStatus,
+  resetStripeConnectProfile,
+  type TravelerStripeProfile,
+} from "../_shared/stripe/profiles.ts";
 
 type RequestBody = {
   carry_request_id?: string;
@@ -26,6 +36,156 @@ type CarryRequestRow = {
   stripe_payment_intent_id: string | null;
   payment_status: string | null;
 };
+
+function paymentIntentUserMessage(err: unknown): string {
+  const message = stripeErrorMessage(err).toLowerCase();
+
+  if (isStaleStripeConnectAccountError(err)) {
+    return "The traveler's payout account is outdated. Ask them to complete Stripe verification again.";
+  }
+
+  if (
+    message.includes("restricted") ||
+    message.includes("cannot receive") ||
+    (message.includes("transfers") && message.includes("not enabled"))
+  ) {
+    return "The traveler's payout account cannot receive payments right now. They must fix their Stripe account first.";
+  }
+
+  if (message.includes("payment amount") || message.includes("minimum")) {
+    return "This payment amount is too small to process. Contact support if this seems wrong.";
+  }
+
+  return "Could not start payment. Try again in a moment or contact support if this continues.";
+}
+
+async function resolveTravelerStripeAccount(
+  stripe: ReturnType<typeof getStripe>,
+  supabaseAdmin: Awaited<
+    ReturnType<typeof getAuthenticatedUser>
+  >["supabaseAdmin"],
+  travelerUserId: string,
+  travelerProfile: TravelerStripeProfile,
+): Promise<
+  | { ok: true; profile: TravelerStripeProfile; accountId: string }
+  | { ok: false; response: Response }
+> {
+  if (!travelerProfile.stripe_account_id) {
+    return {
+      ok: false,
+      response: jsonResponse(
+        { error: "Traveler has not completed payout verification" },
+        400,
+      ),
+    };
+  }
+
+  try {
+    const account = await stripe.accounts.retrieve(
+      travelerProfile.stripe_account_id,
+    );
+
+    if (account.livemode !== isStripeLiveMode()) {
+      console.warn(
+        "create-payment-intent stale traveler account mode mismatch cleared",
+        travelerProfile.stripe_account_id,
+      );
+      const resetProfile = await resetStripeConnectProfile(
+        supabaseAdmin,
+        travelerUserId,
+      );
+      return {
+        ok: false,
+        response: jsonResponse(
+          {
+            error:
+              "The traveler's payout account is outdated. Ask them to complete Stripe verification again.",
+            code: "TRAVELER_STRIPE_OUTDATED",
+          },
+          400,
+        ),
+      };
+    }
+
+    const verificationStatus = mapStripeVerificationStatus(account);
+    const refreshedProfile: TravelerStripeProfile = {
+      ...travelerProfile,
+      stripe_account_id: account.id,
+      stripe_charges_enabled: account.charges_enabled === true,
+      stripe_payouts_enabled: account.payouts_enabled === true,
+      stripe_details_submitted: account.details_submitted === true,
+      stripe_verification_status: verificationStatus,
+    };
+
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        stripe_account_id: account.id,
+        stripe_charges_enabled: refreshedProfile.stripe_charges_enabled,
+        stripe_payouts_enabled: refreshedProfile.stripe_payouts_enabled,
+        stripe_details_submitted: refreshedProfile.stripe_details_submitted,
+        stripe_verification_status: verificationStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", travelerUserId);
+
+    if (!isTravelerStripeVerified(refreshedProfile)) {
+      return {
+        ok: false,
+        response: jsonResponse(
+          {
+            error:
+              "The traveler's payout account cannot receive payments right now. They must fix their Stripe account first.",
+            code: "TRAVELER_STRIPE_NOT_READY",
+          },
+          400,
+        ),
+      };
+    }
+
+    return {
+      ok: true,
+      profile: refreshedProfile,
+      accountId: account.id,
+    };
+  } catch (err) {
+    if (isStaleStripeConnectAccountError(err)) {
+      console.warn(
+        "create-payment-intent stale traveler account cleared",
+        travelerProfile.stripe_account_id,
+        stripeErrorMessage(err),
+      );
+      await resetStripeConnectProfile(supabaseAdmin, travelerUserId);
+      return {
+        ok: false,
+        response: jsonResponse(
+          {
+            error:
+              "The traveler's payout account is outdated. Ask them to complete Stripe verification again.",
+            code: "TRAVELER_STRIPE_OUTDATED",
+          },
+          400,
+        ),
+      };
+    }
+
+    console.error(
+      "create-payment-intent traveler account lookup failed",
+      stripeErrorMessage(err),
+    );
+    return {
+      ok: false,
+      response: jsonResponse(
+        {
+          error:
+            "Could not verify the traveler's payout account. Try again in a moment.",
+          code: "TRAVELER_STRIPE_LOOKUP_FAILED",
+        },
+        502,
+      ),
+    };
+  }
+}
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -50,6 +210,7 @@ Deno.serve(async (req) => {
 
     const { user, supabaseAdmin } = await getAuthenticatedUser(req);
     const stripe = getStripe();
+    const stripeLiveMode = isStripeLiveMode();
 
     const { data: carryRequest, error: loadError } = await supabaseAdmin
       .from("carry_requests")
@@ -76,8 +237,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Request is not awaiting payment" }, 400);
     }
 
-    // Do not expire here: opening checkout refreshes payment_expires_at below.
-
     const travelerProfile = await loadTravelerProfile(
       supabaseAdmin,
       carryRequest.traveler_user_id,
@@ -90,6 +249,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    const travelerStripe = await resolveTravelerStripeAccount(
+      stripe,
+      supabaseAdmin,
+      carryRequest.traveler_user_id,
+      travelerProfile,
+    );
+    if (!travelerStripe.ok) {
+      return travelerStripe.response;
+    }
+
+    const travelerAccountId = travelerStripe.accountId;
+
     const pricePerKg = Number(carryRequest.parcel_snapshot?.price_per_kg ?? 0);
     const weightKg = Number(carryRequest.parcel_snapshot?.weight_kg ?? 0);
     const originCountry = carryRequest.parcel_snapshot?.origin?.country ?? null;
@@ -98,11 +269,23 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Invalid parcel pricing on request" }, 400);
     }
 
-    const amounts = calculatePaymentAmountsFromParcel(
-      pricePerKg,
-      weightKg,
-      originCountry,
-    );
+    let amounts;
+    try {
+      amounts = calculatePaymentAmountsFromParcel(
+        pricePerKg,
+        weightKg,
+        originCountry,
+      );
+    } catch (amountErr) {
+      return jsonResponse(
+        {
+          error: amountErr instanceof Error
+            ? amountErr.message
+            : "Invalid payment amount",
+        },
+        400,
+      );
+    }
 
     const { data: paymentWindowSetting } = await supabaseAdmin
       .from("platform_settings")
@@ -137,8 +320,6 @@ Deno.serve(async (req) => {
     };
 
     const appUrl = Deno.env.get("APP_URL")?.trim() || "http://localhost:5173";
-
-    const stripeLiveMode = isStripeLiveMode();
 
     // Reuse existing pending intent when possible (skip stale test intents after go-live).
     if (
@@ -178,24 +359,36 @@ Deno.serve(async (req) => {
       }
     }
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amounts.paymentAmount,
-      currency: amounts.currency,
-      application_fee_amount: amounts.platformFeeAmount,
-      transfer_data: {
-        destination: travelerProfile.stripe_account_id!,
-      },
-      metadata: {
-        carry_request_id: carryRequestId,
-        sender_user_id: user.id,
-        traveler_user_id: carryRequest.traveler_user_id,
-      },
-      description: `Carry4Me carry request ${carryRequestId.slice(0, 8)}`,
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: "always",
-      },
-    });
+    let paymentIntent;
+    try {
+      paymentIntent = await stripe.paymentIntents.create({
+        amount: amounts.paymentAmount,
+        currency: amounts.currency,
+        application_fee_amount: amounts.platformFeeAmount,
+        transfer_data: {
+          destination: travelerAccountId,
+        },
+        metadata: {
+          carry_request_id: carryRequestId,
+          sender_user_id: user.id,
+          traveler_user_id: carryRequest.traveler_user_id,
+        },
+        description: `Carry4Me carry request ${carryRequestId.slice(0, 8)}`,
+        automatic_payment_methods: { enabled: true },
+      });
+    } catch (stripeErr) {
+      console.error(
+        "create-payment-intent stripe create failed",
+        stripeErrorMessage(stripeErr),
+      );
+      return jsonResponse(
+        {
+          error: paymentIntentUserMessage(stripeErr),
+          code: "STRIPE_PAYMENT_INTENT_FAILED",
+        },
+        502,
+      );
+    }
 
     const { error: updateError } = await supabaseAdmin
       .from("carry_requests")
@@ -234,7 +427,13 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     if (isResponse(err)) return err;
-    console.error("create-payment-intent error", err);
-    return jsonResponse({ error: "Internal server error" }, 500);
+    console.error("create-payment-intent error", stripeErrorMessage(err));
+    return jsonResponse(
+      {
+        error: paymentIntentUserMessage(err),
+        code: "PAYMENT_INTENT_ERROR",
+      },
+      500,
+    );
   }
 });
