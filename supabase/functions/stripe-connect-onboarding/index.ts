@@ -4,11 +4,13 @@ import {
   isResponse,
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
-import { getStripe } from "../_shared/stripe/client.ts";
+import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
+import { isStaleStripeConnectAccountError } from "../_shared/stripe/errors.ts";
 import {
   isTravelerStripeVerified,
   loadTravelerProfile,
   mapStripeVerificationStatus,
+  resetStripeConnectProfile,
 } from "../_shared/stripe/profiles.ts";
 
 type RequestBody = {
@@ -67,6 +69,38 @@ Deno.serve(async (req) => {
     const refreshUrl = body.refresh_url?.trim() || `${appUrl}/requests?stripe=refresh`;
 
     let accountId = profile.stripe_account_id;
+    const stripeLiveMode = isStripeLiveMode();
+
+    if (accountId) {
+      try {
+        const existing = await stripe.accounts.retrieve(accountId);
+        if (existing.livemode !== stripeLiveMode) {
+          console.warn(
+            "stripe-connect-onboarding stale account mode mismatch cleared",
+            accountId,
+          );
+          const resetProfile = await resetStripeConnectProfile(supabaseAdmin, user.id);
+          if (!resetProfile) {
+            return jsonResponse({ error: "Failed to reset Stripe profile" }, 500);
+          }
+          accountId = null;
+        }
+      } catch (err) {
+        if (isStaleStripeConnectAccountError(err)) {
+          console.warn(
+            "stripe-connect-onboarding stale account cleared",
+            accountId,
+          );
+          const resetProfile = await resetStripeConnectProfile(supabaseAdmin, user.id);
+          if (!resetProfile) {
+            return jsonResponse({ error: "Failed to reset Stripe profile" }, 500);
+          }
+          accountId = null;
+        } else {
+          throw err;
+        }
+      }
+    }
 
     if (!accountId) {
       const account = await stripe.accounts.create({

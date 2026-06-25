@@ -56,3 +56,27 @@ export function mapStripeVerificationStatus(account: {
   }
   return "incomplete";
 }
+
+export async function resetStripeConnectProfile(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+): Promise<TravelerStripeProfile | null> {
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      stripe_account_id: null,
+      stripe_charges_enabled: false,
+      stripe_payouts_enabled: false,
+      stripe_details_submitted: false,
+      stripe_verification_status: "not_started",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId);
+
+  if (error) {
+    console.error("resetStripeConnectProfile failed", error.message);
+    return null;
+  }
+
+  return loadTravelerProfile(supabaseAdmin, userId);
+}

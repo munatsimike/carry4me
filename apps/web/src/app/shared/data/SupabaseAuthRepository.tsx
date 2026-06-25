@@ -15,7 +15,7 @@ import {
   throwIfSupabaseError,
 } from "@/app/shared/domain/AppError";
 import { toCountryName } from "@/app/Mapper";
-import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
+import { invokeEdgeFunction } from "@/app/shared/stripe/invokeEdgeFunction";
 import { EMAIL_OTP_USE_PHONE_MESSAGE } from "../Authentication/application/emailOtpLoginErrors";
 
 async function readEdgeFunctionInvokeError(
@@ -267,7 +267,7 @@ export class SupabaseAuthRepository implements AuthRepository {
   }
 
   async deleteAccount(): Promise<void> {
-    await invokeStripeFunction<{ ok: boolean }>("delete-account", {});
+    await invokeEdgeFunction<{ ok: boolean }>("delete-account", {});
   }
 
   async deleteAvatar(

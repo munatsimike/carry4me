@@ -4,18 +4,18 @@ import {
   isResponse,
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
-import { getStripe } from "../_shared/stripe/client.ts";
+import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
 import {
-  isMissingStripeAccountError,
+  isStaleStripeConnectAccountError,
   stripeErrorMessage,
 } from "../_shared/stripe/errors.ts";
 import {
   isTravelerStripeVerified,
   loadTravelerProfile,
   mapStripeVerificationStatus,
+  resetStripeConnectProfile,
   type TravelerStripeProfile,
 } from "../_shared/stripe/profiles.ts";
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 function unverifiedStatusResponse(profile: TravelerStripeProfile) {
   return jsonResponse({
@@ -28,30 +28,6 @@ function unverifiedStatusResponse(profile: TravelerStripeProfile) {
     phone_verified: profile.phone_verified,
     email_verified: profile.email_verified,
   });
-}
-
-async function resetStripeConnectProfile(
-  supabaseAdmin: SupabaseClient,
-  userId: string,
-): Promise<TravelerStripeProfile | null> {
-  const { error } = await supabaseAdmin
-    .from("profiles")
-    .update({
-      stripe_account_id: null,
-      stripe_charges_enabled: false,
-      stripe_payouts_enabled: false,
-      stripe_details_submitted: false,
-      stripe_verification_status: "not_started",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", userId);
-
-  if (error) {
-    console.error("resetStripeConnectProfile failed", error.message);
-    return null;
-  }
-
-  return loadTravelerProfile(supabaseAdmin, userId);
 }
 
 Deno.serve(async (req) => {
@@ -78,11 +54,24 @@ Deno.serve(async (req) => {
     let account;
     try {
       account = await stripe.accounts.retrieve(profile.stripe_account_id);
+
+      if (account.livemode !== isStripeLiveMode()) {
+        console.warn(
+          "stripe-connect-status stale account mode mismatch cleared",
+          profile.stripe_account_id,
+        );
+        profile = await resetStripeConnectProfile(supabaseAdmin, user.id);
+        if (!profile) {
+          return jsonResponse({ error: "Failed to reset Stripe profile" }, 500);
+        }
+        return unverifiedStatusResponse(profile);
+      }
     } catch (err) {
-      if (isMissingStripeAccountError(err)) {
+      if (isStaleStripeConnectAccountError(err)) {
         console.warn(
           "stripe-connect-status stale account cleared",
           profile.stripe_account_id,
+          stripeErrorMessage(err),
         );
         profile = await resetStripeConnectProfile(supabaseAdmin, user.id);
         if (!profile) {

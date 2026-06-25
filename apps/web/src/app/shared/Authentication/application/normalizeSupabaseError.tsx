@@ -49,6 +49,38 @@ function includesAny(value: string, terms: string[]): boolean {
   return terms.some((term) => value.includes(term));
 }
 
+function isGenericClientTransportMessage(message: string): boolean {
+  return includesAny(normalizeText(message), [
+    "edge function returned a non-2xx",
+    "edge function returned a non-2xx status code",
+    "failed to send a request to the edge function",
+    "functionshttperror",
+    "non-2xx status code",
+  ]);
+}
+
+function titleForServerMessage(message: string): string {
+  const normalized = normalizeText(message);
+
+  if (includesAny(normalized, ["active carry requests"])) {
+    return "Active carry requests";
+  }
+
+  if (includesAny(normalized, ["before deleting your account"])) {
+    return "Cannot delete account yet";
+  }
+
+  if (includesAny(normalized, ["payment window", "payment expired"])) {
+    return "Payment window expired";
+  }
+
+  if (includesAny(normalized, ["stripe"])) {
+    return "Stripe setup required";
+  }
+
+  return "Unable to continue";
+}
+
 export function normalizeSupabaseError(
   error: AppError | AppErrorShape,
 ): NormalizedError {
@@ -77,7 +109,6 @@ export function normalizeSupabaseError(
   }
 
   if (
-    !error ||
     includesAny(normalizedMessage, [
       "failed to fetch",
       "networkerror",
@@ -93,6 +124,46 @@ export function normalizeSupabaseError(
         "We couldn't reach the server. Check your internet connection and try again.",
       action: "retry",
     };
+  }
+
+  // Show actionable API / edge-function messages as-is (not generic transport errors).
+  if (
+    !isGenericClientTransportMessage(message) &&
+    message.trim().length > 24
+  ) {
+    const isClientValidation =
+      includesAny(normalizedMessage, [
+        "invalid phone",
+        "phone number is invalid",
+        "invalid email",
+        "email address is invalid",
+        "invalid input",
+        "invalid format",
+      ]);
+
+    const isServerActionMessage =
+      appError.status === 400 ||
+      appError.status === 403 ||
+      appError.status === 422 ||
+      includesAny(normalizedMessage, [
+        "active carry requests",
+        "complete or cancel",
+        "before deleting",
+        "carry request",
+        "payment window",
+        "not awaiting payment",
+        "stripe verification",
+        "could not verify",
+      ]);
+
+    if (!isClientValidation && isServerActionMessage) {
+      return {
+        category: "VALIDATION",
+        title: titleForServerMessage(message),
+        message,
+        action: "close",
+      };
+    }
   }
 
   if (
@@ -272,13 +343,38 @@ export function normalizeSupabaseError(
         action: "retry",
       };
     case 400:
-    case 422:
+    case 422: {
+      if (
+        includesAny(normalizedMessage, [
+          "active carry requests",
+          "complete or cancel them before deleting",
+        ])
+      ) {
+        return {
+          category: "VALIDATION",
+          title: "Active requests",
+          message,
+          action: "close",
+        };
+      }
+
+      if (message.length > 24) {
+        return {
+          category: "VALIDATION",
+          title: "Unable to continue",
+          message,
+          action: "close",
+        };
+      }
+
       return {
         category: "VALIDATION",
         title: "Check your details",
-        message: "Some information doesn’t look right. Please check it and try again.",
+        message:
+          "Some information doesn’t look right. Please check it and try again.",
         action: "close",
       };
+    }
     case 500:
     case 502:
     case 503:

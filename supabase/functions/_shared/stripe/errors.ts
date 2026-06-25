@@ -16,6 +16,24 @@ export function isMissingStripeAccountError(err: unknown): boolean {
   );
 }
 
+/** Test Connect account id stored while using live keys (or the reverse). */
+export function isStripeLiveModeMismatchError(err: unknown): boolean {
+  if (!(err instanceof Stripe.errors.StripeInvalidRequestError)) {
+    return false;
+  }
+
+  const message = err.message?.toLowerCase() ?? "";
+  return (
+    message.includes("test mode") ||
+    message.includes("live mode") ||
+    message.includes("mismatched api key")
+  );
+}
+
+export function isStaleStripeConnectAccountError(err: unknown): boolean {
+  return isMissingStripeAccountError(err) || isStripeLiveModeMismatchError(err);
+}
+
 export function stripeErrorMessage(err: unknown): string {
   if (err instanceof Stripe.errors.StripeError) {
     return err.message;
