@@ -2,8 +2,18 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { ArrowLeft, MoveRight } from "lucide-react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import type { Stripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  ExpressCheckoutElement,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
+import type {
+  Stripe,
+  StripeExpressCheckoutElementConfirmEvent,
+  StripeExpressCheckoutElementReadyEvent,
+} from "@stripe/stripe-js";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
@@ -26,19 +36,84 @@ import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDi
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 
+function hasExpressWalletMethods(
+  available: StripeExpressCheckoutElementReadyEvent["availablePaymentMethods"],
+): boolean {
+  if (!available) return false;
+  return available.applePay === true || available.googlePay === true;
+}
+
 function PaymentCheckoutForm({
   carryRequestId,
-  onCancel,
   onPaymentComplete,
 }: {
   carryRequestId: string;
-  onCancel: () => void;
   onPaymentComplete: () => Promise<void>;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showExpressCheckout, setShowExpressCheckout] = useState(false);
+
+  const completeSuccessfulPayment = async () => {
+    const syncResult = await syncCarryRequestPayment(carryRequestId);
+    if (!syncResult.ok) {
+      setErrorMessage(
+        syncResult.error ??
+          "We couldn't confirm your payment yet. Wait a moment and try again.",
+      );
+      return false;
+    }
+
+    await onPaymentComplete();
+    return true;
+  };
+
+  const handleExpressConfirm = async (
+    event: StripeExpressCheckoutElementConfirmEvent,
+  ) => {
+    if (!stripe || !elements) return;
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const returnUrl = `${window.location.origin}/requests/pay/${encodeURIComponent(carryRequestId)}`;
+      const result = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: returnUrl },
+        redirect: "if_required",
+      });
+
+      if (result.error) {
+        const message = result.error.message ?? "Payment could not be completed.";
+        event.paymentFailed({ message });
+        setErrorMessage(message);
+        return;
+      }
+
+      if (result.paymentIntent?.status !== "succeeded") {
+        const message = "Payment was not completed. Please try again.";
+        event.paymentFailed({ message });
+        setErrorMessage(message);
+        return;
+      }
+
+      const completed = await completeSuccessfulPayment();
+      if (!completed) {
+        event.paymentFailed({
+          message: "Payment succeeded but could not be verified. Please refresh.",
+        });
+      }
+    } catch (err) {
+      const message = AppError.fromUnknown(err).message;
+      event.paymentFailed({ message });
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handlePay = async () => {
     if (!stripe || !elements) return;
@@ -70,16 +145,8 @@ function PaymentCheckoutForm({
         return;
       }
 
-      const syncResult = await syncCarryRequestPayment(carryRequestId);
-      if (!syncResult.ok) {
-        setErrorMessage(
-          syncResult.error ??
-            "We couldn't confirm your payment yet. Wait a moment and try again.",
-        );
-        return;
-      }
-
-      await onPaymentComplete();
+      const completed = await completeSuccessfulPayment();
+      if (!completed) return;
     } catch (err) {
       setErrorMessage(AppError.fromUnknown(err).message);
     } finally {
@@ -95,21 +162,65 @@ function PaymentCheckoutForm({
           : "Pay securely with Stripe test mode. Use a test card — no real charge."}
       </CustomText>
 
-      <PaymentElement
-        className="w-full"
-        options={{
-          layout: {
-            type: "accordion",
-            defaultCollapsed: false,
-            radios: false,
-          },
-          wallets: {
-            applePay: "auto",
-            googlePay: "auto",
-          },
-          paymentMethodOrder: ["apple_pay", "google_pay", "card"],
-        }}
-      />
+      <div
+        id="express-checkout-element"
+        className={showExpressCheckout ? "mb-4 w-full" : "hidden"}
+        aria-hidden={!showExpressCheckout}
+      >
+        <ExpressCheckoutElement
+          onReady={({ availablePaymentMethods }) => {
+            setShowExpressCheckout(hasExpressWalletMethods(availablePaymentMethods));
+          }}
+          onAvailablePaymentMethodsChange={({ paymentMethods }) => {
+            if (!paymentMethods) {
+              setShowExpressCheckout(false);
+              return;
+            }
+
+            setShowExpressCheckout(
+              paymentMethods.applePay?.available === true ||
+                paymentMethods.googlePay?.available === true,
+            );
+          }}
+          onLoadError={() => {
+            setShowExpressCheckout(false);
+          }}
+          onClick={(event) => {
+            event.resolve();
+          }}
+          onConfirm={(event) => {
+            void handleExpressConfirm(event);
+          }}
+          options={{
+            paymentMethods: {
+              applePay: "auto",
+              googlePay: "auto",
+              link: "never",
+              amazonPay: "never",
+              paypal: "never",
+              klarna: "never",
+            },
+          }}
+        />
+      </div>
+
+      <div id="payment-element" className="w-full">
+        <PaymentElement
+          className="w-full"
+          options={{
+            layout: {
+              type: "accordion",
+              defaultCollapsed: false,
+              radios: "never",
+            },
+            wallets: {
+              applePay: "never",
+              googlePay: "never",
+            },
+            paymentMethodOrder: ["card"],
+          }}
+        />
+      </div>
 
       {errorMessage ? (
         <CustomText textSize="sm" textVariant="error">
@@ -117,29 +228,17 @@ function PaymentCheckoutForm({
         </CustomText>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          size="md"
-          disabled={isSubmitting}
-          onClick={onCancel}
-          className="w-full sm:w-auto"
-        >
-          Back to requests
-        </Button>
-        <Button
-          type="button"
-          variant="primary"
-          size="md"
-          disabled={!stripe || !elements || isSubmitting}
-          isBusy={isSubmitting}
-          onClick={() => void handlePay()}
-          className="w-full sm:w-auto"
-        >
-          {isSubmitting ? "Processing..." : "Pay now"}
-        </Button>
-      </div>
+      <Button
+        type="button"
+        variant="primary"
+        size="md"
+        disabled={!stripe || !elements || isSubmitting}
+        isBusy={isSubmitting}
+        onClick={() => void handlePay()}
+        className="w-full"
+      >
+        {isSubmitting ? "Processing..." : "Pay now"}
+      </Button>
     </div>
   );
 }
@@ -432,7 +531,12 @@ export default function PayCarryRequestPage() {
             ) : null}
           </div>
 
-          <Card enableHover={false} sizeClass="max-w-none" className="w-full p-5 sm:p-8 lg:p-10">
+          <Card
+            enableHover={false}
+            sizeClass="max-w-none"
+            className="w-full overflow-hidden p-0"
+          >
+            <div className="bg-canvas p-5 sm:p-8 lg:p-10">
           {loadError ? (
             <div className="flex flex-col gap-4">
               <CustomText textSize="sm" textVariant="error">
@@ -476,11 +580,11 @@ export default function PayCarryRequestPage() {
             >
               <PaymentCheckoutForm
                 carryRequestId={carryRequestId}
-                onCancel={() => navigate("/requests")}
                 onPaymentComplete={handlePaymentComplete}
               />
             </Elements>
           ) : null}
+            </div>
           </Card>
         </div>
       </div>
