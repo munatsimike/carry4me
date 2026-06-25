@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import { jsonResponse, requireEnv } from "../_shared/stripe/auth.ts";
 import { getStripe } from "../_shared/stripe/client.ts";
+import { transferTravelerPayoutForPayment } from "../_shared/stripe/travelerTransfer.ts";
 
 // TODO: handle charge.refunded — restore carry request / notify parties
 // TODO: handle charge.dispute.created — flag request and alert ops
@@ -80,6 +81,19 @@ async function handlePaymentIntentSucceeded(
     return;
   }
 
+  const { data: carryRequest, error: loadError } = await supabaseAdmin
+    .from("carry_requests")
+    .select(
+      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id",
+    )
+    .eq("id", carryRequestId)
+    .maybeSingle();
+
+  if (loadError || !carryRequest) {
+    console.error("stripe-webhook carry request load failed", loadError?.message);
+    throw loadError ?? new Error("Carry request not found");
+  }
+
   const { error: updateError } = await supabaseAdmin
     .from("carry_requests")
     .update({
@@ -92,6 +106,31 @@ async function handlePaymentIntentSucceeded(
   if (updateError) {
     console.error("stripe-webhook payment update failed", updateError.message);
     throw updateError;
+  }
+
+  const stripe = getStripe();
+  const transferResult = await transferTravelerPayoutForPayment(
+    stripe,
+    supabaseAdmin,
+    {
+      carryRequestId,
+      travelerUserId: carryRequest.traveler_user_id,
+      paymentIntent,
+      travelerPayoutAmount: Number(carryRequest.traveler_payout_amount ?? 0),
+      paymentCurrency: carryRequest.payment_currency ?? paymentIntent.currency,
+    },
+  );
+
+  if (!transferResult.ok) {
+    console.warn("stripe-webhook traveler payout deferred", {
+      carryRequestId,
+      reason: transferResult.reason,
+    });
+  } else {
+    console.info("stripe-webhook traveler payout transferred", {
+      carryRequestId,
+      transferId: transferResult.transferId,
+    });
   }
 
   // Reuses the same transition as perform_carry_request_action PAY (RPC).
@@ -112,6 +151,7 @@ async function handlePaymentIntentSucceeded(
     carryRequestId,
     paymentIntentId: paymentIntent.id,
     finalizeResult,
+    travelerTransfer: transferResult.ok ? "sent" : transferResult.reason,
   });
 }
 

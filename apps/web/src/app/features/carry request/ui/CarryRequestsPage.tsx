@@ -27,7 +27,7 @@ import {
   cancelCarryRequest,
   type CancelCarryRequestResponse,
 } from "../application/cancelCarryRequest";
-import PayCarryRequestModal from "./PayCarryRequestModal";
+import { completeCarryRequestPayment } from "../application/completeCarryRequestPayment";
 import { syncCarryRequestPayment } from "../application/carryRequestPayment";
 import { calculateCarryRequestPricing } from "../domain/carryRequestPricing";
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
@@ -342,7 +342,6 @@ export default function CarryRequestsPage() {
     requestId: string;
     slot: PendingActionSlot;
   } | null>(null);
-  const [paymentRequest, setPaymentRequest] = useState<CarryRequest | null>(null);
 
   const openPaymentExpiredInfo = (carryRequest: CarryRequest) => {
     openInfo({
@@ -368,49 +367,23 @@ export default function CarryRequestsPage() {
       slot: "primary",
     });
 
-    const showPaymentSuccess = async (
-      response?: PerformActionResponse,
-    ) => {
-      if (response) {
-        processActionEmailQueue(response, carryRequestId);
-      }
-
-      await queryClient.refetchQueries({
-        queryKey: queryKeys.carryRequests.all,
-      });
-
-      refreshProfile();
-
-      openInfo({
-        title: "Payment success",
-        message:
-          "Payment received. The traveler's contact details have been shared via email and in-app notifications. Arrange the package handover and confirm when it is done.",
-        label: "Close",
-      });
-    };
-
-    const findLatestRequest = () => {
-      const cachedLists = queryClient.getQueriesData<CarryRequest[]>({
-        queryKey: queryKeys.carryRequests.all,
-      });
-
-      return cachedLists
-        .flatMap(([, data]) => data ?? [])
-        .find((request) => request.carryRequestId === carryRequestId);
-    };
-
     try {
-      const response = await performRequestActions.execute(
-        UIACTIONKEYS.PAY,
-        carryRequestId,
-      );
+      const result = await completeCarryRequestPayment(carryRequestId, {
+        queryClient,
+        refreshProfile,
+      });
 
-      if (response.ok) {
-        await showPaymentSuccess(response);
+      if (result.status === "success" || result.status === "already_paid") {
+        openInfo({
+          title: "Payment success",
+          message:
+            "Payment received. The traveler's contact details have been shared via email and in-app notifications. Arrange the package handover and confirm when it is done.",
+          label: "Close",
+        });
         return;
       }
 
-      if (response.reason === "PAYMENT_NOT_CONFIRMED") {
+      if (result.status === "payment_not_confirmed") {
         openInfo({
           title: "Payment not confirmed",
           message:
@@ -420,18 +393,8 @@ export default function CarryRequestsPage() {
         return;
       }
 
-      await queryClient.refetchQueries({
-        queryKey: queryKeys.carryRequests.all,
-      });
-
-      const latestRequest = findLatestRequest();
-      if (latestRequest?.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER) {
-        await showPaymentSuccess();
-        return;
-      }
-
-      if (response.reason === "PAYMENT_EXPIRED" && latestRequest) {
-        openPaymentExpiredInfo(latestRequest);
+      if (result.status === "expired") {
+        openPaymentExpiredInfo(result.request);
       }
     } finally {
       setPendingAction(null);
@@ -511,14 +474,6 @@ export default function CarryRequestsPage() {
   ) => {
     if (!actions.primary || pendingAction || !user) return;
 
-    if (
-      paymentRequest?.carryRequestId === carryRequest.carryRequestId &&
-      actions.primary.key !== UIACTIONKEYS.BROWSE_TRIPS &&
-      actions.primary.key !== UIACTIONKEYS.BROWSE_PARCELS
-    ) {
-      return;
-    }
-
     if (actions.primary.key === UIACTIONKEYS.BROWSE_TRIPS) {
       navigate("/travelers");
       return;
@@ -545,6 +500,9 @@ export default function CarryRequestsPage() {
         showSupabaseError(err);
         return;
       }
+
+      navigate(`/requests/pay/${carryRequest.carryRequestId}`);
+      return;
     }
 
     const shouldProceed = await confirmCarryRequestAction(
@@ -615,12 +573,6 @@ export default function CarryRequestsPage() {
         }
       }
 
-      if (actions.primary.key === UIACTIONKEYS.PAY) {
-        setPendingAction(null);
-        setPaymentRequest(carryRequest);
-        return;
-      }
-
       const response = await performRequestActions.execute(
         actions.primary.key,
         carryRequest.carryRequestId,
@@ -675,12 +627,6 @@ export default function CarryRequestsPage() {
     carryRequest: CarryRequest,
   ) => {
     if (!actions.secondary?.key || pendingAction || !user) return;
-
-    if (
-      paymentRequest?.carryRequestId === carryRequest.carryRequestId
-    ) {
-      return;
-    }
 
     if (actions.secondary.key === UIACTIONKEYS.BROWSE_TRIPS) {
       navigate("/travelers");
@@ -853,25 +799,10 @@ export default function CarryRequestsPage() {
                   ? pendingAction.slot
                   : null
               }
-              paymentModalOpen={
-                paymentRequest?.carryRequestId === request.carryRequestId
-              }
             />
           ))}
         </div>
       </DefaultContainer>
-
-      {paymentRequest ? (
-        <PayCarryRequestModal
-          carryRequestId={paymentRequest.carryRequestId}
-          originCountry={paymentRequest.parcelSnapshot.origin.country}
-          onClose={() => setPaymentRequest(null)}
-          onPaymentComplete={async () => {
-            await completePaymentAfterStripe(paymentRequest.carryRequestId);
-            setPaymentRequest(null);
-          }}
-        />
-      ) : null}
     </>
   );
 }
@@ -887,7 +818,6 @@ function CarryRequestCard({
   onPrimaryAction,
   onSecondaryAction,
   pendingActionSlot,
-  paymentModalOpen,
 }: {
   request: CarryRequest;
   user: { id: string } | null;
@@ -899,7 +829,6 @@ function CarryRequestCard({
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
   pendingActionSlot: PendingActionSlot | null;
-  paymentModalOpen: boolean;
 }) {
   const [openSection, setOpenSection] = useState<MobileSection | null>(null);
 
@@ -1000,7 +929,6 @@ function CarryRequestCard({
             onPrimaryAction={onPrimaryAction}
             onSecondaryAction={onSecondaryAction}
             pendingActionSlot={pendingActionSlot}
-            paymentModalOpen={paymentModalOpen}
           />
         )}
       </Card>
@@ -1033,7 +961,6 @@ function RequestActions({
   onPrimaryAction,
   onSecondaryAction,
   pendingActionSlot,
-  paymentModalOpen,
 }: {
   actions: UIActions;
   request: CarryRequest;
@@ -1044,10 +971,9 @@ function RequestActions({
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
   pendingActionSlot: PendingActionSlot | null;
-  paymentModalOpen: boolean;
 }) {
   const isActionPending = pendingActionSlot !== null;
-  const actionsDisabled = isActionPending || paymentModalOpen;
+  const actionsDisabled = isActionPending;
   const isPrimaryPending = pendingActionSlot === "primary";
   const isSecondaryPending = pendingActionSlot === "secondary";
 

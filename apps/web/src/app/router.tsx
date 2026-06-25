@@ -4,6 +4,7 @@ import AboutPage from "./pages/AboutPage";
 import TravelersPage from "./features/trips/ui/TravelersPage";
 import ParcelsPage from "./features/parcels/ui/ParcelsPage";
 import CarryRequestsPage from "./features/carry request/ui/CarryRequestsPage";
+import PayCarryRequestPage from "./features/carry request/ui/PayCarryRequestPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import HomePage from "./features/home/HomePage";
 import { MyFavouritesPage } from "./features/my favourites/UI/MyFavouritesPage";
@@ -62,6 +63,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requireCompleteProfile={false}>
             <CarryRequestsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "requests/pay/:carryRequestId",
+        element: (
+          <ProtectedRoute requireCompleteProfile={false}>
+            <PayCarryRequestPage />
           </ProtectedRoute>
         ),
       },

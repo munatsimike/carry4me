@@ -45,7 +45,7 @@ export async function confirmCarryRequestStripePayment(
   }
 
   const returnUrl =
-    `${window.location.origin}/requests?carry_request_id=${encodeURIComponent(carryRequestId)}`;
+    `${window.location.origin}/requests/pay/${encodeURIComponent(carryRequestId)}`;
 
   const result = await stripe.confirmPayment({
     clientSecret,

@@ -5,6 +5,7 @@ import {
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
 import { getStripe } from "../_shared/stripe/client.ts";
+import { transferTravelerPayoutForPayment } from "../_shared/stripe/travelerTransfer.ts";
 
 type RequestBody = {
   carry_request_id?: string;
@@ -31,7 +32,9 @@ Deno.serve(async (req) => {
 
     const { data: carryRequest, error: loadError } = await supabaseAdmin
       .from("carry_requests")
-      .select("id, sender_user_id, stripe_payment_intent_id, payment_status, status")
+      .select(
+        "id, sender_user_id, traveler_user_id, stripe_payment_intent_id, payment_status, status, traveler_payout_amount, payment_currency",
+      )
       .eq("id", carryRequestId)
       .maybeSingle();
 
@@ -49,6 +52,7 @@ Deno.serve(async (req) => {
 
     const paymentIntent = await stripe.paymentIntents.retrieve(
       carryRequest.stripe_payment_intent_id,
+      { expand: ["latest_charge"] },
     );
 
     if (paymentIntent.status === "succeeded") {
@@ -59,6 +63,25 @@ Deno.serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq("id", carryRequestId);
+
+      const transferResult = await transferTravelerPayoutForPayment(
+        stripe,
+        supabaseAdmin,
+        {
+          carryRequestId,
+          travelerUserId: carryRequest.traveler_user_id,
+          paymentIntent,
+          travelerPayoutAmount: Number(carryRequest.traveler_payout_amount ?? 0),
+          paymentCurrency: carryRequest.payment_currency ?? paymentIntent.currency,
+        },
+      );
+
+      if (!transferResult.ok) {
+        console.warn("sync-carry-request-payment traveler payout deferred", {
+          carryRequestId,
+          reason: transferResult.reason,
+        });
+      }
 
       return jsonResponse({
         ok: true,

@@ -24,6 +24,7 @@ export type CarryRequestActionConfirmContext = {
 const ACTIONS_WITHOUT_CONFIRM: ReadonlySet<UIActionKey> = new Set([
   UIACTIONKEYS.BROWSE_TRIPS,
   UIACTIONKEYS.BROWSE_PARCELS,
+  UIACTIONKEYS.PAY,
 ]);
 
 function getConfirmOptions(
@@ -93,15 +94,6 @@ function getConfirmOptions(
           "This will release the payment to your account and mark the request as completed.",
         confirmText: "Yes, release payment",
         cancelText: "Not yet",
-      };
-
-    case UIACTIONKEYS.PAY:
-      return {
-        title: "Make payment?",
-        message:
-          "You are about to pay for this carry request. Your payment will be held securely until delivery is complete.",
-        confirmText: "Continue to payment",
-        cancelText: "Not now",
       };
 
     case UIACTIONKEYS.RESEND_DELIVERY_OTP:
