@@ -60,6 +60,12 @@ export function isTravelerStripePayoutReady(profile: StripeConnectProfileFields)
   return getStripeConnectClientState(profile) === "ready";
 }
 
+export function isTravelerStripeVerifiedInProfile(
+  profile: { stripeVerificationStatus?: string | null } | null | undefined,
+): boolean {
+  return profile?.stripeVerificationStatus === "verified";
+}
+
 export function shouldShowTravelerPayoutSetup(
   profile: StripeConnectProfileFields,
   postedTripCount: number,

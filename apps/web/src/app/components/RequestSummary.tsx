@@ -57,7 +57,7 @@ export default function RequestSummary({
 
   const [requestLoaded, setLoadRequest] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, profile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const { showSupabaseError, openInfo, confirm } = useUniversalModal();
   const navigate = useNavigate();
@@ -236,6 +236,7 @@ export default function RequestSummary({
             try {
               const stripeReady = await ensureTravelerStripeReady({
                 openInfo,
+                profile,
                 onStripeSynced: () => refreshProfile({ silent: true }),
               });
               if (!stripeReady) return;

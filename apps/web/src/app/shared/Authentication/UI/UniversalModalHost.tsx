@@ -157,6 +157,19 @@ function ModalFooterButton({
   const browseTone = resolveBrowseMarketplaceTone(label);
   const className = "w-full sm:min-w-[120px] sm:w-auto";
 
+  if (browseTone && slot === "primary") {
+    return (
+      <Button
+        className={className}
+        onClick={onClick}
+        variant="primary"
+        size="sm"
+      >
+        <CustomText textVariant="onDark">{label}</CustomText>
+      </Button>
+    );
+  }
+
   if (browseTone) {
     return (
       <BrowseMarketplaceButton

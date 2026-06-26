@@ -4,7 +4,9 @@ import type { InfoModalPayload } from "@/app/shared/Authentication/application/D
 import {
   type StripeConnectClientState,
   getStripeConnectClientState,
+  isTravelerStripeVerifiedInProfile,
 } from "./travelerStripeConnectStatus";
+import type { UserProfile } from "@/app/shared/Authentication/domain/authTypes";
 
 export type ConnectStatusResponse = {
   verified: boolean;
@@ -28,6 +30,7 @@ type TravelerStripeReadyOptions = {
   returnUrl?: string;
   refreshUrl?: string;
   onStripeSynced?: () => void | Promise<void>;
+  profile?: Pick<UserProfile, "stripeVerificationStatus"> | null;
 };
 
 const VERIFICATION_MESSAGE =
@@ -47,10 +50,25 @@ export function isTravelerStripeReadyForAccept(
   if (!status) return false;
 
   return (
-    status.onboarding_complete === true ||
-    status.verified === true ||
-    (!!status.stripe_account_id && status.stripe_details_submitted === true)
+    status.stripe_verification_status === "verified" || status.verified === true
   );
+}
+
+async function loadTravelerStripeConnectStatus(
+  openInfo: (payload: Omit<InfoModalPayload, "type">) => void,
+): Promise<ConnectStatusResponse | null> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await fetchTravelerStripeConnectStatus();
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  handleStripeVerificationError(lastError, openInfo);
+  return null;
 }
 
 function handleStripeVerificationError(
@@ -107,6 +125,16 @@ function handleStripeVerificationError(
 export async function redirectToTravelerStripeOnboarding(
   options: TravelerStripeReadyOptions = {} as TravelerStripeReadyOptions,
 ): Promise<boolean> {
+  try {
+    const status = await fetchTravelerStripeConnectStatus();
+    if (isTravelerStripeReadyForAccept(status)) {
+      await options.onStripeSynced?.();
+      return true;
+    }
+  } catch {
+    // Fall through to hosted onboarding when status sync is unavailable.
+  }
+
   const { returnUrl, refreshUrl } = resolveOnboardingUrls(options);
 
   const onboarding = await invokeStripeFunction<ConnectOnboardingResponse>(
@@ -174,19 +202,21 @@ function promptTravelerStripeOnboarding(
 export async function ensureTravelerStripeReady(
   options: TravelerStripeReadyOptions,
 ): Promise<boolean> {
-  let status: ConnectStatusResponse | null = null;
-
-  try {
-    status = await fetchTravelerStripeConnectStatus();
-  } catch {
-    status = null;
-  }
-
-  if (isTravelerStripeReadyForAccept(status)) {
+  if (isTravelerStripeVerifiedInProfile(options.profile)) {
     return true;
   }
 
-  if (status && !status.phone_verified) {
+  const status = await loadTravelerStripeConnectStatus(options.openInfo);
+  if (!status) {
+    return false;
+  }
+
+  if (isTravelerStripeReadyForAccept(status)) {
+    await options.onStripeSynced?.();
+    return true;
+  }
+
+  if (!status.phone_verified) {
     options.openInfo({
       title: "Phone verification required",
       message: "Verify your phone number before you can accept paid carry requests.",
@@ -196,7 +226,7 @@ export async function ensureTravelerStripeReady(
     return false;
   }
 
-  if (status && !status.email_verified) {
+  if (!status.email_verified) {
     options.openInfo({
       title: "Email verification required",
       message: "Verify your email before you can accept paid carry requests.",

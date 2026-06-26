@@ -169,7 +169,7 @@ function secondaryActionSuccessMessage(actionKey: UIActionKey): string {
 }
 
 export default function CarryRequestsPage() {
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, profile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const [selectedTab, setSelectedTab] = useState<SelectedTab | null>(null);
   const queryClient = useQueryClient();
@@ -543,6 +543,7 @@ export default function CarryRequestsPage() {
           try {
             const stripeReady = await ensureTravelerStripeReady({
               openInfo,
+              profile,
               onStripeSynced: () => refreshProfile({ silent: true }),
             });
             if (!stripeReady) {
@@ -734,6 +735,7 @@ export default function CarryRequestsPage() {
           message,
           label: senderCanceled ? "Browse other parcels" : "Browse other trips",
           onClick: () => navigate(senderCanceled ? "/parcels" : "/travelers"),
+          secondaryLabel: "Close",
         });
       }
 
