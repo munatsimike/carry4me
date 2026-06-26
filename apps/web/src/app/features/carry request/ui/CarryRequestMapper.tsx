@@ -43,7 +43,7 @@ export function mapCarryRequestToUI(
       description =
         viewerRole === ROLES.SENDER
           ? `This trip is reserved for ${formatPaymentWindowLabel()}. Make payment before the reservation expires.`
-          : `You accepted this carry request. The sender has ${formatPaymentWindowLabel()} to pay and confirm the booking. We'll notify you once payment is received. If they don't pay in time, the request will expire and your trip slot will be released.`;
+          : `You've accepted this carry request. The sender has ${formatPaymentWindowLabel()} to complete payment. Otherwise, the request will expire, and your reserved weight will be released.`;
       break;
 
     case CARRY_REQUEST_STATUSES.PENDING_HANDOVER: {

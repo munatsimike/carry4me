@@ -1266,38 +1266,44 @@ function Header({
   paymentTimeViewer,
 }: HeaderProps) {
   return (
-    <SpaceBetweenRow>
+    <div className="flex w-full flex-col gap-2">
+      <SpaceBetweenRow className="items-start gap-4">
+        <div className="inline-flex min-w-0 items-center gap-2">
+          <span
+            className={`inline-flex h-3 w-3 shrink-0 rounded-full ${statusColor(status)}`}
+          />
+          <span className="font-medium font-heading text-ink-primary text-lg sm:text-xl">
+            {title}
+          </span>
+        </div>
+        <CustomText
+          textSize="xs"
+          textVariant="secondary"
+          className="shrink-0 tracking-wide"
+        >
+          ID {requestId}
+        </CustomText>
+      </SpaceBetweenRow>
       <CurrentStatus
-        title={title}
         description={description}
-        status={status}
         paymentExpiresAt={paymentExpiresAt}
         requestStatus={requestStatus}
         stripePaymentIntentId={stripePaymentIntentId}
         paymentStatus={paymentStatus}
         paymentTimeViewer={paymentTimeViewer}
       />
-      <div className="inline-flex flex-col items-end gap-1">
-        <CustomText textSize="xs" textVariant="secondary" className="tracking-wide">
-          ID {requestId}
-        </CustomText>
-      </div>
-    </SpaceBetweenRow>
+    </div>
   );
 }
 function CurrentStatus({
-  title,
   description,
-  status,
   paymentExpiresAt,
   requestStatus,
   stripePaymentIntentId,
   paymentStatus,
   paymentTimeViewer,
 }: {
-  title: string;
   description: string;
-  status: CarryRequestStatus;
   paymentExpiresAt: string | null;
   requestStatus: CarryRequestStatus;
   stripePaymentIntentId?: string | null;
@@ -1319,16 +1325,7 @@ function CurrentStatus({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="inline-flex items-center gap-2">
-        <span
-          className={`inline-flex h-3 w-3 rounded-full ${statusColor(status)}`}
-        />
-        <span className="font-medium font-heading text-ink-primary text-lg sm:text-xl">
-          {title}
-        </span>
-      </div>
-
-      <span className="text-ink-secondary whitespace-normal text-base">
+      <span className="text-ink-secondary whitespace-normal text-base leading-relaxed">
         {description}
       </span>
       {showTimer && remainingLabel ? (

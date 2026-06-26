@@ -237,13 +237,14 @@ export function useTripForm({
           tripId,
           openInfo,
           navigate,
-          () =>
-            startTravelerStripeOnboarding({
+          () => {
+            void startTravelerStripeOnboarding({
               openInfo,
               returnUrl: `${window.location.origin}${stripeReturnPath}`,
               refreshUrl: `${window.location.origin}/profile?stripe=refresh`,
               onStripeSynced: () => refreshProfile({ silent: true }),
-            }),
+            });
+          },
         );
       }
 
