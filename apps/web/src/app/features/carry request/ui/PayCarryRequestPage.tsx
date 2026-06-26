@@ -35,9 +35,14 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { CARRY_REQUEST_STATUSES } from "../domain/CreateCarryRequest";
-import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
 import SvgIcon from "@/components/ui/SvgIcon";
-import { META_ICONS } from "@/app/icons/MetaIcon";
+import { toflag } from "@/app/Mapper";
+
+function formatParcelWeight(weightKg: number): string {
+  const value = Number(weightKg);
+  if (!Number.isFinite(value) || value <= 0) return "—";
+  return Number.isInteger(value) ? `${value} kg` : `${value.toFixed(1)} kg`;
+}
 
 function isNetherlandsOrigin(country: string): boolean {
   const normalized = country.trim().toLowerCase();
@@ -503,8 +508,9 @@ export default function PayCarryRequestPage() {
     return <Navigate to="/requests" replace />;
   }
 
-  const trip = carryRequest.tripSnapshot;
   const parcel = carryRequest.parcelSnapshot;
+  const originFlag = toflag(parcel.origin.country);
+  const destinationFlag = toflag(parcel.destination.country);
 
   return (
     <DefaultContainer className="max-w-none">
@@ -530,55 +536,61 @@ export default function PayCarryRequestPage() {
           <div className="flex flex-col gap-6">
             <Card enableHover={false} sizeClass="max-w-none" className="w-full p-4 sm:p-6">
               <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <SvgIcon size="xs" Icon={META_ICONS.ukFlag} />
-                  <CustomText textSize="sm" className="font-medium">
-                    {trip.origin.country}
+                <span className="inline-flex w-fit items-center rounded-full border border-neutral-100 bg-neutral-100 px-3 py-1">
+                  <CustomText textSize="xs" textVariant="primary" className="font-medium">
+                    Parcel
                   </CustomText>
-                  <MoveRight className="h-4 w-4 text-neutral-800" strokeWidth={1.5} />
-                  <SvgIcon size="xs" Icon={META_ICONS.zimFlag} />
-                  <CustomText textSize="sm" className="font-medium">
-                    {trip.destination.country}
-                  </CustomText>
+                </span>
+
+                <div className="rounded-xl border border-neutral-100 bg-neutral-50/80 px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    {originFlag ? <SvgIcon size="xs" Icon={originFlag} /> : null}
+                    <CustomText textSize="sm" className="font-medium">
+                      {parcel.origin.country}
+                    </CustomText>
+                    <MoveRight
+                      className="h-4 w-4 shrink-0 text-neutral-400"
+                      strokeWidth={1.5}
+                      aria-hidden
+                    />
+                    {destinationFlag ? (
+                      <SvgIcon size="xs" Icon={destinationFlag} />
+                    ) : null}
+                    <CustomText textSize="sm" className="font-medium">
+                      {parcel.destination.country}
+                    </CustomText>
+                  </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  <div>
-                    <CustomText textSize="xs" textVariant="secondary">
-                      Traveler
-                    </CustomText>
-                    <CustomText textSize="sm" className="font-medium">
-                      {formatPersonDisplayName(trip.traveler_name)}
-                    </CustomText>
-                  </div>
-                  <div>
-                    <CustomText textSize="xs" textVariant="secondary">
-                      Sender
-                    </CustomText>
-                    <CustomText textSize="sm" className="font-medium">
-                      {formatPersonDisplayName(parcel.sender_name)}
-                    </CustomText>
-                  </div>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-2">
+                  <CustomText textSize="sm" textVariant="secondary">
+                    Weight
+                  </CustomText>
+                  <CustomText textSize="sm" textVariant="primary" className="text-right tabular-nums">
+                    {formatParcelWeight(parcel.weight_kg)}
+                  </CustomText>
+
+                  {paymentAmount !== null && platformFeeAmount !== null ? (
+                    <>
+                      <ServiceFeeRow
+                        priceCountry={originCountry}
+                        serviceFee={platformFeeAmount / 100}
+                      />
+                      <CustomText textSize="md" textVariant="primary" className="font-medium">
+                        Total charged
+                      </CustomText>
+                      <CustomText
+                        textSize="md"
+                        textVariant="primary"
+                        className="text-right font-semibold tabular-nums"
+                      >
+                        {formatCurrencyByCountry(originCountry, paymentAmount / 100)}
+                      </CustomText>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </Card>
-
-            {paymentAmount !== null && platformFeeAmount !== null ? (
-              <Card enableHover={false} sizeClass="max-w-none" className="w-full p-4 sm:p-6">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-2">
-                  <ServiceFeeRow
-                    priceCountry={originCountry}
-                    serviceFee={platformFeeAmount / 100}
-                  />
-                  <CustomText textSize="sm" textVariant="primary" className="font-medium">
-                    Total charged
-                  </CustomText>
-                  <CustomText textSize="sm" textVariant="primary" className="text-right font-medium">
-                    {formatCurrencyByCountry(originCountry, paymentAmount / 100)}
-                  </CustomText>
-                </div>
-              </Card>
-            ) : null}
           </div>
 
           <div className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-canvas p-5 shadow-sm sm:p-8 lg:p-10">
