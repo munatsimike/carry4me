@@ -178,17 +178,11 @@ export async function enrichNotificationForEmail(
       return {
         ...base,
         body: senderMustPay
-          ? "The traveler accepted your request to carry your parcel."
+          ? "The traveler accepted your request to carry your parcel. Make payment to continue. Your payment will be held securely until delivery is complete."
           : base.body,
         link: base.link?.trim() ? base.link : "/requests",
         paymentRequired: senderMustPay,
         ctaLabel: senderMustPay ? "Make payment" : "View request",
-        extraParagraphs: senderMustPay
-          ? [
-              "Make payment to continue with your carry request.",
-              "Your payment will be held securely until delivery is complete.",
-            ]
-          : undefined,
       };
     }
     case "PAYMENT_COMPLETED": {

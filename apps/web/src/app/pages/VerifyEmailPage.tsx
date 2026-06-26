@@ -5,25 +5,19 @@ import Spinner from "@/app/components/Spinner";
 import { useToast } from "@/app/components/Toast";
 import { verifyEmail } from "@/app/shared/supabase/verifyEmail";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
-import { getDefaultAuthedPath } from "@/app/shared/Authentication/domain/accountStatus";
 import { getAuthenticatedLandingPath } from "@/app/shared/Authentication/application/postAuthNavigation";
 import {
   normalizeEmailVerificationError,
 } from "@/app/shared/Authentication/application/normalizeSupabaseError";
-import {
-  isEstablishedAppTab,
-  markTabInitialized,
-  requestEmailVerificationHandoff,
-} from "@/app/shared/Authentication/application/emailVerificationTabCoordination";
+import { notifyEmailVerified } from "@/app/shared/Authentication/application/emailVerificationTabCoordination";
 import { SupabaseAuthRepository } from "@/app/shared/data/SupabaseAuthRepository";
+import { Button } from "@/components/ui/Button";
 import { motion } from "framer-motion";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-const REDIRECT_DELAY_MS = 2200;
-
 type VerifyUiStatus = "loading" | "success" | "error";
-type HandoffStatus = "pending" | "self" | "delegated";
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
@@ -32,9 +26,9 @@ export default function VerifyEmailPage() {
   const { user, profile, refreshProfile, loading } = useAuth();
   const { toast } = useToast();
   const toastShownRef = useRef(false);
+  const verifiedBroadcastRef = useRef(false);
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
 
-  const [handoffStatus, setHandoffStatus] = useState<HandoffStatus>("pending");
   const [status, setStatus] = useState<VerifyUiStatus>("loading");
   const [alreadyVerified, setAlreadyVerified] = useState(false);
   const [title, setTitle] = useState("Verifying email");
@@ -58,54 +52,14 @@ export default function VerifyEmailPage() {
   };
 
   useEffect(() => {
-    markTabInitialized();
-  }, []);
-
-  useEffect(() => {
-    if (!token.trim()) {
-      setHandoffStatus("self");
-      return;
-    }
-
-    if (isEstablishedAppTab()) {
-      setHandoffStatus("self");
-      return;
-    }
-
-    let cancelled = false;
-
-    void requestEmailVerificationHandoff(token).then((result) => {
-      if (cancelled) return;
-      setHandoffStatus(result === "other-tab" ? "delegated" : "self");
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
-
-  useEffect(() => {
-    if (handoffStatus === "delegated") {
-      window.setTimeout(() => {
-        window.close();
-      }, 400);
-    }
-  }, [handoffStatus]);
-
-  useEffect(() => {
-    if (handoffStatus !== "self") return;
     if (loading) return;
 
-    if (user) {
-      const destination = getAuthenticatedLandingPath(profile);
-      if (!token.trim() || profile?.emailVerified) {
-        navigate(destination, { replace: true });
-        return;
-      }
-    }
-
     if (!token.trim()) {
-      applyError("token_required");
+      if (profile?.emailVerified) {
+        applySuccess(true);
+      } else {
+        applyError("token_required");
+      }
       return;
     }
 
@@ -116,7 +70,7 @@ export default function VerifyEmailPage() {
 
     let cancelled = false;
 
-    (async () => {
+    void (async () => {
       try {
         const result = await verifyEmail(token);
         if (cancelled) return;
@@ -154,14 +108,10 @@ export default function VerifyEmailPage() {
     };
   }, [
     authRepo,
-    handoffStatus,
     loading,
-    navigate,
-    profile,
     profile?.emailVerified,
     refreshProfile,
     token,
-    user,
     user?.id,
   ]);
 
@@ -176,50 +126,20 @@ export default function VerifyEmailPage() {
   }, [alreadyVerified, status, toast]);
 
   useEffect(() => {
-    if (status !== "success") return;
+    if (status !== "success" || verifiedBroadcastRef.current) return;
 
-    const timeoutId = window.setTimeout(() => {
-      navigate(getDefaultAuthedPath(profile), { replace: true });
-    }, REDIRECT_DELAY_MS);
+    verifiedBroadcastRef.current = true;
+    notifyEmailVerified();
+  }, [status]);
 
-    return () => window.clearTimeout(timeoutId);
-  }, [navigate, profile, status]);
+  const handleContinue = () => {
+    if (user) {
+      navigate(getAuthenticatedLandingPath(profile), { replace: true });
+      return;
+    }
 
-  if (handoffStatus === "pending") {
-    return (
-      <DefaultContainer center outerClassName="bg-canvas min-h-screen">
-        <Card enableHover={false} sizeClass="max-w-lg" className="w-full">
-          <motion.div className="flex flex-col items-center gap-4 p-6 text-center">
-            <Spinner />
-            <CustomText textVariant="primary" textSize="lg" className="font-medium">
-              Opening verification
-            </CustomText>
-            <CustomText textVariant="secondary" textSize="sm">
-              Checking for an open Carry4Me tab…
-            </CustomText>
-          </motion.div>
-        </Card>
-      </DefaultContainer>
-    );
-  }
-
-  if (handoffStatus === "delegated") {
-    return (
-      <DefaultContainer center outerClassName="bg-canvas min-h-screen">
-        <Card enableHover={false} sizeClass="max-w-lg" className="w-full">
-          <motion.div className="flex flex-col items-center gap-4 p-6 text-center">
-            <CustomText textVariant="primary" textSize="lg" className="font-medium">
-              Continuing in your open tab
-            </CustomText>
-            <CustomText textVariant="secondary" textSize="sm">
-              Email verification is running in your existing Carry4Me tab. You
-              can close this one.
-            </CustomText>
-          </motion.div>
-        </Card>
-      </DefaultContainer>
-    );
-  }
+    navigate("/signin", { replace: true });
+  };
 
   return (
     <DefaultContainer center outerClassName="bg-canvas min-h-screen">
@@ -230,12 +150,53 @@ export default function VerifyEmailPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           {status === "loading" && <Spinner />}
+
+          {status === "success" && (
+            <CheckCircle2
+              className="h-12 w-12 text-success-600"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+          )}
+
+          {status === "error" && (
+            <XCircle
+              className="h-12 w-12 text-red-600"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+          )}
+
           <CustomText textVariant="primary" textSize="lg" className="font-medium">
             {title}
           </CustomText>
           <CustomText textVariant="secondary" textSize="sm">
             {message}
           </CustomText>
+
+          {status === "success" ? (
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              className="mt-2 w-full sm:w-auto"
+              onClick={handleContinue}
+            >
+              Continue to Carry4Me
+            </Button>
+          ) : null}
+
+          {status === "error" ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              className="mt-2 w-full sm:w-auto"
+              onClick={() => navigate(user ? "/profile" : "/signin", { replace: true })}
+            >
+              {user ? "Back to profile" : "Sign in"}
+            </Button>
+          ) : null}
         </motion.div>
       </Card>
     </DefaultContainer>

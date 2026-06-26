@@ -109,6 +109,10 @@ function PaymentCheckoutForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const showIdealCheckout =
+    paymentCurrency?.toLowerCase() === "eur" &&
+    isNetherlandsOrigin(originCountry);
+
   const paymentElementOptions = useMemo(() => {
     const options: Parameters<typeof PaymentElement>[0]["options"] = {
       layout: {
@@ -122,10 +126,8 @@ function PaymentCheckoutForm({
       },
     };
 
-    if (
-      paymentCurrency?.toLowerCase() === "eur" &&
-      isNetherlandsOrigin(originCountry)
-    ) {
+    if (showIdealCheckout) {
+      options.paymentMethodOrder = ["ideal", "card"];
       options.defaultValues = {
         billingDetails: {
           address: {
@@ -136,7 +138,7 @@ function PaymentCheckoutForm({
     }
 
     return options;
-  }, [originCountry, paymentCurrency]);
+  }, [showIdealCheckout]);
 
   const completeSuccessfulPayment = async () => {
     const syncResult = await syncCarryRequestPayment(carryRequestId);
@@ -240,9 +242,8 @@ function PaymentCheckoutForm({
     <div className="flex flex-col gap-6">
       <CustomText textSize="sm" textVariant="secondary">
         {isStripeLiveMode()
-          ? paymentCurrency?.toLowerCase() === "eur" &&
-            isNetherlandsOrigin(originCountry)
-            ? "Pay securely with card, iDEAL, Apple Pay, Google Pay, or Link."
+          ? showIdealCheckout
+            ? "Pay securely with Apple Pay, Google Pay, Link, iDEAL, or card."
             : "Pay securely with Stripe using card, Apple Pay, Google Pay, or Link."
           : "Pay securely with Stripe test mode. Use a test card — no real charge."}
       </CustomText>
@@ -252,6 +253,16 @@ function PaymentCheckoutForm({
           options={EXPRESS_CHECKOUT_ELEMENT_OPTIONS}
           onConfirm={handleExpressConfirm}
         />
+      ) : null}
+
+      {showIdealCheckout ? (
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <CustomText textSize="xs" textVariant="secondary">
+            Or pay with iDEAL or card
+          </CustomText>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
       ) : null}
 
       <div id="payment-element" className="w-full">

@@ -572,7 +572,7 @@ export function normalizeEmailVerificationError(
         category: "AUTH",
         title: "Email verified",
         message:
-          "Your email has been verified. Taking you to the dashboard…",
+          "Your email has been verified. You can now post parcels and trips on Carry4Me.",
         action: "close",
       };
 
@@ -581,7 +581,7 @@ export function normalizeEmailVerificationError(
         category: "AUTH",
         title: "Email already verified",
         message:
-          "Your email is already verified. Taking you to the dashboard…",
+          "Your email is already verified. You can continue using Carry4Me.",
         action: "close",
       };
 

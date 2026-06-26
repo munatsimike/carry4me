@@ -1,13 +1,13 @@
-import { subscribeToEmailVerificationRequests } from "@/app/shared/Authentication/application/emailVerificationTabCoordination";
+import { subscribeToEmailVerifiedEvents } from "@/app/shared/Authentication/application/emailVerificationTabCoordination";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 export function useEmailVerificationTabListener() {
-  const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
 
   useEffect(() => {
-    return subscribeToEmailVerificationRequests((message) => {
-      navigate(message.path);
+    return subscribeToEmailVerifiedEvents(() => {
+      void refreshProfile();
     });
-  }, [navigate]);
+  }, [refreshProfile]);
 }
