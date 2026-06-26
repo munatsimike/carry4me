@@ -7,6 +7,23 @@ import {
   needsCompleteProfile,
 } from "../domain/profileCompletion";
 
+const NON_REDIRECT_AUTH_PATHS = new Set([
+  "/",
+  "/signin",
+  "/verify-email",
+  COMPLETE_PROFILE_PATH,
+]);
+
+export function sanitizePostAuthRedirect(redirectTo?: string): string | undefined {
+  const trimmed = redirectTo?.trim();
+  if (!trimmed) return undefined;
+
+  const pathname = trimmed.split(/[?#]/)[0];
+  if (NON_REDIRECT_AUTH_PATHS.has(pathname)) return undefined;
+
+  return trimmed;
+}
+
 export function getAuthenticatedLandingPath(
   profile: UserProfile | null,
   redirectTo?: string,
@@ -15,7 +32,7 @@ export function getAuthenticatedLandingPath(
     return COMPLETE_PROFILE_PATH;
   }
 
-  const customRedirect = redirectTo?.trim();
+  const customRedirect = sanitizePostAuthRedirect(redirectTo);
   if (customRedirect) return customRedirect;
 
   return getDefaultAuthedPath(profile);
@@ -24,12 +41,14 @@ export function getAuthenticatedLandingPath(
 export async function resolveAuthenticatedLandingPath(
   redirectTo?: string,
 ): Promise<string> {
+  const sanitizedRedirect = sanitizePostAuthRedirect(redirectTo);
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirectTo?.trim() || "/dashboard";
+    return sanitizedRedirect || "/dashboard";
   }
 
   const authRepo = new SupabaseAuthRepository();

@@ -559,7 +559,13 @@ export default function PayCarryRequestPage() {
   }, [carryRequestId, handlePaymentComplete, navigate, searchParams, showSupabaseError]);
 
   if (!user) {
-    return <Navigate to="/signin" replace />;
+    return (
+      <Navigate
+        to="/signin"
+        replace
+        state={{ from: `/requests/pay/${carryRequestId}` }}
+      />
+    );
   }
 
   if (!carryRequestId) {

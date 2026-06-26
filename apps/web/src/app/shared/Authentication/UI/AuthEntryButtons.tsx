@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { useSignInModal } from "../SignInModalContext";
+import { sanitizePostAuthRedirect } from "../application/postAuthNavigation";
 
 export function AuthEntryButtons({
   className,
@@ -9,6 +10,11 @@ export function AuthEntryButtons({
 }) {
   const location = useLocation();
   const { openSignInModal, openSignUpModal } = useSignInModal();
+  const redirectTo =
+    sanitizePostAuthRedirect(location.pathname) ??
+    sanitizePostAuthRedirect(
+      (location.state as { from?: string } | null)?.from,
+    );
 
   return (
     <div className={className ?? "flex items-center gap-2"}>
@@ -16,7 +22,7 @@ export function AuthEntryButtons({
         type="button"
         variant="outline"
         size="sm"
-        onClick={() => openSignUpModal({ redirectTo: location.pathname })}
+        onClick={() => openSignUpModal({ redirectTo })}
       >
         Sign up
       </Button>
@@ -24,7 +30,7 @@ export function AuthEntryButtons({
         type="button"
         variant="primary"
         size="sm"
-        onClick={() => openSignInModal({ redirectTo: location.pathname })}
+        onClick={() => openSignInModal({ redirectTo })}
       >
         Sign in
       </Button>

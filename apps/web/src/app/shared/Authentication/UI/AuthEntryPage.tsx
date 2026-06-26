@@ -1,9 +1,29 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/app/components/card/Card";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import CustomText from "@/components/ui/CustomText";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { isSuspended } from "../domain/accountStatus";
+import { getAuthenticatedLandingPath } from "../application/postAuthNavigation";
 import { AuthEntryButtons } from "./AuthEntryButtons";
 
 export function AuthEntryPage() {
+  const navigate = useNavigate();
+  const { user, loading, profile } = useAuth();
+
+  useEffect(() => {
+    if (isSuspended(profile)) return;
+
+    if (user && !loading && profile) {
+      navigate(getAuthenticatedLandingPath(profile), { replace: true });
+    }
+  }, [user, loading, profile, navigate]);
+
+  if (loading || (user && profile && !isSuspended(profile))) {
+    return null;
+  }
+
   return (
     <DefaultContainer outerClassName="bg-canvas min-h-screen">
       <div className="flex min-h-[60vh] items-center justify-center">
