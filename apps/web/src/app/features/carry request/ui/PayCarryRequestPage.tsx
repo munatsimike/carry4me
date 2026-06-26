@@ -205,7 +205,7 @@ function PaymentCheckoutForm({
       </CustomText>
 
       {clientSecret ? (
-        <div id="express-checkout-element" className="mb-4 w-full">
+        <div id="express-checkout-element">
           <ExpressCheckoutElement
             onReady={(event: StripeExpressCheckoutElementReadyEvent) => {
               logExpressCheckoutContext(expressCheckoutLogContext);
@@ -229,6 +229,7 @@ function PaymentCheckoutForm({
               console.error("[ExpressCheckout] loaderror", event);
             }}
             onClick={(event) => {
+              console.log("[ExpressCheckout] click", event);
               event.resolve();
             }}
             onConfirm={(event) => {
@@ -236,9 +237,9 @@ function PaymentCheckoutForm({
             }}
             options={{
               paymentMethods: {
+                googlePay: "always",
                 applePay: "auto",
-                googlePay: "auto",
-                link: "never",
+                link: "auto",
                 amazonPay: "never",
                 paypal: "never",
                 klarna: "never",
@@ -588,7 +589,7 @@ export default function PayCarryRequestPage() {
           <Card
             enableHover={false}
             sizeClass="max-w-none"
-            className="w-full overflow-hidden p-0"
+            className="w-full p-0"
           >
             <div className="bg-canvas p-5 sm:p-8 lg:p-10">
           {loadError ? (

@@ -46,3 +46,10 @@ select:-webkit-autofill {
   border-radius: 0.75rem;
   transition: background-color 9999s ease-in-out 0s;
 }
+
+#express-checkout-element {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-bottom: 16px;
+}
