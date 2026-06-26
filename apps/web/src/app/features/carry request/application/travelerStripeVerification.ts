@@ -1,4 +1,5 @@
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
+import { AppError } from "@/app/shared/domain/AppError";
 import type { InfoModalPayload } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 
 type ConnectStatusResponse = {
@@ -101,10 +102,44 @@ export async function ensureTravelerStripeReady(options: {
   try {
     const onboarding = await startStripeOnboarding();
     return openStripeVerificationModal(options.openInfo, onboarding);
-  } catch {
+  } catch (err) {
+    const appError = AppError.fromUnknown(err);
+
+    if (appError.status === 401 || appError.code === "NOT_AUTHENTICATED") {
+      options.openInfo({
+        title: "Session expired",
+        message:
+          "Your sign-in session expired. Sign in again, then retry Stripe verification.",
+        label: "Close",
+        secondaryLabel: "Maybe later",
+      });
+      return false;
+    }
+
+    if (appError.code === "PHONE_NOT_VERIFIED") {
+      options.openInfo({
+        title: "Phone verification required",
+        message: "Verify your phone number before you can accept paid carry requests.",
+        label: "Close",
+        secondaryLabel: "Maybe later",
+      });
+      return false;
+    }
+
+    if (appError.code === "EMAIL_NOT_VERIFIED") {
+      options.openInfo({
+        title: "Email verification required",
+        message: "Verify your email before you can accept paid carry requests.",
+        label: "Close",
+        secondaryLabel: "Maybe later",
+      });
+      return false;
+    }
+
     options.openInfo({
       title: "Could not open Stripe verification",
       message:
+        appError.message ||
         "We couldn't start payout verification. Check your connection and try again from your profile.",
       label: "Close",
       secondaryLabel: "Maybe later",

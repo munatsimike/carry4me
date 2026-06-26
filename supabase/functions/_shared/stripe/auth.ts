@@ -24,7 +24,15 @@ export async function getAuthenticatedUser(
   const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
+  if (!authHeader?.startsWith("Bearer ")) {
+    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!accessToken) {
     throw new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -35,7 +43,9 @@ export async function getAuthenticatedUser(
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: authData, error: authError } = await supabaseUser.auth.getUser();
+  const { data: authData, error: authError } = await supabaseUser.auth.getUser(
+    accessToken,
+  );
   if (authError || !authData.user) {
     throw new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,

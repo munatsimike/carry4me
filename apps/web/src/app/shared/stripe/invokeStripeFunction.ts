@@ -1,6 +1,8 @@
 import { supabase } from "@/app/shared/supabase/client";
 import { AppError } from "@/app/shared/domain/AppError";
 
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
 function parseEdgeFunctionErrorBody(
   data: unknown,
 ): { message: string | null; status: number | null; code: string | null } {
@@ -33,13 +35,45 @@ function parseStatusFromErrorMessage(message: string): number | null {
   return match ? Number(match[1]) : null;
 }
 
+async function getAccessTokenForEdgeFunction(): Promise<string> {
+  let {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error || !session?.access_token) {
+    throw new AppError({
+      message: "You must be signed in to continue.",
+      status: 401,
+      code: "NOT_AUTHENTICATED",
+    });
+  }
+
+  const expiresAtMs = (session.expires_at ?? 0) * 1000;
+  if (expiresAtMs - Date.now() < 60_000) {
+    const { data: refreshed, error: refreshError } =
+      await supabase.auth.refreshSession();
+    if (!refreshError && refreshed.session?.access_token) {
+      session = refreshed.session;
+    }
+  }
+
+  return session.access_token;
+}
+
 export async function invokeStripeFunction<T>(
   name: string,
   body: Record<string, unknown> = {},
 ): Promise<T> {
+  const accessToken = await getAccessTokenForEdgeFunction();
+
   const { data, error } = await supabase.functions.invoke<T>(name, {
     body,
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      apikey: supabaseAnonKey,
+    },
   });
 
   if (error) {
