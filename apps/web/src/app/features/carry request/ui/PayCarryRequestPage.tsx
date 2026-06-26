@@ -37,13 +37,6 @@ import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDi
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 
-function hasExpressWalletMethods(
-  available: StripeExpressCheckoutElementReadyEvent["availablePaymentMethods"],
-): boolean {
-  if (!available) return false;
-  return available.applePay === true || available.googlePay === true;
-}
-
 type ExpressCheckoutLogContext = {
   carryRequestId: string;
   paymentCurrency: string | null;
@@ -51,11 +44,7 @@ type ExpressCheckoutLogContext = {
   paymentAmount: number | null;
 };
 
-function logExpressCheckoutAvailability(
-  source: "ready" | "availablePaymentMethodsChange" | "loadError",
-  payload: unknown,
-  context: ExpressCheckoutLogContext,
-) {
+function logExpressCheckoutContext(context: ExpressCheckoutLogContext) {
   const googlePaySupportedCurrencies = new Set([
     "gbp",
     "usd",
@@ -68,17 +57,14 @@ function logExpressCheckoutAvailability(
     "jpy",
   ]);
   const currency = context.paymentCurrency?.toLowerCase() ?? null;
-  const currencySupportsGooglePay =
-    currency != null && googlePaySupportedCurrencies.has(currency);
 
-  console.info("[ExpressCheckout] availability", {
-    source,
+  console.info("[ExpressCheckout] context", {
     ...context,
     pageUrl: window.location.href,
     isSecureContext: window.isSecureContext,
     stripeLiveMode: isStripeLiveMode(),
-    currencySupportsGooglePay,
-    payload,
+    currencySupportsGooglePay:
+      currency != null && googlePaySupportedCurrencies.has(currency),
   });
 }
 
@@ -101,8 +87,6 @@ function PaymentCheckoutForm({
   const elements = useElements();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [showExpressCheckout, setShowExpressCheckout] = useState(false);
-  const [expressCheckoutProbing, setExpressCheckoutProbing] = useState(true);
 
   const expressCheckoutLogContext = useMemo<ExpressCheckoutLogContext>(
     () => ({
@@ -221,51 +205,28 @@ function PaymentCheckoutForm({
       </CustomText>
 
       {clientSecret ? (
-        <div
-          id="express-checkout-element"
-          className={
-            showExpressCheckout
-              ? "mb-4 w-full"
-              : expressCheckoutProbing
-                ? "pointer-events-none fixed left-0 top-0 -z-10 w-[360px] opacity-0"
-                : "hidden"
-          }
-          aria-hidden={!showExpressCheckout}
-        >
+        <div id="express-checkout-element" className="mb-4 w-full">
           <ExpressCheckoutElement
-            onReady={({ availablePaymentMethods }) => {
-              logExpressCheckoutAvailability(
-                "ready",
-                { availablePaymentMethods },
-                expressCheckoutLogContext,
+            onReady={(event: StripeExpressCheckoutElementReadyEvent) => {
+              logExpressCheckoutContext(expressCheckoutLogContext);
+              console.log("[ExpressCheckout] ready full event", event);
+              console.log(
+                "[ExpressCheckout] availablePaymentMethods",
+                event.availablePaymentMethods,
               );
-              const walletsAvailable = hasExpressWalletMethods(availablePaymentMethods);
-              setShowExpressCheckout(walletsAvailable);
-              setExpressCheckoutProbing(false);
             }}
-            onAvailablePaymentMethodsChange={({ paymentMethods }) => {
-              logExpressCheckoutAvailability(
-                "availablePaymentMethodsChange",
-                { paymentMethods },
-                expressCheckoutLogContext,
+            onAvailablePaymentMethodsChange={(event) => {
+              console.log(
+                "[ExpressCheckout] availablePaymentMethodsChange full event",
+                event,
               );
-
-              if (!paymentMethods) {
-                setShowExpressCheckout(false);
-                setExpressCheckoutProbing(false);
-                return;
-              }
-
-              const walletsAvailable =
-                paymentMethods.applePay?.available === true ||
-                paymentMethods.googlePay?.available === true;
-              setShowExpressCheckout(walletsAvailable);
-              setExpressCheckoutProbing(false);
+              console.log(
+                "[ExpressCheckout] paymentMethods",
+                event.paymentMethods,
+              );
             }}
             onLoadError={(event) => {
-              logExpressCheckoutAvailability("loadError", event, expressCheckoutLogContext);
-              setShowExpressCheckout(false);
-              setExpressCheckoutProbing(false);
+              console.error("[ExpressCheckout] loaderror", event);
             }}
             onClick={(event) => {
               event.resolve();
