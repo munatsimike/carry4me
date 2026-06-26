@@ -402,6 +402,7 @@ export default function PayCarryRequestPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
   const [paymentCurrency, setPaymentCurrency] = useState<string | null>(null);
   const [platformFeeAmount, setPlatformFeeAmount] = useState<number | null>(null);
@@ -501,6 +502,12 @@ export default function PayCarryRequestPage() {
       } catch (err) {
         if (!cancelled) {
           setClientSecret(null);
+          const appError = AppError.fromUnknown(err);
+          setSessionExpired(
+            appError.status === 401 ||
+              appError.code === "SESSION_EXPIRED" ||
+              appError.code === "NOT_AUTHENTICATED",
+          );
           setLoadError(paymentSetupErrorMessage(err));
         }
       }
@@ -689,14 +696,30 @@ export default function PayCarryRequestPage() {
               <CustomText textSize="sm" textVariant="error">
                 {loadError}
               </CustomText>
-              <Button
-                variant="outline"
-                size="md"
-                className="w-full sm:w-auto"
-                onClick={() => navigate("/requests")}
-              >
-                Back to requests
-              </Button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {sessionExpired ? (
+                  <Button
+                    variant="primary"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    onClick={() =>
+                      navigate("/signin", {
+                        state: { from: `/requests/pay/${carryRequestId}` },
+                      })
+                    }
+                  >
+                    Sign in again
+                  </Button>
+                ) : null}
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  onClick={() => navigate("/requests")}
+                >
+                  Back to requests
+                </Button>
+              </div>
             </div>
           ) : null}
 

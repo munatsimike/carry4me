@@ -15,6 +15,14 @@ export function isPaymentSetupBlocked(error: unknown): boolean {
 export function paymentSetupErrorMessage(error: unknown): string {
   const appError = AppError.fromUnknown(error);
 
+  if (
+    appError.status === 401 ||
+    appError.code === "NOT_AUTHENTICATED" ||
+    appError.code === "SESSION_EXPIRED"
+  ) {
+    return "Your sign-in session expired. Sign in again, then retry payment.";
+  }
+
   if (appError.code === "TRAVELER_STRIPE_LOOKUP_FAILED") {
     return "Could not verify the traveler's payout account. Ask them to complete Stripe verification, then try again.";
   }
