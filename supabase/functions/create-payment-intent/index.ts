@@ -6,6 +6,10 @@ import {
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
 import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
+import {
+  logPaymentIntentDiagnostics,
+  type PaymentIntentDebugSummary,
+} from "../_shared/stripe/paymentIntentDiagnostics.ts";
 import { stripeErrorMessage } from "../_shared/stripe/errors.ts";
 
 type RequestBody = {
@@ -35,6 +39,41 @@ function senderPaymentErrorMessage(err: unknown): string {
   }
 
   return "Could not start payment. Try again in a moment or contact support if this continues.";
+}
+
+function stripeSecretKeyPrefix(): string {
+  const key = Deno.env.get("STRIPE_SECRET_KEY")?.trim() ?? "";
+  return key ? `${key.slice(0, 12)}…` : "missing";
+}
+
+function buildPaymentIntentCreateParams(
+  amounts: {
+    paymentAmount: number;
+    currency: string;
+  },
+  metadata: Record<string, string>,
+  description: string,
+) {
+  const amount = Math.round(amounts.paymentAmount);
+  const currency = amounts.currency.toLowerCase();
+
+  if (!Number.isInteger(amount) || amount < 50) {
+    throw new Error("Payment amount must be an integer of at least 50 cents.");
+  }
+
+  if (!/^[a-z]{3}$/.test(currency)) {
+    throw new Error(`Payment currency must be a lowercase ISO code, got "${currency}".`);
+  }
+
+  return {
+    amount,
+    currency,
+    metadata,
+    description,
+    automatic_payment_methods: {
+      enabled: true,
+    },
+  } as const;
 }
 
 Deno.serve(async (req) => {
@@ -146,6 +185,8 @@ Deno.serve(async (req) => {
     };
 
     const appUrl = Deno.env.get("APP_URL")?.trim() || "http://localhost:5173";
+    const secretKeyPrefix = stripeSecretKeyPrefix();
+    let paymentIntentDebug: PaymentIntentDebugSummary | null = null;
 
     // Reuse existing pending intent when possible (skip stale test intents after go-live).
     if (
@@ -163,14 +204,38 @@ Deno.serve(async (req) => {
 
         const canReuse =
           existing.livemode === stripeLiveMode &&
-          existing.currency === amounts.currency &&
+          existing.currency === amounts.currency.toLowerCase() &&
           hasAutomaticPaymentMethods &&
           (existing.status === "requires_payment_method" ||
             existing.status === "requires_confirmation" ||
             existing.status === "requires_action");
 
+        if (!canReuse) {
+          console.info("create-payment-intent reuse skipped", {
+            carryRequestId,
+            paymentIntentId: existing.id,
+            livemode: existing.livemode,
+            expectedLivemode: stripeLiveMode,
+            currency: existing.currency,
+            expectedCurrency: amounts.currency.toLowerCase(),
+            hasAutomaticPaymentMethods,
+            payment_method_types: existing.payment_method_types ?? [],
+            automatic_payment_methods: existing.automatic_payment_methods,
+            application_fee_amount: existing.application_fee_amount,
+            transfer_data: existing.transfer_data,
+            on_behalf_of: existing.on_behalf_of,
+            status: existing.status,
+          });
+        }
+
         if (canReuse && existing.client_secret) {
           await extendPaymentWindow();
+
+          paymentIntentDebug = logPaymentIntentDiagnostics(existing, {
+            carryRequestId,
+            source: "reused",
+            stripeSecretKeyPrefix: secretKeyPrefix,
+          });
 
           return jsonResponse({
             client_secret: existing.client_secret,
@@ -179,6 +244,7 @@ Deno.serve(async (req) => {
             payment_currency: amounts.currency,
             traveler_payout_amount: amounts.travelerPayoutAmount,
             platform_fee_amount: amounts.platformFeeAmount,
+            payment_intent_debug: paymentIntentDebug,
           });
         }
       } catch (retrieveErr) {
@@ -194,22 +260,28 @@ Deno.serve(async (req) => {
     try {
       // Platform charge only — sender checkout never depends on traveler Connect.
       // Traveler payout is attempted after payment succeeds (webhook transfer).
-      paymentIntent = await stripe.paymentIntents.create({
-        amount: amounts.paymentAmount,
-        currency: amounts.currency,
-        metadata: {
+      const createParams = buildPaymentIntentCreateParams(
+        amounts,
+        {
           carry_request_id: carryRequestId,
           sender_user_id: user.id,
           traveler_user_id: carryRequest.traveler_user_id,
           traveler_payout_amount: String(amounts.travelerPayoutAmount),
           platform_fee_amount: String(amounts.platformFeeAmount),
         },
-        description: `Carry4Me carry request ${carryRequestId.slice(0, 8)}`,
-        automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: "never",
-        },
+        `Carry4Me carry request ${carryRequestId.slice(0, 8)}`,
+      );
+
+      console.info("create-payment-intent creating PaymentIntent", {
+        carryRequestId,
+        amount: createParams.amount,
+        currency: createParams.currency,
+        automatic_payment_methods: createParams.automatic_payment_methods,
+        stripe_secret_key_prefix: secretKeyPrefix,
+        stripe_live_mode: stripeLiveMode,
       });
+
+      paymentIntent = await stripe.paymentIntents.create(createParams);
     } catch (stripeErr) {
       console.error(
         "create-payment-intent stripe create failed",
@@ -246,8 +318,14 @@ Deno.serve(async (req) => {
     console.info("create-payment-intent ok", {
       carryRequestId,
       paymentIntentId: paymentIntent.id,
-      amount: amounts.paymentAmount,
-      currency: amounts.currency,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+    });
+
+    paymentIntentDebug = logPaymentIntentDiagnostics(paymentIntent, {
+      carryRequestId,
+      source: "created",
+      stripeSecretKeyPrefix: secretKeyPrefix,
     });
 
     return jsonResponse({
@@ -258,6 +336,7 @@ Deno.serve(async (req) => {
       traveler_payout_amount: amounts.travelerPayoutAmount,
       platform_fee_amount: amounts.platformFeeAmount,
       return_url: appUrl,
+      payment_intent_debug: paymentIntentDebug,
     });
   } catch (err) {
     if (isResponse(err)) return err;

@@ -4,7 +4,6 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-r
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Elements,
-  ExpressCheckoutElement,
   PaymentElement,
   useElements,
   useStripe,
@@ -81,6 +80,70 @@ const EXPRESS_CHECKOUT_ELEMENT_OPTIONS: StripeExpressCheckoutElementOptions = {
   paymentMethodOrder: ["google_pay", "apple_pay", "link"],
 };
 
+function ImperativeExpressCheckout({
+  options,
+  onReady,
+  onConfirm,
+}: {
+  options: StripeExpressCheckoutElementOptions;
+  onReady: (event: StripeExpressCheckoutElementReadyEvent) => void;
+  onConfirm: (event: StripeExpressCheckoutElementConfirmEvent) => void;
+}) {
+  const elements = useElements();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const handlersRef = useRef({ onReady, onConfirm });
+  handlersRef.current = { onReady, onConfirm };
+
+  useEffect(() => {
+    if (!elements || !containerRef.current) return;
+
+    console.log(
+      "[ExpressCheckout] mount options",
+      JSON.parse(JSON.stringify(options)) as StripeExpressCheckoutElementOptions,
+    );
+
+    const expressCheckoutElement = elements.create("expressCheckout", options);
+
+    expressCheckoutElement.on("ready", (event) => {
+      console.log("[ExpressCheckout] ready full event", event);
+      console.log(
+        "[ExpressCheckout] availablePaymentMethods",
+        event.availablePaymentMethods,
+      );
+      handlersRef.current.onReady(event);
+    });
+
+    expressCheckoutElement.on("loaderror", (event) => {
+      console.error("[ExpressCheckout] loaderror", event);
+    });
+
+    expressCheckoutElement.on("click", (event) => {
+      console.log("[ExpressCheckout] click", event);
+      event.resolve();
+    });
+
+    expressCheckoutElement.on("confirm", (event) => {
+      handlersRef.current.onConfirm(event);
+    });
+
+    expressCheckoutElement.on("availablepaymentmethodschange", (event) => {
+      console.log(
+        "[ExpressCheckout] availablePaymentMethodsChange full event",
+        event,
+      );
+      console.log("[ExpressCheckout] paymentMethods", event.paymentMethods);
+    });
+
+    expressCheckoutElement.mount(containerRef.current);
+
+    return () => {
+      expressCheckoutElement.destroy();
+    };
+  }, [elements, options]);
+
+  return <div id="express-checkout-element" ref={containerRef} />;
+}
+
 function PaymentCheckoutForm({
   carryRequestId,
   clientSecret,
@@ -111,19 +174,16 @@ function PaymentCheckoutForm({
     [carryRequestId, paymentAmount, paymentCurrency, originCountry],
   );
 
-  useEffect(() => {
-    if (!clientSecret) return;
-
-    console.log("[ExpressCheckout] mount options", EXPRESS_CHECKOUT_ELEMENT_OPTIONS);
-    console.log("[ExpressCheckout] Elements provider", {
-      clientSecretPresent: true,
-      clientSecretPrefix: `${clientSecret.slice(0, 24)}…`,
-      paymentCurrency,
-      originCountry,
-      paymentAmount,
-      sameElementsInstance: Boolean(stripe && elements),
-    });
-  }, [clientSecret, elements, originCountry, paymentAmount, paymentCurrency, stripe]);
+  const handleExpressReady = useCallback(
+    (event: StripeExpressCheckoutElementReadyEvent) => {
+      logExpressCheckoutContext(expressCheckoutLogContext);
+      console.log(
+        "[ExpressCheckout] googlePay available?",
+        event.availablePaymentMethods?.googlePay === true,
+      );
+    },
+    [expressCheckoutLogContext],
+  );
 
   const completeSuccessfulPayment = async () => {
     const syncResult = await syncCarryRequestPayment(carryRequestId);
@@ -232,39 +292,11 @@ function PaymentCheckoutForm({
       </CustomText>
 
       {clientSecret ? (
-        <div id="express-checkout-element">
-          <ExpressCheckoutElement
-            onReady={(event: StripeExpressCheckoutElementReadyEvent) => {
-              logExpressCheckoutContext(expressCheckoutLogContext);
-              console.log("[ExpressCheckout] ready full event", event);
-              console.log(
-                "[ExpressCheckout] availablePaymentMethods",
-                event.availablePaymentMethods,
-              );
-            }}
-            onAvailablePaymentMethodsChange={(event) => {
-              console.log(
-                "[ExpressCheckout] availablePaymentMethodsChange full event",
-                event,
-              );
-              console.log(
-                "[ExpressCheckout] paymentMethods",
-                event.paymentMethods,
-              );
-            }}
-            onLoadError={(event) => {
-              console.error("[ExpressCheckout] loaderror", event);
-            }}
-            onClick={(event) => {
-              console.log("[ExpressCheckout] click", event);
-              event.resolve();
-            }}
-            onConfirm={(event) => {
-              void handleExpressConfirm(event);
-            }}
-            options={EXPRESS_CHECKOUT_ELEMENT_OPTIONS}
-          />
-        </div>
+        <ImperativeExpressCheckout
+          options={EXPRESS_CHECKOUT_ELEMENT_OPTIONS}
+          onReady={handleExpressReady}
+          onConfirm={handleExpressConfirm}
+        />
       ) : null}
 
       <div id="payment-element" className="w-full">
