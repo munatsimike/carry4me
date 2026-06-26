@@ -21,7 +21,7 @@ import {
 } from "@/app/lib/useCases";
 import { useInvalidateTrips } from "@/app/hooks/mutations/useTripMutations";
 import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
-import { notifyActorSuggestedMatches } from "@/app/features/listings/application/notifyActorSuggestedMatches";
+import { notifyActorSuggestedMatches, notifyTripPostedSuccess } from "@/app/features/listings/application/notifyActorSuggestedMatches";
 import { processMatchAlertEmailQueue } from "@/app/features/listings/application/processMatchAlertEmailQueue";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
@@ -35,6 +35,7 @@ import {
 } from "@/app/features/trips/ui/tripFormSteps";
 import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
+import { startTravelerStripeOnboarding } from "@/app/features/carry request/application/travelerStripeVerification";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import {
   citySchema,
@@ -228,14 +229,21 @@ export function useTripForm({
       );
 
       processMatchAlertEmailQueue("trip", tripId);
+      await refreshProfile({ silent: true });
       if (user?.id) {
-        void notifyActorSuggestedMatches(
+        const stripeReturnPath = returnPath ?? "/dashboard";
+        await notifyTripPostedSuccess(
           user.id,
-          "trip",
           tripId,
-          "create",
           openInfo,
           navigate,
+          () =>
+            startTravelerStripeOnboarding({
+              openInfo,
+              returnUrl: `${window.location.origin}${stripeReturnPath}`,
+              refreshUrl: `${window.location.origin}/profile?stripe=refresh`,
+              onStripeSynced: () => refreshProfile({ silent: true }),
+            }),
         );
       }
 

@@ -54,9 +54,31 @@ function formatCheckoutGraceRemaining(remainingMs: number): string {
   return "Less than 1m to complete checkout";
 }
 
+export type PaymentTimeRemainingViewer = "sender" | "traveler";
+
+function formatPaymentTimeRemainingForViewer(
+  label: string,
+  viewer: PaymentTimeRemainingViewer,
+): string {
+  if (viewer === "sender") {
+    return label;
+  }
+
+  if (label === "Expired") {
+    return "Payment window expired";
+  }
+
+  if (label.includes("complete checkout")) {
+    return `Sender is completing payment — ${label}`;
+  }
+
+  return `Sender has ${label.replace(" remaining", " to pay")}`;
+}
+
 export function formatPaymentTimeRemaining(
   fields: PaymentTimeRemainingFields,
   now = Date.now(),
+  viewer: PaymentTimeRemainingViewer = "sender",
 ): string | null {
   if (!fields.paymentExpiresAt) {
     return null;
@@ -66,7 +88,10 @@ export function formatPaymentTimeRemaining(
   const remainingMs = expiresAt - now;
 
   if (remainingMs > 0) {
-    return formatDurationRemaining(remainingMs);
+    return formatPaymentTimeRemainingForViewer(
+      formatDurationRemaining(remainingMs),
+      viewer,
+    );
   }
 
   if (
@@ -75,9 +100,12 @@ export function formatPaymentTimeRemaining(
   ) {
     const graceRemainingMs = expiresAt + PAYMENT_CHECKOUT_GRACE_MS - now;
     if (graceRemainingMs > 0) {
-      return formatCheckoutGraceRemaining(graceRemainingMs);
+      return formatPaymentTimeRemainingForViewer(
+        formatCheckoutGraceRemaining(graceRemainingMs),
+        viewer,
+      );
     }
   }
 
-  return "Expired";
+  return formatPaymentTimeRemainingForViewer("Expired", viewer);
 }

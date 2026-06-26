@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { formatPaymentTimeRemaining } from "../domain/carryRequestPaymentWindow";
+import {
+  formatPaymentTimeRemaining,
+  type PaymentTimeRemainingViewer,
+} from "../domain/carryRequestPaymentWindow";
 
 type PaymentTimeRemainingFields = {
   paymentExpiresAt: string | null;
@@ -10,9 +13,10 @@ type PaymentTimeRemainingFields = {
 export function usePaymentTimeRemaining(
   fields: PaymentTimeRemainingFields,
   enabled: boolean,
+  viewer: PaymentTimeRemainingViewer = "sender",
 ): string | null {
   const [remainingLabel, setRemainingLabel] = useState<string | null>(() =>
-    enabled ? formatPaymentTimeRemaining(fields) : null,
+    enabled ? formatPaymentTimeRemaining(fields, Date.now(), viewer) : null,
   );
 
   useEffect(() => {
@@ -22,7 +26,7 @@ export function usePaymentTimeRemaining(
     }
 
     const update = () => {
-      setRemainingLabel(formatPaymentTimeRemaining(fields));
+      setRemainingLabel(formatPaymentTimeRemaining(fields, Date.now(), viewer));
     };
 
     update();
@@ -36,6 +40,7 @@ export function usePaymentTimeRemaining(
     fields.paymentExpiresAt,
     fields.stripePaymentIntentId,
     fields.paymentStatus,
+    viewer,
   ]);
 
   return remainingLabel;

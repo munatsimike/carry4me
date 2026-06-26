@@ -31,7 +31,7 @@ type TravelerStripeReadyOptions = {
 };
 
 const VERIFICATION_MESSAGE =
-  "To receive payouts for your deliveries, you need to complete a quick identity and bank account verification with Stripe. This helps us securely send your earnings and keep the platform safe.";
+  "Complete Stripe verification to receive payouts. You can also finish this later from your profile page.";
 
 function resolveOnboardingUrls(options: TravelerStripeReadyOptions = {} as TravelerStripeReadyOptions) {
   const origin = window.location.origin;
@@ -153,7 +153,6 @@ function promptTravelerStripeOnboarding(
     options.openInfo({
       title: "Stripe verification required",
       message: VERIFICATION_MESSAGE,
-      width: "xl",
       label: "Continue to Stripe",
       secondaryLabel: "Maybe later",
       secondaryAction: () => resolve(false),

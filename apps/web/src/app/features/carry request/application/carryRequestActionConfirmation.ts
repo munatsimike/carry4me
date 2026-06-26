@@ -1,3 +1,4 @@
+import { formatPaymentWindowLabel } from "../domain/carryRequestPaymentWindow";
 import {
   CARRY_REQUEST_STATUSES,
   ROLES,
@@ -36,7 +37,7 @@ function getConfirmOptions(
       return {
         title: "Accept this request?",
         message:
-          "You are committing to carry this parcel. The sender will be notified and asked to pay within the payment window.",
+          `You are committing to carry this parcel. The sender will be notified and has ${formatPaymentWindowLabel()} to pay and confirm the booking.`,
         confirmText: "Yes, accept request",
         cancelText: "Not now",
       };

@@ -202,6 +202,51 @@ async function findStripeAccountIdByUserMetadata(
   }
 }
 
+async function findStripeAccountIdForUser(
+  stripe: Stripe,
+  profile: TravelerStripeProfile,
+  userId: string,
+): Promise<string | null> {
+  const byMetadata = await findStripeAccountIdByUserMetadata(stripe, userId);
+  if (byMetadata) return byMetadata;
+
+  const email = profile.email?.trim();
+  if (!email) return null;
+
+  try {
+    const escapedEmail = email.replace(/'/g, "\\'");
+    const result = await stripe.accounts.search({
+      query: `email:'${escapedEmail}'`,
+      limit: 10,
+    });
+
+    const owned = result.data.find(
+      (account) => account.metadata?.user_id === userId,
+    );
+    if (owned) return owned.id;
+
+    if (result.data.length === 1) {
+      return result.data[0].id;
+    }
+
+    if (result.data.length > 1) {
+      console.warn(
+        "findStripeAccountIdForUser multiple email matches",
+        userId,
+        result.data.map((account) => account.id),
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "findStripeAccountIdForUser email search failed",
+      userId,
+      stripeErrorMessage(err),
+    );
+  }
+
+  return null;
+}
+
 async function validateExistingStripeAccount(
   stripe: Stripe,
   supabaseAdmin: SupabaseClient,
@@ -266,7 +311,14 @@ async function createStripeConnectAccount(
       throw err;
     }
 
-    const recoveredAccountId = await findStripeAccountIdByUserMetadata(stripe, userId);
+    const recoveredAccountId = await findStripeAccountIdForUser(
+      stripe,
+      {
+        email:
+          typeof createParams.email === "string" ? createParams.email : null,
+      } as TravelerStripeProfile,
+      userId,
+    );
     if (!recoveredAccountId) {
       throw err;
     }
@@ -314,7 +366,11 @@ export async function ensureStripeConnectAccountId(
     }
   }
 
-  const recoveredAccountId = await findStripeAccountIdByUserMetadata(stripe, userId);
+  const recoveredAccountId = await findStripeAccountIdForUser(
+    stripe,
+    refreshed ?? profile,
+    userId,
+  );
   if (recoveredAccountId) {
     const validated = await validateExistingStripeAccount(
       stripe,
@@ -401,7 +457,11 @@ export async function reconcileTravelerStripeConnectProfile(
     }
   }
 
-  const recoveredAccountId = await findStripeAccountIdByUserMetadata(stripe, userId);
+  const recoveredAccountId = await findStripeAccountIdForUser(
+    stripe,
+    profile,
+    userId,
+  );
   if (!recoveredAccountId) {
     return profile;
   }

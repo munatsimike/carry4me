@@ -51,6 +51,7 @@ import {
   type CarryRequestStatus,
   type Role,
 } from "../domain/CreateCarryRequest";
+import type { PaymentTimeRemainingViewer } from "../domain/carryRequestPaymentWindow";
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
@@ -897,6 +898,7 @@ function CarryRequestCard({
             requestStatus={request.status}
             stripePaymentIntentId={request.stripePaymentIntentId}
             paymentStatus={request.paymentStatus}
+            paymentTimeViewer={viewerRole === ROLES.SENDER ? "sender" : "traveler"}
           />
           <LineDivider
             heightClass="my-0"
@@ -1249,6 +1251,7 @@ type HeaderProps = {
   requestStatus: CarryRequestStatus;
   stripePaymentIntentId?: string | null;
   paymentStatus?: string | null;
+  paymentTimeViewer: PaymentTimeRemainingViewer;
 };
 
 function Header({
@@ -1260,6 +1263,7 @@ function Header({
   requestStatus,
   stripePaymentIntentId,
   paymentStatus,
+  paymentTimeViewer,
 }: HeaderProps) {
   return (
     <SpaceBetweenRow>
@@ -1271,6 +1275,7 @@ function Header({
         requestStatus={requestStatus}
         stripePaymentIntentId={stripePaymentIntentId}
         paymentStatus={paymentStatus}
+        paymentTimeViewer={paymentTimeViewer}
       />
       <div className="inline-flex flex-col items-end gap-1">
         <CustomText textSize="xs" textVariant="secondary" className="tracking-wide">
@@ -1288,6 +1293,7 @@ function CurrentStatus({
   requestStatus,
   stripePaymentIntentId,
   paymentStatus,
+  paymentTimeViewer,
 }: {
   title: string;
   description: string;
@@ -1296,6 +1302,7 @@ function CurrentStatus({
   requestStatus: CarryRequestStatus;
   stripePaymentIntentId?: string | null;
   paymentStatus?: string | null;
+  paymentTimeViewer: PaymentTimeRemainingViewer;
 }) {
   const showTimer =
     requestStatus === CARRY_REQUEST_STATUSES.PENDING_PAYMENT &&
@@ -1307,6 +1314,7 @@ function CurrentStatus({
       paymentStatus,
     },
     showTimer,
+    paymentTimeViewer,
   );
 
   return (

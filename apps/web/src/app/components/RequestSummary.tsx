@@ -232,7 +232,6 @@ export default function RequestSummary({
           const shouldSend = await confirmResendAfterEndedRequest();
           if (!shouldSend) return;
 
-          // Travelers must complete Stripe onboarding before sending/accepting paid requests.
           if (!isSenderRequesting) {
             try {
               const stripeReady = await ensureTravelerStripeReady({

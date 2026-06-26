@@ -36,11 +36,14 @@ export function mapCarryRequestToUI(
 
     case CARRY_REQUEST_STATUSES.PENDING_PAYMENT:
       currentStep = 2;
-      title = "Waiting for payment";
+      title =
+        viewerRole === ROLES.SENDER
+          ? "Waiting for payment"
+          : "Waiting for sender payment";
       description =
         viewerRole === ROLES.SENDER
           ? `This trip is reserved for ${formatPaymentWindowLabel()}. Make payment before the reservation expires.`
-          : "We’re waiting for payment from the sender. You’ll be notified once payment is made.";
+          : `You accepted this carry request. The sender has ${formatPaymentWindowLabel()} to pay and confirm the booking. We'll notify you once payment is received. If they don't pay in time, the request will expire and your trip slot will be released.`;
       break;
 
     case CARRY_REQUEST_STATUSES.PENDING_HANDOVER: {

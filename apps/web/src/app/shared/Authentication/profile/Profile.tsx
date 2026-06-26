@@ -62,11 +62,15 @@ import {
   type PasskeyCredentialSummary,
 } from "../application/passkeyAuth";
 import { TravelerPayoutStatusRow } from "../UI/TravelerPayoutStatusRow";
+import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
 import {
   fetchTravelerStripeConnectStatus,
   resolveConnectStateFromStatus,
 } from "@/app/features/carry request/application/travelerStripeVerification";
-import { getStripeConnectStatusLabel } from "@/app/features/carry request/application/travelerStripeConnectStatus";
+import {
+  getStripeConnectStatusLabel,
+  shouldShowTravelerPayoutSetup,
+} from "@/app/features/carry request/application/travelerStripeConnectStatus";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -75,6 +79,9 @@ type AvatarProps = {
 };
 
 type ProfileSection = "personal" | "location" | "security";
+
+/** Set true to force Traveler payouts card visible for UI preview. */
+const PREVIEW_TRAVELER_PAYOUTS = false;
 
 const verifyPhoneChangeSchema = z.object({
   otpCode: otpCodeSchema,
@@ -123,7 +130,6 @@ function formatDisplayPhoneNumber(
   return `${dialCode}${digits.replace(/^0+/, "")}`;
 }
 
-
 function getProfileFormValues(
   profile: UserProfile,
   userEmail?: string | null,
@@ -154,6 +160,13 @@ export default function ProfilePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, refreshProfile, profile } = useAuth();
+  const { data: myTrips = [] } = useMyTrips(user?.id);
+  const showTravelerPayouts = useMemo(
+    () =>
+      PREVIEW_TRAVELER_PAYOUTS ||
+      (profile ? shouldShowTravelerPayoutSetup(profile, myTrips.length) : false),
+    [profile, myTrips.length],
+  );
   const { toast } = useToast();
   const { showSupabaseError, confirm } = useUniversalModal();
 
@@ -561,6 +574,8 @@ export default function ProfilePage() {
                 dirtyFields={dirtyFields}
                 touchedFields={touchedFields}
                 watch={watch}
+                showTravelerPayouts={showTravelerPayouts}
+                onRefreshPayoutStatus={() => refreshProfile({ silent: true })}
               />
             </ProfileSectionShell>
             <LineDivider heightClass="my-1 sm:my-2" />
@@ -592,7 +607,6 @@ export default function ProfilePage() {
                   onCancel: () => setEditing(null),
                 }}
                 onChangePhone={() => setChangePhoneOpen(true)}
-                onRefreshPayoutStatus={() => refreshProfile({ silent: true })}
               />
             </ProfileSectionShell>
             <LineDivider heightClass="my-1 sm:my-2" />
@@ -791,7 +805,6 @@ type securityProps = {
   onChangePhone: () => void;
   onAddPasskey: () => void;
   onRemovePasskey: (passkeyId: string) => void;
-  onRefreshPayoutStatus: () => void | Promise<void>;
 };
 
 function SecurityDetailsCard({
@@ -811,7 +824,6 @@ function SecurityDetailsCard({
   onChangePhone,
   onAddPasskey,
   onRemovePasskey,
-  onRefreshPayoutStatus,
 }: securityProps) {
   const isEditing = editing === "security";
   const passkeyCount = passkeys.length;
@@ -853,10 +865,6 @@ function SecurityDetailsCard({
             >
               Change phone number
             </button>
-            <TravelerPayoutStatusRow
-              profile={profile}
-              onStatusRefreshed={onRefreshPayoutStatus}
-            />
             <InfoRow
               label="Passkey sign-in"
               value={
@@ -870,9 +878,9 @@ function SecurityDetailsCard({
             <div className="flex flex-col gap-2">
               <Button
                 type="button"
-                variant={passkeyCount > 0 ? "outline" : "primary"}
+                variant="neutral"
                 size="sm"
-                className="w-full sm:w-auto"
+                className="w-full border border-neutral-300 bg-white font-medium text-ink-primary hover:bg-neutral-100 sm:w-auto"
                 onClick={onAddPasskey}
                 disabled={passkeysLoading || passkeyActionLoading || !!removingPasskeyId}
                 isBusy={passkeyActionLoading}
@@ -985,6 +993,8 @@ function PersonalDetailsSection({
   watch,
   onClick,
   isSubmitting,
+  showTravelerPayouts,
+  onRefreshPayoutStatus,
 }: {
   isSubmitting: boolean;
   dirtyFields: FieldNamesMarkedBoolean<UserDetailsFields>;
@@ -997,6 +1007,8 @@ function PersonalDetailsSection({
   setEditing: (s: ProfileSection | null) => void;
   register: UseFormRegister<UserDetailsFields>;
   onClick: () => void;
+  showTravelerPayouts: boolean;
+  onRefreshPayoutStatus: () => void | Promise<void>;
 }) {
   const isEditing = editing === "personal";
   const nameParts = profile.fullName?.trim().split(/\s+/) ?? [];
@@ -1036,6 +1048,12 @@ function PersonalDetailsSection({
                   : undefined
               }
             />
+            {showTravelerPayouts ? (
+              <TravelerPayoutStatusRow
+                profile={profile}
+                onStatusRefreshed={onRefreshPayoutStatus}
+              />
+            ) : null}
           </motion.div>
         ) : (
           <motion.div

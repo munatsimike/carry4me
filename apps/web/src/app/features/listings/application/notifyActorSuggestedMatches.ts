@@ -1,5 +1,6 @@
 import { countMatchesForPostedListing } from "@/app/features/dashboard/application/suggestedMatches";
 import type { InfoModalPayload } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
+import { fetchTravelerStripeConnectStatus } from "@/app/features/carry request/application/travelerStripeVerification";
 import {
   getParcelsUseCase,
   getTripsUseCase,
@@ -105,6 +106,58 @@ export function promptActorSuggestedMatches(
     messageDetail: `There are no matching ${counterpartPlural} right now. You will be notified when a matching ${counterpart} is posted.`,
     label: "Close",
   });
+}
+
+function promptTripPostedWithStripeSetup(
+  openInfo: (payload: Omit<InfoModalPayload, "type">) => void,
+  input: {
+    onCompleteStripe: () => void | Promise<void>;
+  },
+): void {
+  openInfo({
+    title: "Trip posted",
+    message: "Your trip has been posted successfully.",
+    messageDetail:
+      "To receive payouts when you accept carry requests, complete Stripe verification. You can also do this later from your profile page.",
+    label: "Complete Stripe setup",
+    secondaryLabel: "Later",
+    onClick: () => {
+      void input.onCompleteStripe();
+    },
+  });
+}
+
+async function isTravelerStripePayoutComplete(): Promise<boolean> {
+  try {
+    const status = await fetchTravelerStripeConnectStatus();
+    return status.verified === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function notifyTripPostedSuccess(
+  userId: string,
+  tripId: string,
+  openInfo: (payload: Omit<InfoModalPayload, "type">) => void,
+  navigate: NavigateFunction,
+  onCompleteStripe: () => void | Promise<void>,
+): Promise<void> {
+  const [matchCount, stripeComplete] = await Promise.all([
+    countActorMatchesForListing(userId, "trip", tripId),
+    isTravelerStripePayoutComplete(),
+  ]);
+
+  if (stripeComplete) {
+    promptActorSuggestedMatches(openInfo, navigate, {
+      listingType: "trip",
+      action: "create",
+      matchCount,
+    });
+    return;
+  }
+
+  promptTripPostedWithStripeSetup(openInfo, { onCompleteStripe });
 }
 
 export async function notifyActorSuggestedMatches(

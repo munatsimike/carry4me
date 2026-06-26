@@ -48,7 +48,7 @@ export function getStripeConnectStatusDescription(
 
   switch (state) {
     case "not_created":
-      return "Complete Stripe verification to receive payouts for deliveries you carry.";
+      return "Set up Stripe to receive payouts for deliveries you carry.";
     case "setup_incomplete":
       return "Finish identity and bank verification in Stripe to enable payouts.";
     case "ready":
@@ -58,4 +58,11 @@ export function getStripeConnectStatusDescription(
 
 export function isTravelerStripePayoutReady(profile: StripeConnectProfileFields): boolean {
   return getStripeConnectClientState(profile) === "ready";
+}
+
+export function shouldShowTravelerPayoutSetup(
+  profile: StripeConnectProfileFields,
+  postedTripCount: number,
+): boolean {
+  return postedTripCount > 0 && !isTravelerStripePayoutReady(profile);
 }
