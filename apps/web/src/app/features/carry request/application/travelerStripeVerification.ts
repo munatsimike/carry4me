@@ -8,6 +8,7 @@ import {
 
 export type ConnectStatusResponse = {
   verified: boolean;
+  onboarding_complete?: boolean;
   connect_state?: StripeConnectClientState;
   stripe_account_id?: string | null;
   stripe_details_submitted?: boolean;
@@ -100,7 +101,7 @@ export async function redirectToTravelerStripeOnboarding(
     { return_url: returnUrl, refresh_url: refreshUrl },
   );
 
-  if (onboarding.verified) {
+  if (onboarding.verified || onboarding.onboarding_complete) {
     return true;
   }
 
@@ -170,7 +171,12 @@ export async function ensureTravelerStripeReady(options: {
     status = null;
   }
 
-  if (status?.verified) {
+  if (status?.onboarding_complete || status?.verified) {
+    return true;
+  }
+
+  // Onboarding finished in Stripe but payouts may still be activating.
+  if (status?.stripe_details_submitted && status?.stripe_account_id) {
     return true;
   }
 

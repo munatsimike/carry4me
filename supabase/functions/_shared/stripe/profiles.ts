@@ -7,6 +7,7 @@ export type TravelerStripeProfile = {
   phone_verified: boolean;
   email_verified: boolean;
   country_code: string | null;
+  country: string | null;
   stripe_account_id: string | null;
   stripe_charges_enabled: boolean;
   stripe_payouts_enabled: boolean;
@@ -21,7 +22,7 @@ export async function loadTravelerProfile(
   const { data, error } = await supabaseAdmin
     .from("profiles")
     .select(
-      "id, email, full_name, phone_verified, email_verified, country_code, stripe_account_id, stripe_charges_enabled, stripe_payouts_enabled, stripe_details_submitted, stripe_verification_status",
+      "id, email, full_name, phone_verified, email_verified, country_code, country, stripe_account_id, stripe_charges_enabled, stripe_payouts_enabled, stripe_details_submitted, stripe_verification_status",
     )
     .eq("id", userId)
     .maybeSingle<TravelerStripeProfile>();
@@ -34,12 +35,21 @@ export async function loadTravelerProfile(
   return data;
 }
 
-export function isTravelerStripeVerified(profile: TravelerStripeProfile): boolean {
+export function isTravelerStripeOnboardingComplete(
+  profile: TravelerStripeProfile,
+): boolean {
   return (
     profile.phone_verified === true &&
     profile.email_verified === true &&
     !!profile.stripe_account_id &&
-    profile.stripe_details_submitted === true &&
+    profile.stripe_details_submitted === true
+  );
+}
+
+/** Full payout readiness — required before sending traveler transfers. */
+export function isTravelerStripeVerified(profile: TravelerStripeProfile): boolean {
+  return (
+    isTravelerStripeOnboardingComplete(profile) &&
     profile.stripe_payouts_enabled === true
   );
 }

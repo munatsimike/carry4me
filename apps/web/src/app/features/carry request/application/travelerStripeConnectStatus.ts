@@ -20,7 +20,14 @@ export function getStripeConnectClientState(
   return "setup_incomplete";
 }
 
-export function getStripeConnectStatusLabel(state: StripeConnectClientState): string {
+export function getStripeConnectStatusLabel(
+  state: StripeConnectClientState,
+  detailsSubmitted = false,
+): string {
+  if (state === "setup_incomplete" && detailsSubmitted) {
+    return "Under Stripe review";
+  }
+
   switch (state) {
     case "not_created":
       return "Not set up";
@@ -31,7 +38,14 @@ export function getStripeConnectStatusLabel(state: StripeConnectClientState): st
   }
 }
 
-export function getStripeConnectStatusDescription(state: StripeConnectClientState): string {
+export function getStripeConnectStatusDescription(
+  state: StripeConnectClientState,
+  detailsSubmitted = false,
+): string {
+  if (state === "setup_incomplete" && detailsSubmitted) {
+    return "Stripe is reviewing your account. You can accept requests; payouts activate once review completes.";
+  }
+
   switch (state) {
     case "not_created":
       return "Complete Stripe verification to receive payouts for deliveries you carry.";

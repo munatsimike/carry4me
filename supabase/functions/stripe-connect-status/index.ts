@@ -10,29 +10,13 @@ import {
   stripeErrorMessage,
 } from "../_shared/stripe/errors.ts";
 import {
-  getStripeConnectClientState,
+  buildConnectStatusPayload,
   refreshStripeConnectAccountStatus,
 } from "../_shared/stripe/connectAccount.ts";
 import {
-  isTravelerStripeVerified,
   loadTravelerProfile,
   resetStripeConnectProfile,
-  type TravelerStripeProfile,
 } from "../_shared/stripe/profiles.ts";
-
-function connectStatusPayload(profile: TravelerStripeProfile) {
-  return {
-    verified: isTravelerStripeVerified(profile),
-    connect_state: getStripeConnectClientState(profile),
-    stripe_account_id: profile.stripe_account_id,
-    stripe_charges_enabled: profile.stripe_charges_enabled,
-    stripe_payouts_enabled: profile.stripe_payouts_enabled,
-    stripe_details_submitted: profile.stripe_details_submitted,
-    stripe_verification_status: profile.stripe_verification_status ?? "not_started",
-    phone_verified: profile.phone_verified,
-    email_verified: profile.email_verified,
-  };
-}
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -52,7 +36,7 @@ Deno.serve(async (req) => {
     }
 
     if (!profile.stripe_account_id) {
-      return jsonResponse(connectStatusPayload(profile));
+      return jsonResponse(buildConnectStatusPayload(profile));
     }
 
     try {
@@ -73,7 +57,7 @@ Deno.serve(async (req) => {
         if (!resetProfile) {
           return jsonResponse({ error: "Failed to reset Stripe profile" }, 500);
         }
-        return jsonResponse(connectStatusPayload(resetProfile));
+        return jsonResponse(buildConnectStatusPayload(resetProfile));
       }
 
       console.error(
@@ -89,7 +73,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    return jsonResponse(connectStatusPayload(profile));
+    return jsonResponse(buildConnectStatusPayload(profile));
   } catch (err) {
     if (isResponse(err)) return err;
     console.error("stripe-connect-status error", err);

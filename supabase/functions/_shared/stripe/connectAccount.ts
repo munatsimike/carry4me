@@ -1,8 +1,15 @@
 import type Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { isStripeLiveMode } from "./client.ts";
-import { isStaleStripeConnectAccountError } from "./errors.ts";
 import {
+  isStaleStripeConnectAccountError,
+  isStripeAccountCreateConflict,
+  isStripeIdempotencyError,
+  stripeErrorMessage,
+} from "./errors.ts";
+import {
+  isTravelerStripeOnboardingComplete,
+  isTravelerStripeVerified,
   loadTravelerProfile,
   mapStripeVerificationStatus,
   resetStripeConnectProfile,
@@ -10,6 +17,28 @@ import {
 } from "./profiles.ts";
 
 export type StripeConnectClientState = "not_created" | "setup_incomplete" | "ready";
+
+const CONNECT_ACCOUNT_IDEMPOTENCY_VERSION = "v2";
+
+const ALPHA3_TO_ALPHA2: Record<string, string> = {
+  NLD: "NL",
+  GBR: "GB",
+  USA: "US",
+  ZWE: "ZW",
+  FRA: "FR",
+  IRL: "IE",
+};
+
+const COUNTRY_NAME_TO_ALPHA2: Record<string, string> = {
+  netherlands: "NL",
+  "united kingdom": "GB",
+  uk: "GB",
+  "united states": "US",
+  "united states of america": "US",
+  zimbabwe: "ZW",
+  france: "FR",
+  ireland: "IE",
+};
 
 export function getStripeConnectClientState(
   profile: Pick<
@@ -28,12 +57,49 @@ export function getStripeConnectClientState(
   return "setup_incomplete";
 }
 
-function resolveStripeConnectCountry(profile: TravelerStripeProfile): string | undefined {
-  const countryCode = profile.country_code?.trim().toUpperCase();
-  if (countryCode && /^[A-Z]{2}$/.test(countryCode)) {
-    return countryCode;
+export function buildConnectStatusPayload(profile: TravelerStripeProfile) {
+  return {
+    verified: isTravelerStripeVerified(profile),
+    onboarding_complete: isTravelerStripeOnboardingComplete(profile),
+    connect_state: getStripeConnectClientState(profile),
+    stripe_account_id: profile.stripe_account_id,
+    stripe_charges_enabled: profile.stripe_charges_enabled,
+    stripe_payouts_enabled: profile.stripe_payouts_enabled,
+    stripe_details_submitted: profile.stripe_details_submitted,
+    stripe_verification_status: profile.stripe_verification_status ?? "not_started",
+    phone_verified: profile.phone_verified,
+    email_verified: profile.email_verified,
+  };
+}
+
+export function resolveStripeConnectCountry(
+  profile: TravelerStripeProfile,
+): string {
+  const rawCode = profile.country_code?.trim();
+  if (rawCode && /^[A-Z]{2}$/i.test(rawCode)) {
+    return rawCode.toUpperCase();
   }
-  return undefined;
+
+  if (rawCode) {
+    const fromAlpha3 = ALPHA3_TO_ALPHA2[rawCode.toUpperCase()];
+    if (fromAlpha3) {
+      return fromAlpha3;
+    }
+  }
+
+  const rawCountry = profile.country?.trim().toLowerCase();
+  if (rawCountry) {
+    const fromName = COUNTRY_NAME_TO_ALPHA2[rawCountry];
+    if (fromName) {
+      return fromName;
+    }
+
+    if (/^[A-Z]{2}$/i.test(rawCountry)) {
+      return rawCountry.toUpperCase();
+    }
+  }
+
+  return "NL";
 }
 
 export async function syncStripeConnectAccountToProfile(
@@ -82,6 +148,60 @@ export async function findProfileIdByStripeAccountId(
   return data?.id ?? null;
 }
 
+async function claimStripeAccountId(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  accountId: string,
+): Promise<string> {
+  const { data: claimed, error: claimError } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      stripe_account_id: accountId,
+      stripe_verification_status: "incomplete",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId)
+    .is("stripe_account_id", null)
+    .select("stripe_account_id")
+    .maybeSingle<{ stripe_account_id: string }>();
+
+  if (claimError) {
+    console.error("claimStripeAccountId failed", userId, claimError.message);
+    throw claimError;
+  }
+
+  if (claimed?.stripe_account_id) {
+    return claimed.stripe_account_id;
+  }
+
+  const refreshed = await loadTravelerProfile(supabaseAdmin, userId);
+  if (refreshed?.stripe_account_id) {
+    return refreshed.stripe_account_id;
+  }
+
+  return accountId;
+}
+
+async function findStripeAccountIdByUserMetadata(
+  stripe: Stripe,
+  userId: string,
+): Promise<string | null> {
+  try {
+    const result = await stripe.accounts.search({
+      query: `metadata['user_id']:'${userId}'`,
+      limit: 1,
+    });
+    return result.data[0]?.id ?? null;
+  } catch (err) {
+    console.warn(
+      "findStripeAccountIdByUserMetadata failed",
+      userId,
+      stripeErrorMessage(err),
+    );
+    return null;
+  }
+}
+
 async function validateExistingStripeAccount(
   stripe: Stripe,
   supabaseAdmin: SupabaseClient,
@@ -110,6 +230,47 @@ async function validateExistingStripeAccount(
     console.warn("validateExistingStripeAccount stale account cleared", accountId);
     const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
     return resetProfile?.stripe_account_id ?? null;
+  }
+}
+
+function buildConnectAccountCreateParams(
+  profile: TravelerStripeProfile,
+  userId: string,
+  userEmail: string | undefined,
+): Stripe.AccountCreateParams {
+  return {
+    type: "express",
+    country: resolveStripeConnectCountry(profile),
+    email: profile.email ?? userEmail ?? undefined,
+    metadata: { user_id: userId },
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true },
+    },
+    business_type: "individual",
+  };
+}
+
+async function createStripeConnectAccount(
+  stripe: Stripe,
+  userId: string,
+  createParams: Stripe.AccountCreateParams,
+): Promise<Stripe.Account> {
+  const idempotencyKey = `connect-account-${CONNECT_ACCOUNT_IDEMPOTENCY_VERSION}-${userId}`;
+
+  try {
+    return await stripe.accounts.create(createParams, { idempotencyKey });
+  } catch (err) {
+    if (!isStripeIdempotencyError(err) && !isStripeAccountCreateConflict(err)) {
+      throw err;
+    }
+
+    const recoveredAccountId = await findStripeAccountIdByUserMetadata(stripe, userId);
+    if (!recoveredAccountId) {
+      throw err;
+    }
+
+    return stripe.accounts.retrieve(recoveredAccountId);
   }
 }
 
@@ -152,54 +313,28 @@ export async function ensureStripeConnectAccountId(
     }
   }
 
+  const recoveredAccountId = await findStripeAccountIdByUserMetadata(stripe, userId);
+  if (recoveredAccountId) {
+    const validated = await validateExistingStripeAccount(
+      stripe,
+      supabaseAdmin,
+      userId,
+      recoveredAccountId,
+    );
+    if (validated) {
+      return claimStripeAccountId(supabaseAdmin, userId, validated);
+    }
+  }
+
   const profileForCreate = refreshed ?? profile;
-  const createParams: Stripe.AccountCreateParams = {
-    type: "express",
-    email: profileForCreate.email ?? userEmail ?? undefined,
-    metadata: { user_id: userId },
-    capabilities: {
-      card_payments: { requested: true },
-      transfers: { requested: true },
-    },
-    business_type: "individual",
-  };
+  const createParams = buildConnectAccountCreateParams(
+    profileForCreate,
+    userId,
+    userEmail,
+  );
 
-  const country = resolveStripeConnectCountry(profileForCreate);
-  if (country) {
-    createParams.country = country;
-  }
-
-  const account = await stripe.accounts.create(createParams, {
-    idempotencyKey: `connect-account-${userId}`,
-  });
-
-  const { data: claimed, error: claimError } = await supabaseAdmin
-    .from("profiles")
-    .update({
-      stripe_account_id: account.id,
-      stripe_verification_status: "incomplete",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", userId)
-    .is("stripe_account_id", null)
-    .select("stripe_account_id")
-    .maybeSingle<{ stripe_account_id: string }>();
-
-  if (claimError) {
-    console.error("ensureStripeConnectAccountId claim failed", claimError.message);
-    throw claimError;
-  }
-
-  if (claimed?.stripe_account_id) {
-    return claimed.stripe_account_id;
-  }
-
-  const afterRace = await loadTravelerProfile(supabaseAdmin, userId);
-  if (afterRace?.stripe_account_id) {
-    return afterRace.stripe_account_id;
-  }
-
-  return account.id;
+  const account = await createStripeConnectAccount(stripe, userId, createParams);
+  return claimStripeAccountId(supabaseAdmin, userId, account.id);
 }
 
 /**

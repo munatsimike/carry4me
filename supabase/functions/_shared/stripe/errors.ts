@@ -34,6 +34,27 @@ export function isStaleStripeConnectAccountError(err: unknown): boolean {
   return isMissingStripeAccountError(err) || isStripeLiveModeMismatchError(err);
 }
 
+export function isStripeIdempotencyError(err: unknown): boolean {
+  if (!(err instanceof Stripe.errors.StripeIdempotencyError)) {
+    return false;
+  }
+
+  return true;
+}
+
+export function isStripeAccountCreateConflict(err: unknown): boolean {
+  if (!(err instanceof Stripe.errors.StripeInvalidRequestError)) {
+    return false;
+  }
+
+  const message = err.message?.toLowerCase() ?? "";
+  return (
+    message.includes("idempotency") ||
+    message.includes("keys for idempotent requests") ||
+    message.includes("already uses")
+  );
+}
+
 export function stripeErrorMessage(err: unknown): string {
   if (err instanceof Stripe.errors.StripeError) {
     return err.message;

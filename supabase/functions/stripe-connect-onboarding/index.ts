@@ -5,13 +5,15 @@ import {
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
 import { getStripe } from "../_shared/stripe/client.ts";
+import { stripeErrorMessage } from "../_shared/stripe/errors.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import {
+  buildConnectStatusPayload,
   ensureStripeConnectAccountId,
-  getStripeConnectClientState,
   syncStripeConnectAccountToProfile,
 } from "../_shared/stripe/connectAccount.ts";
 import {
-  isTravelerStripeVerified,
+  isTravelerStripeOnboardingComplete,
   loadTravelerProfile,
 } from "../_shared/stripe/profiles.ts";
 
@@ -19,20 +21,6 @@ type RequestBody = {
   return_url?: string;
   refresh_url?: string;
 };
-
-function connectStatusPayload(profile: NonNullable<Awaited<ReturnType<typeof loadTravelerProfile>>>) {
-  return {
-    verified: isTravelerStripeVerified(profile),
-    connect_state: getStripeConnectClientState(profile),
-    stripe_account_id: profile.stripe_account_id,
-    stripe_charges_enabled: profile.stripe_charges_enabled,
-    stripe_payouts_enabled: profile.stripe_payouts_enabled,
-    stripe_details_submitted: profile.stripe_details_submitted,
-    stripe_verification_status: profile.stripe_verification_status ?? "not_started",
-    phone_verified: profile.phone_verified,
-    email_verified: profile.email_verified,
-  };
-}
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -72,9 +60,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (isTravelerStripeVerified(profile)) {
+    if (isTravelerStripeOnboardingComplete(profile)) {
       return jsonResponse({
-        ...connectStatusPayload(profile),
+        ...buildConnectStatusPayload(profile),
         onboarding_url: null,
       });
     }
@@ -107,12 +95,35 @@ Deno.serve(async (req) => {
     }
 
     return jsonResponse({
-      ...connectStatusPayload(refreshed),
+      ...buildConnectStatusPayload(refreshed),
       onboarding_url: accountLink.url,
     });
   } catch (err) {
     if (isResponse(err)) return err;
-    console.error("stripe-connect-onboarding error", err);
+
+    const message = stripeErrorMessage(err);
+    console.error("stripe-connect-onboarding error", message, err);
+
+    if (err instanceof Stripe.errors.StripeError) {
+      return jsonResponse(
+        {
+          error: message,
+          code: err.code ?? "STRIPE_ERROR",
+        },
+        502,
+      );
+    }
+
+    if (err && typeof err === "object" && "message" in err) {
+      return jsonResponse(
+        {
+          error: String((err as { message: unknown }).message),
+          code: "ONBOARDING_FAILED",
+        },
+        500,
+      );
+    }
+
     return jsonResponse({ error: "Internal server error" }, 500);
   }
 });

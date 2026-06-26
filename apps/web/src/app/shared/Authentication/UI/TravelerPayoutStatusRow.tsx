@@ -31,8 +31,16 @@ export function TravelerPayoutStatusRow({
     stripeDetailsSubmitted: profile.stripeDetailsSubmitted,
     stripePayoutsEnabled: profile.stripePayoutsEnabled,
   });
-  const statusLabel = getStripeConnectStatusLabel(connectState);
-  const statusDescription = getStripeConnectStatusDescription(connectState);
+  const statusLabel = getStripeConnectStatusLabel(
+    connectState,
+    profile.stripeDetailsSubmitted === true,
+  );
+  const statusDescription = getStripeConnectStatusDescription(
+    connectState,
+    profile.stripeDetailsSubmitted === true,
+  );
+  const onboardingComplete =
+    !!profile.stripeAccountId && profile.stripeDetailsSubmitted === true;
 
   const handleSetupPayouts = async () => {
     setLoading(true);
@@ -77,7 +85,7 @@ export function TravelerPayoutStatusRow({
       <CustomText textSize="xs" textVariant="secondary">
         {statusDescription}
       </CustomText>
-      {connectState !== "ready" ? (
+      {connectState !== "ready" && !onboardingComplete ? (
         <Button
           type="button"
           variant="primary"
