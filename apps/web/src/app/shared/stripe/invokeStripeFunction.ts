@@ -3,9 +3,9 @@ import { AppError } from "@/app/shared/domain/AppError";
 
 function parseEdgeFunctionErrorBody(
   data: unknown,
-): { message: string | null; status: number | null } {
+): { message: string | null; status: number | null; code: string | null } {
   if (!data || typeof data !== "object") {
-    return { message: null, status: null };
+    return { message: null, status: null, code: null };
   }
 
   const record = data as Record<string, unknown>;
@@ -23,7 +23,9 @@ function parseEdgeFunctionErrorBody(
         ? record.statusCode
         : null;
 
-  return { message, status };
+  const code = typeof record.code === "string" ? record.code : null;
+
+  return { message, status, code };
 }
 
 function parseStatusFromErrorMessage(message: string): number | null {
@@ -49,17 +51,21 @@ export async function invokeStripeFunction<T>(
         ? context.context
         : null;
 
-    let serverError: string | null = parseEdgeFunctionErrorBody(data).message;
-    let status = response?.status ?? parseEdgeFunctionErrorBody(data).status;
+    const parsedDataError = parseEdgeFunctionErrorBody(data);
+    let serverError: string | null = parsedDataError.message;
+    let status = response?.status ?? parsedDataError.status;
+    let code = parsedDataError.code;
 
     if (response) {
       try {
         const payload = (await response.clone().json()) as {
           error?: string;
           message?: string;
+          code?: string;
         };
         serverError =
           payload?.error ?? payload?.message ?? serverError;
+        code = payload?.code ?? code;
       } catch {
         // Response body may be empty or non-JSON.
       }
@@ -76,7 +82,7 @@ export async function invokeStripeFunction<T>(
           ? `Could not reach "${name}". Make sure your edge functions are deployed and CORS is configured.`
           : raw;
 
-    throw new AppError({ message, status });
+    throw new AppError({ message, status, code: code ?? undefined });
   }
 
   const dataError = parseEdgeFunctionErrorBody(data);
@@ -84,6 +90,7 @@ export async function invokeStripeFunction<T>(
     throw new AppError({
       message: dataError.message,
       status: dataError.status,
+      code: dataError.code ?? undefined,
     });
   }
 

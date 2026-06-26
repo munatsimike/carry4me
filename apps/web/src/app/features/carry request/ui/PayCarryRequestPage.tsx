@@ -23,6 +23,7 @@ import { getStripePromise, isStripeLiveMode } from "@/app/shared/stripe/stripeCl
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import {
   createCarryRequestPaymentIntent,
+  paymentSetupErrorMessage,
   syncCarryRequestPayment,
 } from "../application/carryRequestPayment";
 import { completeCarryRequestPayment } from "../application/completeCarryRequestPayment";
@@ -43,11 +44,57 @@ function hasExpressWalletMethods(
   return available.applePay === true || available.googlePay === true;
 }
 
+type ExpressCheckoutLogContext = {
+  carryRequestId: string;
+  paymentCurrency: string | null;
+  originCountry: string;
+  paymentAmount: number | null;
+};
+
+function logExpressCheckoutAvailability(
+  source: "ready" | "availablePaymentMethodsChange" | "loadError",
+  payload: unknown,
+  context: ExpressCheckoutLogContext,
+) {
+  const googlePaySupportedCurrencies = new Set([
+    "gbp",
+    "usd",
+    "eur",
+    "aud",
+    "cad",
+    "nzd",
+    "sgd",
+    "hkd",
+    "jpy",
+  ]);
+  const currency = context.paymentCurrency?.toLowerCase() ?? null;
+  const currencySupportsGooglePay =
+    currency != null && googlePaySupportedCurrencies.has(currency);
+
+  console.info("[ExpressCheckout] availability", {
+    source,
+    ...context,
+    pageUrl: window.location.href,
+    isSecureContext: window.isSecureContext,
+    stripeLiveMode: isStripeLiveMode(),
+    currencySupportsGooglePay,
+    payload,
+  });
+}
+
 function PaymentCheckoutForm({
   carryRequestId,
+  clientSecret,
+  paymentCurrency,
+  originCountry,
+  paymentAmount,
   onPaymentComplete,
 }: {
   carryRequestId: string;
+  clientSecret: string;
+  paymentCurrency: string | null;
+  originCountry: string;
+  paymentAmount: number | null;
   onPaymentComplete: () => Promise<void>;
 }) {
   const stripe = useStripe();
@@ -55,6 +102,17 @@ function PaymentCheckoutForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showExpressCheckout, setShowExpressCheckout] = useState(false);
+  const [expressCheckoutProbing, setExpressCheckoutProbing] = useState(true);
+
+  const expressCheckoutLogContext = useMemo<ExpressCheckoutLogContext>(
+    () => ({
+      carryRequestId,
+      paymentCurrency,
+      originCountry,
+      paymentAmount,
+    }),
+    [carryRequestId, paymentAmount, paymentCurrency, originCountry],
+  );
 
   const completeSuccessfulPayment = async () => {
     const syncResult = await syncCarryRequestPayment(carryRequestId);
@@ -162,47 +220,72 @@ function PaymentCheckoutForm({
           : "Pay securely with Stripe test mode. Use a test card — no real charge."}
       </CustomText>
 
-      <div
-        id="express-checkout-element"
-        className={showExpressCheckout ? "mb-4 w-full" : "hidden"}
-        aria-hidden={!showExpressCheckout}
-      >
-        <ExpressCheckoutElement
-          onReady={({ availablePaymentMethods }) => {
-            setShowExpressCheckout(hasExpressWalletMethods(availablePaymentMethods));
-          }}
-          onAvailablePaymentMethodsChange={({ paymentMethods }) => {
-            if (!paymentMethods) {
-              setShowExpressCheckout(false);
-              return;
-            }
+      {clientSecret ? (
+        <div
+          id="express-checkout-element"
+          className={
+            showExpressCheckout
+              ? "mb-4 w-full"
+              : expressCheckoutProbing
+                ? "pointer-events-none fixed left-0 top-0 -z-10 w-[360px] opacity-0"
+                : "hidden"
+          }
+          aria-hidden={!showExpressCheckout}
+        >
+          <ExpressCheckoutElement
+            onReady={({ availablePaymentMethods }) => {
+              logExpressCheckoutAvailability(
+                "ready",
+                { availablePaymentMethods },
+                expressCheckoutLogContext,
+              );
+              const walletsAvailable = hasExpressWalletMethods(availablePaymentMethods);
+              setShowExpressCheckout(walletsAvailable);
+              setExpressCheckoutProbing(false);
+            }}
+            onAvailablePaymentMethodsChange={({ paymentMethods }) => {
+              logExpressCheckoutAvailability(
+                "availablePaymentMethodsChange",
+                { paymentMethods },
+                expressCheckoutLogContext,
+              );
 
-            setShowExpressCheckout(
-              paymentMethods.applePay?.available === true ||
-                paymentMethods.googlePay?.available === true,
-            );
-          }}
-          onLoadError={() => {
-            setShowExpressCheckout(false);
-          }}
-          onClick={(event) => {
-            event.resolve();
-          }}
-          onConfirm={(event) => {
-            void handleExpressConfirm(event);
-          }}
-          options={{
-            paymentMethods: {
-              applePay: "auto",
-              googlePay: "auto",
-              link: "never",
-              amazonPay: "never",
-              paypal: "never",
-              klarna: "never",
-            },
-          }}
-        />
-      </div>
+              if (!paymentMethods) {
+                setShowExpressCheckout(false);
+                setExpressCheckoutProbing(false);
+                return;
+              }
+
+              const walletsAvailable =
+                paymentMethods.applePay?.available === true ||
+                paymentMethods.googlePay?.available === true;
+              setShowExpressCheckout(walletsAvailable);
+              setExpressCheckoutProbing(false);
+            }}
+            onLoadError={(event) => {
+              logExpressCheckoutAvailability("loadError", event, expressCheckoutLogContext);
+              setShowExpressCheckout(false);
+              setExpressCheckoutProbing(false);
+            }}
+            onClick={(event) => {
+              event.resolve();
+            }}
+            onConfirm={(event) => {
+              void handleExpressConfirm(event);
+            }}
+            options={{
+              paymentMethods: {
+                applePay: "auto",
+                googlePay: "auto",
+                link: "never",
+                amazonPay: "never",
+                paypal: "never",
+                klarna: "never",
+              },
+            }}
+          />
+        </div>
+      ) : null}
 
       <div id="payment-element" className="w-full">
         <PaymentElement
@@ -266,6 +349,7 @@ export default function PayCarryRequestPage() {
   const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
+  const [paymentCurrency, setPaymentCurrency] = useState<string | null>(null);
   const [platformFeeAmount, setPlatformFeeAmount] = useState<number | null>(null);
   const [isCompletingPayment, setIsCompletingPayment] = useState(false);
 
@@ -347,13 +431,22 @@ export default function PayCarryRequestPage() {
       try {
         const result = await createCarryRequestPaymentIntent(carryRequestId);
         if (!cancelled) {
+          console.info("[ExpressCheckout] PaymentIntent created", {
+            carryRequestId,
+            paymentCurrency: result.payment_currency,
+            paymentAmount: result.payment_amount,
+            originCountry: carryRequest.parcelSnapshot.origin.country ?? "UK",
+            stripeLiveMode: isStripeLiveMode(),
+          });
           setClientSecret(result.client_secret);
           setPaymentAmount(result.payment_amount);
+          setPaymentCurrency(result.payment_currency);
           setPlatformFeeAmount(result.platform_fee_amount);
         }
       } catch (err) {
         if (!cancelled) {
-          setLoadError(AppError.fromUnknown(err).message);
+          setClientSecret(null);
+          setLoadError(paymentSetupErrorMessage(err));
         }
       }
     })();
@@ -580,6 +673,10 @@ export default function PayCarryRequestPage() {
             >
               <PaymentCheckoutForm
                 carryRequestId={carryRequestId}
+                clientSecret={clientSecret}
+                paymentCurrency={paymentCurrency}
+                originCountry={originCountry}
+                paymentAmount={paymentAmount}
                 onPaymentComplete={handlePaymentComplete}
               />
             </Elements>

@@ -1,5 +1,30 @@
 import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
+import { AppError } from "@/app/shared/domain/AppError";
 import { getStripePromise } from "@/app/shared/stripe/stripeClient";
+
+export const PAYMENT_SETUP_BLOCKED_CODES = new Set([
+  "TRAVELER_STRIPE_LOOKUP_FAILED",
+  "TRAVELER_STRIPE_OUTDATED",
+]);
+
+export function isPaymentSetupBlocked(error: unknown): boolean {
+  const code = AppError.fromUnknown(error).code;
+  return code != null && PAYMENT_SETUP_BLOCKED_CODES.has(code);
+}
+
+export function paymentSetupErrorMessage(error: unknown): string {
+  const appError = AppError.fromUnknown(error);
+
+  if (appError.code === "TRAVELER_STRIPE_LOOKUP_FAILED") {
+    return "Could not verify the traveler's payout account. Ask them to complete Stripe verification, then try again.";
+  }
+
+  if (appError.code === "TRAVELER_STRIPE_OUTDATED") {
+    return "The traveler's payout account is outdated. Ask them to complete Stripe verification again.";
+  }
+
+  return appError.message;
+}
 
 type CreatePaymentIntentResponse = {
   client_secret: string;
