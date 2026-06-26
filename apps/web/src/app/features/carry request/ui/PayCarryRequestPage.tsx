@@ -12,6 +12,8 @@ import type {
   Stripe,
   StripeExpressCheckoutElementConfirmEvent,
   StripeExpressCheckoutElementOptions,
+  StripeExpressCheckoutElementReadyEvent,
+  StripeExpressCheckoutElementAvailablePaymentMethodsChangeEvent,
 } from "@stripe/stripe-js";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import CustomText from "@/components/ui/CustomText";
@@ -38,6 +40,7 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { CARRY_REQUEST_STATUSES } from "../domain/CreateCarryRequest";
+import { cn } from "@/app/lib/cn";
 
 function formatParcelWeight(weightKg: number): string {
   const value = Number(weightKg);
@@ -62,22 +65,90 @@ const EXPRESS_CHECKOUT_ELEMENT_OPTIONS: StripeExpressCheckoutElementOptions = {
   paymentMethodOrder: ["google_pay", "apple_pay", "link"],
 };
 
+function isExpressCheckoutMethodAvailable(
+  value: boolean | { available: boolean } | undefined,
+): boolean {
+  if (value === true) return true;
+  if (typeof value === "object" && value !== null) {
+    return value.available === true;
+  }
+  return false;
+}
+
+function hasAvailableExpressCheckoutMethods(
+  methods:
+    | StripeExpressCheckoutElementReadyEvent["availablePaymentMethods"]
+    | StripeExpressCheckoutElementAvailablePaymentMethodsChangeEvent["paymentMethods"],
+): boolean {
+  if (!methods) return false;
+
+  return (
+    isExpressCheckoutMethodAvailable(methods.googlePay) ||
+    isExpressCheckoutMethodAvailable(methods.applePay) ||
+    isExpressCheckoutMethodAvailable(methods.link)
+  );
+}
+
+function getLivePaymentDescription(
+  showIdealCheckout: boolean,
+  expressCheckoutAvailable: boolean,
+): string {
+  if (showIdealCheckout) {
+    return expressCheckoutAvailable
+      ? "Pay securely with Apple Pay, Google Pay, Link, iDEAL, or card."
+      : "Pay securely with iDEAL or card.";
+  }
+
+  return expressCheckoutAvailable
+    ? "Pay securely with Stripe using card, Apple Pay, or Google Pay."
+    : "Pay securely with Stripe using card.";
+}
+
 function ImperativeExpressCheckout({
   options,
   onConfirm,
+  onAvailabilityChange,
 }: {
   options: StripeExpressCheckoutElementOptions;
   onConfirm: (event: StripeExpressCheckoutElementConfirmEvent) => void;
+  onAvailabilityChange: (available: boolean) => void;
 }) {
   const elements = useElements();
   const containerRef = useRef<HTMLDivElement>(null);
-  const handlersRef = useRef({ onConfirm });
-  handlersRef.current = { onConfirm };
+  const handlersRef = useRef({ onConfirm, onAvailabilityChange });
+  handlersRef.current = { onConfirm, onAvailabilityChange };
+  const [isAvailable, setIsAvailable] = useState(false);
 
   useEffect(() => {
     if (!elements || !containerRef.current) return;
 
+    setIsAvailable(false);
+    handlersRef.current.onAvailabilityChange(false);
+
     const expressCheckoutElement = elements.create("expressCheckout", options);
+
+    const updateAvailability = (
+      methods:
+        | StripeExpressCheckoutElementReadyEvent["availablePaymentMethods"]
+        | StripeExpressCheckoutElementAvailablePaymentMethodsChangeEvent["paymentMethods"],
+    ) => {
+      const available = hasAvailableExpressCheckoutMethods(methods);
+      setIsAvailable(available);
+      handlersRef.current.onAvailabilityChange(available);
+    };
+
+    expressCheckoutElement.on("ready", (event) => {
+      updateAvailability(event.availablePaymentMethods);
+    });
+
+    expressCheckoutElement.on("availablepaymentmethodschange", (event) => {
+      updateAvailability(event.paymentMethods);
+    });
+
+    expressCheckoutElement.on("loaderror", () => {
+      setIsAvailable(false);
+      handlersRef.current.onAvailabilityChange(false);
+    });
 
     expressCheckoutElement.on("click", (event) => {
       event.resolve();
@@ -91,10 +162,19 @@ function ImperativeExpressCheckout({
 
     return () => {
       expressCheckoutElement.destroy();
+      setIsAvailable(false);
+      handlersRef.current.onAvailabilityChange(false);
     };
   }, [elements, options]);
 
-  return <div id="express-checkout-element" ref={containerRef} />;
+  return (
+    <div
+      id="express-checkout-element"
+      ref={containerRef}
+      className={cn("w-full", isAvailable ? "mb-4" : "hidden")}
+      aria-hidden={!isAvailable}
+    />
+  );
 }
 
 function PaymentCheckoutForm({
@@ -114,6 +194,11 @@ function PaymentCheckoutForm({
   const elements = useElements();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [expressCheckoutAvailable, setExpressCheckoutAvailable] = useState(false);
+
+  const handleExpressAvailabilityChange = useCallback((available: boolean) => {
+    setExpressCheckoutAvailable(available);
+  }, []);
 
   const showIdealCheckout =
     paymentCurrency?.toLowerCase() === "eur" &&
@@ -248,9 +333,7 @@ function PaymentCheckoutForm({
     <div className="flex flex-col gap-6">
       <CustomText textSize="sm" textVariant="secondary">
         {isStripeLiveMode()
-          ? showIdealCheckout
-            ? "Pay securely with Apple Pay, Google Pay, Link, iDEAL, or card."
-            : "Pay securely with Stripe using card, Apple Pay, Google Pay, or Link."
+          ? getLivePaymentDescription(showIdealCheckout, expressCheckoutAvailable)
           : "Pay securely with Stripe test mode. Use a test card — no real charge."}
       </CustomText>
 
@@ -258,10 +341,11 @@ function PaymentCheckoutForm({
         <ImperativeExpressCheckout
           options={EXPRESS_CHECKOUT_ELEMENT_OPTIONS}
           onConfirm={handleExpressConfirm}
+          onAvailabilityChange={handleExpressAvailabilityChange}
         />
       ) : null}
 
-      {showIdealCheckout ? (
+      {showIdealCheckout && expressCheckoutAvailable ? (
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-slate-200" />
           <CustomText textSize="xs" textVariant="secondary">

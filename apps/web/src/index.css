@@ -50,6 +50,4 @@ select:-webkit-autofill {
 #express-checkout-element {
   display: block;
   width: 100%;
-  min-height: 48px;
-  margin-bottom: 16px;
 }
