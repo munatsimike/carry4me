@@ -17,7 +17,12 @@ import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import { processActionEmailQueue } from "../application/processActionEmailQueue";
 import { processEmailQueueInBackground } from "@/app/shared/supabase/processEmailQueue";
-import { ensureTravelerStripeReady } from "../application/travelerStripeVerification";
+import {
+  ensureTravelerStripeReady,
+  fetchTravelerStripeConnectStatus,
+  resolveConnectStateFromStatus,
+} from "../application/travelerStripeVerification";
+import { getStripeConnectStatusLabel } from "../application/travelerStripeConnectStatus";
 import {
   deliveryOtpFailureMessage,
   resendDeliveryOtp,
@@ -30,7 +35,6 @@ import {
 import { completeCarryRequestPayment } from "../application/completeCarryRequestPayment";
 import { syncCarryRequestPayment } from "../application/carryRequestPayment";
 import { calculateCarryRequestPricing } from "../domain/carryRequestPricing";
-import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 import statusColor from "./StatustColorMapper";
 import actionsMapper, {
   UIACTIONKEYS,
@@ -411,7 +415,11 @@ export default function CarryRequestsPage() {
 
     void (async () => {
       try {
-        await invokeStripeFunction("stripe-connect-status", {});
+        const status = await fetchTravelerStripeConnectStatus();
+        const state = resolveConnectStateFromStatus(status);
+        toast(`Payout status: ${getStripeConnectStatusLabel(state)}`, {
+          variant: state === "ready" ? "success" : "info",
+        });
         refreshProfile();
       } catch (err) {
         showSupabaseError(err);
@@ -423,7 +431,7 @@ export default function CarryRequestsPage() {
         navigate({ search: nextSearch ? `?${nextSearch}` : "" }, { replace: true });
       }
     })();
-  }, [searchParams, refreshProfile, showSupabaseError, navigate]);
+  }, [searchParams, refreshProfile, showSupabaseError, navigate, toast]);
 
   useEffect(() => {
     const carryRequestId = searchParams.get("carry_request_id")?.trim();

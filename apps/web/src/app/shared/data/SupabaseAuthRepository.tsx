@@ -149,6 +149,11 @@ function toUserProfile(profile: Record<string, any>): UserProfile {
     emailVerified: profile.email_verified === true,
     phoneVerified: profile.phone_verified === true,
     accountStatus: toAccountStatus(profile.account_status),
+    stripeAccountId: profile.stripe_account_id ?? null,
+    stripeDetailsSubmitted: profile.stripe_details_submitted === true,
+    stripeChargesEnabled: profile.stripe_charges_enabled === true,
+    stripePayoutsEnabled: profile.stripe_payouts_enabled === true,
+    stripeVerificationStatus: profile.stripe_verification_status ?? null,
   };
 }
 

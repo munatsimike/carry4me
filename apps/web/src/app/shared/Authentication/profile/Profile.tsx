@@ -61,6 +61,12 @@ import {
   removePasskey,
   type PasskeyCredentialSummary,
 } from "../application/passkeyAuth";
+import { TravelerPayoutStatusRow } from "../UI/TravelerPayoutStatusRow";
+import {
+  fetchTravelerStripeConnectStatus,
+  resolveConnectStateFromStatus,
+} from "@/app/features/carry request/application/travelerStripeVerification";
+import { getStripeConnectStatusLabel } from "@/app/features/carry request/application/travelerStripeConnectStatus";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -202,6 +208,29 @@ export default function ProfilePage() {
     openSecurityEdit();
     setSearchParams({}, { replace: true });
   }, [profile, searchParams, setSearchParams, setValue, user?.email]);
+
+  useEffect(() => {
+    const stripeParam = searchParams.get("stripe");
+    if (stripeParam !== "return" && stripeParam !== "refresh") return;
+
+    void (async () => {
+      try {
+        const status = await fetchTravelerStripeConnectStatus();
+        const state = resolveConnectStateFromStatus(status);
+        toast(`Payout status: ${getStripeConnectStatusLabel(state)}`, {
+          variant: state === "ready" ? "success" : "info",
+        });
+        await refreshProfile({ silent: true });
+      } catch (err) {
+        showSupabaseError(err);
+      } finally {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("stripe");
+        const nextSearch = params.toString();
+        setSearchParams(nextSearch ? `?${nextSearch}` : "", { replace: true });
+      }
+    })();
+  }, [searchParams, refreshProfile, setSearchParams, showSupabaseError, toast]);
 
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const updateAuthDetails = useMemo(
@@ -563,6 +592,7 @@ export default function ProfilePage() {
                   onCancel: () => setEditing(null),
                 }}
                 onChangePhone={() => setChangePhoneOpen(true)}
+                onRefreshPayoutStatus={() => refreshProfile({ silent: true })}
               />
             </ProfileSectionShell>
             <LineDivider heightClass="my-1 sm:my-2" />
@@ -761,6 +791,7 @@ type securityProps = {
   onChangePhone: () => void;
   onAddPasskey: () => void;
   onRemovePasskey: (passkeyId: string) => void;
+  onRefreshPayoutStatus: () => void | Promise<void>;
 };
 
 function SecurityDetailsCard({
@@ -780,6 +811,7 @@ function SecurityDetailsCard({
   onChangePhone,
   onAddPasskey,
   onRemovePasskey,
+  onRefreshPayoutStatus,
 }: securityProps) {
   const isEditing = editing === "security";
   const passkeyCount = passkeys.length;
@@ -821,6 +853,10 @@ function SecurityDetailsCard({
             >
               Change phone number
             </button>
+            <TravelerPayoutStatusRow
+              profile={profile}
+              onStatusRefreshed={onRefreshPayoutStatus}
+            />
             <InfoRow
               label="Passkey sign-in"
               value={

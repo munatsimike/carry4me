@@ -26,6 +26,11 @@ export type UserProfile = {
   accountStatus?: AccountStatus;
   email: string;
   emailVerified?: boolean;
+  stripeAccountId?: string | null;
+  stripeDetailsSubmitted?: boolean;
+  stripeChargesEnabled?: boolean;
+  stripePayoutsEnabled?: boolean;
+  stripeVerificationStatus?: string | null;
 };
 
 export type AppUser = {
