@@ -417,10 +417,13 @@ export default function CarryRequestsPage() {
       try {
         const status = await fetchTravelerStripeConnectStatus();
         const state = resolveConnectStateFromStatus(status);
-        toast(`Payout status: ${getStripeConnectStatusLabel(state)}`, {
-          variant: state === "ready" ? "success" : "info",
-        });
-        refreshProfile();
+        toast(
+          `Payout status: ${getStripeConnectStatusLabel(state, status.stripe_details_submitted === true)}`,
+          {
+            variant: state === "ready" ? "success" : "info",
+          },
+        );
+        await refreshProfile({ silent: true });
       } catch (err) {
         showSupabaseError(err);
       } finally {

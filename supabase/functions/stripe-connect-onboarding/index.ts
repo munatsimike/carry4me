@@ -10,6 +10,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import {
   buildConnectStatusPayload,
   ensureStripeConnectAccountId,
+  reconcileTravelerStripeConnectProfile,
   syncStripeConnectAccountToProfile,
 } from "../_shared/stripe/connectAccount.ts";
 import {
@@ -41,24 +42,31 @@ Deno.serve(async (req) => {
     const { user, supabaseAdmin } = await getAuthenticatedUser(req);
     const stripe = getStripe();
 
-    const profile = await loadTravelerProfile(supabaseAdmin, user.id);
-    if (!profile) {
+    const loaded = await loadTravelerProfile(supabaseAdmin, user.id);
+    if (!loaded) {
       return jsonResponse({ error: "Profile not found" }, 404);
     }
 
-    if (!profile.phone_verified) {
+    if (!loaded.phone_verified) {
       return jsonResponse(
         { error: "Verify your phone number before Stripe onboarding", code: "PHONE_NOT_VERIFIED" },
         400,
       );
     }
 
-    if (!profile.email_verified) {
+    if (!loaded.email_verified) {
       return jsonResponse(
         { error: "Verify your email before Stripe onboarding", code: "EMAIL_NOT_VERIFIED" },
         400,
       );
     }
+
+    const profile = await reconcileTravelerStripeConnectProfile(
+      stripe,
+      supabaseAdmin,
+      user.id,
+      loaded,
+    );
 
     if (isTravelerStripeOnboardingComplete(profile)) {
       return jsonResponse({

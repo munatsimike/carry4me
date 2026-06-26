@@ -221,6 +221,7 @@ async function validateExistingStripeAccount(
       return resetProfile?.stripe_account_id ?? null;
     }
 
+    await syncStripeConnectAccountToProfile(supabaseAdmin, userId, existing);
     return accountId;
   } catch (err) {
     if (!isStaleStripeConnectAccountError(err)) {
@@ -365,4 +366,62 @@ export async function refreshStripeConnectAccountStatus(
 
   const refreshed = await loadTravelerProfile(supabaseAdmin, userId);
   return refreshed ?? profile;
+}
+
+/**
+ * Ensures profiles.stripe_* columns match the user's Stripe Connect account.
+ * Recovers a missing stripe_account_id from Stripe metadata when needed.
+ */
+export async function reconcileTravelerStripeConnectProfile(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  profile: TravelerStripeProfile,
+): Promise<TravelerStripeProfile> {
+  if (profile.stripe_account_id) {
+    try {
+      return await refreshStripeConnectAccountStatus(
+        stripe,
+        supabaseAdmin,
+        profile,
+        userId,
+      );
+    } catch (err) {
+      if (!isStaleStripeConnectAccountError(err)) {
+        throw err;
+      }
+
+      console.warn(
+        "reconcileTravelerStripeConnectProfile stale account cleared",
+        profile.stripe_account_id,
+        stripeErrorMessage(err),
+      );
+      const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
+      profile = resetProfile ?? profile;
+    }
+  }
+
+  const recoveredAccountId = await findStripeAccountIdByUserMetadata(stripe, userId);
+  if (!recoveredAccountId) {
+    return profile;
+  }
+
+  const validated = await validateExistingStripeAccount(
+    stripe,
+    supabaseAdmin,
+    userId,
+    recoveredAccountId,
+  );
+  if (!validated) {
+    return profile;
+  }
+
+  await claimStripeAccountId(supabaseAdmin, userId, validated);
+
+  const claimed = await loadTravelerProfile(supabaseAdmin, userId);
+  if (!claimed?.stripe_account_id) {
+    return profile;
+  }
+
+  return refreshStripeConnectAccountStatus(stripe, supabaseAdmin, claimed, userId);
 }
