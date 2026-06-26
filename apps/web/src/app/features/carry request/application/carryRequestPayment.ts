@@ -51,6 +51,21 @@ type CreatePaymentIntentResponse = {
     status: string;
     connect_charge_type: "platform_direct" | "connected_account";
   };
+  stripe_key_debug?: {
+    secret_key_prefix: string;
+    secret_key_livemode: boolean;
+  };
+  stripe_account_debug?: {
+    id: string | null;
+    country: string | null;
+    default_currency: string | null;
+    charges_enabled: boolean | null;
+    payouts_enabled: boolean | null;
+    type: string | null;
+    business_profile_url: string | null;
+    capabilities: Record<string, string> | null;
+  } | null;
+  payment_method_configurations?: unknown;
 };
 
 type SyncPaymentResponse = {

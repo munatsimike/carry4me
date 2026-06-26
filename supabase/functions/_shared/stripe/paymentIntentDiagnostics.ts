@@ -68,3 +68,32 @@ export function logPaymentIntentDiagnostics(
 
   return summary;
 }
+
+export async function retrieveAndLogPaymentIntent(
+  stripe: Stripe,
+  paymentIntentId: string,
+  context: {
+    carryRequestId: string;
+    source: "created" | "reused";
+    stripeSecretKeyPrefix: string;
+  },
+): Promise<PaymentIntentDebugSummary> {
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+  console.info("create-payment-intent PaymentIntent retrieved immediately", {
+    carryRequestId: context.carryRequestId,
+    source: context.source,
+    id: paymentIntent.id,
+    amount: paymentIntent.amount,
+    currency: paymentIntent.currency,
+    payment_method_types: paymentIntent.payment_method_types ?? [],
+    automatic_payment_methods: paymentIntent.automatic_payment_methods ?? null,
+    application_fee_amount: paymentIntent.application_fee_amount ?? null,
+    transfer_data: paymentIntent.transfer_data ?? null,
+    on_behalf_of: paymentIntent.on_behalf_of ?? null,
+    livemode: paymentIntent.livemode,
+    status: paymentIntent.status,
+  });
+
+  return logPaymentIntentDiagnostics(paymentIntent, context);
+}

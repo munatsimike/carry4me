@@ -19,7 +19,12 @@ import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
 import Spinner from "@/app/components/Spinner";
-import { getStripePromise, isStripeLiveMode } from "@/app/shared/stripe/stripeClient";
+import {
+  getMaskedStripePublishableKey,
+  getStripePromise,
+  isStripeLiveMode,
+  STRIPE_CLIENT_PACKAGE_VERSIONS,
+} from "@/app/shared/stripe/stripeClient";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import {
   createCarryRequestPaymentIntent,
@@ -98,7 +103,7 @@ function ImperativeExpressCheckout({
     if (!elements || !containerRef.current) return;
 
     console.log(
-      "[ExpressCheckout] mount options",
+      "[ExpressCheckout] elements.create(\"expressCheckout\", options)",
       JSON.parse(JSON.stringify(options)) as StripeExpressCheckoutElementOptions,
     );
 
@@ -177,6 +182,12 @@ function PaymentCheckoutForm({
   const handleExpressReady = useCallback(
     (event: StripeExpressCheckoutElementReadyEvent) => {
       logExpressCheckoutContext(expressCheckoutLogContext);
+      console.info("[ExpressCheckout] Stripe client diagnostics", {
+        publishableKeyMasked: getMaskedStripePublishableKey(),
+        publishableKeyLiveMode: isStripeLiveMode(),
+        stripePackages: STRIPE_CLIENT_PACKAGE_VERSIONS,
+        userAgent: navigator.userAgent,
+      });
       console.log(
         "[ExpressCheckout] googlePay available?",
         event.availablePaymentMethods?.googlePay === true,
@@ -443,13 +454,18 @@ export default function PayCarryRequestPage() {
       try {
         const result = await createCarryRequestPaymentIntent(carryRequestId);
         if (!cancelled) {
-          console.info("[ExpressCheckout] PaymentIntent created", {
+          console.info("[ExpressCheckout] PaymentIntent diagnostics bundle", {
             carryRequestId,
             paymentCurrency: result.payment_currency,
             paymentAmount: result.payment_amount,
             originCountry: carryRequest.parcelSnapshot.origin.country ?? "UK",
-            stripeLiveMode: isStripeLiveMode(),
+            publishableKeyMasked: getMaskedStripePublishableKey(),
+            publishableKeyLiveMode: isStripeLiveMode(),
+            secretKeyDebug: result.stripe_key_debug ?? null,
             paymentIntentDebug: result.payment_intent_debug ?? null,
+            stripeAccountDebug: result.stripe_account_debug ?? null,
+            paymentMethodConfigurations: result.payment_method_configurations ?? null,
+            stripePackages: STRIPE_CLIENT_PACKAGE_VERSIONS,
           });
           setClientSecret(result.client_secret);
           setPaymentAmount(result.payment_amount);
