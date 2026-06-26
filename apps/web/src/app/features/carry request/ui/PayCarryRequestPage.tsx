@@ -12,7 +12,6 @@ import type {
   Stripe,
   StripeExpressCheckoutElementConfirmEvent,
   StripeExpressCheckoutElementOptions,
-  StripeExpressCheckoutElementReadyEvent,
 } from "@stripe/stripe-js";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import CustomText from "@/components/ui/CustomText";
@@ -20,10 +19,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
 import Spinner from "@/app/components/Spinner";
 import {
-  getMaskedStripePublishableKey,
   getStripePromise,
   isStripeLiveMode,
-  STRIPE_CLIENT_PACKAGE_VERSIONS,
 } from "@/app/shared/stripe/stripeClient";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import {
@@ -42,40 +39,14 @@ import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDi
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 
-type ExpressCheckoutLogContext = {
-  carryRequestId: string;
-  paymentCurrency: string | null;
-  originCountry: string;
-  paymentAmount: number | null;
-};
-
-function logExpressCheckoutContext(context: ExpressCheckoutLogContext) {
-  const googlePaySupportedCurrencies = new Set([
-    "gbp",
-    "usd",
-    "eur",
-    "aud",
-    "cad",
-    "nzd",
-    "sgd",
-    "hkd",
-    "jpy",
-  ]);
-  const currency = context.paymentCurrency?.toLowerCase() ?? null;
-
-  console.info("[ExpressCheckout] context", {
-    ...context,
-    pageUrl: window.location.href,
-    isSecureContext: window.isSecureContext,
-    stripeLiveMode: isStripeLiveMode(),
-    currencySupportsGooglePay:
-      currency != null && googlePaySupportedCurrencies.has(currency),
-  });
+function isNetherlandsOrigin(country: string): boolean {
+  const normalized = country.trim().toLowerCase();
+  return normalized === "nl" || normalized === "netherlands";
 }
 
 const EXPRESS_CHECKOUT_ELEMENT_OPTIONS: StripeExpressCheckoutElementOptions = {
   paymentMethods: {
-    googlePay: "always",
+    googlePay: "auto",
     applePay: "auto",
     link: "auto",
     amazonPay: "never",
@@ -87,56 +58,27 @@ const EXPRESS_CHECKOUT_ELEMENT_OPTIONS: StripeExpressCheckoutElementOptions = {
 
 function ImperativeExpressCheckout({
   options,
-  onReady,
   onConfirm,
 }: {
   options: StripeExpressCheckoutElementOptions;
-  onReady: (event: StripeExpressCheckoutElementReadyEvent) => void;
   onConfirm: (event: StripeExpressCheckoutElementConfirmEvent) => void;
 }) {
   const elements = useElements();
   const containerRef = useRef<HTMLDivElement>(null);
-  const handlersRef = useRef({ onReady, onConfirm });
-  handlersRef.current = { onReady, onConfirm };
+  const handlersRef = useRef({ onConfirm });
+  handlersRef.current = { onConfirm };
 
   useEffect(() => {
     if (!elements || !containerRef.current) return;
 
-    console.log(
-      "[ExpressCheckout] elements.create(\"expressCheckout\", options)",
-      JSON.parse(JSON.stringify(options)) as StripeExpressCheckoutElementOptions,
-    );
-
     const expressCheckoutElement = elements.create("expressCheckout", options);
 
-    expressCheckoutElement.on("ready", (event) => {
-      console.log("[ExpressCheckout] ready full event", event);
-      console.log(
-        "[ExpressCheckout] availablePaymentMethods",
-        event.availablePaymentMethods,
-      );
-      handlersRef.current.onReady(event);
-    });
-
-    expressCheckoutElement.on("loaderror", (event) => {
-      console.error("[ExpressCheckout] loaderror", event);
-    });
-
     expressCheckoutElement.on("click", (event) => {
-      console.log("[ExpressCheckout] click", event);
       event.resolve();
     });
 
     expressCheckoutElement.on("confirm", (event) => {
       handlersRef.current.onConfirm(event);
-    });
-
-    expressCheckoutElement.on("availablepaymentmethodschange", (event) => {
-      console.log(
-        "[ExpressCheckout] availablePaymentMethodsChange full event",
-        event,
-      );
-      console.log("[ExpressCheckout] paymentMethods", event.paymentMethods);
     });
 
     expressCheckoutElement.mount(containerRef.current);
@@ -154,14 +96,12 @@ function PaymentCheckoutForm({
   clientSecret,
   paymentCurrency,
   originCountry,
-  paymentAmount,
   onPaymentComplete,
 }: {
   carryRequestId: string;
   clientSecret: string;
   paymentCurrency: string | null;
   originCountry: string;
-  paymentAmount: number | null;
   onPaymentComplete: () => Promise<void>;
 }) {
   const stripe = useStripe();
@@ -169,32 +109,34 @@ function PaymentCheckoutForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const expressCheckoutLogContext = useMemo<ExpressCheckoutLogContext>(
-    () => ({
-      carryRequestId,
-      paymentCurrency,
-      originCountry,
-      paymentAmount,
-    }),
-    [carryRequestId, paymentAmount, paymentCurrency, originCountry],
-  );
+  const paymentElementOptions = useMemo(() => {
+    const options: Parameters<typeof PaymentElement>[0]["options"] = {
+      layout: {
+        type: "accordion",
+        defaultCollapsed: false,
+        radios: "never",
+      },
+      wallets: {
+        applePay: "never",
+        googlePay: "never",
+      },
+    };
 
-  const handleExpressReady = useCallback(
-    (event: StripeExpressCheckoutElementReadyEvent) => {
-      logExpressCheckoutContext(expressCheckoutLogContext);
-      console.info("[ExpressCheckout] Stripe client diagnostics", {
-        publishableKeyMasked: getMaskedStripePublishableKey(),
-        publishableKeyLiveMode: isStripeLiveMode(),
-        stripePackages: STRIPE_CLIENT_PACKAGE_VERSIONS,
-        userAgent: navigator.userAgent,
-      });
-      console.log(
-        "[ExpressCheckout] googlePay available?",
-        event.availablePaymentMethods?.googlePay === true,
-      );
-    },
-    [expressCheckoutLogContext],
-  );
+    if (
+      paymentCurrency?.toLowerCase() === "eur" &&
+      isNetherlandsOrigin(originCountry)
+    ) {
+      options.defaultValues = {
+        billingDetails: {
+          address: {
+            country: "NL",
+          },
+        },
+      };
+    }
+
+    return options;
+  }, [originCountry, paymentCurrency]);
 
   const completeSuccessfulPayment = async () => {
     const syncResult = await syncCarryRequestPayment(carryRequestId);
@@ -298,34 +240,22 @@ function PaymentCheckoutForm({
     <div className="flex flex-col gap-6">
       <CustomText textSize="sm" textVariant="secondary">
         {isStripeLiveMode()
-          ? "Pay securely with Stripe using card, Apple Pay, or Google Pay."
+          ? paymentCurrency?.toLowerCase() === "eur" &&
+            isNetherlandsOrigin(originCountry)
+            ? "Pay securely with card, iDEAL, Apple Pay, Google Pay, or Link."
+            : "Pay securely with Stripe using card, Apple Pay, Google Pay, or Link."
           : "Pay securely with Stripe test mode. Use a test card — no real charge."}
       </CustomText>
 
       {clientSecret ? (
         <ImperativeExpressCheckout
           options={EXPRESS_CHECKOUT_ELEMENT_OPTIONS}
-          onReady={handleExpressReady}
           onConfirm={handleExpressConfirm}
         />
       ) : null}
 
       <div id="payment-element" className="w-full">
-        <PaymentElement
-          className="w-full"
-          options={{
-            layout: {
-              type: "accordion",
-              defaultCollapsed: false,
-              radios: "never",
-            },
-            wallets: {
-              applePay: "never",
-              googlePay: "never",
-            },
-            paymentMethodOrder: ["card"],
-          }}
-        />
+        <PaymentElement className="w-full" options={paymentElementOptions} />
       </div>
 
       {errorMessage ? (
@@ -454,19 +384,6 @@ export default function PayCarryRequestPage() {
       try {
         const result = await createCarryRequestPaymentIntent(carryRequestId);
         if (!cancelled) {
-          console.info("[ExpressCheckout] PaymentIntent diagnostics bundle", {
-            carryRequestId,
-            paymentCurrency: result.payment_currency,
-            paymentAmount: result.payment_amount,
-            originCountry: carryRequest.parcelSnapshot.origin.country ?? "UK",
-            publishableKeyMasked: getMaskedStripePublishableKey(),
-            publishableKeyLiveMode: isStripeLiveMode(),
-            secretKeyDebug: result.stripe_key_debug ?? null,
-            paymentIntentDebug: result.payment_intent_debug ?? null,
-            stripeAccountDebug: result.stripe_account_debug ?? null,
-            paymentMethodConfigurations: result.payment_method_configurations ?? null,
-            stripePackages: STRIPE_CLIENT_PACKAGE_VERSIONS,
-          });
           setClientSecret(result.client_secret);
           setPaymentAmount(result.payment_amount);
           setPaymentCurrency(result.payment_currency);
@@ -653,12 +570,7 @@ export default function PayCarryRequestPage() {
             ) : null}
           </div>
 
-          <Card
-            enableHover={false}
-            sizeClass="max-w-none"
-            className="w-full p-0"
-          >
-            <div className="bg-canvas p-5 sm:p-8 lg:p-10">
+          <div className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-canvas p-5 shadow-sm sm:p-8 lg:p-10">
           {loadError ? (
             <div className="flex flex-col gap-4">
               <CustomText textSize="sm" textVariant="error">
@@ -705,13 +617,11 @@ export default function PayCarryRequestPage() {
                 clientSecret={clientSecret}
                 paymentCurrency={paymentCurrency}
                 originCountry={originCountry}
-                paymentAmount={paymentAmount}
                 onPaymentComplete={handlePaymentComplete}
               />
             </Elements>
           ) : null}
-            </div>
-          </Card>
+          </div>
         </div>
       </div>
     </DefaultContainer>

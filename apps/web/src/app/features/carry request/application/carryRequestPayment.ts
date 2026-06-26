@@ -33,39 +33,6 @@ type CreatePaymentIntentResponse = {
   payment_currency: string;
   traveler_payout_amount: number;
   platform_fee_amount: number;
-  payment_intent_debug?: {
-    id: string;
-    amount: number;
-    amount_is_integer: boolean;
-    currency: string;
-    currency_is_lowercase: boolean;
-    payment_method_types: string[];
-    automatic_payment_methods: {
-      enabled: boolean;
-      allow_redirects?: string;
-    } | null;
-    application_fee_amount: number | null;
-    transfer_data: unknown;
-    on_behalf_of: string | null;
-    livemode: boolean;
-    status: string;
-    connect_charge_type: "platform_direct" | "connected_account";
-  };
-  stripe_key_debug?: {
-    secret_key_prefix: string;
-    secret_key_livemode: boolean;
-  };
-  stripe_account_debug?: {
-    id: string | null;
-    country: string | null;
-    default_currency: string | null;
-    charges_enabled: boolean | null;
-    payouts_enabled: boolean | null;
-    type: string | null;
-    business_profile_url: string | null;
-    capabilities: Record<string, string> | null;
-  } | null;
-  payment_method_configurations?: unknown;
 };
 
 type SyncPaymentResponse = {

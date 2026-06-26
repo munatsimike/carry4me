@@ -6,18 +6,6 @@ import {
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
 import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
-import type Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
-import {
-  fetchPaymentMethodConfigurationSummary,
-  fetchStripeAccountDebugSummary,
-  stripeKeyDebugSummary,
-  type StripeAccountDebugSummary,
-  type StripeKeyDebugSummary,
-} from "../_shared/stripe/accountDiagnostics.ts";
-import {
-  retrieveAndLogPaymentIntent,
-  type PaymentIntentDebugSummary,
-} from "../_shared/stripe/paymentIntentDiagnostics.ts";
 import { stripeErrorMessage } from "../_shared/stripe/errors.ts";
 
 type RequestBody = {
@@ -47,55 +35,6 @@ function senderPaymentErrorMessage(err: unknown): string {
   }
 
   return "Could not start payment. Try again in a moment or contact support if this continues.";
-}
-
-function stripeSecretKeyPrefix(): string {
-  const key = Deno.env.get("STRIPE_SECRET_KEY")?.trim() ?? "";
-  return key ? `${key.slice(0, 12)}…` : "missing";
-}
-
-async function buildStripeDiagnosticsBundle(
-  stripe: Stripe,
-  paymentIntentId: string,
-  context: {
-    carryRequestId: string;
-    source: "created" | "reused";
-  },
-): Promise<{
-  payment_intent_debug: PaymentIntentDebugSummary;
-  stripe_key_debug: StripeKeyDebugSummary;
-  stripe_account_debug: StripeAccountDebugSummary | null;
-  payment_method_configurations: unknown;
-}> {
-  const secretKey = Deno.env.get("STRIPE_SECRET_KEY")?.trim() ?? "";
-  const stripeKeyDebug = stripeKeyDebugSummary(secretKey);
-  const [paymentIntentDebug, stripeAccountDebug, paymentMethodConfigurations] =
-    await Promise.all([
-      retrieveAndLogPaymentIntent(stripe, paymentIntentId, {
-        carryRequestId: context.carryRequestId,
-        source: context.source,
-        stripeSecretKeyPrefix: stripeKeyDebug.secret_key_prefix,
-      }),
-      fetchStripeAccountDebugSummary(secretKey),
-      fetchPaymentMethodConfigurationSummary(secretKey),
-    ]);
-
-  console.info("create-payment-intent Stripe account diagnostics", {
-    carryRequestId: context.carryRequestId,
-    source: context.source,
-    stripe_key_debug: stripeKeyDebug,
-    stripe_account_debug: stripeAccountDebug,
-    payment_method_configurations: paymentMethodConfigurations,
-    connect_charge_type: paymentIntentDebug.connect_charge_type,
-    connected_account_id: paymentIntentDebug.on_behalf_of,
-  });
-
-  return {
-    payment_intent_debug: paymentIntentDebug,
-    stripe_key_debug: stripeKeyDebug,
-    stripe_account_debug: stripeAccountDebug,
-    payment_method_configurations: paymentMethodConfigurations,
-  };
 }
 
 function buildPaymentIntentCreateParams(
@@ -237,9 +176,6 @@ Deno.serve(async (req) => {
     };
 
     const appUrl = Deno.env.get("APP_URL")?.trim() || "http://localhost:5173";
-    const secretKeyPrefix = stripeSecretKeyPrefix();
-    let diagnosticsBundle: Awaited<ReturnType<typeof buildStripeDiagnosticsBundle>> | null =
-      null;
 
     // Reuse existing pending intent when possible (skip stale test intents after go-live).
     if (
@@ -254,41 +190,20 @@ Deno.serve(async (req) => {
 
         const hasAutomaticPaymentMethods =
           existing.automatic_payment_methods?.enabled === true;
+        const allowsRedirectPaymentMethods =
+          existing.automatic_payment_methods?.allow_redirects !== "never";
 
         const canReuse =
           existing.livemode === stripeLiveMode &&
           existing.currency === amounts.currency.toLowerCase() &&
           hasAutomaticPaymentMethods &&
+          allowsRedirectPaymentMethods &&
           (existing.status === "requires_payment_method" ||
             existing.status === "requires_confirmation" ||
             existing.status === "requires_action");
 
-        if (!canReuse) {
-          console.info("create-payment-intent reuse skipped", {
-            carryRequestId,
-            paymentIntentId: existing.id,
-            livemode: existing.livemode,
-            expectedLivemode: stripeLiveMode,
-            currency: existing.currency,
-            expectedCurrency: amounts.currency.toLowerCase(),
-            hasAutomaticPaymentMethods,
-            payment_method_types: existing.payment_method_types ?? [],
-            automatic_payment_methods: existing.automatic_payment_methods,
-            application_fee_amount: existing.application_fee_amount,
-            transfer_data: existing.transfer_data,
-            on_behalf_of: existing.on_behalf_of,
-            status: existing.status,
-          });
-        }
-
         if (canReuse && existing.client_secret) {
           await extendPaymentWindow();
-
-          diagnosticsBundle = await buildStripeDiagnosticsBundle(
-            stripe,
-            existing.id,
-            { carryRequestId, source: "reused" },
-          );
 
           return jsonResponse({
             client_secret: existing.client_secret,
@@ -297,7 +212,6 @@ Deno.serve(async (req) => {
             payment_currency: amounts.currency,
             traveler_payout_amount: amounts.travelerPayoutAmount,
             platform_fee_amount: amounts.platformFeeAmount,
-            ...diagnosticsBundle,
           });
         }
       } catch (retrieveErr) {
@@ -324,15 +238,6 @@ Deno.serve(async (req) => {
         },
         `Carry4Me carry request ${carryRequestId.slice(0, 8)}`,
       );
-
-      console.info("create-payment-intent creating PaymentIntent", {
-        carryRequestId,
-        amount: createParams.amount,
-        currency: createParams.currency,
-        automatic_payment_methods: createParams.automatic_payment_methods,
-        stripe_secret_key_prefix: secretKeyPrefix,
-        stripe_live_mode: stripeLiveMode,
-      });
 
       paymentIntent = await stripe.paymentIntents.create(createParams);
     } catch (stripeErr) {
@@ -368,19 +273,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Failed to store payment details" }, 500);
     }
 
-    console.info("create-payment-intent ok", {
-      carryRequestId,
-      paymentIntentId: paymentIntent.id,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-    });
-
-    diagnosticsBundle = await buildStripeDiagnosticsBundle(
-      stripe,
-      paymentIntent.id,
-      { carryRequestId, source: "created" },
-    );
-
     return jsonResponse({
       client_secret: paymentIntent.client_secret,
       payment_intent_id: paymentIntent.id,
@@ -389,7 +281,6 @@ Deno.serve(async (req) => {
       traveler_payout_amount: amounts.travelerPayoutAmount,
       platform_fee_amount: amounts.platformFeeAmount,
       return_url: appUrl,
-      ...diagnosticsBundle,
     });
   } catch (err) {
     if (isResponse(err)) return err;
