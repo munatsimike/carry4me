@@ -417,6 +417,7 @@ export default function PayCarryRequestPage() {
             paymentAmount: result.payment_amount,
             originCountry: carryRequest.parcelSnapshot.origin.country ?? "UK",
             stripeLiveMode: isStripeLiveMode(),
+            paymentIntentDebug: result.payment_intent_debug ?? null,
           });
           setClientSecret(result.client_secret);
           setPaymentAmount(result.payment_amount);

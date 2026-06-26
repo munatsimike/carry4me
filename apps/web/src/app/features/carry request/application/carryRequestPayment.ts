@@ -33,6 +33,24 @@ type CreatePaymentIntentResponse = {
   payment_currency: string;
   traveler_payout_amount: number;
   platform_fee_amount: number;
+  payment_intent_debug?: {
+    id: string;
+    amount: number;
+    amount_is_integer: boolean;
+    currency: string;
+    currency_is_lowercase: boolean;
+    payment_method_types: string[];
+    automatic_payment_methods: {
+      enabled: boolean;
+      allow_redirects?: string;
+    } | null;
+    application_fee_amount: number | null;
+    transfer_data: unknown;
+    on_behalf_of: string | null;
+    livemode: boolean;
+    status: string;
+    connect_charge_type: "platform_direct" | "connected_account";
+  };
 };
 
 type SyncPaymentResponse = {
