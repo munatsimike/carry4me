@@ -7,5 +7,8 @@ export function useCarryRequests(userId: string | undefined) {
     queryKey: queryKeys.carryRequests.list(userId ?? ""),
     queryFn: () => fetchCarryRequestsUseCase.execute(userId!),
     enabled: !!userId,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }

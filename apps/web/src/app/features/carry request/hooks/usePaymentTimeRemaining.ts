@@ -26,7 +26,7 @@ export function usePaymentTimeRemaining(
     };
 
     update();
-    const intervalId = window.setInterval(update, 30_000);
+    const intervalId = window.setInterval(update, 1_000);
 
     return () => {
       window.clearInterval(intervalId);

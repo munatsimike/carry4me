@@ -587,6 +587,10 @@ export default function CarryRequestsPage() {
             label: "Close",
           });
         }
+
+        await queryClient.refetchQueries({
+          queryKey: queryKeys.carryRequests.all,
+        });
         return;
       }
 
@@ -684,6 +688,9 @@ export default function CarryRequestsPage() {
         );
 
       if (!response.ok) {
+        await queryClient.refetchQueries({
+          queryKey: queryKeys.carryRequests.all,
+        });
         return;
       }
 

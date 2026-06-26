@@ -153,27 +153,11 @@ Deno.serve(async (req) => {
       1,
       Number.parseInt(paymentWindowSetting?.value ?? "10", 10) || 10,
     );
-    const paymentExpiresAt = new Date(
+    const fallbackPaymentExpiresAt = new Date(
       Date.now() + paymentWindowMinutes * 60 * 1000,
     ).toISOString();
-
-    const extendPaymentWindow = async () => {
-      const { error: extendError } = await supabaseAdmin
-        .from("carry_requests")
-        .update({
-          payment_expires_at: paymentExpiresAt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", carryRequestId)
-        .eq("status", "PENDING_PAYMENT");
-
-      if (extendError) {
-        console.error(
-          "create-payment-intent extend payment window failed",
-          extendError.message,
-        );
-      }
-    };
+    const resolvedPaymentExpiresAt =
+      carryRequest.payment_expires_at ?? fallbackPaymentExpiresAt;
 
     const appUrl = Deno.env.get("APP_URL")?.trim() || "http://localhost:5173";
 
@@ -203,8 +187,6 @@ Deno.serve(async (req) => {
             existing.status === "requires_action");
 
         if (canReuse && existing.client_secret) {
-          await extendPaymentWindow();
-
           return jsonResponse({
             client_secret: existing.client_secret,
             payment_intent_id: existing.id,
@@ -263,7 +245,7 @@ Deno.serve(async (req) => {
         payment_currency: amounts.currency,
         platform_fee_amount: amounts.platformFeeAmount,
         traveler_payout_amount: amounts.travelerPayoutAmount,
-        payment_expires_at: paymentExpiresAt,
+        payment_expires_at: resolvedPaymentExpiresAt,
         updated_at: new Date().toISOString(),
       })
       .eq("id", carryRequestId);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { ArrowLeft, MoveRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -17,6 +17,9 @@ import DefaultContainer from "@/components/ui/DefualtContianer";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/app/components/card/Card";
+import CardLabel from "@/app/components/card/CardLabel";
+import RouteRow from "@/app/components/RouteRow";
+import LineDivider from "@/app/components/LineDivider";
 import Spinner from "@/app/components/Spinner";
 import {
   getStripePromise,
@@ -35,13 +38,11 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { CARRY_REQUEST_STATUSES } from "../domain/CreateCarryRequest";
-import SvgIcon from "@/components/ui/SvgIcon";
-import { toflag } from "@/app/Mapper";
 
 function formatParcelWeight(weightKg: number): string {
   const value = Number(weightKg);
   if (!Number.isFinite(value) || value <= 0) return "—";
-  return Number.isInteger(value) ? `${value} kg` : `${value.toFixed(1)} kg`;
+  return Number.isInteger(value) ? `${value}kg` : `${value.toFixed(1)}kg`;
 }
 
 function isNetherlandsOrigin(country: string): boolean {
@@ -304,7 +305,7 @@ export default function PayCarryRequestPage() {
   const { openInfo, showSupabaseError } = useUniversalModal();
   const paymentReturnHandledRef = useRef<string | null>(null);
 
-  const { data: carryRequestsData, isPending: requestsPending } = useCarryRequests(
+  const { data: carryRequestsData, isPending: requestsPending, refetch: refetchCarryRequests } = useCarryRequests(
     user?.id,
   );
 
@@ -389,14 +390,22 @@ export default function PayCarryRequestPage() {
     };
   }, []);
 
+  const carryRequestSenderId = carryRequest?.senderUserId;
+  const carryRequestStatus = carryRequest?.status;
+
   useEffect(() => {
-    if (!carryRequestId || !carryRequest) return;
-    if (carryRequest.senderUserId !== user?.id) return;
-    if (carryRequest.status !== CARRY_REQUEST_STATUSES.PENDING_PAYMENT) return;
+    if (!carryRequestId || !user?.id || !carryRequestSenderId || !carryRequestStatus) {
+      return;
+    }
+    if (carryRequestSenderId !== user.id) return;
+    if (carryRequestStatus !== CARRY_REQUEST_STATUSES.PENDING_PAYMENT) return;
 
     let cancelled = false;
 
     void (async () => {
+      await refetchCarryRequests();
+      if (cancelled) return;
+
       try {
         const result = await createCarryRequestPaymentIntent(carryRequestId);
         if (!cancelled) {
@@ -416,7 +425,13 @@ export default function PayCarryRequestPage() {
     return () => {
       cancelled = true;
     };
-  }, [carryRequest, carryRequestId, user?.id]);
+  }, [
+    carryRequestId,
+    carryRequestSenderId,
+    carryRequestStatus,
+    refetchCarryRequests,
+    user?.id,
+  ]);
 
   useEffect(() => {
     const paymentIntentId = searchParams.get("payment_intent")?.trim();
@@ -509,8 +524,6 @@ export default function PayCarryRequestPage() {
   }
 
   const parcel = carryRequest.parcelSnapshot;
-  const originFlag = toflag(parcel.origin.country);
-  const destinationFlag = toflag(parcel.destination.country);
 
   return (
     <DefaultContainer className="max-w-none">
@@ -536,35 +549,22 @@ export default function PayCarryRequestPage() {
           <div className="flex flex-col gap-6">
             <Card enableHover={false} sizeClass="max-w-none" className="w-full p-4 sm:p-6">
               <div className="flex flex-col gap-4">
-                <span className="inline-flex w-fit items-center rounded-full border border-neutral-100 bg-neutral-100 px-3 py-1">
-                  <CustomText textSize="xs" textVariant="primary" className="font-medium">
-                    Parcel
-                  </CustomText>
-                </span>
-
-                <div className="rounded-xl border border-neutral-100 bg-neutral-50/80 px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    {originFlag ? <SvgIcon size="xs" Icon={originFlag} /> : null}
-                    <CustomText textSize="sm" className="font-medium">
-                      {parcel.origin.country}
-                    </CustomText>
-                    <MoveRight
-                      className="h-4 w-4 shrink-0 text-neutral-400"
-                      strokeWidth={1.5}
-                      aria-hidden
-                    />
-                    {destinationFlag ? (
-                      <SvgIcon size="xs" Icon={destinationFlag} />
-                    ) : null}
-                    <CustomText textSize="sm" className="font-medium">
-                      {parcel.destination.country}
-                    </CustomText>
-                  </div>
+                <div className="w-fit">
+                  <CardLabel variant="parcel" label="Parcel" />
                 </div>
+
+                <RouteRow
+                  origin={parcel.origin.country}
+                  originCity={parcel.origin.city}
+                  destination={parcel.destination.country}
+                  destinationCity={parcel.destination.city}
+                />
+
+                <LineDivider heightClass="my-1" />
 
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-2">
                   <CustomText textSize="sm" textVariant="secondary">
-                    Weight
+                    Parcel weight
                   </CustomText>
                   <CustomText textSize="sm" textVariant="primary" className="text-right tabular-nums">
                     {formatParcelWeight(parcel.weight_kg)}
