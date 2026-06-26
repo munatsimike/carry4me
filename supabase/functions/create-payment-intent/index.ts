@@ -158,14 +158,13 @@ Deno.serve(async (req) => {
           carryRequest.stripe_payment_intent_id,
         );
 
-        const paymentMethodTypes = existing.payment_method_types ?? [];
-        const cardOnlyIntent =
-          paymentMethodTypes.length === 0 ||
-          paymentMethodTypes.every((type) => type === "card");
+        const hasAutomaticPaymentMethods =
+          existing.automatic_payment_methods?.enabled === true;
 
         const canReuse =
           existing.livemode === stripeLiveMode &&
-          cardOnlyIntent &&
+          existing.currency === amounts.currency &&
+          hasAutomaticPaymentMethods &&
           (existing.status === "requires_payment_method" ||
             existing.status === "requires_confirmation" ||
             existing.status === "requires_action");

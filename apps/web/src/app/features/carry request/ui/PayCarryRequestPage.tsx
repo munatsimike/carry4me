@@ -12,6 +12,7 @@ import {
 import type {
   Stripe,
   StripeExpressCheckoutElementConfirmEvent,
+  StripeExpressCheckoutElementOptions,
   StripeExpressCheckoutElementReadyEvent,
 } from "@stripe/stripe-js";
 import DefaultContainer from "@/components/ui/DefualtContianer";
@@ -68,6 +69,18 @@ function logExpressCheckoutContext(context: ExpressCheckoutLogContext) {
   });
 }
 
+const EXPRESS_CHECKOUT_ELEMENT_OPTIONS: StripeExpressCheckoutElementOptions = {
+  paymentMethods: {
+    googlePay: "always",
+    applePay: "auto",
+    link: "auto",
+    amazonPay: "never",
+    paypal: "never",
+    klarna: "never",
+  },
+  paymentMethodOrder: ["google_pay", "apple_pay", "link"],
+};
+
 function PaymentCheckoutForm({
   carryRequestId,
   clientSecret,
@@ -97,6 +110,20 @@ function PaymentCheckoutForm({
     }),
     [carryRequestId, paymentAmount, paymentCurrency, originCountry],
   );
+
+  useEffect(() => {
+    if (!clientSecret) return;
+
+    console.log("[ExpressCheckout] mount options", EXPRESS_CHECKOUT_ELEMENT_OPTIONS);
+    console.log("[ExpressCheckout] Elements provider", {
+      clientSecretPresent: true,
+      clientSecretPrefix: `${clientSecret.slice(0, 24)}…`,
+      paymentCurrency,
+      originCountry,
+      paymentAmount,
+      sameElementsInstance: Boolean(stripe && elements),
+    });
+  }, [clientSecret, elements, originCountry, paymentAmount, paymentCurrency, stripe]);
 
   const completeSuccessfulPayment = async () => {
     const syncResult = await syncCarryRequestPayment(carryRequestId);
@@ -235,16 +262,7 @@ function PaymentCheckoutForm({
             onConfirm={(event) => {
               void handleExpressConfirm(event);
             }}
-            options={{
-              paymentMethods: {
-                googlePay: "always",
-                applePay: "auto",
-                link: "auto",
-                amazonPay: "never",
-                paypal: "never",
-                klarna: "never",
-              },
-            }}
+            options={EXPRESS_CHECKOUT_ELEMENT_OPTIONS}
           />
         </div>
       ) : null}
