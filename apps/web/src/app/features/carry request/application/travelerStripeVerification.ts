@@ -23,20 +23,34 @@ type ConnectOnboardingResponse = ConnectStatusResponse & {
   code?: string;
 };
 
-type OnboardingRedirectOptions = {
+type TravelerStripeReadyOptions = {
+  openInfo: (payload: Omit<InfoModalPayload, "type">) => void;
   returnUrl?: string;
   refreshUrl?: string;
+  onStripeSynced?: () => void | Promise<void>;
 };
 
 const VERIFICATION_MESSAGE =
   "To receive payouts for your deliveries, you need to complete a quick identity and bank account verification with Stripe. This helps us securely send your earnings and keep the platform safe.";
 
-function resolveOnboardingUrls(options: OnboardingRedirectOptions = {}) {
+function resolveOnboardingUrls(options: TravelerStripeReadyOptions = {} as TravelerStripeReadyOptions) {
   const origin = window.location.origin;
   return {
     returnUrl: options.returnUrl ?? `${origin}/requests?stripe=return`,
     refreshUrl: options.refreshUrl ?? `${origin}/requests?stripe=refresh`,
   };
+}
+
+export function isTravelerStripeReadyForAccept(
+  status: ConnectStatusResponse | null | undefined,
+): boolean {
+  if (!status) return false;
+
+  return (
+    status.onboarding_complete === true ||
+    status.verified === true ||
+    (!!status.stripe_account_id && status.stripe_details_submitted === true)
+  );
 }
 
 function handleStripeVerificationError(
@@ -88,11 +102,10 @@ function handleStripeVerificationError(
 }
 
 /**
- * Creates/reuses the Connect account and redirects to Stripe.
- * Only call after the user explicitly chooses to continue onboarding.
+ * Syncs from Stripe and redirects to hosted onboarding when still required.
  */
 export async function redirectToTravelerStripeOnboarding(
-  options: OnboardingRedirectOptions = {},
+  options: TravelerStripeReadyOptions = {} as TravelerStripeReadyOptions,
 ): Promise<boolean> {
   const { returnUrl, refreshUrl } = resolveOnboardingUrls(options);
 
@@ -101,7 +114,8 @@ export async function redirectToTravelerStripeOnboarding(
     { return_url: returnUrl, refresh_url: refreshUrl },
   );
 
-  if (onboarding.verified || onboarding.onboarding_complete) {
+  if (isTravelerStripeReadyForAccept(onboarding)) {
+    await options.onStripeSynced?.();
     return true;
   }
 
@@ -115,30 +129,6 @@ export async function redirectToTravelerStripeOnboarding(
   return false;
 }
 
-function openTravelerStripeOnboardingPrompt(options: {
-  openInfo: (payload: Omit<InfoModalPayload, "type">) => void;
-  returnUrl?: string;
-  refreshUrl?: string;
-}): false {
-  options.openInfo({
-    title: "Stripe verification required",
-    message: VERIFICATION_MESSAGE,
-    width: "xl",
-    label: "Continue to Stripe",
-    onClick: () => {
-      void (async () => {
-        try {
-          await redirectToTravelerStripeOnboarding(options);
-        } catch (err) {
-          handleStripeVerificationError(err, options.openInfo);
-        }
-      })();
-    },
-    secondaryLabel: "Maybe later",
-  });
-  return false;
-}
-
 export async function fetchTravelerStripeConnectStatus(): Promise<ConnectStatusResponse> {
   return invokeStripeFunction<ConnectStatusResponse>("stripe-connect-status", {});
 }
@@ -146,11 +136,9 @@ export async function fetchTravelerStripeConnectStatus(): Promise<ConnectStatusR
 /**
  * Starts onboarding immediately (user already clicked an explicit setup action).
  */
-export async function startTravelerStripeOnboarding(options: {
-  openInfo: (payload: Omit<InfoModalPayload, "type">) => void;
-  returnUrl?: string;
-  refreshUrl?: string;
-}): Promise<boolean> {
+export async function startTravelerStripeOnboarding(
+  options: TravelerStripeReadyOptions,
+): Promise<boolean> {
   try {
     return await redirectToTravelerStripeOnboarding(options);
   } catch (err) {
@@ -158,11 +146,35 @@ export async function startTravelerStripeOnboarding(options: {
   }
 }
 
-export async function ensureTravelerStripeReady(options: {
-  openInfo: (payload: Omit<InfoModalPayload, "type">) => void;
-  returnUrl?: string;
-  refreshUrl?: string;
-}): Promise<boolean> {
+function promptTravelerStripeOnboarding(
+  options: TravelerStripeReadyOptions,
+): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    options.openInfo({
+      title: "Stripe verification required",
+      message: VERIFICATION_MESSAGE,
+      width: "xl",
+      label: "Continue to Stripe",
+      secondaryLabel: "Maybe later",
+      secondaryAction: () => resolve(false),
+      onClick: () => {
+        void (async () => {
+          try {
+            const ready = await redirectToTravelerStripeOnboarding(options);
+            resolve(ready);
+          } catch (err) {
+            handleStripeVerificationError(err, options.openInfo);
+            resolve(false);
+          }
+        })();
+      },
+    });
+  });
+}
+
+export async function ensureTravelerStripeReady(
+  options: TravelerStripeReadyOptions,
+): Promise<boolean> {
   let status: ConnectStatusResponse | null = null;
 
   try {
@@ -171,12 +183,7 @@ export async function ensureTravelerStripeReady(options: {
     status = null;
   }
 
-  if (status?.onboarding_complete || status?.verified) {
-    return true;
-  }
-
-  // Onboarding finished in Stripe but payouts may still be activating.
-  if (status?.stripe_details_submitted && status?.stripe_account_id) {
+  if (isTravelerStripeReadyForAccept(status)) {
     return true;
   }
 
@@ -200,7 +207,7 @@ export async function ensureTravelerStripeReady(options: {
     return false;
   }
 
-  return openTravelerStripeOnboardingPrompt(options);
+  return promptTravelerStripeOnboarding(options);
 }
 
 export function resolveConnectStateFromStatus(

@@ -540,7 +540,10 @@ export default function CarryRequestsPage() {
 
         if (accepterIsTraveler) {
           try {
-            const stripeReady = await ensureTravelerStripeReady({ openInfo });
+            const stripeReady = await ensureTravelerStripeReady({
+              openInfo,
+              onStripeSynced: () => refreshProfile({ silent: true }),
+            });
             if (!stripeReady) {
               return;
             }

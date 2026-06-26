@@ -57,7 +57,7 @@ export default function RequestSummary({
 
   const [requestLoaded, setLoadRequest] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const { showSupabaseError, openInfo, confirm } = useUniversalModal();
   const navigate = useNavigate();
@@ -235,7 +235,10 @@ export default function RequestSummary({
           // Travelers must complete Stripe onboarding before sending/accepting paid requests.
           if (!isSenderRequesting) {
             try {
-              const stripeReady = await ensureTravelerStripeReady({ openInfo });
+              const stripeReady = await ensureTravelerStripeReady({
+                openInfo,
+                onStripeSynced: () => refreshProfile({ silent: true }),
+              });
               if (!stripeReady) return;
             } catch (err) {
               showSupabaseError(err);
