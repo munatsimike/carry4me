@@ -1,6 +1,8 @@
 import type Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
-import { isStripeLiveMode } from "./client.ts";
+import {
+  refreshStripeConnectAccountStatus,
+} from "./connectAccount.ts";
 import {
   isStaleStripeConnectAccountError,
   stripeErrorMessage,
@@ -8,7 +10,6 @@ import {
 import {
   isTravelerStripeVerified,
   loadTravelerProfile,
-  mapStripeVerificationStatus,
   resetStripeConnectProfile,
 } from "./profiles.ts";
 
@@ -35,31 +36,18 @@ async function resolveTravelerDestinationAccount(
   }
 
   try {
-    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
+    const refreshed = await refreshStripeConnectAccountStatus(
+      stripe,
+      supabaseAdmin,
+      profile,
+      travelerUserId,
+    );
 
-    if (account.livemode !== isStripeLiveMode()) {
-      await resetStripeConnectProfile(supabaseAdmin, travelerUserId);
+    if (!isTravelerStripeVerified(refreshed)) {
       return null;
     }
 
-    if (!account.charges_enabled || !account.payouts_enabled) {
-      return null;
-    }
-
-    const verificationStatus = mapStripeVerificationStatus(account);
-    await supabaseAdmin
-      .from("profiles")
-      .update({
-        stripe_account_id: account.id,
-        stripe_charges_enabled: account.charges_enabled === true,
-        stripe_payouts_enabled: account.payouts_enabled === true,
-        stripe_details_submitted: account.details_submitted === true,
-        stripe_verification_status: verificationStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", travelerUserId);
-
-    return account.id;
+    return refreshed.stripe_account_id;
   } catch (err) {
     if (isStaleStripeConnectAccountError(err)) {
       await resetStripeConnectProfile(supabaseAdmin, travelerUserId);

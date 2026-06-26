@@ -4,19 +4,35 @@ import {
   isResponse,
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
-import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
-import { isStaleStripeConnectAccountError } from "../_shared/stripe/errors.ts";
+import { getStripe } from "../_shared/stripe/client.ts";
+import {
+  ensureStripeConnectAccountId,
+  getStripeConnectClientState,
+  syncStripeConnectAccountToProfile,
+} from "../_shared/stripe/connectAccount.ts";
 import {
   isTravelerStripeVerified,
   loadTravelerProfile,
-  mapStripeVerificationStatus,
-  resetStripeConnectProfile,
 } from "../_shared/stripe/profiles.ts";
 
 type RequestBody = {
   return_url?: string;
   refresh_url?: string;
 };
+
+function connectStatusPayload(profile: NonNullable<Awaited<ReturnType<typeof loadTravelerProfile>>>) {
+  return {
+    verified: isTravelerStripeVerified(profile),
+    connect_state: getStripeConnectClientState(profile),
+    stripe_account_id: profile.stripe_account_id,
+    stripe_charges_enabled: profile.stripe_charges_enabled,
+    stripe_payouts_enabled: profile.stripe_payouts_enabled,
+    stripe_details_submitted: profile.stripe_details_submitted,
+    stripe_verification_status: profile.stripe_verification_status ?? "not_started",
+    phone_verified: profile.phone_verified,
+    email_verified: profile.email_verified,
+  };
+}
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -58,9 +74,8 @@ Deno.serve(async (req) => {
 
     if (isTravelerStripeVerified(profile)) {
       return jsonResponse({
-        verified: true,
+        ...connectStatusPayload(profile),
         onboarding_url: null,
-        stripe_account_id: profile.stripe_account_id,
       });
     }
 
@@ -68,68 +83,13 @@ Deno.serve(async (req) => {
     const returnUrl = body.return_url?.trim() || `${appUrl}/requests?stripe=return`;
     const refreshUrl = body.refresh_url?.trim() || `${appUrl}/requests?stripe=refresh`;
 
-    let accountId = profile.stripe_account_id;
-    const stripeLiveMode = isStripeLiveMode();
-
-    if (accountId) {
-      try {
-        const existing = await stripe.accounts.retrieve(accountId);
-        if (existing.livemode !== stripeLiveMode) {
-          console.warn(
-            "stripe-connect-onboarding stale account mode mismatch cleared",
-            accountId,
-          );
-          const resetProfile = await resetStripeConnectProfile(supabaseAdmin, user.id);
-          if (!resetProfile) {
-            return jsonResponse({ error: "Failed to reset Stripe profile" }, 500);
-          }
-          accountId = null;
-        }
-      } catch (err) {
-        if (isStaleStripeConnectAccountError(err)) {
-          console.warn(
-            "stripe-connect-onboarding stale account cleared",
-            accountId,
-          );
-          const resetProfile = await resetStripeConnectProfile(supabaseAdmin, user.id);
-          if (!resetProfile) {
-            return jsonResponse({ error: "Failed to reset Stripe profile" }, 500);
-          }
-          accountId = null;
-        } else {
-          throw err;
-        }
-      }
-    }
-
-    if (!accountId) {
-      const account = await stripe.accounts.create({
-        type: "express",
-        email: profile.email ?? user.email ?? undefined,
-        metadata: { user_id: user.id },
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
-        business_type: "individual",
-      });
-
-      accountId = account.id;
-
-      const { error: saveError } = await supabaseAdmin
-        .from("profiles")
-        .update({
-          stripe_account_id: accountId,
-          stripe_verification_status: "incomplete",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
-
-      if (saveError) {
-        console.error("stripe-connect-onboarding save account failed", saveError.message);
-        return jsonResponse({ error: "Failed to save Stripe account" }, 500);
-      }
-    }
+    const accountId = await ensureStripeConnectAccountId(
+      stripe,
+      supabaseAdmin,
+      profile,
+      user.id,
+      user.email,
+    );
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
@@ -139,24 +99,16 @@ Deno.serve(async (req) => {
     });
 
     const account = await stripe.accounts.retrieve(accountId);
-    const verificationStatus = mapStripeVerificationStatus(account);
+    await syncStripeConnectAccountToProfile(supabaseAdmin, user.id, account);
 
-    await supabaseAdmin
-      .from("profiles")
-      .update({
-        stripe_charges_enabled: account.charges_enabled === true,
-        stripe_payouts_enabled: account.payouts_enabled === true,
-        stripe_details_submitted: account.details_submitted === true,
-        stripe_verification_status: verificationStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
+    const refreshed = await loadTravelerProfile(supabaseAdmin, user.id);
+    if (!refreshed) {
+      return jsonResponse({ error: "Profile not found" }, 404);
+    }
 
     return jsonResponse({
-      verified: false,
+      ...connectStatusPayload(refreshed),
       onboarding_url: accountLink.url,
-      stripe_account_id: accountId,
-      stripe_verification_status: verificationStatus,
     });
   } catch (err) {
     if (isResponse(err)) return err;

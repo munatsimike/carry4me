@@ -3,6 +3,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { handleCorsPreflight } from "../_shared/cors.ts";
 import { jsonResponse, requireEnv } from "../_shared/stripe/auth.ts";
 import { getStripe } from "../_shared/stripe/client.ts";
+import {
+  findProfileIdByStripeAccountId,
+  syncStripeConnectAccountToProfile,
+} from "../_shared/stripe/connectAccount.ts";
 import { transferTravelerPayoutForPayment } from "../_shared/stripe/travelerTransfer.ts";
 
 // TODO: handle charge.refunded — restore carry request / notify parties
@@ -58,6 +62,11 @@ Deno.serve(async (req) => {
       case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         await handlePaymentIntentFailed(supabaseAdmin, paymentIntent);
+        break;
+      }
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        await handleAccountUpdated(supabaseAdmin, account);
         break;
       }
       default:
@@ -181,5 +190,25 @@ async function handlePaymentIntentFailed(
   console.info("payment_intent.payment_failed processed", {
     carryRequestId,
     paymentIntentId: paymentIntent.id,
+  });
+}
+
+async function handleAccountUpdated(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  account: Stripe.Account,
+) {
+  const userId = await findProfileIdByStripeAccountId(supabaseAdmin, account.id);
+  if (!userId) {
+    console.info("stripe-webhook account.updated ignored unknown account", account.id);
+    return;
+  }
+
+  await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
+
+  console.info("stripe-webhook account.updated synced", {
+    userId,
+    accountId: account.id,
+    detailsSubmitted: account.details_submitted,
+    payoutsEnabled: account.payouts_enabled,
   });
 }

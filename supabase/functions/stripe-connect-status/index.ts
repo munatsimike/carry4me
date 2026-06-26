@@ -4,22 +4,26 @@ import {
   isResponse,
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
-import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
+import { getStripe } from "../_shared/stripe/client.ts";
 import {
   isStaleStripeConnectAccountError,
   stripeErrorMessage,
 } from "../_shared/stripe/errors.ts";
 import {
+  getStripeConnectClientState,
+  refreshStripeConnectAccountStatus,
+} from "../_shared/stripe/connectAccount.ts";
+import {
   isTravelerStripeVerified,
   loadTravelerProfile,
-  mapStripeVerificationStatus,
   resetStripeConnectProfile,
   type TravelerStripeProfile,
 } from "../_shared/stripe/profiles.ts";
 
-function unverifiedStatusResponse(profile: TravelerStripeProfile) {
-  return jsonResponse({
-    verified: false,
+function connectStatusPayload(profile: TravelerStripeProfile) {
+  return {
+    verified: isTravelerStripeVerified(profile),
+    connect_state: getStripeConnectClientState(profile),
     stripe_account_id: profile.stripe_account_id,
     stripe_charges_enabled: profile.stripe_charges_enabled,
     stripe_payouts_enabled: profile.stripe_payouts_enabled,
@@ -27,7 +31,7 @@ function unverifiedStatusResponse(profile: TravelerStripeProfile) {
     stripe_verification_status: profile.stripe_verification_status ?? "not_started",
     phone_verified: profile.phone_verified,
     email_verified: profile.email_verified,
-  });
+  };
 }
 
 Deno.serve(async (req) => {
@@ -48,24 +52,16 @@ Deno.serve(async (req) => {
     }
 
     if (!profile.stripe_account_id) {
-      return unverifiedStatusResponse(profile);
+      return jsonResponse(connectStatusPayload(profile));
     }
 
-    let account;
     try {
-      account = await stripe.accounts.retrieve(profile.stripe_account_id);
-
-      if (account.livemode !== isStripeLiveMode()) {
-        console.warn(
-          "stripe-connect-status stale account mode mismatch cleared",
-          profile.stripe_account_id,
-        );
-        profile = await resetStripeConnectProfile(supabaseAdmin, user.id);
-        if (!profile) {
-          return jsonResponse({ error: "Failed to reset Stripe profile" }, 500);
-        }
-        return unverifiedStatusResponse(profile);
-      }
+      profile = await refreshStripeConnectAccountStatus(
+        stripe,
+        supabaseAdmin,
+        profile,
+        user.id,
+      );
     } catch (err) {
       if (isStaleStripeConnectAccountError(err)) {
         console.warn(
@@ -73,11 +69,11 @@ Deno.serve(async (req) => {
           profile.stripe_account_id,
           stripeErrorMessage(err),
         );
-        profile = await resetStripeConnectProfile(supabaseAdmin, user.id);
-        if (!profile) {
+        const resetProfile = await resetStripeConnectProfile(supabaseAdmin, user.id);
+        if (!resetProfile) {
           return jsonResponse({ error: "Failed to reset Stripe profile" }, 500);
         }
-        return unverifiedStatusResponse(profile);
+        return jsonResponse(connectStatusPayload(resetProfile));
       }
 
       console.error(
@@ -93,44 +89,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const verificationStatus = mapStripeVerificationStatus(account);
-
-    const { error: updateError } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        stripe_account_id: account.id,
-        stripe_charges_enabled: account.charges_enabled === true,
-        stripe_payouts_enabled: account.payouts_enabled === true,
-        stripe_details_submitted: account.details_submitted === true,
-        stripe_verification_status: verificationStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
-
-    if (updateError) {
-      console.error("stripe-connect-status update failed", updateError.message);
-      return jsonResponse({ error: "Failed to update profile" }, 500);
-    }
-
-    const refreshed = {
-      ...profile,
-      stripe_account_id: account.id,
-      stripe_charges_enabled: account.charges_enabled === true,
-      stripe_payouts_enabled: account.payouts_enabled === true,
-      stripe_details_submitted: account.details_submitted === true,
-      stripe_verification_status: verificationStatus,
-    };
-
-    return jsonResponse({
-      verified: isTravelerStripeVerified(refreshed),
-      stripe_account_id: refreshed.stripe_account_id,
-      stripe_charges_enabled: refreshed.stripe_charges_enabled,
-      stripe_payouts_enabled: refreshed.stripe_payouts_enabled,
-      stripe_details_submitted: refreshed.stripe_details_submitted,
-      stripe_verification_status: refreshed.stripe_verification_status,
-      phone_verified: refreshed.phone_verified,
-      email_verified: refreshed.email_verified,
-    });
+    return jsonResponse(connectStatusPayload(profile));
   } catch (err) {
     if (isResponse(err)) return err;
     console.error("stripe-connect-status error", err);
