@@ -5,6 +5,7 @@ const SUPPORTED_PHONE_COUNTRIES = [
   { countryCode: "UK", dialCode: "+44", name: "United Kingdom" },
   { countryCode: "USA", dialCode: "+1", name: "United States of America" },
   { countryCode: "NL", dialCode: "+31", name: "Netherlands" },
+  { countryCode: "FR", dialCode: "+33", name: "France" },
   { countryCode: "Zimbabwe", dialCode: "+263", name: "Zimbabwe" },
 ] as const;
 
@@ -17,6 +18,8 @@ export const FALLBACK_CITIES_BY_COUNTRY_CODE: Record<string, string[]> = {
   UK: ["London", "Birmingham", "Manchester"],
   USA: ["Houston", "Dallas", "Atlanta"],
   NL: ["Amsterdam", "Rotterdam", "The Hague", "Utrecht", "Eindhoven"],
+  FR: ["Paris", "Lyon", "Marseille", "Mulhouse"],
+  France: ["Paris", "Lyon", "Marseille"],
   Zimbabwe: ["Harare", "Bulawayo"],
   ZW: ["Harare", "Bulawayo"],
 };
@@ -102,6 +105,9 @@ export function toIsoCountryCode(country: string | null | undefined) {
     case "NL":
     case "Netherlands":
       return "NL";
+    case "FR":
+    case "France":
+      return "FR";
     default:
       return null;
   }
@@ -128,6 +134,9 @@ export function toCountryName(
     case "NL":
     case "Netherlands":
       return "Netherlands";
+    case "FR":
+    case "France":
+      return "France";
     default:
       return null;
   }
@@ -155,6 +164,8 @@ export function normalizeCountryCode(
       return "USA";
     case "Netherlands":
       return "NL";
+    case "France":
+      return "FR";
     case "Zimbabwe":
       return "ZW";
     case "ZW":
