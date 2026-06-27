@@ -15,6 +15,10 @@ import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 import type { PhoneWithCountryFields } from "../../validation/phoneWithCountrySchema";
 
+/** Shared by sign-in, complete profile, phone entry, and profile phone change. */
+const COUNTRY_CODE_MENU_CLASSNAME =
+  "fixed z-[120] max-h-[min(50vh,12rem)] overflow-y-auto overscroll-y-contain rounded-xl border border-slate-200 bg-white shadow-lg";
+
 type PhoneNumberWithCountryFieldsProps = {
   register: UseFormRegister<PhoneWithCountryFields>;
   setValue: UseFormSetValue<PhoneWithCountryFields>;
@@ -112,7 +116,7 @@ export default function PhoneNumberWithCountryFields({
         ref={countryMenuListRef}
         role="listbox"
         aria-label="Country codes"
-        className="fixed z-[120] max-h-[min(50vh,16rem)] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
+        className={COUNTRY_CODE_MENU_CLASSNAME}
         style={{
           top: countryMenuPosition.top,
           left: countryMenuPosition.left,

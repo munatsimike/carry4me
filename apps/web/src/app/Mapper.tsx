@@ -4,6 +4,7 @@ export const DEFAULT_VARIANT = "primary" as const;
 const SUPPORTED_PHONE_COUNTRIES = [
   { countryCode: "UK", dialCode: "+44", name: "United Kingdom" },
   { countryCode: "USA", dialCode: "+1", name: "United States of America" },
+  { countryCode: "IE", dialCode: "+353", name: "Ireland" },
   { countryCode: "NL", dialCode: "+31", name: "Netherlands" },
   { countryCode: "FR", dialCode: "+33", name: "France" },
   { countryCode: "Zimbabwe", dialCode: "+263", name: "Zimbabwe" },
@@ -17,6 +18,8 @@ const DIAL_CODES_LONGEST_FIRST = [...SUPPORTED_PHONE_COUNTRIES].sort(
 export const FALLBACK_CITIES_BY_COUNTRY_CODE: Record<string, string[]> = {
   UK: ["London", "Birmingham", "Manchester"],
   USA: ["Houston", "Dallas", "Atlanta"],
+  IE: ["Dublin", "Cork", "Galway"],
+  Ireland: ["Dublin", "Cork", "Galway"],
   NL: ["Amsterdam", "Rotterdam", "The Hague", "Utrecht", "Eindhoven"],
   FR: ["Paris", "Lyon", "Marseille", "Mulhouse"],
   France: ["Paris", "Lyon", "Marseille"],
@@ -42,6 +45,9 @@ export function toflag(country: string | null | undefined) {
     case "United States":
     case "United States of America":
       return META_ICONS.uSFlagIcon;
+    case "IE":
+    case "Ireland":
+      return META_ICONS.ieFlag;
     case "Zimbabwe":
     case "ZW":
       return META_ICONS.zimFlag;
@@ -72,6 +78,9 @@ export function toDialCode(country: string | null | undefined): string | null {
     case "United States":
     case "United States of America":
       return "+1";
+    case "IE":
+    case "Ireland":
+      return "+353";
     case "Zimbabwe":
     case "ZW":
       return "+263";
@@ -99,6 +108,9 @@ export function toIsoCountryCode(country: string | null | undefined) {
     case "United States":
     case "United States of America":
       return "US";
+    case "IE":
+    case "Ireland":
+      return "IE";
     case "Zimbabwe":
     case "ZW":
       return "ZW";
@@ -128,6 +140,9 @@ export function toCountryName(
     case "United States":
     case "United States of America":
       return "United States of America";
+    case "IE":
+    case "Ireland":
+      return "Ireland";
     case "Zimbabwe":
     case "ZW":
       return "Zimbabwe";
@@ -162,6 +177,8 @@ export function normalizeCountryCode(
     case "United States":
     case "United States of America":
       return "USA";
+    case "Ireland":
+      return "IE";
     case "Netherlands":
       return "NL";
     case "France":
