@@ -578,7 +578,9 @@ export default function ProfilePage() {
                 touchedFields={touchedFields}
                 watch={watch}
                 showTravelerPayouts={showTravelerPayouts}
-                onRefreshPayoutStatus={() => refreshProfile({ silent: true })}
+                onRefreshPayoutStatus={() => {
+                  void refreshProfile({ silent: true });
+                }}
               />
             </ProfileSectionShell>
             <LineDivider heightClass="my-1 sm:my-2" />

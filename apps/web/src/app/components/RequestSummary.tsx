@@ -237,7 +237,9 @@ export default function RequestSummary({
               const stripeReady = await ensureTravelerStripeReady({
                 openInfo,
                 profile,
-                onStripeSynced: () => refreshProfile({ silent: true }),
+                onStripeSynced: () => {
+                  void refreshProfile({ silent: true });
+                },
               });
               if (!stripeReady) return;
             } catch (err) {

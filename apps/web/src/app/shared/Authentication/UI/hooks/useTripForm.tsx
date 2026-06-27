@@ -242,7 +242,9 @@ export function useTripForm({
               openInfo,
               returnUrl: `${window.location.origin}${stripeReturnPath}`,
               refreshUrl: `${window.location.origin}/profile?stripe=refresh`,
-              onStripeSynced: () => refreshProfile({ silent: true }),
+              onStripeSynced: () => {
+                void refreshProfile({ silent: true });
+              },
             });
           },
           latestProfile,
