@@ -153,8 +153,14 @@ export const questions: InfoItem[] = [
   {
     label: "How do I send a parcel?",
     value:
-      "Post your parcel details, browse available travelers, and send a carry request. Once accepted, make payment and hand over the parcel.",
+      "Log in, post your parcel details, browse available travelers, and send a carry request. Once accepted, make payment and hand over the parcel.",
     tag: "sender",
+  },
+  {
+    label: "How do I post a trip?",
+    value:
+      "Log in, post your trip details: departure city, destination, travel date, available luggage space, and carrying price. Once your trip is published, senders can find your trip and send you parcel requests.",
+    tag: "traveler",
   },
 
   {

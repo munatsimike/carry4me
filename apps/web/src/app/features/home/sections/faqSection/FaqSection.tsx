@@ -55,7 +55,7 @@ function faqTagClass(tag: string): string {
   return "bg-slate-100 text-slate-500";
 }
 
- function FaqDesktopPanel({
+function FaqDesktopPanel({
   items,
   openIndex,
   onSelect,
@@ -63,7 +63,7 @@ function faqTagClass(tag: string): string {
   const selectedItem = items[openIndex] ?? items[0];
 
   return (
-    <div className="grid w-full max-w-5xl grid-cols-[0.9fr_1.1fr] gap-8 mb-6">
+    <div className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(280px,0.75fr)_minmax(0,1.25fr)] gap-8 mb-6 lg:gap-10">
       <div className="flex flex-col gap-2">
         {items.map((item, index) => {
           const isOpen = openIndex === index;
@@ -102,7 +102,7 @@ function faqTagClass(tag: string): string {
       </div>
 
       {selectedItem && (
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
           {selectedItem.tag && (
             <span
               className={cn(

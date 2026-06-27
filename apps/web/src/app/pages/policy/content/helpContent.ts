@@ -63,6 +63,8 @@ export const helpContent: PolicyPageContent = {
       id: "faq",
       title: "Frequently Asked Questions",
       paragraphs: [
+        "How do I send a parcel? Log in, post your parcel details, browse available travelers, and send a carry request. Once accepted, make payment and hand over the parcel.",
+        "How do I post a trip? Log in, post your trip details: departure city, destination, travel date, available luggage space, and carrying price. Once your trip is published, senders can find your trip and send you parcel requests.",
         "Can travelers inspect packages? Yes. Travelers may inspect packages before acceptance, and either party may refuse handover if something seems unsafe or misdescribed.",
         "When is payment released? After successful delivery confirmation, unless a dispute is under review.",
         "What happens if delivery fails? The booking may be cancelled or refunded after review. Document the issue in the app.",
