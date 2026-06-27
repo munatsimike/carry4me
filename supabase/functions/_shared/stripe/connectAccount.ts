@@ -126,6 +126,11 @@ export async function syncStripeConnectAccountToProfile(
 
   if (error) {
     console.error("syncStripeConnectAccountToProfile failed", userId, error.message);
+    if (error.code === "23505") {
+      throw new Error(
+        "This Stripe account is already linked to another Carry4Me profile.",
+      );
+    }
     throw error;
   }
 }
@@ -148,6 +153,93 @@ export async function findProfileIdByStripeAccountId(
   return data?.id ?? null;
 }
 
+/**
+ * Retrieves a Connect account from Stripe and writes the latest flags to profiles.
+ * Never clears stored profile data on lookup failure.
+ */
+async function syncStripeAccountFromStripe(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  accountId: string,
+): Promise<TravelerStripeProfile | null> {
+  try {
+    const account = await stripe.accounts.retrieve(accountId);
+
+    if (account.livemode !== isStripeLiveMode()) {
+      console.warn(
+        "syncStripeAccountFromStripe livemode mismatch — skipping sync",
+        accountId,
+      );
+      return null;
+    }
+
+    await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
+
+    return await loadTravelerProfile(supabaseAdmin, userId);
+  } catch (err) {
+    if (isStaleStripeConnectAccountError(err)) {
+      console.warn(
+        "syncStripeAccountFromStripe account lookup failed",
+        accountId,
+        stripeErrorMessage(err),
+      );
+      return null;
+    }
+
+    throw err;
+  }
+}
+
+/**
+ * Syncs Connect flags from Stripe without clearing the profile when lookup fails.
+ * Used by stripe-connect-status (read-only status checks).
+ */
+export async function refreshTravelerStripeConnectStatusSafe(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  profile: TravelerStripeProfile,
+  userId: string,
+): Promise<TravelerStripeProfile> {
+  return syncTravelerStripeConnectProfileFromStripe(
+    stripe,
+    supabaseAdmin,
+    userId,
+    profile,
+  );
+}
+
+/**
+ * Uses the stored stripe_account_id (or recovers it from Stripe) to refresh profiles.*
+ * Safe to call before onboarding redirects — never resets verified profile rows.
+ */
+export async function syncTravelerStripeConnectProfileFromStripe(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  profile: TravelerStripeProfile,
+): Promise<TravelerStripeProfile> {
+  const bestAccountId = await findStripeAccountIdForUser(
+    stripe,
+    supabaseAdmin,
+    profile,
+    userId,
+  );
+
+  if (!bestAccountId) {
+    return profile;
+  }
+
+  const synced = await syncStripeAccountFromStripe(
+    stripe,
+    supabaseAdmin,
+    userId,
+    bestAccountId,
+  );
+
+  return synced ?? profile;
+}
+
 async function claimStripeAccountId(
   supabaseAdmin: SupabaseClient,
   userId: string,
@@ -157,7 +249,6 @@ async function claimStripeAccountId(
     .from("profiles")
     .update({
       stripe_account_id: accountId,
-      stripe_verification_status: "incomplete",
       updated_at: new Date().toISOString(),
     })
     .eq("id", userId)
@@ -182,6 +273,116 @@ async function claimStripeAccountId(
   return accountId;
 }
 
+function scoreStripeConnectAccount(
+  account: Pick<
+    Stripe.Account,
+    "details_submitted" | "payouts_enabled" | "charges_enabled"
+  >,
+): number {
+  let score = 0;
+  if (account.details_submitted) score += 4;
+  if (account.payouts_enabled) score += 8;
+  if (account.charges_enabled) score += 2;
+  return score;
+}
+
+async function isStripeAccountAvailableForUser(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  accountId: string,
+): Promise<boolean> {
+  const ownerId = await findProfileIdByStripeAccountId(supabaseAdmin, accountId);
+  return ownerId === null || ownerId === userId;
+}
+
+async function pickBestStripeConnectAccountId(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  candidateIds: string[],
+): Promise<string | null> {
+  const stripeLiveMode = isStripeLiveMode();
+  const uniqueCandidates = [...new Set(candidateIds.filter(Boolean))];
+
+  let bestAccountId: string | null = null;
+  let bestScore = -1;
+
+  for (const accountId of uniqueCandidates) {
+    if (!(await isStripeAccountAvailableForUser(supabaseAdmin, userId, accountId))) {
+      continue;
+    }
+
+    try {
+      const account = await stripe.accounts.retrieve(accountId);
+      if (account.livemode !== stripeLiveMode) {
+        continue;
+      }
+
+      const score = scoreStripeConnectAccount(account);
+      if (score > bestScore) {
+        bestScore = score;
+        bestAccountId = account.id;
+      }
+    } catch (err) {
+      if (!isStaleStripeConnectAccountError(err)) {
+        throw err;
+      }
+    }
+  }
+
+  return bestAccountId;
+}
+
+async function listStripeAccountIdsForUser(
+  stripe: Stripe,
+  profile: TravelerStripeProfile,
+  userId: string,
+): Promise<string[]> {
+  const candidateIds = new Set<string>();
+
+  if (profile.stripe_account_id) {
+    candidateIds.add(profile.stripe_account_id);
+  }
+
+  try {
+    const metadataMatches = await stripe.accounts.search({
+      query: `metadata['user_id']:'${userId}'`,
+      limit: 10,
+    });
+    for (const account of metadataMatches.data) {
+      candidateIds.add(account.id);
+    }
+  } catch (err) {
+    console.warn(
+      "listStripeAccountIdsForUser metadata search failed",
+      userId,
+      stripeErrorMessage(err),
+    );
+  }
+
+  const email = profile.email?.trim();
+  if (email) {
+    try {
+      const escapedEmail = email.replace(/'/g, "\\'");
+      const emailMatches = await stripe.accounts.search({
+        query: `email:'${escapedEmail}'`,
+        limit: 10,
+      });
+      for (const account of emailMatches.data) {
+        candidateIds.add(account.id);
+      }
+    } catch (err) {
+      console.warn(
+        "listStripeAccountIdsForUser email search failed",
+        userId,
+        stripeErrorMessage(err),
+      );
+    }
+  }
+
+  return [...candidateIds];
+}
+
 async function findStripeAccountIdByUserMetadata(
   stripe: Stripe,
   userId: string,
@@ -189,7 +390,7 @@ async function findStripeAccountIdByUserMetadata(
   try {
     const result = await stripe.accounts.search({
       query: `metadata['user_id']:'${userId}'`,
-      limit: 1,
+      limit: 10,
     });
     return result.data[0]?.id ?? null;
   } catch (err) {
@@ -204,47 +405,12 @@ async function findStripeAccountIdByUserMetadata(
 
 async function findStripeAccountIdForUser(
   stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
   profile: TravelerStripeProfile,
   userId: string,
 ): Promise<string | null> {
-  const byMetadata = await findStripeAccountIdByUserMetadata(stripe, userId);
-  if (byMetadata) return byMetadata;
-
-  const email = profile.email?.trim();
-  if (!email) return null;
-
-  try {
-    const escapedEmail = email.replace(/'/g, "\\'");
-    const result = await stripe.accounts.search({
-      query: `email:'${escapedEmail}'`,
-      limit: 10,
-    });
-
-    const owned = result.data.find(
-      (account) => account.metadata?.user_id === userId,
-    );
-    if (owned) return owned.id;
-
-    if (result.data.length === 1) {
-      return result.data[0].id;
-    }
-
-    if (result.data.length > 1) {
-      console.warn(
-        "findStripeAccountIdForUser multiple email matches",
-        userId,
-        result.data.map((account) => account.id),
-      );
-    }
-  } catch (err) {
-    console.warn(
-      "findStripeAccountIdForUser email search failed",
-      userId,
-      stripeErrorMessage(err),
-    );
-  }
-
-  return null;
+  const candidates = await listStripeAccountIdsForUser(stripe, profile, userId);
+  return pickBestStripeConnectAccountId(stripe, supabaseAdmin, userId, candidates);
 }
 
 async function validateExistingStripeAccount(
@@ -299,6 +465,8 @@ function buildConnectAccountCreateParams(
 
 async function createStripeConnectAccount(
   stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  profile: TravelerStripeProfile,
   userId: string,
   createParams: Stripe.AccountCreateParams,
 ): Promise<Stripe.Account> {
@@ -313,6 +481,7 @@ async function createStripeConnectAccount(
 
     const recoveredAccountId = await findStripeAccountIdForUser(
       stripe,
+      supabaseAdmin,
       {
         email:
           typeof createParams.email === "string" ? createParams.email : null,
@@ -368,6 +537,7 @@ export async function ensureStripeConnectAccountId(
 
   const recoveredAccountId = await findStripeAccountIdForUser(
     stripe,
+    supabaseAdmin,
     refreshed ?? profile,
     userId,
   );
@@ -390,8 +560,16 @@ export async function ensureStripeConnectAccountId(
     userEmail,
   );
 
-  const account = await createStripeConnectAccount(stripe, userId, createParams);
-  return claimStripeAccountId(supabaseAdmin, userId, account.id);
+  const account = await createStripeConnectAccount(
+    stripe,
+    supabaseAdmin,
+    profileForCreate,
+    userId,
+    createParams,
+  );
+  const claimedId = await claimStripeAccountId(supabaseAdmin, userId, account.id);
+  await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
+  return claimedId;
 }
 
 /**
@@ -459,6 +637,7 @@ export async function reconcileTravelerStripeConnectProfile(
 
   const recoveredAccountId = await findStripeAccountIdForUser(
     stripe,
+    supabaseAdmin,
     profile,
     userId,
   );

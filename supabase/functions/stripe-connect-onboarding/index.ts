@@ -10,11 +10,12 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import {
   buildConnectStatusPayload,
   ensureStripeConnectAccountId,
-  reconcileTravelerStripeConnectProfile,
   syncStripeConnectAccountToProfile,
+  syncTravelerStripeConnectProfileFromStripe,
 } from "../_shared/stripe/connectAccount.ts";
 import {
   isTravelerStripeOnboardingComplete,
+  isTravelerStripeVerified,
   loadTravelerProfile,
 } from "../_shared/stripe/profiles.ts";
 
@@ -61,14 +62,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    const profile = await reconcileTravelerStripeConnectProfile(
+    const profile = await syncTravelerStripeConnectProfileFromStripe(
       stripe,
       supabaseAdmin,
       user.id,
       loaded,
     );
 
-    if (isTravelerStripeOnboardingComplete(profile)) {
+    if (
+      isTravelerStripeVerified(profile) ||
+      isTravelerStripeOnboardingComplete(profile)
+    ) {
       return jsonResponse({
         ...buildConnectStatusPayload(profile),
         onboarding_url: null,

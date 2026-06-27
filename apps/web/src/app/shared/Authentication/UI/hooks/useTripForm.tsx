@@ -229,7 +229,7 @@ export function useTripForm({
       );
 
       processMatchAlertEmailQueue("trip", tripId);
-      await refreshProfile({ silent: true });
+      const latestProfile = await refreshProfile({ silent: true });
       if (user?.id) {
         const stripeReturnPath = returnPath ?? "/dashboard";
         await notifyTripPostedSuccess(
@@ -245,7 +245,9 @@ export function useTripForm({
               onStripeSynced: () => refreshProfile({ silent: true }),
             });
           },
+          latestProfile,
         );
+        await refreshProfile({ silent: true });
       }
 
       await invalidateTrips();

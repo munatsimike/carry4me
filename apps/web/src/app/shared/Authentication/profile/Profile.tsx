@@ -64,13 +64,10 @@ import {
 import { TravelerPayoutStatusRow } from "../UI/TravelerPayoutStatusRow";
 import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
 import {
-  fetchTravelerStripeConnectStatus,
-  resolveConnectStateFromStatus,
+  getTravelerStripeReturnToast,
+  syncTravelerStripeConnectAfterReturn,
 } from "@/app/features/carry request/application/travelerStripeVerification";
-import {
-  getStripeConnectStatusLabel,
-  shouldShowTravelerPayoutSetup,
-} from "@/app/features/carry request/application/travelerStripeConnectStatus";
+import { shouldShowTravelerPayoutSetup } from "@/app/features/carry request/application/travelerStripeConnectStatus";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -151,6 +148,7 @@ export default function ProfilePage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const localAvatarPreviewUrlRef = useRef<string | null>(null);
+  const stripeParamHandledRef = useRef<string | null>(null);
   const [changePhoneOpen, setChangePhoneOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [passkeys, setPasskeys] = useState<PasskeyCredentialSummary[]>([]);
@@ -226,14 +224,19 @@ export default function ProfilePage() {
     const stripeParam = searchParams.get("stripe");
     if (stripeParam !== "return" && stripeParam !== "refresh") return;
 
+    if (stripeParamHandledRef.current === stripeParam) return;
+    stripeParamHandledRef.current = stripeParam;
+
     void (async () => {
       try {
-        const status = await fetchTravelerStripeConnectStatus();
-        const state = resolveConnectStateFromStatus(status);
-        toast(`Payout status: ${getStripeConnectStatusLabel(state)}`, {
-          variant: state === "ready" ? "success" : "info",
+        const origin = window.location.origin;
+        const status = await syncTravelerStripeConnectAfterReturn({
+          returnUrl: `${origin}/profile?stripe=return`,
+          refreshUrl: `${origin}/profile?stripe=refresh`,
         });
         await refreshProfile({ silent: true });
+        const { message, variant } = getTravelerStripeReturnToast(status);
+        toast(message, { variant });
       } catch (err) {
         showSupabaseError(err);
       } finally {

@@ -53,6 +53,35 @@ const euroCountries = [
   "vatican city",
 ] as const;
 
+/** ISO 3166-1 alpha-2 codes for Eurozone / EUR-using countries in the app. */
+const euroCountryIsoCodes = [
+  "ad",
+  "at",
+  "be",
+  "hr",
+  "cy",
+  "ee",
+  "fi",
+  "fr",
+  "de",
+  "gr",
+  "ie",
+  "it",
+  "lv",
+  "lt",
+  "lu",
+  "mt",
+  "mc",
+  "me",
+  "nl",
+  "pt",
+  "sm",
+  "sk",
+  "si",
+  "es",
+  "va",
+] as const;
+
 const countryToCurrencyCode: Record<string, CurrencyCode> = {
   uk: "GBP",
   gb: "GBP",
@@ -63,18 +92,28 @@ const countryToCurrencyCode: Record<string, CurrencyCode> = {
   "united states": "USD",
   "united states of america": "USD",
   zimbabwe: "USD",
+  zw: "USD",
   "south africa": "ZAR",
   za: "ZAR",
   canada: "CAD",
+  ca: "CAD",
   australia: "AUD",
+  au: "AUD",
   "new zealand": "NZD",
+  nz: "NZD",
   japan: "JPY",
+  jp: "JPY",
   china: "CNY",
+  cn: "CNY",
   india: "INR",
+  in: "INR",
   eu: "EUR",
   europe: "EUR",
   ...(Object.fromEntries(
-    euroCountries.map((country) => [country, "EUR"]),
+    [...euroCountries, ...euroCountryIsoCodes].map((country) => [
+      country,
+      "EUR",
+    ]),
   ) as Record<string, CurrencyCode>),
 };
 

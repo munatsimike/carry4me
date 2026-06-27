@@ -1,3 +1,5 @@
+import type { UserProfile } from "@/app/shared/Authentication/domain/authTypes";
+
 export type StripeConnectClientState = "not_created" | "setup_incomplete" | "ready";
 
 export type StripeConnectProfileFields = {
@@ -60,10 +62,28 @@ export function isTravelerStripePayoutReady(profile: StripeConnectProfileFields)
   return getStripeConnectClientState(profile) === "ready";
 }
 
-export function isTravelerStripeVerifiedInProfile(
-  profile: { stripeVerificationStatus?: string | null } | null | undefined,
+type TravelerStripeProfileSnapshot = Pick<
+  UserProfile,
+  | "stripeAccountId"
+  | "stripeDetailsSubmitted"
+  | "stripePayoutsEnabled"
+  | "stripeVerificationStatus"
+>;
+
+export function isTravelerStripeAcceptReadyInProfile(
+  profile: TravelerStripeProfileSnapshot | null | undefined,
 ): boolean {
-  return profile?.stripeVerificationStatus === "verified";
+  if (!profile?.stripeAccountId) return false;
+
+  if (isTravelerStripeVerifiedInProfile(profile)) {
+    return true;
+  }
+
+  return isTravelerStripePayoutReady({
+    stripeAccountId: profile.stripeAccountId,
+    stripeDetailsSubmitted: profile.stripeDetailsSubmitted,
+    stripePayoutsEnabled: profile.stripePayoutsEnabled,
+  });
 }
 
 export function shouldShowTravelerPayoutSetup(
@@ -71,4 +91,10 @@ export function shouldShowTravelerPayoutSetup(
   postedTripCount: number,
 ): boolean {
   return postedTripCount > 0 && !isTravelerStripePayoutReady(profile);
+}
+
+export function isTravelerStripeVerifiedInProfile(
+  profile: { stripeVerificationStatus?: string | null } | null | undefined,
+): boolean {
+  return profile?.stripeVerificationStatus === "verified";
 }

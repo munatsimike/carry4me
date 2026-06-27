@@ -19,7 +19,7 @@ type AuthContextValue = {
   error: string | null;
   profile: UserProfile | null;
   profileIncomplete: boolean;
-  refreshProfile: (opts?: { silent?: boolean }) => Promise<void>;
+  refreshProfile: (opts?: { silent?: boolean }) => Promise<UserProfile | null>;
 };
 
 const authRepository = new SupabaseAuthRepository();
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Prevent race conditions (stale requests overwriting newer results)
   const requestIdRef = useRef(0);
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     const myRequestId = ++requestIdRef.current;
 
     try {
@@ -68,14 +68,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         10_000,
       );
       // Ignore stale results / unmounted
-      if (!mountedRef.current || myRequestId !== requestIdRef.current) return;
+      if (!mountedRef.current || myRequestId !== requestIdRef.current) {
+        return profileData;
+      }
 
       setError(null);
       setProfile(profileData);
+      return profileData;
     } catch (e) {
-      if (!mountedRef.current || myRequestId !== requestIdRef.current) return;
+      if (!mountedRef.current || myRequestId !== requestIdRef.current) return null;
       setError(toErrorMessage(e));
       setProfile(null);
+      return null;
     }
   }, []);
 
@@ -144,13 +148,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = useCallback(async (opts?: { silent?: boolean }) => {
     const userId = user?.id;
-    if (!userId) return;
+    if (!userId) return null;
 
     if (!opts?.silent) {
       setLoading(true);
     }
     try {
-      await fetchProfile(userId);
+      return await fetchProfile(userId);
     } finally {
       if (!opts?.silent && mountedRef.current) {
         setLoading(false);

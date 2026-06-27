@@ -19,10 +19,9 @@ import { processActionEmailQueue } from "../application/processActionEmailQueue"
 import { processEmailQueueInBackground } from "@/app/shared/supabase/processEmailQueue";
 import {
   ensureTravelerStripeReady,
-  fetchTravelerStripeConnectStatus,
-  resolveConnectStateFromStatus,
+  getTravelerStripeReturnToast,
+  syncTravelerStripeConnectAfterReturn,
 } from "../application/travelerStripeVerification";
-import { getStripeConnectStatusLabel } from "../application/travelerStripeConnectStatus";
 import {
   deliveryOtpFailureMessage,
   resendDeliveryOtp,
@@ -416,15 +415,14 @@ export default function CarryRequestsPage() {
 
     void (async () => {
       try {
-        const status = await fetchTravelerStripeConnectStatus();
-        const state = resolveConnectStateFromStatus(status);
-        toast(
-          `Payout status: ${getStripeConnectStatusLabel(state, status.stripe_details_submitted === true)}`,
-          {
-            variant: state === "ready" ? "success" : "info",
-          },
-        );
+        const origin = window.location.origin;
+        const status = await syncTravelerStripeConnectAfterReturn({
+          returnUrl: `${origin}/requests?stripe=return`,
+          refreshUrl: `${origin}/requests?stripe=refresh`,
+        });
         await refreshProfile({ silent: true });
+        const { message, variant } = getTravelerStripeReturnToast(status);
+        toast(message, { variant });
       } catch (err) {
         showSupabaseError(err);
       } finally {

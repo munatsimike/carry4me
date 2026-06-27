@@ -1,6 +1,11 @@
 import { countMatchesForPostedListing } from "@/app/features/dashboard/application/suggestedMatches";
 import type { InfoModalPayload } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { fetchTravelerStripeConnectStatus } from "@/app/features/carry request/application/travelerStripeVerification";
+import { isTravelerStripeAcceptReadyInProfile } from "@/app/features/carry request/application/travelerStripeConnectStatus";
+import {
+  fetchTravelerStripeConnectStatus,
+  isTravelerStripeReadyForAccept,
+} from "@/app/features/carry request/application/travelerStripeVerification";
+import type { UserProfile } from "@/app/shared/Authentication/domain/authTypes";
 import {
   getParcelsUseCase,
   getTripsUseCase,
@@ -127,10 +132,24 @@ function promptTripPostedWithStripeSetup(
   });
 }
 
-async function isTravelerStripePayoutComplete(): Promise<boolean> {
+async function resolveTravelerStripePayoutComplete(
+  profile?: Pick<
+    UserProfile,
+    | "stripeAccountId"
+    | "stripeDetailsSubmitted"
+    | "stripePayoutsEnabled"
+    | "stripeVerificationStatus"
+  > | null,
+): Promise<boolean> {
+  if (profile) {
+    if (isTravelerStripeAcceptReadyInProfile(profile)) {
+      return true;
+    }
+  }
+
   try {
     const status = await fetchTravelerStripeConnectStatus();
-    return status.verified === true;
+    return isTravelerStripeReadyForAccept(status);
   } catch {
     return false;
   }
@@ -142,10 +161,17 @@ export async function notifyTripPostedSuccess(
   openInfo: (payload: Omit<InfoModalPayload, "type">) => void,
   navigate: NavigateFunction,
   onCompleteStripe: () => void | Promise<void>,
+  profile?: Pick<
+    UserProfile,
+    | "stripeAccountId"
+    | "stripeDetailsSubmitted"
+    | "stripePayoutsEnabled"
+    | "stripeVerificationStatus"
+  > | null,
 ): Promise<void> {
   const [matchCount, stripeComplete] = await Promise.all([
     countActorMatchesForListing(userId, "trip", tripId),
-    isTravelerStripePayoutComplete(),
+    resolveTravelerStripePayoutComplete(profile),
   ]);
 
   if (stripeComplete) {

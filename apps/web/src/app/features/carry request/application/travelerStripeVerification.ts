@@ -4,7 +4,8 @@ import type { InfoModalPayload } from "@/app/shared/Authentication/application/D
 import {
   type StripeConnectClientState,
   getStripeConnectClientState,
-  isTravelerStripeVerifiedInProfile,
+  getStripeConnectStatusLabel,
+  isTravelerStripeAcceptReadyInProfile,
 } from "./travelerStripeConnectStatus";
 import type { UserProfile } from "@/app/shared/Authentication/domain/authTypes";
 
@@ -30,8 +31,16 @@ type TravelerStripeReadyOptions = {
   returnUrl?: string;
   refreshUrl?: string;
   onStripeSynced?: () => void | Promise<void>;
-  profile?: Pick<UserProfile, "stripeVerificationStatus"> | null;
+  profile?: TravelerStripeProfileSnapshot | null;
 };
+
+type TravelerStripeProfileSnapshot = Pick<
+  UserProfile,
+  | "stripeAccountId"
+  | "stripeDetailsSubmitted"
+  | "stripePayoutsEnabled"
+  | "stripeVerificationStatus"
+>;
 
 const VERIFICATION_MESSAGE =
   "Complete Stripe verification to receive payouts. You can also finish this later from your profile page.";
@@ -161,6 +170,102 @@ export async function fetchTravelerStripeConnectStatus(): Promise<ConnectStatusR
   return invokeStripeFunction<ConnectStatusResponse>("stripe-connect-status", {});
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function needsStripeConnectReconcile(status: ConnectStatusResponse): boolean {
+  if (!status.stripe_account_id) {
+    return true;
+  }
+
+  if (
+    !status.stripe_details_submitted &&
+    status.onboarding_complete !== true &&
+    !isTravelerStripeReadyForAccept(status)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+async function reconcileTravelerStripeConnectFromOnboarding(
+  options: { returnUrl?: string; refreshUrl?: string } = {},
+): Promise<ConnectStatusResponse> {
+  const { returnUrl, refreshUrl } = resolveOnboardingUrls(
+    options as TravelerStripeReadyOptions,
+  );
+
+  return invokeStripeFunction<ConnectOnboardingResponse>("stripe-connect-onboarding", {
+    return_url: returnUrl,
+    refresh_url: refreshUrl,
+  });
+}
+
+/**
+ * After Stripe redirects back, sync profile columns from Stripe (with retries).
+ * Never follows a new onboarding URL — only writes status to the database.
+ */
+export async function syncTravelerStripeConnectAfterReturn(
+  options: { returnUrl?: string; refreshUrl?: string } = {},
+): Promise<ConnectStatusResponse> {
+  let status = await fetchTravelerStripeConnectStatus();
+
+  if (!needsStripeConnectReconcile(status)) {
+    return status;
+  }
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await sleep(1200);
+    status = await fetchTravelerStripeConnectStatus();
+    if (!needsStripeConnectReconcile(status)) {
+      return status;
+    }
+  }
+
+  try {
+    return await reconcileTravelerStripeConnectFromOnboarding(options);
+  } catch {
+    return status;
+  }
+}
+
+export function isTravelerStripeReturnSuccess(
+  status: ConnectStatusResponse,
+): boolean {
+  return (
+    isTravelerStripePayoutCompleteFromStatus(status) ||
+    status.onboarding_complete === true ||
+    (status.stripe_details_submitted === true && !!status.stripe_account_id)
+  );
+}
+
+export function getTravelerStripeReturnToast(status: ConnectStatusResponse): {
+  message: string;
+  variant: "success" | "info";
+} {
+  if (isTravelerStripeReturnSuccess(status)) {
+    return {
+      message: isTravelerStripePayoutCompleteFromStatus(status)
+        ? "Payout setup complete — your Stripe account is ready."
+        : "Stripe onboarding complete — Stripe is reviewing your payout account.",
+      variant: "success",
+    };
+  }
+
+  const state = resolveConnectStateFromStatus(status);
+  return {
+    message: `Payout status: ${getStripeConnectStatusLabel(
+      state,
+      status.stripe_details_submitted === true,
+    )}`,
+    variant: "info",
+  };
+}
+
 /**
  * Starts onboarding immediately (user already clicked an explicit setup action).
  */
@@ -202,7 +307,7 @@ function promptTravelerStripeOnboarding(
 export async function ensureTravelerStripeReady(
   options: TravelerStripeReadyOptions,
 ): Promise<boolean> {
-  if (isTravelerStripeVerifiedInProfile(options.profile)) {
+  if (isTravelerStripeAcceptReadyInProfile(options.profile)) {
     return true;
   }
 
@@ -251,4 +356,13 @@ export function resolveConnectStateFromStatus(
     stripeDetailsSubmitted: status.stripe_details_submitted,
     stripePayoutsEnabled: status.stripe_payouts_enabled,
   });
+}
+
+export function isTravelerStripePayoutCompleteFromStatus(
+  status: ConnectStatusResponse,
+): boolean {
+  return (
+    resolveConnectStateFromStatus(status) === "ready" ||
+    isTravelerStripeReadyForAccept(status)
+  );
 }
