@@ -1,3 +1,4 @@
+import MarketplaceListingGrid from "@/app/components/MarketplaceListingGrid";
 import type { TripListing } from "../domain/Trip";
 import TravelerCard from "./TravelerCard";
 
@@ -12,15 +13,15 @@ export default function Travelers({
   onToggleLikd,
 }: TravlersProps) {
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {trips.map((trip, index) => (
+    <MarketplaceListingGrid>
+      {trips.map((trip) => (
         <TravelerCard
-          key={index}
+          key={trip.id}
           trip={trip}
           onClick={onClick}
           setTrips={onToggleLikd}
         />
       ))}
-    </div>
+    </MarketplaceListingGrid>
   );
 }

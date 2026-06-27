@@ -1,3 +1,4 @@
+import MarketplaceListingGrid from "@/app/components/MarketplaceListingGrid";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import ParcelCard from "./ParcelCard";
 
@@ -12,15 +13,15 @@ export default function Travelers({
   toggleLike,
 }: ParcelsProps) {
   return (
-    <div className="grid min-w-0 grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {parcels.map((parcel, index) => (
+    <MarketplaceListingGrid>
+      {parcels.map((parcel) => (
         <ParcelCard
           toggleLike={toggleLike}
-          key={index}
+          key={parcel.id}
           parcel={parcel}
           onClick={onClick}
         />
       ))}
-    </div>
+    </MarketplaceListingGrid>
   );
 }

@@ -33,12 +33,12 @@ export default function ParcelSendingRow({ items }: ParcelSendingRowProps) {
         >
           Sending
         </CustomText>
-        <div className="min-w-0 flex-1 px-2">
+        <div className="relative min-w-0 flex-1">
           <button
             type="button"
             onClick={() => setShowItemsModal(true)}
             className={cn(
-              "w-fit text-left text-sm font-medium text-primary-600 underline-offset-2 transition-colors",
+              "px-2 w-fit text-left text-sm font-medium text-primary-600 underline-offset-2 transition-colors",
               "hover:text-primary-700 hover:underline",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 rounded",
             )}

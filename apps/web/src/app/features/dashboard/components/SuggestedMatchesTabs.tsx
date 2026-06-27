@@ -13,8 +13,8 @@ import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/
 import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { getParcelUseCase, getTripUseCase } from "@/app/lib/useCases";
-import TravelerCard from "@/app/features/trips/ui/TravelerCard";
-import ParcelCard from "@/app/features/parcels/ui/ParcelCard";
+import Parcels from "@/app/features/parcels/ui/Parcels";
+import Travelers from "@/app/features/trips/ui/Travelers";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
 import type { TripListing } from "../../trips/domain/Trip";
 import { cn } from "@/app/lib/cn";
@@ -229,7 +229,7 @@ export default function SuggestedMatchesTabs({
           Suggested matches
         </CustomText>
 
-        <div className="flex w-full min-w-0 flex-col items-center p-3 text-center sm:p-4">
+        <div className="flex w-full min-w-0 flex-col gap-2.5 p-3 sm:p-4">
           <div className="flex w-full justify-center">
             <div
               className="inline-flex w-fit gap-1 rounded-lg bg-white p-1"
@@ -255,7 +255,7 @@ export default function SuggestedMatchesTabs({
             </div>
           </div>
 
-          <div className="mt-2.5 flex min-h-[5.5rem] w-full min-w-0 flex-col items-center">
+          <div className="mt-2.5 flex min-h-[5.5rem] w-full min-w-0 flex-col">
             <AnimatePresence mode="wait">
               {activeTab === "trips" ? (
                 <TabPanel
@@ -269,14 +269,11 @@ export default function SuggestedMatchesTabs({
                     ) : undefined
                   }
                 >
-                  {data.suggestedTrips.map((trip) => (
-                    <TravelerCard
-                      key={trip.id}
-                      trip={trip}
-                      onClick={handleTripRequest}
-                      setTrips={handleToggleTripLike}
-                    />
-                  ))}
+                  <Travelers
+                    trips={data.suggestedTrips}
+                    onClick={handleTripRequest}
+                    onToggleLikd={handleToggleTripLike}
+                  />
                 </TabPanel>
               ) : (
                 <TabPanel
@@ -290,14 +287,11 @@ export default function SuggestedMatchesTabs({
                     ) : undefined
                   }
                 >
-                  {data.suggestedParcels.map((parcel) => (
-                    <ParcelCard
-                      key={parcel.id}
-                      parcel={parcel}
-                      onClick={handleParcelRequest}
-                      toggleLike={handleToggleParcelLike}
-                    />
-                  ))}
+                  <Parcels
+                    parcels={data.suggestedParcels}
+                    onClick={handleParcelRequest}
+                    toggleLike={handleToggleParcelLike}
+                  />
                 </TabPanel>
               )}
             </AnimatePresence>
@@ -444,12 +438,10 @@ function TabPanel({
       role="tabpanel"
       id={`panel-${panelId}`}
       aria-labelledby={`tab-${panelId}`}
-      className="flex w-full min-w-0 flex-col items-stretch"
+      className="w-full min-w-0 text-left"
       {...tabMotion}
     >
-      <div className="grid w-full min-w-0 grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {children}
-      </div>
+      {children}
     </motion.div>
   );
 }

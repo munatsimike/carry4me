@@ -92,6 +92,7 @@ export function ListingCard<T extends Listing>({
   return (
     <Card
       enableHover={isDisplayMode}
+      sizeClass="max-w-none"
       className={`group/card ${cardSurfaceClass}`}
       borderClass=""
       shadowClass=""
