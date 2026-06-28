@@ -1,6 +1,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useFieldArray, type Control, type FieldErrors, type UseFormRegister } from "react-hook-form";
 import type { GoodsItem } from "@/types/Ui";
+import { GOODS_CONDITION_OPTIONS } from "@/app/shared/goodsCondition";
 import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useParcelForm";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
@@ -38,8 +39,10 @@ export default function GoodsManifestFields({
           What are you sending?
         </CustomText>
         <CustomText textSize="xs" textVariant="secondary">
-          List each item with quantity, size, and whether it is new or used. The
-          traveler will sign this list at handover.
+          List each item with quantity, size, and condition. Use{" "}
+          <span className="font-medium">Not applicable</span> for documents and
+          other items where new or used does not apply. The traveler will sign
+          this list at handover.
         </CustomText>
       </div>
 
@@ -151,7 +154,7 @@ export default function GoodsManifestFields({
                     Condition
                   </span>
                   <div className="flex flex-wrap gap-2">
-                    {(["new", "used"] as const).map((value) => (
+                    {GOODS_CONDITION_OPTIONS.map(({ value, label }) => (
                       <label
                         key={value}
                         className="inline-flex cursor-pointer items-center"
@@ -164,12 +167,12 @@ export default function GoodsManifestFields({
                         />
                         <span
                           className={cn(
-                            "rounded-full border px-4 py-1.5 text-sm font-medium capitalize transition-colors",
+                            "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
                             "border-neutral-200 bg-white text-neutral-600",
                             "peer-checked:border-primary-500 peer-checked:bg-primary-50 peer-checked:text-primary-700",
                           )}
                         >
-                          {value}
+                          {label}
                         </span>
                       </label>
                     ))}

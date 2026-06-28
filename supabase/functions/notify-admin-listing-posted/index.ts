@@ -34,7 +34,25 @@ type ParcelRow = {
   origin_country: string;
   weight_kg: number;
   price: number;
+  parcel_categories: {
+    category: { name: string; slug: string } | null;
+  }[];
 };
+
+function formatParcelCategoriesLabel(
+  parcel: ParcelRow,
+): string | undefined {
+  const names = parcel.parcel_categories
+    .map((row) => row.category?.name?.trim())
+    .filter((name): name is string => Boolean(name))
+    .filter((name) => name.toLowerCase() !== "all");
+
+  if (names.length === 0) {
+    return undefined;
+  }
+
+  return [...new Set(names)].join(", ");
+}
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -114,7 +132,7 @@ Deno.serve(async (req) => {
     const { data: parcel, error } = await supabaseAdmin
       .from("parcels")
       .select(
-        "id, sender_user_id, origin_city, destination_city, origin_country, weight_kg, price",
+        "id, sender_user_id, origin_city, destination_city, origin_country, weight_kg, price, parcel_categories(category:goods_categories(name, slug))",
       )
       .eq("id", listingId)
       .maybeSingle<ParcelRow>();
@@ -140,6 +158,7 @@ Deno.serve(async (req) => {
           parcel.origin_city,
           parcel.destination_city,
         ),
+        categoriesLabel: formatParcelCategoriesLabel(parcel),
         weightKg: Number(parcel.weight_kg),
         budgetPerKg: Number(parcel.price),
         currencySymbol: currencySymbolForCountry(parcel.origin_country),

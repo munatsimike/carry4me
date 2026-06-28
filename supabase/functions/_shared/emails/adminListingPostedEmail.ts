@@ -13,6 +13,7 @@ export type AdminListingPostedDetails = {
   listingType: ListingType;
   listingId: string;
   routeLabel: string;
+  categoriesLabel?: string;
   weightKg?: number;
   budgetPerKg?: number;
   travelDate?: string;
@@ -62,6 +63,9 @@ function buildDetailRows(details: AdminListingPostedDetails): string {
   ];
 
   if (details.listingType === "parcel") {
+    if (details.categoriesLabel) {
+      rows.push({ label: "Category", value: details.categoriesLabel });
+    }
     if (details.weightKg != null) {
       rows.push({ label: "Weight", value: formatWeightKg(details.weightKg) });
     }
@@ -134,6 +138,9 @@ export function buildAdminListingPostedEmail(
   ];
 
   if (details.listingType === "parcel") {
+    if (details.categoriesLabel) {
+      textLines.push(`Category: ${details.categoriesLabel}`);
+    }
     if (details.weightKg != null) {
       textLines.push(`Weight: ${formatWeightKg(details.weightKg)}`);
     }

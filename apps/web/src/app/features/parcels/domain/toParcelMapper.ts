@@ -1,5 +1,6 @@
 import type { ParcelListing } from "./Parcel";
 import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
+import { normalizeGoodsCondition } from "@/app/shared/goodsCondition";
 
 type ParcelRow = {
   id: string;
@@ -62,7 +63,7 @@ export function toParcelMapper(row: ParcelRow,  likedTripIds: Set<string> = new 
       quantity: x.quantity,
       description: x.description,
       size: x.size?.trim() ?? "",
-      condition: x.condition === "used" ? "used" : "new",
+      condition: normalizeGoodsCondition(x.condition),
     })),
     status: row.status,
     isLiked: likedTripIds?.has(row.id) ?? false

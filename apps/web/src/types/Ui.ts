@@ -42,7 +42,7 @@ export type Route = {
   acceptedParcels: Category[];
 };
 
-export const GOODS_CONDITIONS = ["new", "used"] as const;
+export const GOODS_CONDITIONS = ["new", "used", "na"] as const;
 export type GoodsCondition = (typeof GOODS_CONDITIONS)[number];
 
 export type GoodsItem = {

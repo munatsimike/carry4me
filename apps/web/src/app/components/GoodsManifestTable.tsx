@@ -1,20 +1,24 @@
 import type { GoodsItem } from "@/types/Ui";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
+import {
+  formatGoodsConditionLabel,
+  normalizeGoodsCondition,
+} from "@/app/shared/goodsCondition";
 
 export function normalizeGoodsItem(item: Partial<GoodsItem>): GoodsItem {
   return {
     quantity: item.quantity ?? 1,
     description: item.description?.trim() ?? "",
     size: item.size?.trim() ?? "",
-    condition: item.condition === "used" ? "used" : "new",
+    condition: normalizeGoodsCondition(item.condition),
   };
 }
 
 export function formatGoodsCondition(
   condition: GoodsItem["condition"],
 ): string {
-  return condition === "used" ? "Used" : "New";
+  return formatGoodsConditionLabel(condition);
 }
 
 type GoodsManifestTableProps = {

@@ -121,7 +121,7 @@ export const parcelItemSchema = z.object({
     .string()
     .trim()
     .min(1, "Enter a size (e.g. S, M, shoe box)"),
-  condition: z.enum(["new", "used"], {
-    error: "Select new or used",
+  condition: z.enum(["new", "used", "na"], {
+    error: "Select item condition",
   }),
 });
