@@ -22,6 +22,7 @@ import {
 import { useInvalidateTrips } from "@/app/hooks/mutations/useTripMutations";
 import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
 import { notifyActorSuggestedMatches, notifyTripPostedSuccess } from "@/app/features/listings/application/notifyActorSuggestedMatches";
+import { processAdminListingPostedEmailInBackground } from "@/app/features/listings/application/processAdminListingPostedEmail";
 import { processMatchAlertEmailQueue } from "@/app/features/listings/application/processMatchAlertEmailQueue";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "@/app/components/Toast";
@@ -229,6 +230,7 @@ export function useTripForm({
       );
 
       processMatchAlertEmailQueue("trip", tripId);
+      processAdminListingPostedEmailInBackground("trip", tripId);
       const latestProfile = await refreshProfile({ silent: true });
       if (user?.id) {
         const stripeReturnPath = returnPath ?? "/dashboard";

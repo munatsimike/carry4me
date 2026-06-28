@@ -443,6 +443,11 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/delete-account/index.ts"
 
+[functions.notify-admin-listing-posted]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/notify-admin-listing-posted/index.ts"
+
 [functions.send-email-login-otp]
 enabled = true
 verify_jwt = false

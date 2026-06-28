@@ -21,6 +21,7 @@ import {
 import { useInvalidateParcels } from "@/app/hooks/mutations/useParcelMutations";
 import type { SaveGoodsUseCase } from "@/app/features/goods/application/SaveGoodsUseCase";
 import { notifyActorSuggestedMatches } from "@/app/features/listings/application/notifyActorSuggestedMatches";
+import { processAdminListingPostedEmailInBackground } from "@/app/features/listings/application/processAdminListingPostedEmail";
 import { processMatchAlertEmailQueue } from "@/app/features/listings/application/processMatchAlertEmailQueue";
 import type { CreateParcelUseCase } from "@/app/features/parcels/application/CreateParcelUseCase";
 import type { UserGoods } from "@/app/features/goods/domain/UserGoods";
@@ -231,6 +232,7 @@ export default function useParcelForm({
       );
 
       processMatchAlertEmailQueue("parcel", parcelId);
+      processAdminListingPostedEmailInBackground("parcel", parcelId);
       if (user?.id) {
         void notifyActorSuggestedMatches(
           user.id,
