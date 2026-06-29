@@ -4,6 +4,7 @@ import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import type { CarryRequest } from "../domain/CarryRequest";
 import { CARRY_REQUEST_STATUSES } from "../domain/CreateCarryRequest";
 import { processActionEmailQueue } from "./processActionEmailQueue";
+import { applyCarryRequestActionResult, refreshAfterCarryRequestAction } from "./refreshAfterCarryRequestAction";
 import { UIACTIONKEYS } from "../ui/ActionsMapper";
 
 export type CompleteCarryRequestPaymentResult =
@@ -16,6 +17,7 @@ type CompleteCarryRequestPaymentDeps = {
   performRequestActions?: typeof performCarryRequestActionUseCase;
   queryClient: QueryClient;
   refreshProfile: () => void;
+  userId?: string;
 };
 
 export async function completeCarryRequestPayment(
@@ -24,6 +26,7 @@ export async function completeCarryRequestPayment(
     performRequestActions = performCarryRequestActionUseCase,
     queryClient,
     refreshProfile,
+    userId,
   }: CompleteCarryRequestPaymentDeps,
 ): Promise<CompleteCarryRequestPaymentResult> {
   const findLatestRequest = () => {
@@ -43,8 +46,12 @@ export async function completeCarryRequestPayment(
 
   if (response.ok) {
     processActionEmailQueue(response, carryRequestId);
-    await queryClient.refetchQueries({
-      queryKey: queryKeys.carryRequests.all,
+    const cachedRequest = findLatestRequest();
+    await applyCarryRequestActionResult(queryClient, {
+      userId,
+      carryRequestId,
+      actorUserId: cachedRequest?.senderUserId ?? userId ?? "",
+      response,
     });
     refreshProfile();
     return { status: "success", carryRequestId };
@@ -54,9 +61,7 @@ export async function completeCarryRequestPayment(
     return { status: "payment_not_confirmed" };
   }
 
-  await queryClient.refetchQueries({
-    queryKey: queryKeys.carryRequests.all,
-  });
+  await refreshAfterCarryRequestAction(queryClient, userId);
 
   const latestRequest = findLatestRequest();
   if (latestRequest?.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER) {

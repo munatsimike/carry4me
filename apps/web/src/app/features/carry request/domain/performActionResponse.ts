@@ -10,4 +10,6 @@ export type PerformActionResponse = {
   message?: string;
   notification_id?: string;
   event_type?: string;
+  new_status?: string;
+  payment_expires_at?: string | null;
 };

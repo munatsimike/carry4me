@@ -416,6 +416,7 @@ export default function PayCarryRequestPage() {
       const result = await completeCarryRequestPayment(carryRequestId, {
         queryClient,
         refreshProfile,
+        userId: user?.id,
       });
 
       if (result.status === "success" || result.status === "already_paid") {

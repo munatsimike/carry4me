@@ -15,6 +15,7 @@ import type { UserProfile } from "./app/shared/Authentication/domain/authTypes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "./app/components/Toast";
 import { useNotifications } from "./app/hooks/queries/useNotificationsQueries";
+import { useNotificationRealtimeSync } from "./app/hooks/useNotificationRealtimeSync";
 import { useMarkNotificationsReadMutation } from "./app/hooks/mutations/useNotificationMutations";
 import { AnimatePresence, motion } from "framer-motion";
 import { UserProfileMenu } from "./app/shared/Authentication/UI/userProfileMenu";
@@ -90,6 +91,7 @@ function AuthenticatedNavigation({ userProfile }: ProfileProps) {
   const { data: notifications = [], isError } = useNotifications(
     userProfile?.id ?? undefined,
   );
+  useNotificationRealtimeSync(userProfile?.id ?? undefined);
   const markAllReadMutation = useMarkNotificationsReadMutation();
 
   const unreadNotifications = useMemo(

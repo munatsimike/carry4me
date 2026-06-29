@@ -11,8 +11,8 @@ import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryReques
 import PageSection from "@/app/components/PageSection";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/app/lib/queryKeys";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
+import { useCarryRequestRealtimeSync } from "@/app/hooks/useCarryRequestRealtimeSync";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import { processActionEmailQueue } from "../application/processActionEmailQueue";
@@ -32,6 +32,7 @@ import {
   type CancelCarryRequestResponse,
 } from "../application/cancelCarryRequest";
 import { completeCarryRequestPayment } from "../application/completeCarryRequestPayment";
+import { applyCarryRequestActionResult, refreshAfterCarryRequestAction } from "../application/refreshAfterCarryRequestAction";
 import { syncCarryRequestPayment } from "../application/carryRequestPayment";
 import { calculateCarryRequestPricing } from "../domain/carryRequestPricing";
 import statusColor from "./StatustColorMapper";
@@ -53,7 +54,6 @@ import {
 import type { PaymentTimeRemainingViewer } from "../domain/carryRequestPaymentWindow";
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
-import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import EmptyState from "@/app/components/EmptyState";
 import BrowseMarketplaceActions, {
@@ -181,16 +181,12 @@ export default function CarryRequestsPage() {
   } = useCarryRequests(user?.id);
   const carryRequestsList = carryRequestsData ?? EMPTY_CARRY_REQUESTS;
   useQueryErrorEffect(error, !!user?.id);
+  useCarryRequestRealtimeSync(user?.id);
 
   const { openInfo, showSupabaseError, confirm } = useUniversalModal();
  
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const [handoverState, setHandoverState] = useState<
-    HandoverConfirmationState | undefined
-  >(undefined);
-
 
   const [emptyStateMessage, setEmptyState] = useState<EmptyStateConfig | null>(
     null,
@@ -360,9 +356,7 @@ export default function CarryRequestsPage() {
           carryRequest.initiatorRole === ROLES.SENDER ? "/travelers" : "/parcels",
         ),
     });
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.carryRequests.all,
-    });
+    void refreshAfterCarryRequestAction(queryClient, user?.id);
   };
 
   const completePaymentAfterStripe = async (carryRequestId: string) => {
@@ -375,6 +369,7 @@ export default function CarryRequestsPage() {
       const result = await completeCarryRequestPayment(carryRequestId, {
         queryClient,
         refreshProfile,
+        userId: user?.id,
       });
 
       if (result.status === "success" || result.status === "already_paid") {
@@ -604,8 +599,11 @@ export default function CarryRequestsPage() {
           });
         }
 
-        await queryClient.refetchQueries({
-          queryKey: queryKeys.carryRequests.all,
+        await applyCarryRequestActionResult(queryClient, {
+          userId: user.id,
+          carryRequestId: carryRequest.carryRequestId,
+          actorUserId: user.id,
+          response,
         });
         return;
       }
@@ -617,8 +615,11 @@ export default function CarryRequestsPage() {
 
       processActionEmailQueue(response, carryRequest.carryRequestId);
 
-      await queryClient.refetchQueries({
-        queryKey: queryKeys.carryRequests.all,
+      await applyCarryRequestActionResult(queryClient, {
+        userId: user.id,
+        carryRequestId: carryRequest.carryRequestId,
+        actorUserId: user.id,
+        response,
       });
 
       refreshProfile();
@@ -704,8 +705,11 @@ export default function CarryRequestsPage() {
         );
 
       if (!response.ok) {
-        await queryClient.refetchQueries({
-          queryKey: queryKeys.carryRequests.all,
+        await applyCarryRequestActionResult(queryClient, {
+          userId: user.id,
+          carryRequestId: carryRequest.carryRequestId,
+          actorUserId: user.id,
+          response,
         });
         return;
       }
@@ -739,8 +743,11 @@ export default function CarryRequestsPage() {
         });
       }
 
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.carryRequests.all,
+      await applyCarryRequestActionResult(queryClient, {
+        userId: user.id,
+        carryRequestId: carryRequest.carryRequestId,
+        actorUserId: user.id,
+        response,
       });
       toast(secondaryActionSuccessMessage(actions.secondary.key), {
         variant: "success",
@@ -749,30 +756,6 @@ export default function CarryRequestsPage() {
       setPendingAction(null);
     }
   };
-
-  const pendingHandoverRequest = useMemo(
-    () =>
-      carryRequestsList.find(
-        (request) => request.status === CARRY_REQUEST_STATUSES.PENDING_HANDOVER,
-      ),
-    [carryRequestsList],
-  );
-
-  useEffect(() => {
-    const state = pendingHandoverRequest?.handoverState;
-    if (!state) return;
-
-    setHandoverState((prev) =>
-      prev?.senderConfirmed === state.senderConfirmed &&
-      prev?.travelerConfirmed === state.travelerConfirmed
-        ? prev
-        : state,
-    );
-  }, [
-    pendingHandoverRequest?.carryRequestId,
-    pendingHandoverRequest?.handoverState?.senderConfirmed,
-    pendingHandoverRequest?.handoverState?.travelerConfirmed,
-  ]);
 
   return (
     <>
@@ -806,7 +789,6 @@ export default function CarryRequestsPage() {
               key={request.carryRequestId}
               request={request}
               user={user}
-              handoverState={handoverState}
               inputValue={inputValue}
               setValue={setValue}
               onInputValueChange={(value) => {
@@ -834,7 +816,6 @@ export default function CarryRequestsPage() {
 function CarryRequestCard({
   request,
   user,
-  handoverState,
   inputValue,
   setValue,
   onInputValueChange,
@@ -845,7 +826,6 @@ function CarryRequestCard({
 }: {
   request: CarryRequest;
   user: { id: string } | null;
-  handoverState?: HandoverConfirmationState;
   inputValue: string;
   setValue: (value: string) => void;
   onInputValueChange: (value: string) => void;
@@ -866,7 +846,7 @@ function CarryRequestCard({
     viewerRole,
     effectiveStatus,
     request.initiatorRole,
-    handoverState ?? undefined,
+    request.handoverState,
   );
 
   const toggleSection = (section: MobileSection) => {
