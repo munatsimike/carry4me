@@ -34,6 +34,16 @@ function getConfirmOptions(
 ): ConfirmOptions | null {
   switch (actionKey) {
     case UIACTIONKEYS.ACCEPT:
+      if (context.viewerRole === ROLES.SENDER) {
+        return {
+          title: "Accept this offer?",
+          message:
+            `You're accepting this carry offer. You have ${formatPaymentWindowLabel()} to complete payment and confirm the booking. The traveler will be notified.`,
+          confirmText: "Yes, accept offer",
+          cancelText: "Not now",
+        };
+      }
+
       return {
         title: "Accept this request?",
         message:

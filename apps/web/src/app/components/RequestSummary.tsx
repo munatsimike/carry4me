@@ -80,19 +80,19 @@ export default function RequestSummary({
 
     if (routeMismatch.hasMismatch) {
       issues.push(getRouteMismatchIssue(routeMismatch));
-    }
+    } else {
+      if (parcel.weightKg > trip.weightKg) {
+        issues.push(getWeightCapacityIssue(isSenderRequesting));
+      }
 
-    if (parcel.weightKg > trip.weightKg) {
-      issues.push(getWeightCapacityIssue(isSenderRequesting));
-    }
+      const categoriesAccepted = tripAcceptsParcelCategories(
+        trip.goodsCategory,
+        parcel.goodsCategory,
+      );
 
-    const categoriesAccepted = tripAcceptsParcelCategories(
-      trip.goodsCategory,
-      parcel.goodsCategory,
-    );
-
-    if (!categoriesAccepted) {
-      issues.push(getCategoryMismatchIssue());
+      if (!categoriesAccepted) {
+        issues.push(getCategoryMismatchIssue());
+      }
     }
 
     return {
