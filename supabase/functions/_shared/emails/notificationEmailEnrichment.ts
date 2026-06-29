@@ -26,12 +26,18 @@ function toDialCode(country: string | null | undefined): string | null {
     case "United States":
     case "United States of America":
       return "+1";
+    case "IE":
+    case "Ireland":
+      return "+353";
     case "Zimbabwe":
     case "ZW":
       return "+263";
     case "NL":
     case "Netherlands":
       return "+31";
+    case "FR":
+    case "France":
+      return "+33";
     default:
       return null;
   }
