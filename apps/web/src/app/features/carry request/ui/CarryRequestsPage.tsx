@@ -628,7 +628,7 @@ export default function CarryRequestsPage() {
         openInfo({
           title: "Payment released",
           message:
-            "Payment was released successfully. Depending on your bank, it may take 2 to 3 working days to arrive.",
+            "Payment was released successfully. Depending on your bank, it may take 3 to 4 working days to arrive.",
           label: "Close",
         });
       }

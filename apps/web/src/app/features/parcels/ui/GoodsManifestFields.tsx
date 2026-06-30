@@ -53,7 +53,7 @@ export default function GoodsManifestFields({
           return (
             <div
               key={field.id}
-              className="rounded-xl border border-neutral-200 bg-neutral-50/40 p-3 sm:p-4"
+              className="rounded-xl border border-neutral-200 bg-neutral-50/40 p-3 transition-colors hover:bg-neutral-100 sm:p-4"
             >
               <div className="mb-3 flex items-center justify-between gap-2">
                 <CustomText textSize="sm" className="font-medium text-ink-primary">

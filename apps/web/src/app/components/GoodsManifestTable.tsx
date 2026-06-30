@@ -56,6 +56,7 @@ function ManifestTable({
               key={`${item.description}-${index}`}
               className={cn(
                 rowBorder && "border-b border-neutral-100 last:border-0",
+                "transition-colors hover:bg-neutral-50",
               )}
             >
               <td
@@ -127,7 +128,7 @@ export default function GoodsManifestTable({
         {rows.map((item, index) => (
           <div
             key={`${item.description}-${index}-mobile`}
-            className="rounded-xl border border-neutral-200 bg-neutral-50/40 p-3"
+            className="rounded-xl border border-neutral-200 bg-neutral-50/40 p-3 transition-colors hover:bg-neutral-100"
           >
             {hideSizeOnMobile ? (
               <div className="grid grid-cols-3 gap-3">
