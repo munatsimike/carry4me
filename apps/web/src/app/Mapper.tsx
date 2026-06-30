@@ -7,7 +7,7 @@ const SUPPORTED_PHONE_COUNTRIES = [
   { countryCode: "IE", dialCode: "+353", name: "Ireland" },
   { countryCode: "NL", dialCode: "+31", name: "Netherlands" },
   { countryCode: "FR", dialCode: "+33", name: "France" },
-  { countryCode: "Zimbabwe", dialCode: "+263", name: "Zimbabwe" },
+  { countryCode: "ZW", dialCode: "+263", name: "Zimbabwe" },
 ] as const;
 
 const DIAL_CODES_LONGEST_FIRST = [...SUPPORTED_PHONE_COUNTRIES].sort(
