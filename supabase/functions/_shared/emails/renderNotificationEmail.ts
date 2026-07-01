@@ -4,6 +4,7 @@ import { renderHandoverConfirmedEmail } from "./templates/HandoverConfirmed.ts";
 import { renderParcelReceivedEmail } from "./templates/ParcelReceived.ts";
 import { renderPaymentReceivedEmail } from "./templates/PaymentReceived.ts";
 import { renderPaymentReleasedEmail } from "./templates/PaymentReleased.ts";
+import { renderTravelerBankPayoutEmail } from "./templates/TravelerBankPayout.ts";
 import { renderRequestAcceptedEmail } from "./templates/RequestAccepted.ts";
 import type { NotificationEmailInput } from "./utils.ts";
 
@@ -28,6 +29,9 @@ export function renderNotificationEmail(
       break;
     case "PAYMENT_RELEASED":
       rendered = renderPaymentReleasedEmail(notification);
+      break;
+    case "TRAVELER_BANK_PAYOUT":
+      rendered = renderTravelerBankPayoutEmail(notification);
       break;
     case "HANDOVER_CONFIRMED":
       rendered = renderHandoverConfirmedEmail(notification);

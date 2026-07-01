@@ -8,6 +8,7 @@ import {
   syncStripeConnectAccountToProfile,
 } from "../_shared/stripe/connectAccount.ts";
 import { transferTravelerPayoutForPayment } from "../_shared/stripe/travelerTransfer.ts";
+import { notifyTravelerBankPayoutPaid } from "../_shared/stripe/travelerBankPayoutNotification.ts";
 
 // TODO: handle charge.refunded — restore carry request / notify parties
 // TODO: handle charge.dispute.created — flag request and alert ops
@@ -67,6 +68,11 @@ Deno.serve(async (req) => {
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
         await handleAccountUpdated(supabaseAdmin, account);
+        break;
+      }
+      case "payout.paid": {
+        const payout = event.data.object as Stripe.Payout;
+        await handlePayoutPaid(supabaseAdmin, payout, event.account);
         break;
       }
       default:
@@ -210,5 +216,24 @@ async function handleAccountUpdated(
     accountId: account.id,
     detailsSubmitted: account.details_submitted,
     payoutsEnabled: account.payouts_enabled,
+  });
+}
+
+async function handlePayoutPaid(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  payout: Stripe.Payout,
+  connectedAccountId: string | null | undefined,
+) {
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  const result = await notifyTravelerBankPayoutPaid(supabaseAdmin, {
+    payout,
+    connectedAccountId,
+    resendApiKey,
+  });
+
+  console.info("stripe-webhook payout.paid processed", {
+    payoutId: payout.id,
+    connectedAccountId,
+    ...result,
   });
 }

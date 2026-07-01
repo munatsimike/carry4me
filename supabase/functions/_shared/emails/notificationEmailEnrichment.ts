@@ -155,7 +155,7 @@ export async function enrichNotificationForEmail(
 
   const type = notification.type?.trim().toUpperCase() ?? "";
 
-  if (type === "PAYMENT_RELEASED" || type === "PARCEL_DELIVERED") {
+  if (type === "PAYMENT_RELEASED" || type === "PARCEL_DELIVERED" || type === "TRAVELER_BANK_PAYOUT") {
     return { ...base, ctaLabel: null };
   }
 
