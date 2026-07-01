@@ -39,3 +39,21 @@ export async function confirmListingStatusChange(
     destructive: true,
   });
 }
+
+export async function confirmListingDelete(
+  listing: Listing,
+  confirm: ConfirmFn,
+): Promise<boolean> {
+  const isTrip = listing.type === "trip";
+  const noun = isTrip ? "trip" : "parcel";
+
+  return confirm({
+    title: `Delete this ${noun}?`,
+    message: isTrip
+      ? "This will permanently remove your trip listing and any related data. This action cannot be undone."
+      : "This will permanently remove your parcel listing and any related data. This action cannot be undone.",
+    confirmText: `Delete ${noun}`,
+    cancelText: "Cancel",
+    destructive: true,
+  });
+}

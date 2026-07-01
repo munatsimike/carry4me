@@ -23,7 +23,7 @@ import {
 } from "@/app/hooks/mutations/useParcelMutations";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { confirmListingStatusChange } from "@/app/shared/listings/listingStatusConfirmation";
+import { confirmListingDelete, confirmListingStatusChange } from "@/app/shared/listings/listingStatusConfirmation";
 
 export function MyParcelsPage() {
   const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
@@ -47,8 +47,11 @@ export function MyParcelsPage() {
     );
   }, [myParcels]);
 
-  const deleteParcel = (parcelId: string) => {
-    deleteParcelMutation.mutate(parcelId, {
+  const deleteParcel = async (listing: Listing) => {
+    const shouldProceed = await confirmListingDelete(listing, confirm);
+    if (!shouldProceed) return;
+
+    deleteParcelMutation.mutate(listing.id, {
       onSuccess: () => {
         toast("Parcel deleted successfully.", { variant: "success" });
       },
@@ -67,9 +70,12 @@ export function MyParcelsPage() {
       { parcelId: listing.id, active },
       {
         onSuccess: () => {
-          toast(active ? "Parcel activated." : "Parcel deactivated.", {
-            variant: "success",
-          });
+          toast(
+            active
+              ? "Parcel activated successfully."
+              : "Parcel deactivated successfully.",
+            { variant: "success" },
+          );
         },
       },
     );

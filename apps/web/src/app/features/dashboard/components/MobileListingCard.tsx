@@ -171,7 +171,7 @@ export function MobileListingCard<T extends Listing>({
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 type="button"
-                onClick={() => onDelete(row.id)}
+                onClick={() => onDelete(row)}
                 className="rounded-xl border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
               >
                 Delete

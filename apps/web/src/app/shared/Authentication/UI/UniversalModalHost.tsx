@@ -134,6 +134,7 @@ export function UniversalModalHost({
                 <ModalFooterButton
                   label={action.label}
                   slot="primary"
+                  destructive={modal.type === "confirm" && modal.destructive}
                   onClick={action.onClick}
                 />
               </ModalFooter>
@@ -148,16 +149,18 @@ export function UniversalModalHost({
 function ModalFooterButton({
   label,
   slot,
+  destructive = false,
   onClick,
 }: {
   label: string;
   slot: "primary" | "secondary";
+  destructive?: boolean;
   onClick: () => void;
 }) {
   const browseTone = resolveBrowseMarketplaceTone(label);
   const className = "w-full sm:min-w-[120px] sm:w-auto";
 
-  if (browseTone && slot === "primary") {
+  if (browseTone && slot === "primary" && !destructive) {
     return (
       <Button
         className={className}
@@ -180,6 +183,22 @@ function ModalFooterButton({
       >
         {label}
       </BrowseMarketplaceButton>
+    );
+  }
+
+  if (destructive && slot === "primary") {
+    return (
+      <Button
+        className={cn(
+          className,
+          "border-0 bg-error-600 hover:bg-error-700 hover:ring-2 hover:ring-error-200 focus-visible:ring-error-400",
+        )}
+        onClick={onClick}
+        variant="primary"
+        size="sm"
+      >
+        <CustomText textVariant="onDark">{label}</CustomText>
+      </Button>
     );
   }
 

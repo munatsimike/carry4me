@@ -23,7 +23,7 @@ import {
 } from "@/app/hooks/mutations/useTripMutations";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { confirmListingStatusChange } from "@/app/shared/listings/listingStatusConfirmation";
+import { confirmListingDelete, confirmListingStatusChange } from "@/app/shared/listings/listingStatusConfirmation";
 
 export function MyTripsPage() {
   const { user } = useAuth();
@@ -43,8 +43,11 @@ export function MyTripsPage() {
     return [...myTrips].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
   }, [myTrips]);
 
-  const deleteTrip = (tripId: string) => {
-    deleteTripMutation.mutate(tripId, {
+  const deleteTrip = async (listing: Listing) => {
+    const shouldProceed = await confirmListingDelete(listing, confirm);
+    if (!shouldProceed) return;
+
+    deleteTripMutation.mutate(listing.id, {
       onSuccess: () => {
         toast("Trip deleted successfully.", { variant: "success" });
       },
@@ -63,9 +66,10 @@ export function MyTripsPage() {
       { tripId: listing.id, active },
       {
         onSuccess: () => {
-          toast(active ? "Trip activated." : "Trip deactivated.", {
-            variant: "success",
-          });
+          toast(
+            active ? "Trip activated successfully." : "Trip deactivated successfully.",
+            { variant: "success" },
+          );
         },
       },
     );

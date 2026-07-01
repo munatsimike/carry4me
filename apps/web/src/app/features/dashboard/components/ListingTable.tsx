@@ -44,7 +44,7 @@ const rowVariants = {
 export interface ListingTableProps<T extends Listing> {
   data: T[];
   onEdit: (v: FormValues) => void;
-  onDelete: (s: string) => void;
+  onDelete: (listing: Listing) => void;
   onToggleStatus?: (listing: Listing, active: boolean) => void;
   showDateColumn?: boolean;
   setListingPreview: (p: T) => void;
@@ -62,9 +62,9 @@ export function ListingTable<T extends Listing>({
 }: ListingTableProps<T>) {
   const textStyle = "font-medium text-ink-primary py-4";
   const headerStyle = `pl-4 ${textStyle}`;
+  const bodyCellClass = "min-w-0 pl-4 py-3";
   const [hoverId, setHoverId] = useState<string | null>(null);
   const columnCount = showDateColumn ? 6 : 5;
-  const compactLayout = !showDateColumn;
 
   return (
     <motion.div
@@ -74,32 +74,28 @@ export function ListingTable<T extends Listing>({
       style={{ marginTop: 16 }}
       className="w-full min-w-0 overflow-hidden rounded-xl bg-white shadow-md"
     >
-      <div className={compactLayout ? "w-full min-w-0" : "w-full overflow-x-auto"}>
-      <table
-        className={`w-full border-collapse table-fixed ${
-          compactLayout ? "min-w-0" : "min-w-[720px]"
-        }`}
-      >
+      <div className="w-full min-w-0">
+      <table className="w-full min-w-0 border-collapse table-fixed">
         <thead>
           <tr className="text-left border border-b-neutral-200">
             <TableTd
-              className={`${compactLayout ? "w-[40%]" : showDateColumn ? "w-[38%]" : "w-[52%]"} ${headerStyle}`}
+              className={`${showDateColumn ? "w-[32%]" : "w-[38%]"} ${headerStyle}`}
             >
               Route
             </TableTd>
             {showDateColumn ? (
-              <TableTd className={`w-[14%] ${headerStyle}`}>Departure</TableTd>
+              <TableTd className={`w-[12%] ${headerStyle}`}>Departure</TableTd>
             ) : null}
-            <TableTd className={`${compactLayout ? "w-[10%]" : "w-[10%]"} ${headerStyle}`}>
+            <TableTd className={`w-[8%] ${headerStyle}`}>
               Space
             </TableTd>
-            <TableTd className={`${compactLayout ? "w-[14%]" : "w-[14%]"} ${headerStyle}`}>
+            <TableTd className={`w-[12%] ${headerStyle}`}>
               Price per kg
             </TableTd>
-            <TableTd className={`${compactLayout ? "w-[12%]" : "w-[10%]"} ${headerStyle}`}>
+            <TableTd className={`w-[9%] ${headerStyle}`}>
               Status
             </TableTd>
-            <TableTd className={`${compactLayout ? "w-[24%]" : "w-[18%]"} pl-6 ${textStyle}`}>
+            <TableTd className={`${showDateColumn ? "w-[27%]" : "w-[33%]"} pl-6 ${textStyle}`}>
               Actions
             </TableTd>
           </tr>
@@ -125,9 +121,7 @@ export function ListingTable<T extends Listing>({
               className="hover:bg-neutral-100 border border-b-neutral-100 hover:shadow-sm"
               style={{ transformOrigin: "center" }}
             >
-              <TableTd
-                className={`pl-4 py-2 ${compactLayout ? "w-[40%]" : showDateColumn ? "w-[38%]" : "w-[52%]"}`}
-              >
+              <TableTd className={bodyCellClass}>
                 <span className="relative inline-flex w-full min-w-0 items-center pr-4">
                   <span
                     className="block min-w-0 truncate text-sm text-ink-primary"
@@ -159,16 +153,21 @@ export function ListingTable<T extends Listing>({
               </TableTd>
 
               {showDateColumn ? (
-                <TableTd className="pl-4 py-2 w-[14%] whitespace-nowrap">
-                  <TableText text={formatListingDate(row.departDate)} />
+                <TableTd className={bodyCellClass}>
+                  <span
+                    className="block min-w-0 truncate"
+                    title={formatListingDate(row.departDate)}
+                  >
+                    <TableText text={formatListingDate(row.departDate)} />
+                  </span>
                 </TableTd>
               ) : null}
 
-              <TableTd>
+              <TableTd className={bodyCellClass}>
                 <TableText text={`${row.weightKg.toString()}kg`} />
               </TableTd>
 
-              <TableTd>
+              <TableTd className={bodyCellClass}>
                 <TableText
                   text={formatCurrencyByCountry(
                     row.route.originCountry,
@@ -181,14 +180,14 @@ export function ListingTable<T extends Listing>({
                 />
               </TableTd>
 
-              <TableTd>
-                <span className={`inline-flex rounded-full border px-2 py-1 text-[12px] ${statusBadgeClass(row.status)}`}>
+              <TableTd className={bodyCellClass}>
+                <span className={`inline-flex max-w-full rounded-full border px-2 py-1 text-[12px] ${statusBadgeClass(row.status)}`}>
                   {formatListingStatus(row.status)}
                 </span>
               </TableTd>
 
-              <TableTd>
-                <div className="flex flex-wrap gap-2">
+              <TableTd className={`${bodyCellClass} pl-6`}>
+                <div className="flex flex-nowrap items-center gap-1">
                   {(() => {
                     const toggleLabel = getListingStatusToggleLabel(row);
                     return toggleLabel && onToggleStatus ? (
@@ -196,7 +195,7 @@ export function ListingTable<T extends Listing>({
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.98 }}
                         aria-label={`${toggleLabel} listing`}
-                        className="rounded-md px-3 py-1 text-sm text-primary-700 transition hover:bg-primary-50"
+                        className="shrink-0 whitespace-nowrap rounded-md px-2 py-1 text-xs text-primary-700 transition hover:bg-primary-50"
                         onClick={() =>
                           onToggleStatus(row, toggleLabel === "Activate")
                         }
@@ -210,7 +209,7 @@ export function ListingTable<T extends Listing>({
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     aria-label="Edit listing"
-                    className="rounded-md px-3 py-1 text-sm text-ink-primary transition hover:bg-neutral-300"
+                    className="shrink-0 whitespace-nowrap rounded-md px-2 py-1 text-xs text-ink-primary transition hover:bg-neutral-300"
                     onClick={() => {
                       setModalState(true);
                       // set form values for editing
@@ -244,8 +243,8 @@ export function ListingTable<T extends Listing>({
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     aria-label="Delete listing"
-                    className="rounded-md px-2 py-1 text-sm text-red-600 transition hover:bg-error-100"
-                    onClick={() => onDelete(row.id)}
+                    className="shrink-0 whitespace-nowrap rounded-md px-2 py-1 text-xs text-red-600 transition hover:bg-error-100"
+                    onClick={() => onDelete(row)}
                   >
                     Delete
                   </motion.button>
@@ -262,7 +261,7 @@ export function ListingTable<T extends Listing>({
 
 function TableTd({
   children,
-  className = "pl-4 py-2",
+  className = "pl-4 py-3",
   colSpan,
 }: {
   children: React.ReactNode;
