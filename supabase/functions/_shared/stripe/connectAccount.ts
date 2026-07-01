@@ -18,7 +18,7 @@ import {
 
 export type StripeConnectClientState = "not_created" | "setup_incomplete" | "ready";
 
-const CONNECT_ACCOUNT_IDEMPOTENCY_VERSION = "v2";
+const CONNECT_ACCOUNT_IDEMPOTENCY_VERSION = "v3";
 
 const ALPHA3_TO_ALPHA2: Record<string, string> = {
   NLD: "NL",
@@ -155,7 +155,6 @@ export async function findProfileIdByStripeAccountId(
 
 /**
  * Retrieves a Connect account from Stripe and writes the latest flags to profiles.
- * Never clears stored profile data on lookup failure.
  */
 async function syncStripeAccountFromStripe(
   stripe: Stripe,
@@ -184,10 +183,50 @@ async function syncStripeAccountFromStripe(
         accountId,
         stripeErrorMessage(err),
       );
+
+      const current = await loadTravelerProfile(supabaseAdmin, userId);
+      if (current?.stripe_account_id === accountId) {
+        return await resetStripeConnectProfile(supabaseAdmin, userId);
+      }
+
       return null;
     }
 
     throw err;
+  }
+}
+
+/** Clears profiles.stripe_* when the stored Connect account was deleted in Stripe. */
+async function clearStaleStoredStripeConnectAccount(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  profile: TravelerStripeProfile,
+): Promise<TravelerStripeProfile> {
+  const storedId = profile.stripe_account_id?.trim();
+  if (!storedId) {
+    return profile;
+  }
+
+  try {
+    const account = await stripe.accounts.retrieve(storedId);
+    if (account.livemode !== isStripeLiveMode()) {
+      const reset = await resetStripeConnectProfile(supabaseAdmin, userId);
+      return reset ?? profile;
+    }
+    return profile;
+  } catch (err) {
+    if (!isStaleStripeConnectAccountError(err)) {
+      throw err;
+    }
+
+    console.warn(
+      "clearStaleStoredStripeConnectAccount deleted account cleared from profile",
+      storedId,
+      stripeErrorMessage(err),
+    );
+    const reset = await resetStripeConnectProfile(supabaseAdmin, userId);
+    return reset ?? profile;
   }
 }
 
@@ -211,7 +250,7 @@ export async function refreshTravelerStripeConnectStatusSafe(
 
 /**
  * Uses the stored stripe_account_id (or recovers it from Stripe) to refresh profiles.*
- * Safe to call before onboarding redirects — never resets verified profile rows.
+ * Clears the profile when the stored account was deleted in Stripe.
  */
 export async function syncTravelerStripeConnectProfileFromStripe(
   stripe: Stripe,
@@ -227,7 +266,12 @@ export async function syncTravelerStripeConnectProfileFromStripe(
   );
 
   if (!bestAccountId) {
-    return profile;
+    return clearStaleStoredStripeConnectAccount(
+      stripe,
+      supabaseAdmin,
+      userId,
+      profile,
+    );
   }
 
   const synced = await syncStripeAccountFromStripe(
@@ -237,7 +281,16 @@ export async function syncTravelerStripeConnectProfileFromStripe(
     bestAccountId,
   );
 
-  return synced ?? profile;
+  if (!synced) {
+    return clearStaleStoredStripeConnectAccount(
+      stripe,
+      supabaseAdmin,
+      userId,
+      profile,
+    );
+  }
+
+  return synced;
 }
 
 async function claimStripeAccountId(
@@ -324,9 +377,11 @@ async function pickBestStripeConnectAccountId(
         bestAccountId = account.id;
       }
     } catch (err) {
-      if (!isStaleStripeConnectAccountError(err)) {
-        throw err;
-      }
+      console.warn(
+        "pickBestStripeConnectAccountId skipped candidate",
+        accountId,
+        stripeErrorMessage(err),
+      );
     }
   }
 
@@ -435,13 +490,18 @@ async function validateExistingStripeAccount(
     await syncStripeConnectAccountToProfile(supabaseAdmin, userId, existing);
     return accountId;
   } catch (err) {
-    if (!isStaleStripeConnectAccountError(err)) {
-      throw err;
+    if (isStaleStripeConnectAccountError(err)) {
+      console.warn("validateExistingStripeAccount stale account cleared", accountId);
+      const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
+      return resetProfile?.stripe_account_id ?? null;
     }
 
-    console.warn("validateExistingStripeAccount stale account cleared", accountId);
-    const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
-    return resetProfile?.stripe_account_id ?? null;
+    console.warn(
+      "validateExistingStripeAccount failed",
+      accountId,
+      stripeErrorMessage(err),
+    );
+    return null;
   }
 }
 
@@ -472,8 +532,11 @@ async function createStripeConnectAccount(
 ): Promise<Stripe.Account> {
   const idempotencyKey = `connect-account-${CONNECT_ACCOUNT_IDEMPOTENCY_VERSION}-${userId}`;
 
+  const createFreshAccount = () => stripe.accounts.create(createParams);
+
+  let account: Stripe.Account;
   try {
-    return await stripe.accounts.create(createParams, { idempotencyKey });
+    account = await stripe.accounts.create(createParams, { idempotencyKey });
   } catch (err) {
     if (!isStripeIdempotencyError(err) && !isStripeAccountCreateConflict(err)) {
       throw err;
@@ -489,10 +552,36 @@ async function createStripeConnectAccount(
       userId,
     );
     if (!recoveredAccountId) {
+      await resetStripeConnectProfile(supabaseAdmin, userId);
+      return await createFreshAccount();
+    }
+
+    try {
+      account = await stripe.accounts.retrieve(recoveredAccountId);
+    } catch (retrieveErr) {
+      if (!isStaleStripeConnectAccountError(retrieveErr)) {
+        throw retrieveErr;
+      }
+
+      await resetStripeConnectProfile(supabaseAdmin, userId);
+      return await createFreshAccount();
+    }
+  }
+
+  try {
+    return await stripe.accounts.retrieve(account.id);
+  } catch (err) {
+    if (!isStaleStripeConnectAccountError(err)) {
       throw err;
     }
 
-    return stripe.accounts.retrieve(recoveredAccountId);
+    console.warn(
+      "createStripeConnectAccount idempotency replayed deleted account — creating fresh",
+      account.id,
+      stripeErrorMessage(err),
+    );
+    await resetStripeConnectProfile(supabaseAdmin, userId);
+    return await createFreshAccount();
   }
 }
 
@@ -585,21 +674,40 @@ export async function refreshStripeConnectAccountStatus(
     return profile;
   }
 
-  const account = await stripe.accounts.retrieve(profile.stripe_account_id);
+  try {
+    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
 
-  if (account.livemode !== isStripeLiveMode()) {
+    if (account.livemode !== isStripeLiveMode()) {
+      console.warn(
+        "refreshStripeConnectAccountStatus livemode mismatch cleared",
+        profile.stripe_account_id,
+      );
+      const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
+      return resetProfile ?? profile;
+    }
+
+    await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
+
+    const refreshed = await loadTravelerProfile(supabaseAdmin, userId);
+    return refreshed ?? profile;
+  } catch (err) {
+    if (!isStaleStripeConnectAccountError(err)) {
+      console.warn(
+        "refreshStripeConnectAccountStatus failed",
+        profile.stripe_account_id,
+        stripeErrorMessage(err),
+      );
+      return profile;
+    }
+
     console.warn(
-      "refreshStripeConnectAccountStatus livemode mismatch cleared",
+      "refreshStripeConnectAccountStatus stale account cleared",
       profile.stripe_account_id,
+      stripeErrorMessage(err),
     );
     const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
     return resetProfile ?? profile;
   }
-
-  await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
-
-  const refreshed = await loadTravelerProfile(supabaseAdmin, userId);
-  return refreshed ?? profile;
 }
 
 /**
@@ -612,55 +720,71 @@ export async function reconcileTravelerStripeConnectProfile(
   userId: string,
   profile: TravelerStripeProfile,
 ): Promise<TravelerStripeProfile> {
-  if (profile.stripe_account_id) {
-    try {
-      return await refreshStripeConnectAccountStatus(
+  try {
+    if (profile.stripe_account_id) {
+      profile = await refreshStripeConnectAccountStatus(
         stripe,
         supabaseAdmin,
         profile,
         userId,
       );
-    } catch (err) {
-      if (!isStaleStripeConnectAccountError(err)) {
-        throw err;
-      }
-
-      console.warn(
-        "reconcileTravelerStripeConnectProfile stale account cleared",
-        profile.stripe_account_id,
-        stripeErrorMessage(err),
-      );
-      const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
-      profile = resetProfile ?? profile;
     }
+
+    const recoveredAccountId = await findStripeAccountIdForUser(
+      stripe,
+      supabaseAdmin,
+      profile,
+      userId,
+    );
+    if (!recoveredAccountId) {
+      return clearStaleStoredStripeConnectAccount(
+        stripe,
+        supabaseAdmin,
+        userId,
+        profile,
+      );
+    }
+
+    const validated = await validateExistingStripeAccount(
+      stripe,
+      supabaseAdmin,
+      userId,
+      recoveredAccountId,
+    );
+    if (!validated) {
+      return clearStaleStoredStripeConnectAccount(
+        stripe,
+        supabaseAdmin,
+        userId,
+        profile,
+      );
+    }
+
+    await claimStripeAccountId(supabaseAdmin, userId, validated);
+
+    const claimed = await loadTravelerProfile(supabaseAdmin, userId);
+    if (!claimed?.stripe_account_id) {
+      return profile;
+    }
+
+    return refreshStripeConnectAccountStatus(stripe, supabaseAdmin, claimed, userId);
+  } catch (err) {
+    console.warn(
+      "reconcileTravelerStripeConnectProfile failed",
+      userId,
+      stripeErrorMessage(err),
+    );
+
+    const latest = await loadTravelerProfile(supabaseAdmin, userId);
+    if (!latest) {
+      return profile;
+    }
+
+    return clearStaleStoredStripeConnectAccount(
+      stripe,
+      supabaseAdmin,
+      userId,
+      latest,
+    );
   }
-
-  const recoveredAccountId = await findStripeAccountIdForUser(
-    stripe,
-    supabaseAdmin,
-    profile,
-    userId,
-  );
-  if (!recoveredAccountId) {
-    return profile;
-  }
-
-  const validated = await validateExistingStripeAccount(
-    stripe,
-    supabaseAdmin,
-    userId,
-    recoveredAccountId,
-  );
-  if (!validated) {
-    return profile;
-  }
-
-  await claimStripeAccountId(supabaseAdmin, userId, validated);
-
-  const claimed = await loadTravelerProfile(supabaseAdmin, userId);
-  if (!claimed?.stripe_account_id) {
-    return profile;
-  }
-
-  return refreshStripeConnectAccountStatus(stripe, supabaseAdmin, claimed, userId);
 }

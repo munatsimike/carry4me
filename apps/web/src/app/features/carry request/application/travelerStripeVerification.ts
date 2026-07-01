@@ -117,6 +117,21 @@ function handleStripeVerificationError(
     return false;
   }
 
+  const lowerMessage = appError.message.toLowerCase();
+  if (
+    appError.code === "STRIPE_ACCOUNT_NOT_FOUND" ||
+    lowerMessage.includes("no such account")
+  ) {
+    openInfo({
+      title: "Stripe account reset required",
+      message:
+        "Your previous Stripe payout account was removed. Close this and try setup again — a fresh account will be created.",
+      label: "Close",
+      secondaryLabel: "Maybe later",
+    });
+    return false;
+  }
+
   openInfo({
     title: "Could not open Stripe verification",
     message:
@@ -146,10 +161,27 @@ export async function redirectToTravelerStripeOnboarding(
 
   const { returnUrl, refreshUrl } = resolveOnboardingUrls(options);
 
-  const onboarding = await invokeStripeFunction<ConnectOnboardingResponse>(
-    "stripe-connect-onboarding",
-    { return_url: returnUrl, refresh_url: refreshUrl },
-  );
+  let onboarding: ConnectOnboardingResponse;
+  try {
+    onboarding = await invokeStripeFunction<ConnectOnboardingResponse>(
+      "stripe-connect-onboarding",
+      { return_url: returnUrl, refresh_url: refreshUrl },
+    );
+  } catch (firstErr) {
+    const appError = AppError.fromUnknown(firstErr);
+    const shouldRetry =
+      appError.code === "STRIPE_ACCOUNT_NOT_FOUND" ||
+      appError.message.toLowerCase().includes("no such account");
+
+    if (!shouldRetry) {
+      throw firstErr;
+    }
+
+    onboarding = await invokeStripeFunction<ConnectOnboardingResponse>(
+      "stripe-connect-onboarding",
+      { return_url: returnUrl, refresh_url: refreshUrl },
+    );
+  }
 
   if (isTravelerStripeReadyForAccept(onboarding)) {
     await options.onStripeSynced?.();
@@ -212,25 +244,38 @@ async function reconcileTravelerStripeConnectFromOnboarding(
 export async function syncTravelerStripeConnectAfterReturn(
   options: { returnUrl?: string; refreshUrl?: string } = {},
 ): Promise<ConnectStatusResponse> {
-  let status = await fetchTravelerStripeConnectStatus();
+  try {
+    let status = await reconcileTravelerStripeConnectFromOnboarding(options);
 
-  if (!needsStripeConnectReconcile(status)) {
-    return status;
-  }
-
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    await sleep(1200);
-    status = await fetchTravelerStripeConnectStatus();
     if (!needsStripeConnectReconcile(status)) {
       return status;
     }
-  }
 
-  try {
-    return await reconcileTravelerStripeConnectFromOnboarding(options);
-  } catch {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await sleep(1500);
+      status = await reconcileTravelerStripeConnectFromOnboarding(options);
+      if (!needsStripeConnectReconcile(status)) {
+        return status;
+      }
+    }
+
     return status;
+  } catch {
+    return fetchTravelerStripeConnectStatus();
   }
+}
+
+export function isTravelerStripeProfileSyncedWithStatus(
+  profile: TravelerStripeProfileSnapshot,
+  status: ConnectStatusResponse,
+): boolean {
+  return (
+    (profile.stripeAccountId ?? null) === (status.stripe_account_id ?? null) &&
+    profile.stripeDetailsSubmitted === (status.stripe_details_submitted === true) &&
+    profile.stripePayoutsEnabled === (status.stripe_payouts_enabled === true) &&
+    (profile.stripeVerificationStatus ?? "not_started") ===
+      (status.stripe_verification_status ?? "not_started")
+  );
 }
 
 export function isTravelerStripeReturnSuccess(
@@ -305,6 +350,51 @@ function promptTravelerStripeOnboarding(
 }
 
 export async function ensureTravelerStripeReady(
+  options: TravelerStripeReadyOptions,
+): Promise<boolean> {
+  if (isTravelerStripeAcceptReadyInProfile(options.profile)) {
+    return true;
+  }
+
+  const status = await loadTravelerStripeConnectStatus(options.openInfo);
+  if (!status) {
+    return false;
+  }
+
+  if (isTravelerStripeReadyForAccept(status)) {
+    await options.onStripeSynced?.();
+    return true;
+  }
+
+  if (!status.phone_verified) {
+    options.openInfo({
+      title: "Phone verification required",
+      message: "Verify your phone number before you can accept paid carry requests.",
+      label: "Close",
+      secondaryLabel: "Maybe later",
+    });
+    return false;
+  }
+
+  if (!status.email_verified) {
+    options.openInfo({
+      title: "Email verification required",
+      message: "Verify your email before you can accept paid carry requests.",
+      label: "Close",
+      secondaryLabel: "Maybe later",
+    });
+    return false;
+  }
+
+  return promptTravelerStripeOnboarding(options);
+}
+
+/**
+ * Stripe gate before accept/send carry actions.
+ * Checks payout status first, then shows the Stripe setup modal when needed
+ * (before any accept/send confirmation — not after).
+ */
+export async function ensureTravelerStripeReadyForCarryAction(
   options: TravelerStripeReadyOptions,
 ): Promise<boolean> {
   if (isTravelerStripeAcceptReadyInProfile(options.profile)) {

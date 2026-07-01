@@ -63,10 +63,6 @@ import {
 } from "../application/passkeyAuth";
 import { TravelerPayoutStatusRow } from "../UI/TravelerPayoutStatusRow";
 import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
-import {
-  getTravelerStripeReturnToast,
-  syncTravelerStripeConnectAfterReturn,
-} from "@/app/features/carry request/application/travelerStripeVerification";
 import { shouldShowTravelerPayoutSetup } from "@/app/features/carry request/application/travelerStripeConnectStatus";
 
 type AvatarProps = {
@@ -148,7 +144,6 @@ export default function ProfilePage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const localAvatarPreviewUrlRef = useRef<string | null>(null);
-  const stripeParamHandledRef = useRef<string | null>(null);
   const [changePhoneOpen, setChangePhoneOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [passkeys, setPasskeys] = useState<PasskeyCredentialSummary[]>([]);
@@ -219,34 +214,6 @@ export default function ProfilePage() {
     openSecurityEdit();
     setSearchParams({}, { replace: true });
   }, [profile, searchParams, setSearchParams, setValue, user?.email]);
-
-  useEffect(() => {
-    const stripeParam = searchParams.get("stripe");
-    if (stripeParam !== "return" && stripeParam !== "refresh") return;
-
-    if (stripeParamHandledRef.current === stripeParam) return;
-    stripeParamHandledRef.current = stripeParam;
-
-    void (async () => {
-      try {
-        const origin = window.location.origin;
-        const status = await syncTravelerStripeConnectAfterReturn({
-          returnUrl: `${origin}/profile?stripe=return`,
-          refreshUrl: `${origin}/profile?stripe=refresh`,
-        });
-        await refreshProfile({ silent: true });
-        const { message, variant } = getTravelerStripeReturnToast(status);
-        toast(message, { variant });
-      } catch (err) {
-        showSupabaseError(err);
-      } finally {
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("stripe");
-        const nextSearch = params.toString();
-        setSearchParams(nextSearch ? `?${nextSearch}` : "", { replace: true });
-      }
-    })();
-  }, [searchParams, refreshProfile, setSearchParams, showSupabaseError, toast]);
 
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const updateAuthDetails = useMemo(

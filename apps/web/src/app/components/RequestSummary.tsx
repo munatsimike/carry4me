@@ -20,7 +20,7 @@ import {
   ModalSeparator,
 } from "@/app/components/ModalFooter";
 import { processRequestSentEmailQueue } from "../features/carry request/application/processRequestSentEmailQueue";
-import { ensureTravelerStripeReady } from "../features/carry request/application/travelerStripeVerification";
+import { ensureTravelerStripeReadyForCarryAction } from "../features/carry request/application/travelerStripeVerification";
 import { CarryRequestCostSummary } from "../features/carry request/ui/CarryRequestCostSummary";
 import {
   RequestDetailsGrid,
@@ -229,14 +229,14 @@ export default function RequestSummary({
       void (async () => {
         setIsSubmitting(true);
         try {
-          const shouldSend = await confirmResendAfterEndedRequest();
-          if (!shouldSend) return;
-
           if (!isSenderRequesting) {
             try {
-              const stripeReady = await ensureTravelerStripeReady({
+              const origin = window.location.origin;
+              const stripeReady = await ensureTravelerStripeReadyForCarryAction({
                 openInfo,
                 profile,
+                returnUrl: `${origin}/requests?stripe=return`,
+                refreshUrl: `${origin}/profile?stripe=refresh`,
                 onStripeSynced: () => {
                   void refreshProfile({ silent: true });
                 },
@@ -247,6 +247,9 @@ export default function RequestSummary({
               return;
             }
           }
+
+          const shouldSend = await confirmResendAfterEndedRequest();
+          if (!shouldSend) return;
 
           await handleSendRequest();
         } finally {

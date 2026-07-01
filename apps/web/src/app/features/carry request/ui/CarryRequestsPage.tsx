@@ -18,9 +18,7 @@ import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
 import { processActionEmailQueue } from "../application/processActionEmailQueue";
 import { processEmailQueueInBackground } from "@/app/shared/supabase/processEmailQueue";
 import {
-  ensureTravelerStripeReady,
-  getTravelerStripeReturnToast,
-  syncTravelerStripeConnectAfterReturn,
+  ensureTravelerStripeReadyForCarryAction,
 } from "../application/travelerStripeVerification";
 import {
   deliveryOtpFailureMessage,
@@ -193,7 +191,6 @@ export default function CarryRequestsPage() {
   );
 
   const [searchParams] = useSearchParams();
-  const stripeParamHandledRef = useRef<string | null>(null);
   const paymentReturnHandledRef = useRef<string | null>(null);
 
   const tabCounts = useMemo<Record<SelectedTab, number>>(() => {
@@ -401,36 +398,6 @@ export default function CarryRequestsPage() {
   };
 
   useEffect(() => {
-    const stripeParam = searchParams.get("stripe");
-    if (stripeParam !== "return" && stripeParam !== "refresh") return;
-
-    // Prevent repeated calls when the page re-renders (common after refreshProfile).
-    if (stripeParamHandledRef.current === stripeParam) return;
-    stripeParamHandledRef.current = stripeParam;
-
-    void (async () => {
-      try {
-        const origin = window.location.origin;
-        const status = await syncTravelerStripeConnectAfterReturn({
-          returnUrl: `${origin}/requests?stripe=return`,
-          refreshUrl: `${origin}/requests?stripe=refresh`,
-        });
-        await refreshProfile({ silent: true });
-        const { message, variant } = getTravelerStripeReturnToast(status);
-        toast(message, { variant });
-      } catch (err) {
-        showSupabaseError(err);
-      } finally {
-        // Remove the stripe param so we don't re-run this effect forever.
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("stripe");
-        const nextSearch = params.toString();
-        navigate({ search: nextSearch ? `?${nextSearch}` : "" }, { replace: true });
-      }
-    })();
-  }, [searchParams, refreshProfile, showSupabaseError, navigate, toast]);
-
-  useEffect(() => {
     const carryRequestId = searchParams.get("carry_request_id")?.trim();
     const paymentIntentId = searchParams.get("payment_intent")?.trim();
     const redirectStatus = searchParams.get("redirect_status")?.trim();
@@ -510,6 +477,35 @@ export default function CarryRequestsPage() {
       return;
     }
 
+    const accepterIsTraveler =
+      actions.primary.key === UIACTIONKEYS.ACCEPT &&
+      user.id === carryRequest.travelerUserId;
+
+    if (accepterIsTraveler) {
+      if (!guardAction(() => undefined, "send_request")) {
+        return;
+      }
+
+      try {
+        const origin = window.location.origin;
+        const stripeReady = await ensureTravelerStripeReadyForCarryAction({
+          openInfo,
+          profile,
+          returnUrl: `${origin}/requests?stripe=return`,
+          refreshUrl: `${origin}/requests?stripe=refresh`,
+          onStripeSynced: () => {
+            void refreshProfile({ silent: true });
+          },
+        });
+        if (!stripeReady) {
+          return;
+        }
+      } catch (err) {
+        showSupabaseError(err);
+        return;
+      }
+    }
+
     const shouldProceed = await confirmCarryRequestAction(
       actions.primary.key,
       { viewerRole, status: carryRequest.status },
@@ -523,32 +519,8 @@ export default function CarryRequestsPage() {
     });
 
     try {
-      // ACCEPT checks — only travelers need Stripe + trip capacity validation.
       if (actions.primary.key === UIACTIONKEYS.ACCEPT) {
-        if (!guardAction(() => undefined, "send_request")) {
-          return;
-        }
-
-        const accepterIsTraveler =
-          user.id === carryRequest.travelerUserId;
-
         if (accepterIsTraveler) {
-          try {
-            const stripeReady = await ensureTravelerStripeReady({
-              openInfo,
-              profile,
-              onStripeSynced: () => {
-                void refreshProfile({ silent: true });
-              },
-            });
-            if (!stripeReady) {
-              return;
-            }
-          } catch (err) {
-            showSupabaseError(err);
-            return;
-          }
-
           const weightResult = await checkTravelersWeight(carryRequest);
           if (!weightResult) return;
         }

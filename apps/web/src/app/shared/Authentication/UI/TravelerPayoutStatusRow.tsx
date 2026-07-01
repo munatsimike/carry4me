@@ -15,6 +15,7 @@ import {
 import {
   fetchTravelerStripeConnectStatus,
   isTravelerStripePayoutCompleteFromStatus,
+  isTravelerStripeProfileSyncedWithStatus,
   startTravelerStripeOnboarding,
 } from "@/app/features/carry request/application/travelerStripeVerification";
 
@@ -64,10 +65,7 @@ export function TravelerPayoutStatusRow({
 
     void fetchTravelerStripeConnectStatus()
       .then((status) => {
-        if (
-          status.verified ||
-          status.stripe_verification_status === "verified"
-        ) {
+        if (!isTravelerStripeProfileSyncedWithStatus(profile, status)) {
           return onStatusRefreshed?.();
         }
       })
@@ -75,6 +73,8 @@ export function TravelerPayoutStatusRow({
   }, [
     onStatusRefreshed,
     profile.stripeAccountId,
+    profile.stripeDetailsSubmitted,
+    profile.stripePayoutsEnabled,
     profile.stripeVerificationStatus,
   ]);
 

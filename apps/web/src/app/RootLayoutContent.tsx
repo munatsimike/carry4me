@@ -21,6 +21,7 @@ import {
   useSignInModal,
 } from "./shared/Authentication/SignInModalContext";
 import { useEmailVerificationTabListener } from "./shared/Authentication/UI/hooks/useEmailVerificationTabListener";
+import { useStripeConnectReturnSync } from "./hooks/useStripeConnectReturnSync";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
 const SCROLL_TO_TOP_PATHS = ["/travelers", "/parcels"];
 
@@ -35,6 +36,7 @@ export default function RootLayoutContent() {
   const isAuthed = !!user;
 
   useEmailVerificationTabListener();
+  useStripeConnectReturnSync();
 
   useEffect(() => {
     if (SCROLL_TO_TOP_PATHS.includes(location.pathname)) {

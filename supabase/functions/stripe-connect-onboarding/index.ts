@@ -5,7 +5,10 @@ import {
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
 import { getStripe } from "../_shared/stripe/client.ts";
-import { stripeErrorMessage } from "../_shared/stripe/errors.ts";
+import {
+  isStaleStripeConnectAccountError,
+  stripeErrorMessage,
+} from "../_shared/stripe/errors.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import {
   buildConnectStatusPayload,
@@ -17,12 +20,109 @@ import {
   isTravelerStripeOnboardingComplete,
   isTravelerStripeVerified,
   loadTravelerProfile,
+  resetStripeConnectProfile,
 } from "../_shared/stripe/profiles.ts";
 
 type RequestBody = {
   return_url?: string;
   refresh_url?: string;
 };
+
+async function createOnboardingLink(
+  stripe: Stripe,
+  accountId: string,
+  returnUrl: string,
+  refreshUrl: string,
+): Promise<Stripe.AccountLink> {
+  return stripe.accountLinks.create({
+    account: accountId,
+    type: "account_onboarding",
+    return_url: returnUrl,
+    refresh_url: refreshUrl,
+  });
+}
+
+async function buildOnboardingResponse(
+  stripe: ReturnType<typeof getStripe>,
+  supabaseAdmin: Awaited<ReturnType<typeof getAuthenticatedUser>>["supabaseAdmin"],
+  userId: string,
+  userEmail: string | undefined,
+  returnUrl: string,
+  refreshUrl: string,
+  allowRetry: boolean,
+) {
+  let profile = await loadTravelerProfile(supabaseAdmin, userId);
+  if (!profile) {
+    return jsonResponse({ error: "Profile not found" }, 404);
+  }
+
+  profile = await syncTravelerStripeConnectProfileFromStripe(
+    stripe,
+    supabaseAdmin,
+    userId,
+    profile,
+  );
+
+  if (
+    isTravelerStripeVerified(profile) ||
+    isTravelerStripeOnboardingComplete(profile)
+  ) {
+    return jsonResponse({
+      ...buildConnectStatusPayload(profile),
+      onboarding_url: null,
+    });
+  }
+
+  let accountId = await ensureStripeConnectAccountId(
+    stripe,
+    supabaseAdmin,
+    profile,
+    userId,
+    userEmail,
+  );
+
+  try {
+    const accountLink = await createOnboardingLink(
+      stripe,
+      accountId,
+      returnUrl,
+      refreshUrl,
+    );
+
+    const account = await stripe.accounts.retrieve(accountId);
+    await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
+
+    const refreshed = await loadTravelerProfile(supabaseAdmin, userId);
+    if (!refreshed) {
+      return jsonResponse({ error: "Profile not found" }, 404);
+    }
+
+    return jsonResponse({
+      ...buildConnectStatusPayload(refreshed),
+      onboarding_url: accountLink.url,
+    });
+  } catch (err) {
+    if (!allowRetry || !isStaleStripeConnectAccountError(err)) {
+      throw err;
+    }
+
+    console.warn(
+      "stripe-connect-onboarding stale account during link create — retrying",
+      accountId,
+      stripeErrorMessage(err),
+    );
+    await resetStripeConnectProfile(supabaseAdmin, userId);
+    return buildOnboardingResponse(
+      stripe,
+      supabaseAdmin,
+      userId,
+      userEmail,
+      returnUrl,
+      refreshUrl,
+      false,
+    );
+  }
+}
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -35,7 +135,7 @@ Deno.serve(async (req) => {
 
     let body: RequestBody = {};
     try {
-      body = await req.json();
+      body = (await req.json()) as RequestBody;
     } catch {
       body = {};
     }
@@ -50,66 +150,37 @@ Deno.serve(async (req) => {
 
     if (!loaded.phone_verified) {
       return jsonResponse(
-        { error: "Verify your phone number before Stripe onboarding", code: "PHONE_NOT_VERIFIED" },
+        {
+          error: "Verify your phone number before Stripe onboarding",
+          code: "PHONE_NOT_VERIFIED",
+        },
         400,
       );
     }
 
     if (!loaded.email_verified) {
       return jsonResponse(
-        { error: "Verify your email before Stripe onboarding", code: "EMAIL_NOT_VERIFIED" },
+        {
+          error: "Verify your email before Stripe onboarding",
+          code: "EMAIL_NOT_VERIFIED",
+        },
         400,
       );
-    }
-
-    const profile = await syncTravelerStripeConnectProfileFromStripe(
-      stripe,
-      supabaseAdmin,
-      user.id,
-      loaded,
-    );
-
-    if (
-      isTravelerStripeVerified(profile) ||
-      isTravelerStripeOnboardingComplete(profile)
-    ) {
-      return jsonResponse({
-        ...buildConnectStatusPayload(profile),
-        onboarding_url: null,
-      });
     }
 
     const appUrl = Deno.env.get("APP_URL")?.trim() || "http://localhost:5173";
     const returnUrl = body.return_url?.trim() || `${appUrl}/requests?stripe=return`;
     const refreshUrl = body.refresh_url?.trim() || `${appUrl}/requests?stripe=refresh`;
 
-    const accountId = await ensureStripeConnectAccountId(
+    return await buildOnboardingResponse(
       stripe,
       supabaseAdmin,
-      profile,
       user.id,
       user.email,
+      returnUrl,
+      refreshUrl,
+      true,
     );
-
-    const accountLink = await stripe.accountLinks.create({
-      account: accountId,
-      type: "account_onboarding",
-      return_url: returnUrl,
-      refresh_url: refreshUrl,
-    });
-
-    const account = await stripe.accounts.retrieve(accountId);
-    await syncStripeConnectAccountToProfile(supabaseAdmin, user.id, account);
-
-    const refreshed = await loadTravelerProfile(supabaseAdmin, user.id);
-    if (!refreshed) {
-      return jsonResponse({ error: "Profile not found" }, 404);
-    }
-
-    return jsonResponse({
-      ...buildConnectStatusPayload(refreshed),
-      onboarding_url: accountLink.url,
-    });
   } catch (err) {
     if (isResponse(err)) return err;
 
@@ -117,6 +188,17 @@ Deno.serve(async (req) => {
     console.error("stripe-connect-onboarding error", message, err);
 
     if (err instanceof Stripe.errors.StripeError) {
+      if (isStaleStripeConnectAccountError(err)) {
+        return jsonResponse(
+          {
+            error:
+              "Your previous Stripe payout account was removed. Try again to start fresh setup.",
+            code: "STRIPE_ACCOUNT_NOT_FOUND",
+          },
+          409,
+        );
+      }
+
       return jsonResponse(
         {
           error: message,

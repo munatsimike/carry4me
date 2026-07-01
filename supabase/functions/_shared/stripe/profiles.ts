@@ -68,6 +68,41 @@ export function mapStripeVerificationStatus(account: {
   return "incomplete";
 }
 
+export async function loadTravelerProfileByStripeAccountId(
+  supabaseAdmin: SupabaseClient,
+  stripeAccountId: string,
+): Promise<TravelerStripeProfile | null> {
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select(
+      "id, email, full_name, phone_verified, email_verified, country_code, country, stripe_account_id, stripe_charges_enabled, stripe_payouts_enabled, stripe_details_submitted, stripe_verification_status",
+    )
+    .eq("stripe_account_id", stripeAccountId)
+    .maybeSingle<TravelerStripeProfile>();
+
+  if (error) {
+    console.error("loadTravelerProfileByStripeAccountId failed", {
+      stripeAccountId,
+      message: error.message,
+    });
+    throw error;
+  }
+
+  return data;
+}
+
+export async function resetStripeConnectProfileByAccountId(
+  supabaseAdmin: SupabaseClient,
+  stripeAccountId: string,
+): Promise<TravelerStripeProfile | null> {
+  const profile = await loadTravelerProfileByStripeAccountId(
+    supabaseAdmin,
+    stripeAccountId,
+  );
+  if (!profile) return null;
+  return resetStripeConnectProfile(supabaseAdmin, profile.id);
+}
+
 export async function resetStripeConnectProfile(
   supabaseAdmin: SupabaseClient,
   userId: string,

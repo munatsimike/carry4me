@@ -16,6 +16,10 @@ import {
   isSuspended,
 } from "@/app/shared/Authentication/domain/accountStatus";
 import { getAuthenticatedLandingPath } from "@/app/shared/Authentication/application/postAuthNavigation";
+
+/** Local-only Stripe delete panel on home. Keep false for Vercel/production. */
+const TEMP_DELETE_STRIPE_ENABLED = false;
+
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,6 +29,7 @@ export default function HomePage() {
   const { user, loading, profile } = useAuth();
 
   useEffect(() => {
+    if (TEMP_DELETE_STRIPE_ENABLED) return;
     if (isSuspended(profile)) return;
 
     if (user && !loading && profile) {
