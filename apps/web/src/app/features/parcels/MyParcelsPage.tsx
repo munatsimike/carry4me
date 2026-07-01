@@ -51,11 +51,12 @@ export function MyParcelsPage() {
     const shouldProceed = await confirmListingDelete(listing, confirm);
     if (!shouldProceed) return;
 
-    deleteParcelMutation.mutate(listing.id, {
-      onSuccess: () => {
-        toast("Parcel deleted successfully.", { variant: "success" });
-      },
-    });
+    try {
+      await deleteParcelMutation.mutateAsync(listing.id);
+      toast("Parcel deleted successfully.", { variant: "success" });
+    } catch {
+      // Errors are surfaced by the mutation hook.
+    }
   };
 
   const toggleParcelStatus = async (listing: Listing, active: boolean) => {
@@ -66,19 +67,20 @@ export function MyParcelsPage() {
     );
     if (!shouldProceed) return;
 
-    updateParcelStatusMutation.mutate(
-      { parcelId: listing.id, active },
-      {
-        onSuccess: () => {
-          toast(
-            active
-              ? "Parcel activated successfully."
-              : "Parcel deactivated successfully.",
-            { variant: "success" },
-          );
-        },
-      },
-    );
+    try {
+      await updateParcelStatusMutation.mutateAsync({
+        parcelId: listing.id,
+        active,
+      });
+      toast(
+        active
+          ? "Parcel activated successfully."
+          : "Parcel deactivated successfully.",
+        { variant: "success" },
+      );
+    } catch {
+      // Errors are surfaced by the mutation hook.
+    }
   };
 
   const handleOnClick = () => {

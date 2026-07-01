@@ -47,11 +47,12 @@ export function MyTripsPage() {
     const shouldProceed = await confirmListingDelete(listing, confirm);
     if (!shouldProceed) return;
 
-    deleteTripMutation.mutate(listing.id, {
-      onSuccess: () => {
-        toast("Trip deleted successfully.", { variant: "success" });
-      },
-    });
+    try {
+      await deleteTripMutation.mutateAsync(listing.id);
+      toast("Trip deleted successfully.", { variant: "success" });
+    } catch {
+      // Errors are surfaced by the mutation hook.
+    }
   };
 
   const toggleTripStatus = async (listing: Listing, active: boolean) => {
@@ -62,17 +63,15 @@ export function MyTripsPage() {
     );
     if (!shouldProceed) return;
 
-    updateTripStatusMutation.mutate(
-      { tripId: listing.id, active },
-      {
-        onSuccess: () => {
-          toast(
-            active ? "Trip activated successfully." : "Trip deactivated successfully.",
-            { variant: "success" },
-          );
-        },
-      },
-    );
+    try {
+      await updateTripStatusMutation.mutateAsync({ tripId: listing.id, active });
+      toast(
+        active ? "Trip activated successfully." : "Trip deactivated successfully.",
+        { variant: "success" },
+      );
+    } catch {
+      // Errors are surfaced by the mutation hook.
+    }
   };
 
   const handleOnClick = () => {
