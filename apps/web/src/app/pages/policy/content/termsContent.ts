@@ -11,7 +11,21 @@ export const termsContent: PolicyPageContent = {
       id: "introduction",
       title: "Introduction",
       paragraphs: [
-        "Carry4Me is a marketplace that connects senders with travelers for peer-to-peer delivery. We facilitate listings, requests, payments, and delivery confirmation—we are not a courier or shipping carrier.",
+        "Carry4Me is a marketplace that connects senders with travelers for peer-to-peer delivery. By using the platform, you agree to these Terms & Conditions.",
+      ],
+    },
+    {
+      id: "carry4me-role",
+      title: "Carry4Me's role",
+      paragraphs: [
+        "Carry4Me provides the marketplace and tools that help senders and travelers connect. We are not the carrier of the goods.",
+      ],
+      bullets: [
+        "We provide the marketplace where senders and travelers list parcels and trips.",
+        "We facilitate payments through approved payment partners.",
+        "We verify users where possible, such as through phone, email, or identity checks.",
+        "We help resolve disputes according to our policies, but we do not take physical custody of parcels.",
+        "Travelers and senders—not Carry4Me—are responsible for handover, transport, and delivery of items.",
       ],
     },
     {
@@ -50,6 +64,20 @@ export const termsContent: PolicyPageContent = {
         "Inspect packages before acceptance and refuse prohibited or unsafe items.",
         "Honor agreed routes, dates, and communication standards.",
         "Complete delivery verification when required.",
+      ],
+    },
+    {
+      id: "traveler-responsibility",
+      title: "Traveler responsibility",
+      paragraphs: [
+        "When a traveler accepts a parcel, they agree that they are responsible for it from the time they receive it until it is delivered.",
+        "This responsibility applies throughout the carry, including after handover is confirmed in the app.",
+      ],
+      bullets: [
+        "Loss of the parcel while in the traveler's care.",
+        "Theft of the parcel while in the traveler's care.",
+        "Damage caused by the traveler's negligence.",
+        "Failure to deliver without a valid reason.",
       ],
     },
     {
@@ -100,7 +128,9 @@ export const termsContent: PolicyPageContent = {
       id: "liability",
       title: "Liability Limitations",
       paragraphs: [
-        "Carry4Me is provided “as is.” To the extent permitted by law, we are not liable for indirect damages, and our liability is limited to fees paid for the affected booking, except where law requires otherwise.",
+        "Carry4Me is provided “as is.” We are a marketplace facilitator, not a carrier, courier, or insurer of goods.",
+        "To the extent permitted by law, we are not liable for loss, theft, or damage to parcels while they are in a traveler's care, and we are not liable for indirect damages.",
+        "Our liability is limited to fees paid for the affected booking, except where law requires otherwise.",
       ],
     },
   ],

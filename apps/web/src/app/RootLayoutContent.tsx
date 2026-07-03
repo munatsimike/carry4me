@@ -23,7 +23,6 @@ import {
 import { useEmailVerificationTabListener } from "./shared/Authentication/UI/hooks/useEmailVerificationTabListener";
 import { useStripeConnectReturnSync } from "./hooks/useStripeConnectReturnSync";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
-const SCROLL_TO_TOP_PATHS = ["/travelers", "/parcels"];
 
 export default function RootLayoutContent() {
   const { loading, user, profile } = useAuth();
@@ -39,10 +38,11 @@ export default function RootLayoutContent() {
   useStripeConnectReturnSync();
 
   useEffect(() => {
-    if (SCROLL_TO_TOP_PATHS.includes(location.pathname)) {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }
-  }, [location.pathname]);
+    // Hash targets (e.g. /dashboard#suggested-matches) handle their own scroll position.
+    if (location.hash) return;
+
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [location.pathname, location.hash]);
 
   // Show phone verification modal if user is logged in and phone is not verified
 

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {
-  Clock3,
   ClipboardList,
+  Inbox,
   Package,
   Plane,
   Truck,
@@ -16,7 +16,7 @@ type StatsSectionProps = {
 };
 
 const statIconByName: Record<string, LucideIcon> = {
-  "Active Requests": Clock3,
+  "Active Requests": Inbox,
   Deliveries: Truck,
   "Posted Trips": Plane,
   "Posted  Parcels": Package,

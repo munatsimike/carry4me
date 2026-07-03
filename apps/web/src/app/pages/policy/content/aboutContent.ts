@@ -18,7 +18,7 @@ export const aboutContent: PolicyPageContent = {
       id: "what-we-do",
       title: "What we do",
       paragraphs: [
-        "Carry4Me is a marketplace—not a shipping company. We provide listings, matching, secure payments, and delivery confirmation tools. Senders post parcels; travelers post trips; either side can start a carry request when routes align.",
+        "Carry4Me is a marketplace—not a shipping company or carrier of goods. We provide listings, matching, secure payments, delivery confirmation tools, and dispute support where possible. Senders post parcels; travelers post trips; either side can start a carry request when routes align.",
       ],
       bullets: [
         "Senders list parcel details, weight, and their price per kg.",

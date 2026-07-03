@@ -47,7 +47,7 @@ function getConfirmOptions(
       return {
         title: "Accept this request?",
         message:
-          `You are committing to carry this parcel. The sender will be notified and has ${formatPaymentWindowLabel()} to pay and confirm the booking.`,
+          `You are committing to carry this parcel and will be responsible for it from receipt until delivery. The sender will be notified and has ${formatPaymentWindowLabel()} to pay and confirm the booking. See our Terms & Conditions for details.`,
         confirmText: "Yes, accept request",
         cancelText: "Not now",
       };

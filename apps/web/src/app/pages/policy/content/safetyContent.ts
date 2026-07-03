@@ -29,6 +29,19 @@ export const safetyContent: PolicyPageContent = {
       ],
     },
     {
+      id: "traveler-custody",
+      title: "Your responsibility after acceptance",
+      paragraphs: [
+        "When you accept a carry request and receive a parcel, you are responsible for it until delivery is completed.",
+      ],
+      bullets: [
+        "Take reasonable care to prevent loss, theft, or damage while the parcel is with you.",
+        "Deliver the parcel as agreed, or communicate promptly if something prevents delivery.",
+        "Use in-app handover and delivery confirmation so there is a clear record.",
+        "See our Terms & Conditions for full details on traveler responsibility and Carry4Me's role.",
+      ],
+    },
+    {
       id: "meetup",
       title: "Safe Meetup Guidelines",
       bullets: [
