@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 export function HeroSection() {
   const heading = "We match travelers with parcels that need to go home.";
   const subHeading =
-    "Post a parcel or trip and connect with travelers or senders";
+    "Post a parcel or trip and connect with travelers or senders.";
 
   const container = {
     hidden: {},
