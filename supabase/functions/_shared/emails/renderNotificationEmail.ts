@@ -1,4 +1,5 @@
 import { renderEmailFooterText } from "./components/EmailFooter.ts";
+import { renderDeliveryOtpEmail } from "./templates/DeliveryOtp.ts";
 import { renderGenericNotificationEmail } from "./templates/GenericNotification.ts";
 import { renderHandoverConfirmedEmail } from "./templates/HandoverConfirmed.ts";
 import { renderParcelReceivedEmail } from "./templates/ParcelReceived.ts";
@@ -38,6 +39,9 @@ export function renderNotificationEmail(
       break;
     case "PARCEL_RECEIVED":
       rendered = renderParcelReceivedEmail(notification);
+      break;
+    case "DELIVERY_OTP":
+      rendered = renderDeliveryOtpEmail(notification);
       break;
     default:
       rendered = renderGenericNotificationEmail(notification);
