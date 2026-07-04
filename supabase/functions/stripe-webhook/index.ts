@@ -4,6 +4,10 @@ import { handleCorsPreflight } from "../_shared/cors.ts";
 import { jsonResponse, requireEnv } from "../_shared/stripe/auth.ts";
 import { getStripe } from "../_shared/stripe/client.ts";
 import {
+  constructVerifiedStripeEvent,
+  getStripeWebhookSecrets,
+} from "../_shared/stripe/webhookVerification.ts";
+import {
   findProfileIdByStripeAccountId,
   syncStripeConnectAccountToProfile,
 } from "../_shared/stripe/connectAccount.ts";
@@ -22,10 +26,12 @@ Deno.serve(async (req) => {
   }
 
   const stripe = getStripe();
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")?.trim();
+  const webhookSecrets = getStripeWebhookSecrets();
 
-  if (!webhookSecret) {
-    console.error("stripe-webhook: STRIPE_WEBHOOK_SECRET is not set");
+  if (webhookSecrets.length === 0) {
+    console.error(
+      "stripe-webhook: set STRIPE_WEBHOOK_SECRET and/or STRIPE_CONNECT_WEBHOOK_SECRET",
+    );
     return jsonResponse({ error: "Webhook not configured" }, 500);
   }
 
@@ -36,15 +42,9 @@ Deno.serve(async (req) => {
 
   const body = await req.text();
 
-  let event: Stripe.Event;
-  try {
-    event = await stripe.webhooks.constructEventAsync(
-      body,
-      signature,
-      webhookSecret,
-    );
-  } catch (err) {
-    console.error("stripe-webhook signature verification failed", err);
+  const event = await constructVerifiedStripeEvent(stripe, body, signature);
+  if (!event) {
+    console.error("stripe-webhook signature verification failed for all configured secrets");
     return jsonResponse({ error: "Invalid signature" }, 400);
   }
 
