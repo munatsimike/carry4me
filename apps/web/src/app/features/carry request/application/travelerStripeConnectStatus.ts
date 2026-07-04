@@ -93,6 +93,24 @@ export function shouldShowTravelerPayoutSetup(
   return postedTripCount > 0 && !isTravelerStripePayoutReady(profile);
 }
 
+export function isTravelerStripeOnboardingCompleteInProfile(
+  profile: TravelerStripeProfileSnapshot | null | undefined,
+): boolean {
+  return !!profile?.stripeAccountId && profile.stripeDetailsSubmitted === true;
+}
+
+export function isTravelerStripeSetupSufficientInProfile(
+  profile: TravelerStripeProfileSnapshot | null | undefined,
+): boolean {
+  if (!profile?.stripeAccountId) return false;
+
+  return (
+    isTravelerStripeAcceptReadyInProfile(profile) ||
+    isTravelerStripeOnboardingCompleteInProfile(profile) ||
+    isTravelerStripeVerifiedInProfile(profile)
+  );
+}
+
 export function isTravelerStripeVerifiedInProfile(
   profile: { stripeVerificationStatus?: string | null } | null | undefined,
 ): boolean {

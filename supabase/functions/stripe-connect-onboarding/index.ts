@@ -13,6 +13,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import {
   buildConnectStatusPayload,
   ensureStripeConnectAccountId,
+  resolveExistingStripeConnectAccountId,
   syncStripeConnectAccountToProfile,
   syncTravelerStripeConnectProfileFromStripe,
 } from "../_shared/stripe/connectAccount.ts";
@@ -73,13 +74,23 @@ async function buildOnboardingResponse(
     });
   }
 
-  let accountId = await ensureStripeConnectAccountId(
+  const existingAccountId = await resolveExistingStripeConnectAccountId(
     stripe,
     supabaseAdmin,
     profile,
     userId,
-    userEmail,
   );
+
+  let accountId = existingAccountId;
+  if (!accountId) {
+    accountId = await ensureStripeConnectAccountId(
+      stripe,
+      supabaseAdmin,
+      profile,
+      userId,
+      userEmail,
+    );
+  }
 
   try {
     const accountLink = await createOnboardingLink(

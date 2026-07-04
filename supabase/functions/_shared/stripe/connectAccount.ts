@@ -18,7 +18,7 @@ import {
 
 export type StripeConnectClientState = "not_created" | "setup_incomplete" | "ready";
 
-const CONNECT_ACCOUNT_IDEMPOTENCY_VERSION = "v3";
+const CONNECT_ACCOUNT_IDEMPOTENCY_VERSION = "v4";
 
 const ALPHA3_TO_ALPHA2: Record<string, string> = {
   NLD: "NL",
@@ -501,7 +501,7 @@ async function validateExistingStripeAccount(
       accountId,
       stripeErrorMessage(err),
     );
-    return null;
+    throw err;
   }
 }
 
@@ -530,9 +530,28 @@ async function createStripeConnectAccount(
   userId: string,
   createParams: Stripe.AccountCreateParams,
 ): Promise<Stripe.Account> {
+  const recoveredBeforeCreate = await findStripeAccountIdForUser(
+    stripe,
+    supabaseAdmin,
+    profile,
+    userId,
+  );
+  if (recoveredBeforeCreate) {
+    try {
+      return await stripe.accounts.retrieve(recoveredBeforeCreate);
+    } catch (err) {
+      if (!isStaleStripeConnectAccountError(err)) {
+        throw err;
+      }
+    }
+  }
+
   const idempotencyKey = `connect-account-${CONNECT_ACCOUNT_IDEMPOTENCY_VERSION}-${userId}`;
 
-  const createFreshAccount = () => stripe.accounts.create(createParams);
+  const createFreshAccount = () =>
+    stripe.accounts.create(createParams, {
+      idempotencyKey: `${idempotencyKey}-fresh-${Date.now()}`,
+    });
 
   let account: Stripe.Account;
   try {
@@ -576,13 +595,78 @@ async function createStripeConnectAccount(
     }
 
     console.warn(
-      "createStripeConnectAccount idempotency replayed deleted account — creating fresh",
+      "createStripeConnectAccount idempotency replayed deleted account — recovering or creating fresh",
       account.id,
       stripeErrorMessage(err),
     );
     await resetStripeConnectProfile(supabaseAdmin, userId);
+
+    const recoveredAfterReset = await findStripeAccountIdForUser(
+      stripe,
+      supabaseAdmin,
+      profile,
+      userId,
+    );
+    if (recoveredAfterReset) {
+      return await stripe.accounts.retrieve(recoveredAfterReset);
+    }
+
     return await createFreshAccount();
   }
+}
+
+/**
+ * Reuses an existing Connect account when one is already linked or discoverable in Stripe.
+ * Never creates a new account.
+ */
+export async function resolveExistingStripeConnectAccountId(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  profile: TravelerStripeProfile,
+  userId: string,
+): Promise<string | null> {
+  const syncedProfile = await syncTravelerStripeConnectProfileFromStripe(
+    stripe,
+    supabaseAdmin,
+    userId,
+    profile,
+  );
+
+  const candidateIds = new Set<string>();
+  if (syncedProfile.stripe_account_id) {
+    candidateIds.add(syncedProfile.stripe_account_id);
+  }
+
+  const discovered = await findStripeAccountIdForUser(
+    stripe,
+    supabaseAdmin,
+    syncedProfile,
+    userId,
+  );
+  if (discovered) {
+    candidateIds.add(discovered);
+  }
+
+  for (const accountId of candidateIds) {
+    try {
+      const validated = await validateExistingStripeAccount(
+        stripe,
+        supabaseAdmin,
+        userId,
+        accountId,
+      );
+      if (validated) {
+        return validated;
+      }
+    } catch (err) {
+      if (isStaleStripeConnectAccountError(err)) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -596,53 +680,24 @@ export async function ensureStripeConnectAccountId(
   userId: string,
   userEmail: string | undefined,
 ): Promise<string> {
-  let accountId = profile.stripe_account_id;
-
-  if (accountId) {
-    const validated = await validateExistingStripeAccount(
-      stripe,
-      supabaseAdmin,
-      userId,
-      accountId,
-    );
-    if (validated) {
-      return validated;
-    }
-    accountId = null;
-  }
-
-  const refreshed = await loadTravelerProfile(supabaseAdmin, userId);
-  if (refreshed?.stripe_account_id) {
-    const validated = await validateExistingStripeAccount(
-      stripe,
-      supabaseAdmin,
-      userId,
-      refreshed.stripe_account_id,
-    );
-    if (validated) {
-      return validated;
-    }
-  }
-
-  const recoveredAccountId = await findStripeAccountIdForUser(
+  const existingAccountId = await resolveExistingStripeConnectAccountId(
     stripe,
     supabaseAdmin,
-    refreshed ?? profile,
+    profile,
     userId,
   );
-  if (recoveredAccountId) {
-    const validated = await validateExistingStripeAccount(
-      stripe,
-      supabaseAdmin,
-      userId,
-      recoveredAccountId,
-    );
-    if (validated) {
-      return claimStripeAccountId(supabaseAdmin, userId, validated);
-    }
+  if (existingAccountId) {
+    return existingAccountId;
   }
 
-  const profileForCreate = refreshed ?? profile;
+  const latestProfile = await loadTravelerProfile(supabaseAdmin, userId);
+  if (latestProfile?.stripe_account_id) {
+    throw new Error(
+      "Could not verify the linked Stripe account. Try again in a moment.",
+    );
+  }
+
+  const profileForCreate = latestProfile ?? profile;
   const createParams = buildConnectAccountCreateParams(
     profileForCreate,
     userId,

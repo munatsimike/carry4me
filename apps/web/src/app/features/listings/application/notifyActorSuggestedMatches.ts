@@ -1,6 +1,6 @@
 import { countMatchesForPostedListing } from "@/app/features/dashboard/application/suggestedMatches";
 import type { InfoModalPayload } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
-import { isTravelerStripeAcceptReadyInProfile } from "@/app/features/carry request/application/travelerStripeConnectStatus";
+import { isTravelerStripeSetupSufficientInProfile } from "@/app/features/carry request/application/travelerStripeConnectStatus";
 import {
   fetchTravelerStripeConnectStatus,
   isTravelerStripeReadyForAccept,
@@ -141,18 +141,20 @@ async function resolveTravelerStripePayoutComplete(
     | "stripeVerificationStatus"
   > | null,
 ): Promise<boolean> {
-  if (profile) {
-    if (isTravelerStripeAcceptReadyInProfile(profile)) {
-      return true;
-    }
-  }
-
   try {
     const status = await fetchTravelerStripeConnectStatus();
-    return isTravelerStripeReadyForAccept(status);
+    if (
+      isTravelerStripeReadyForAccept(status) ||
+      status.onboarding_complete === true ||
+      (!!status.stripe_account_id && status.stripe_details_submitted === true)
+    ) {
+      return true;
+    }
   } catch {
-    return false;
+    // Fall back to cached profile fields below.
   }
+
+  return isTravelerStripeSetupSufficientInProfile(profile);
 }
 
 export async function notifyTripPostedSuccess(

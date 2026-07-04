@@ -155,6 +155,14 @@ export async function redirectToTravelerStripeOnboarding(
       await options.onStripeSynced?.();
       return true;
     }
+
+    if (
+      status.onboarding_complete === true ||
+      (!!status.stripe_account_id && status.stripe_details_submitted === true)
+    ) {
+      await options.onStripeSynced?.();
+      return true;
+    }
   } catch {
     // Fall through to hosted onboarding when status sync is unavailable.
   }

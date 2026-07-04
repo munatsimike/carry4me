@@ -10,19 +10,11 @@ import {
   buildConnectStatusPayload,
   reconcileTravelerStripeConnectProfile,
 } from "../_shared/stripe/connectAccount.ts";
-import {
-  loadTravelerProfile,
-  resetStripeConnectProfile,
-} from "../_shared/stripe/profiles.ts";
-import type { User } from "npm:@supabase/supabase-js@2";
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { loadTravelerProfile } from "../_shared/stripe/profiles.ts";
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
   if (preflight) return preflight;
-
-  let user: User | null = null;
-  let supabaseAdmin: SupabaseClient | null = null;
 
   try {
     if (req.method !== "POST" && req.method !== "GET") {
@@ -30,8 +22,7 @@ Deno.serve(async (req) => {
     }
 
     const auth = await getAuthenticatedUser(req);
-    user = auth.user;
-    supabaseAdmin = auth.supabaseAdmin;
+    const { user, supabaseAdmin } = auth;
     const stripe = getStripe();
 
     const loaded = await loadTravelerProfile(supabaseAdmin, user.id);
@@ -55,21 +46,6 @@ Deno.serve(async (req) => {
       stripeErrorMessage(err),
       err,
     );
-
-    if (user && supabaseAdmin) {
-      try {
-        await resetStripeConnectProfile(supabaseAdmin, user.id);
-        const cleared = await loadTravelerProfile(supabaseAdmin, user.id);
-        if (cleared) {
-          return jsonResponse(buildConnectStatusPayload(cleared));
-        }
-      } catch (fallbackErr) {
-        console.error(
-          "stripe-connect-status fallback clear failed",
-          stripeErrorMessage(fallbackErr),
-        );
-      }
-    }
 
     return jsonResponse(
       {
