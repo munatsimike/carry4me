@@ -13,15 +13,14 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import {
   buildConnectStatusPayload,
   ensureStripeConnectAccountId,
+  refreshStripeConnectAccountStatus,
   resolveExistingStripeConnectAccountId,
   syncStripeConnectAccountToProfile,
-  syncTravelerStripeConnectProfileFromStripe,
 } from "../_shared/stripe/connectAccount.ts";
 import {
   isTravelerStripeOnboardingComplete,
   isTravelerStripeVerified,
   loadTravelerProfile,
-  resetStripeConnectProfile,
 } from "../_shared/stripe/profiles.ts";
 
 type RequestBody = {
@@ -57,12 +56,14 @@ async function buildOnboardingResponse(
     return jsonResponse({ error: "Profile not found" }, 404);
   }
 
-  profile = await syncTravelerStripeConnectProfileFromStripe(
-    stripe,
-    supabaseAdmin,
-    userId,
-    profile,
-  );
+  profile = profile.stripe_account_id
+    ? await refreshStripeConnectAccountStatus(
+      stripe,
+      supabaseAdmin,
+      userId,
+      profile,
+    )
+    : profile;
 
   if (
     isTravelerStripeVerified(profile) ||
@@ -122,7 +123,17 @@ async function buildOnboardingResponse(
       accountId,
       stripeErrorMessage(err),
     );
-    await resetStripeConnectProfile(supabaseAdmin, userId);
+
+    const recoveredAccountId = await resolveExistingStripeConnectAccountId(
+      stripe,
+      supabaseAdmin,
+      profile,
+      userId,
+    );
+    if (recoveredAccountId && recoveredAccountId !== accountId) {
+      accountId = recoveredAccountId;
+    }
+
     return buildOnboardingResponse(
       stripe,
       supabaseAdmin,

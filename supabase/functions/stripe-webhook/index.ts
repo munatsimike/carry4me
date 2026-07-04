@@ -11,7 +11,7 @@ import {
   findProfileIdByStripeAccountId,
   syncStripeConnectAccountToProfile,
 } from "../_shared/stripe/connectAccount.ts";
-import { transferTravelerPayoutForPayment } from "../_shared/stripe/travelerTransfer.ts";
+import { transferTravelerPayoutForPayment, retryPendingTravelerTransfersForUser } from "../_shared/stripe/travelerTransfer.ts";
 import { notifyTravelerBankPayoutPaid } from "../_shared/stripe/travelerBankPayoutNotification.ts";
 
 // TODO: handle charge.refunded — restore carry request / notify parties
@@ -210,6 +210,9 @@ async function handleAccountUpdated(
   }
 
   await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
+
+  const stripe = getStripe();
+  await retryPendingTravelerTransfersForUser(stripe, supabaseAdmin, userId);
 
   console.info("stripe-webhook account.updated synced", {
     userId,

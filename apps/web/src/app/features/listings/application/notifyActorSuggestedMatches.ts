@@ -141,6 +141,12 @@ async function resolveTravelerStripePayoutComplete(
     | "stripeVerificationStatus"
   > | null,
 ): Promise<boolean> {
+  // Trust the profile already loaded in the client — posting a trip must not
+  // trigger a reconcile that can downgrade or reset Stripe columns in the DB.
+  if (isTravelerStripeSetupSufficientInProfile(profile)) {
+    return true;
+  }
+
   try {
     const status = await fetchTravelerStripeConnectStatus();
     if (

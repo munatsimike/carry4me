@@ -2,9 +2,11 @@ import type Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { isStripeLiveMode } from "./client.ts";
 import {
+  isMissingStripeAccountError,
   isStaleStripeConnectAccountError,
   isStripeAccountCreateConflict,
   isStripeIdempotencyError,
+  isStripeLiveModeMismatchError,
   stripeErrorMessage,
 } from "./errors.ts";
 import {
@@ -167,37 +169,46 @@ async function syncStripeAccountFromStripe(
 
     if (account.livemode !== isStripeLiveMode()) {
       console.warn(
-        "syncStripeAccountFromStripe livemode mismatch — skipping sync",
+        "syncStripeAccountFromStripe livemode mismatch — leaving profile unchanged",
         accountId,
       );
-      return null;
+      return await loadTravelerProfile(supabaseAdmin, userId);
     }
 
     await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
 
     return await loadTravelerProfile(supabaseAdmin, userId);
   } catch (err) {
-    if (isStaleStripeConnectAccountError(err)) {
+    if (isMissingStripeAccountError(err)) {
       console.warn(
-        "syncStripeAccountFromStripe account lookup failed",
+        "syncStripeAccountFromStripe account missing",
         accountId,
         stripeErrorMessage(err),
       );
 
       const current = await loadTravelerProfile(supabaseAdmin, userId);
       if (current?.stripe_account_id === accountId) {
-        return await resetStripeConnectProfile(supabaseAdmin, userId);
+        return clearStoredStripeLinkOnlyIfDeleted(
+          stripe,
+          supabaseAdmin,
+          userId,
+          current,
+        );
       }
 
       return null;
+    }
+
+    if (isStripeLiveModeMismatchError(err)) {
+      return await loadTravelerProfile(supabaseAdmin, userId);
     }
 
     throw err;
   }
 }
 
-/** Clears profiles.stripe_* when the stored Connect account was deleted in Stripe. */
-async function clearStaleStoredStripeConnectAccount(
+/** Clears the profile link only when the stored Connect account was deleted in Stripe. */
+async function clearStoredStripeLinkOnlyIfDeleted(
   stripe: Stripe,
   supabaseAdmin: SupabaseClient,
   userId: string,
@@ -211,17 +222,28 @@ async function clearStaleStoredStripeConnectAccount(
   try {
     const account = await stripe.accounts.retrieve(storedId);
     if (account.livemode !== isStripeLiveMode()) {
-      const reset = await resetStripeConnectProfile(supabaseAdmin, userId);
-      return reset ?? profile;
+      console.warn(
+        "clearStoredStripeLinkOnlyIfDeleted livemode mismatch — leaving profile unchanged",
+        storedId,
+      );
+      return profile;
     }
     return profile;
   } catch (err) {
-    if (!isStaleStripeConnectAccountError(err)) {
+    if (isStripeLiveModeMismatchError(err)) {
+      console.warn(
+        "clearStoredStripeLinkOnlyIfDeleted livemode mismatch — leaving profile unchanged",
+        storedId,
+      );
+      return profile;
+    }
+
+    if (!isMissingStripeAccountError(err)) {
       throw err;
     }
 
     console.warn(
-      "clearStaleStoredStripeConnectAccount deleted account cleared from profile",
+      "clearStoredStripeLinkOnlyIfDeleted deleted account cleared from profile",
       storedId,
       stripeErrorMessage(err),
     );
@@ -266,7 +288,16 @@ export async function syncTravelerStripeConnectProfileFromStripe(
   );
 
   if (!bestAccountId) {
-    return clearStaleStoredStripeConnectAccount(
+    if (profile.stripe_account_id) {
+      return refreshStripeConnectAccountStatus(
+        stripe,
+        supabaseAdmin,
+        profile,
+        userId,
+      );
+    }
+
+    return clearStoredStripeLinkOnlyIfDeleted(
       stripe,
       supabaseAdmin,
       userId,
@@ -282,7 +313,16 @@ export async function syncTravelerStripeConnectProfileFromStripe(
   );
 
   if (!synced) {
-    return clearStaleStoredStripeConnectAccount(
+    if (profile.stripe_account_id) {
+      return refreshStripeConnectAccountStatus(
+        stripe,
+        supabaseAdmin,
+        profile,
+        userId,
+      );
+    }
+
+    return clearStoredStripeLinkOnlyIfDeleted(
       stripe,
       supabaseAdmin,
       userId,
@@ -464,6 +504,25 @@ async function findStripeAccountIdForUser(
   profile: TravelerStripeProfile,
   userId: string,
 ): Promise<string | null> {
+  const storedId = profile.stripe_account_id?.trim();
+  if (storedId) {
+    if (await isStripeAccountAvailableForUser(supabaseAdmin, userId, storedId)) {
+      try {
+        const account = await stripe.accounts.retrieve(storedId);
+        if (account.livemode === isStripeLiveMode()) {
+          return storedId;
+        }
+      } catch (err) {
+        if (isStripeLiveModeMismatchError(err)) {
+          return null;
+        }
+        if (!isMissingStripeAccountError(err)) {
+          throw err;
+        }
+      }
+    }
+  }
+
   const candidates = await listStripeAccountIdsForUser(stripe, profile, userId);
   return pickBestStripeConnectAccountId(stripe, supabaseAdmin, userId, candidates);
 }
@@ -480,20 +539,26 @@ async function validateExistingStripeAccount(
     const existing = await stripe.accounts.retrieve(accountId);
     if (existing.livemode !== stripeLiveMode) {
       console.warn(
-        "validateExistingStripeAccount livemode mismatch cleared",
+        "validateExistingStripeAccount livemode mismatch skipped",
         accountId,
       );
-      const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
-      return resetProfile?.stripe_account_id ?? null;
+      return null;
     }
 
     await syncStripeConnectAccountToProfile(supabaseAdmin, userId, existing);
     return accountId;
   } catch (err) {
-    if (isStaleStripeConnectAccountError(err)) {
-      console.warn("validateExistingStripeAccount stale account cleared", accountId);
-      const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
-      return resetProfile?.stripe_account_id ?? null;
+    if (isMissingStripeAccountError(err)) {
+      console.warn("validateExistingStripeAccount missing account skipped", accountId);
+      return null;
+    }
+
+    if (isStripeLiveModeMismatchError(err)) {
+      console.warn(
+        "validateExistingStripeAccount livemode mismatch skipped",
+        accountId,
+      );
+      return null;
     }
 
     console.warn(
@@ -571,7 +636,6 @@ async function createStripeConnectAccount(
       userId,
     );
     if (!recoveredAccountId) {
-      await resetStripeConnectProfile(supabaseAdmin, userId);
       return await createFreshAccount();
     }
 
@@ -582,7 +646,6 @@ async function createStripeConnectAccount(
         throw retrieveErr;
       }
 
-      await resetStripeConnectProfile(supabaseAdmin, userId);
       return await createFreshAccount();
     }
   }
@@ -599,7 +662,6 @@ async function createStripeConnectAccount(
       account.id,
       stripeErrorMessage(err),
     );
-    await resetStripeConnectProfile(supabaseAdmin, userId);
 
     const recoveredAfterReset = await findStripeAccountIdForUser(
       stripe,
@@ -625,16 +687,23 @@ export async function resolveExistingStripeConnectAccountId(
   profile: TravelerStripeProfile,
   userId: string,
 ): Promise<string | null> {
-  const syncedProfile = await syncTravelerStripeConnectProfileFromStripe(
-    stripe,
-    supabaseAdmin,
-    userId,
-    profile,
-  );
+  let syncedProfile = profile.stripe_account_id
+    ? await refreshStripeConnectAccountStatus(
+      stripe,
+      supabaseAdmin,
+      profile,
+      userId,
+    )
+    : await syncTravelerStripeConnectProfileFromStripe(
+      stripe,
+      supabaseAdmin,
+      userId,
+      profile,
+    );
 
-  const candidateIds = new Set<string>();
+  const candidateIds: string[] = [];
   if (syncedProfile.stripe_account_id) {
-    candidateIds.add(syncedProfile.stripe_account_id);
+    candidateIds.push(syncedProfile.stripe_account_id);
   }
 
   const discovered = await findStripeAccountIdForUser(
@@ -643,8 +712,8 @@ export async function resolveExistingStripeConnectAccountId(
     syncedProfile,
     userId,
   );
-  if (discovered) {
-    candidateIds.add(discovered);
+  if (discovered && !candidateIds.includes(discovered)) {
+    candidateIds.push(discovered);
   }
 
   for (const accountId of candidateIds) {
@@ -666,7 +735,7 @@ export async function resolveExistingStripeConnectAccountId(
     }
   }
 
-  return null;
+  return syncedProfile.stripe_account_id;
 }
 
 /**
@@ -734,11 +803,10 @@ export async function refreshStripeConnectAccountStatus(
 
     if (account.livemode !== isStripeLiveMode()) {
       console.warn(
-        "refreshStripeConnectAccountStatus livemode mismatch cleared",
+        "refreshStripeConnectAccountStatus livemode mismatch — leaving profile unchanged",
         profile.stripe_account_id,
       );
-      const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
-      return resetProfile ?? profile;
+      return profile;
     }
 
     await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
@@ -746,7 +814,15 @@ export async function refreshStripeConnectAccountStatus(
     const refreshed = await loadTravelerProfile(supabaseAdmin, userId);
     return refreshed ?? profile;
   } catch (err) {
-    if (!isStaleStripeConnectAccountError(err)) {
+    if (isStripeLiveModeMismatchError(err)) {
+      console.warn(
+        "refreshStripeConnectAccountStatus livemode mismatch — leaving profile unchanged",
+        profile.stripe_account_id,
+      );
+      return profile;
+    }
+
+    if (!isMissingStripeAccountError(err)) {
       console.warn(
         "refreshStripeConnectAccountStatus failed",
         profile.stripe_account_id,
@@ -756,12 +832,16 @@ export async function refreshStripeConnectAccountStatus(
     }
 
     console.warn(
-      "refreshStripeConnectAccountStatus stale account cleared",
+      "refreshStripeConnectAccountStatus stored account missing",
       profile.stripe_account_id,
       stripeErrorMessage(err),
     );
-    const resetProfile = await resetStripeConnectProfile(supabaseAdmin, userId);
-    return resetProfile ?? profile;
+    return clearStoredStripeLinkOnlyIfDeleted(
+      stripe,
+      supabaseAdmin,
+      userId,
+      profile,
+    );
   }
 }
 
@@ -792,12 +872,15 @@ export async function reconcileTravelerStripeConnectProfile(
       userId,
     );
     if (!recoveredAccountId) {
-      return clearStaleStoredStripeConnectAccount(
-        stripe,
-        supabaseAdmin,
-        userId,
-        profile,
-      );
+      if (profile.stripe_account_id) {
+        return clearStoredStripeLinkOnlyIfDeleted(
+          stripe,
+          supabaseAdmin,
+          userId,
+          profile,
+        );
+      }
+      return profile;
     }
 
     const validated = await validateExistingStripeAccount(
@@ -807,12 +890,7 @@ export async function reconcileTravelerStripeConnectProfile(
       recoveredAccountId,
     );
     if (!validated) {
-      return clearStaleStoredStripeConnectAccount(
-        stripe,
-        supabaseAdmin,
-        userId,
-        profile,
-      );
+      return profile;
     }
 
     await claimStripeAccountId(supabaseAdmin, userId, validated);
@@ -831,15 +909,6 @@ export async function reconcileTravelerStripeConnectProfile(
     );
 
     const latest = await loadTravelerProfile(supabaseAdmin, userId);
-    if (!latest) {
-      return profile;
-    }
-
-    return clearStaleStoredStripeConnectAccount(
-      stripe,
-      supabaseAdmin,
-      userId,
-      latest,
-    );
+    return latest ?? profile;
   }
 }
