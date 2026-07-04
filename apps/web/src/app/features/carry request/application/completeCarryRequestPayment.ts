@@ -54,6 +54,9 @@ export async function completeCarryRequestPayment(
       response,
     });
     refreshProfile();
+    if (response.reason === "ALREADY_PAID") {
+      return { status: "already_paid", carryRequestId };
+    }
     return { status: "success", carryRequestId };
   }
 

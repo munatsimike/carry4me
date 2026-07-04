@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Parcels from "./Parcels";
 import Search, { SearchResults } from "@/app/components/Search";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
-import type { TripListing } from "@/app/features/trips/domain/Trip";
+import {
+  getTripsWithAvailableSpace,
+  type TripListing,
+} from "@/app/features/trips/domain/Trip";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { useToast } from "@/app/components/Toast";
@@ -141,6 +144,7 @@ export default function ParcelsPage() {
           queryKey: queryKeys.trips.byUser(user.id),
           queryFn: () => getTripUseCase.execute(user.id),
         });
+        const availableTrips = getTripsWithAvailableSpace(data);
 
         if (data.length === 0) {
           toast("Post a trip first to match with a sender.", {
@@ -149,12 +153,19 @@ export default function ParcelsPage() {
           return;
         }
 
-        if (data.length === 1) {
-          setSelectedTrip(data[0]);
+        if (availableTrips.length === 0) {
+          toast("None of your trips have available space to carry this parcel.", {
+            variant: "warning",
+          });
+          return;
         }
 
-        if (data.length > 1) {
-          setUserTrips(data);
+        if (availableTrips.length === 1) {
+          setSelectedTrip(availableTrips[0]);
+        }
+
+        if (availableTrips.length > 1) {
+          setUserTrips(availableTrips);
           setTripSelectionOpen(true);
         }
       } catch (err) {

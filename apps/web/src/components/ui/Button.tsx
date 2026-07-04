@@ -31,15 +31,17 @@ export function Button({
   cornerRadiusClass = "rounded-full",
   type = "button",
   isBusy = false,
+  disabled,
   ...props
 }: ButtonProps) {
-  const opacityCursor = "opacity-70 cursor-not-allowed";
+  const isInactive = isBusy || disabled;
+  const inactiveClass = "opacity-70 cursor-not-allowed";
   const hoverClass =
-    "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer";
+    "transition-all duration-300 enabled:hover:-translate-y-0.5 enabled:hover:shadow-lg cursor-pointer enabled:active:translate-y-0 enabled:active:scale-[0.95] enabled:active:shadow-md";
 
   // IMPORTANT: remove justify-center, because we want internal layout to decide positioning
-  const base = `relative inline-flex items-center font-thin font-heading active:translate-y-0 active:scale-[0.95] active:shadow-md ${
-    isBusy ? opacityCursor : hoverClass
+  const base = `relative inline-flex items-center font-thin font-heading ${
+    isInactive ? inactiveClass : hoverClass
   }`;
 
   const sizes: Record<ButtonSize, string> = {
@@ -53,16 +55,16 @@ export function Button({
 
   const variants: Record<ButtonVariant, string> = {
     primary:
-      "bg-primary-500 text-white font-heading hover:bg-primary-600 hover:ring-2 hover:ring-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2",
+      "bg-primary-500 text-white font-heading enabled:hover:bg-primary-600 enabled:hover:ring-2 enabled:hover:ring-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2",
     secondary:
-      "bg-secondary-100 hover:bg-secondary-200 hover:ring-2 hover:ring-indigo-200",
-    ghost: "bg-transparent hover:bg-tertiary-50",
+      "bg-secondary-100 enabled:hover:bg-secondary-200 enabled:hover:ring-2 enabled:hover:ring-indigo-200",
+    ghost: "bg-transparent enabled:hover:bg-tertiary-50",
     tonal:
-      "bg-secondary-200 hover:bg-primary-500 text-primary border border-secondary-400 hover:text-white",
-    neutral: "hover:bg-neutral-50 text-ink-secondary",
-    outline: "hover:bg-neutral-200 border bg-neutral-50 text-ink-secondary",
+      "bg-secondary-200 enabled:hover:bg-primary-500 text-primary border border-secondary-400 enabled:hover:text-white",
+    neutral: "enabled:hover:bg-neutral-50 text-ink-secondary",
+    outline: "enabled:hover:bg-neutral-200 border bg-neutral-50 text-ink-secondary",
     error:
-      "hover:bg-error-100 hover:text-ink-error text-ink-primary border bg-neutral-100",
+      "enabled:hover:bg-error-100 enabled:hover:text-ink-error text-ink-primary border bg-neutral-100",
   };
 
   // gap should only be between leading and text, NOT including trailing
@@ -72,11 +74,12 @@ export function Button({
     <button
       type={type}
       {...props}
+      disabled={isInactive}
       className={cn("group", base, sizes[size], variants[variant], className)}
     >
       <span
         className="pointer-events-none absolute inset-0 rounded-[inherit] bg-white/20 opacity-0
-             group-active:opacity-100 group-active:duration-150"
+             enabled:group-active:opacity-100 enabled:group-active:duration-150"
       />
       {/* Full-width layout container */}
       <span className="flex w-full items-center gap-2 justify-center">

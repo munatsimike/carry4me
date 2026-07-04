@@ -12,6 +12,7 @@ import {
 import {
   isTravelerStripeOnboardingComplete,
   isTravelerStripeVerified,
+  isTravelerProfileVerifiedForSenderPayment,
   loadTravelerProfile,
   mapStripeVerificationStatus,
   resetStripeConnectProfile,
@@ -21,6 +22,11 @@ import {
 export type StripeConnectClientState = "not_created" | "setup_incomplete" | "ready";
 
 const CONNECT_ACCOUNT_IDEMPOTENCY_VERSION = "v4";
+
+const DAILY_CONNECT_PAYOUT_SCHEDULE: Stripe.AccountCreateParams.Settings.Payouts.Schedule =
+  {
+    interval: "daily",
+  };
 
 const ALPHA3_TO_ALPHA2: Record<string, string> = {
   NLD: "NL",
@@ -175,6 +181,7 @@ async function syncStripeAccountFromStripe(
       return await loadTravelerProfile(supabaseAdmin, userId);
     }
 
+    await ensureDailyConnectPayoutSchedule(stripe, account);
     await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
 
     return await loadTravelerProfile(supabaseAdmin, userId);
@@ -545,6 +552,7 @@ async function validateExistingStripeAccount(
       return null;
     }
 
+    await ensureDailyConnectPayoutSchedule(stripe, existing);
     await syncStripeConnectAccountToProfile(supabaseAdmin, userId, existing);
     return accountId;
   } catch (err) {
@@ -585,7 +593,38 @@ function buildConnectAccountCreateParams(
       transfers: { requested: true },
     },
     business_type: "individual",
+    settings: {
+      payouts: {
+        schedule: DAILY_CONNECT_PAYOUT_SCHEDULE,
+      },
+    },
   };
+}
+
+/** Express accounts should pay out to the traveler's bank every business day. */
+async function ensureDailyConnectPayoutSchedule(
+  stripe: Stripe,
+  account: Pick<Stripe.Account, "id" | "settings">,
+): Promise<void> {
+  if (account.settings?.payouts?.schedule?.interval === "daily") {
+    return;
+  }
+
+  try {
+    await stripe.accounts.update(account.id, {
+      settings: {
+        payouts: {
+          schedule: DAILY_CONNECT_PAYOUT_SCHEDULE,
+        },
+      },
+    });
+  } catch (err) {
+    console.warn(
+      "ensureDailyConnectPayoutSchedule failed",
+      account.id,
+      stripeErrorMessage(err),
+    );
+  }
 }
 
 async function createStripeConnectAccount(
@@ -809,6 +848,7 @@ export async function refreshStripeConnectAccountStatus(
       return profile;
     }
 
+    await ensureDailyConnectPayoutSchedule(stripe, account);
     await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
 
     const refreshed = await loadTravelerProfile(supabaseAdmin, userId);
@@ -843,6 +883,188 @@ export async function refreshStripeConnectAccountStatus(
       profile,
     );
   }
+}
+
+function isStripeConnectAccountAcceptableForPayment(
+  account: Pick<
+    Stripe.Account,
+    "livemode" | "details_submitted" | "payouts_enabled" | "charges_enabled" | "capabilities"
+  >,
+): boolean {
+  if (account.livemode !== isStripeLiveMode()) {
+    return false;
+  }
+
+  if (
+    account.details_submitted === true ||
+    account.payouts_enabled === true ||
+    account.charges_enabled === true
+  ) {
+    return true;
+  }
+
+  const transfers = account.capabilities?.transfers;
+  return transfers === "active" || transfers === "pending";
+}
+
+async function isConnectAccountLivemodeValid(
+  stripe: Stripe,
+  accountId: string,
+): Promise<boolean | null> {
+  try {
+    const account = await stripe.accounts.retrieve(accountId);
+    return account.livemode === isStripeLiveMode();
+  } catch (err) {
+    console.warn(
+      "isConnectAccountLivemodeValid lookup failed",
+      accountId,
+      stripeErrorMessage(err),
+    );
+    return null;
+  }
+}
+
+async function syncConnectAccountBestEffort(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  accountId: string,
+): Promise<void> {
+  try {
+    const account = await stripe.accounts.retrieve(accountId);
+    if (account.livemode !== isStripeLiveMode()) {
+      return;
+    }
+
+    await ensureDailyConnectPayoutSchedule(stripe, account);
+    await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
+  } catch (err) {
+    console.warn(
+      "syncConnectAccountBestEffort failed",
+      accountId,
+      stripeErrorMessage(err),
+    );
+  }
+}
+
+/**
+ * Resolves the traveler's Connect account before sender checkout.
+ * Verified travelers proceed immediately — Stripe sync runs best-effort in the background.
+ */
+export async function resolveTravelerConnectAccountForPayment(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+): Promise<string | null> {
+  const initialProfile = await loadTravelerProfile(supabaseAdmin, userId);
+  if (!initialProfile) {
+    return null;
+  }
+
+  const verifiedBeforeSync = isTravelerProfileVerifiedForSenderPayment(initialProfile);
+  const trustedAccountId = verifiedBeforeSync
+    ? initialProfile.stripe_account_id?.trim() ?? null
+    : null;
+
+  let profile = initialProfile;
+  try {
+    if (initialProfile.stripe_account_id) {
+      profile = await refreshStripeConnectAccountStatus(
+        stripe,
+        supabaseAdmin,
+        initialProfile,
+        userId,
+      );
+    } else if (!verifiedBeforeSync) {
+      profile = await reconcileTravelerStripeConnectProfile(
+        stripe,
+        supabaseAdmin,
+        userId,
+        initialProfile,
+      );
+    }
+  } catch (err) {
+    console.warn(
+      "resolveTravelerConnectAccountForPayment sync failed",
+      userId,
+      stripeErrorMessage(err),
+    );
+    profile = initialProfile;
+  }
+
+  const verifiedAccountId =
+    trustedAccountId ??
+    (isTravelerProfileVerifiedForSenderPayment(profile)
+      ? profile.stripe_account_id?.trim() ?? null
+      : null);
+
+  if (verifiedAccountId) {
+    const livemodeOk = await isConnectAccountLivemodeValid(stripe, verifiedAccountId);
+    if (livemodeOk === false) {
+      console.warn(
+        "resolveTravelerConnectAccountForPayment livemode mismatch on verified account — using profile id",
+        verifiedAccountId,
+      );
+    }
+
+    await syncConnectAccountBestEffort(
+      stripe,
+      supabaseAdmin,
+      userId,
+      verifiedAccountId,
+    );
+    return verifiedAccountId;
+  }
+
+  const candidateIds: string[] = [];
+  const linkedId = profile.stripe_account_id?.trim();
+  if (linkedId) {
+    candidateIds.push(linkedId);
+  }
+
+  const discovered = await findStripeAccountIdForUser(
+    stripe,
+    supabaseAdmin,
+    profile,
+    userId,
+  );
+  if (discovered && !candidateIds.includes(discovered)) {
+    candidateIds.push(discovered);
+  }
+
+  for (const accountId of candidateIds) {
+    try {
+      const account = await stripe.accounts.retrieve(accountId);
+      if (!isStripeConnectAccountAcceptableForPayment(account)) {
+        continue;
+      }
+
+      await ensureDailyConnectPayoutSchedule(stripe, account);
+      await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
+      return accountId;
+    } catch (err) {
+      if (!isMissingStripeAccountError(err)) {
+        console.warn(
+          "resolveTravelerConnectAccountForPayment candidate failed",
+          accountId,
+          stripeErrorMessage(err),
+        );
+      }
+    }
+  }
+
+  if (
+    linkedId &&
+    profile.stripe_details_submitted === true
+  ) {
+    const livemodeOk = await isConnectAccountLivemodeValid(stripe, linkedId);
+    if (livemodeOk !== false) {
+      await syncConnectAccountBestEffort(stripe, supabaseAdmin, userId, linkedId);
+      return linkedId;
+    }
+  }
+
+  return null;
 }
 
 /**

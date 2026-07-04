@@ -36,6 +36,7 @@ export function FormStepActions({
           type="submit"
           variant="primary"
           disabled={isSubmitting}
+          isBusy={isSubmitting}
           size="md"
         >
           {submitLabel}

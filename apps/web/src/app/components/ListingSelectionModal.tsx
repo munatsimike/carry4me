@@ -24,6 +24,10 @@ export default function ListingSelectionModal<T, U extends Listing>({
   setSelectedListing,
   setModalState,
 }: TripSelectionModalProps<T, U>) {
+  const visibleListings = listings.filter(
+    (listing) => listing.type !== "trip" || listing.weightKg > 0,
+  );
+
   return (
     <AnimatePresence>
       {listingSelectionOpen && user && selectedParcel && (
@@ -45,7 +49,12 @@ export default function ListingSelectionModal<T, U extends Listing>({
             </div>
 
             <div className="space-y-3">
-              {listings.map((listing) => (
+              {visibleListings.length === 0 ? (
+                <CustomText textVariant="secondary">
+                  No trips with available space right now.
+                </CustomText>
+              ) : null}
+              {visibleListings.map((listing) => (
                 <button
                   key={listing.id}
                   type="button"

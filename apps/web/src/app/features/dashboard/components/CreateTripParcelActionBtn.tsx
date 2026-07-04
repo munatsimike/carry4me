@@ -25,6 +25,7 @@ export default function ActionBtn({
       <Button
         form="tripForm"
         disabled={isSubmitting}
+        isBusy={isSubmitting}
         type="submit"
         className="w-full sm:w-auto"
         variant="primary"

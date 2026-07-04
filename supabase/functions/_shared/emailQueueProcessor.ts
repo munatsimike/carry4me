@@ -94,6 +94,40 @@ export async function loadQueueRowByCarryRequestEvent(
   return rows[0] ?? null;
 }
 
+export async function processCarryRequestEventEmails(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  carryRequestId: string,
+  eventType: string,
+  resendApiKey: string | null | undefined,
+): Promise<{ processed: number; results: Awaited<ReturnType<typeof processQueueRow>>[] }> {
+  if (!resendApiKey?.trim()) {
+    console.warn(
+      "processCarryRequestEventEmails: RESEND_API_KEY not set; emails remain queued",
+      { carryRequestId, eventType },
+    );
+    return { processed: 0, results: [] };
+  }
+
+  const rows = await loadQueueRowsByCarryRequestEvent(
+    supabaseAdmin,
+    carryRequestId,
+    eventType,
+  );
+
+  const results = [];
+  for (const row of rows) {
+    results.push(
+      await processQueueRow(supabaseAdmin, row, resendApiKey.trim(), {
+        allowedStatuses: USER_PROCESSABLE_STATUSES,
+      }),
+    );
+  }
+
+  const processed = results.filter((result) => result.processed === true).length;
+
+  return { processed, results };
+}
+
 export async function loadQueueRowsByCarryRequestEvent(
   supabaseAdmin: ReturnType<typeof createClient>,
   carryRequestId: string,

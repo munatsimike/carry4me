@@ -27,7 +27,6 @@ import {
 } from "../application/deliveryOtp";
 import {
   cancelCarryRequest,
-  type CancelCarryRequestResponse,
 } from "../application/cancelCarryRequest";
 import { completeCarryRequestPayment } from "../application/completeCarryRequestPayment";
 import { applyCarryRequestActionResult, refreshAfterCarryRequestAction } from "../application/refreshAfterCarryRequestAction";
@@ -600,7 +599,7 @@ export default function CarryRequestsPage() {
         openInfo({
           title: "Payment released",
           message:
-            "Payment was released successfully. Depending on your bank, it may take 3 to 4 working days to arrive.",
+            "Payment was released successfully. Stripe sends bank payouts daily on business days; your bank may take 1–3 more days to show the deposit.",
           label: "Close",
         });
       }
@@ -687,33 +686,6 @@ export default function CarryRequestsPage() {
       }
 
       processActionEmailQueue(response, carryRequest.carryRequestId);
-
-      if (actions.secondary.key === UIACTIONKEYS.CANCEL) {
-        const senderCanceled = viewerRole === ROLES.SENDER;
-        const cancelResponse = response as CancelCarryRequestResponse;
-        const refundApplied = cancelResponse.refund?.applied === true;
-        const refundStatus = cancelResponse.refund?.refund_status;
-
-        const message = senderCanceled
-          ? refundApplied
-            ? refundStatus === "FULL"
-              ? "Traveler notified. Your payment was refunded in full."
-              : "Traveler notified. A partial refund was issued and the service fee was retained."
-            : "Traveler notified. This request was cancelled before payment, so no refund was needed."
-          : refundApplied
-            ? refundStatus === "FULL"
-              ? "Request cancelled. The sender was refunded in full."
-              : "Request cancelled. A partial refund was issued to the sender and the service fee was retained."
-            : "Request cancelled. No payment had been made yet.";
-
-        openInfo({
-          title: "Request cancelled",
-          message,
-          label: senderCanceled ? "Browse other parcels" : "Browse other trips",
-          onClick: () => navigate(senderCanceled ? "/parcels" : "/travelers"),
-          secondaryLabel: "Close",
-        });
-      }
 
       await applyCarryRequestActionResult(queryClient, {
         userId: user.id,

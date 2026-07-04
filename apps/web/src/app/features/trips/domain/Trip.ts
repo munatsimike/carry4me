@@ -14,3 +14,9 @@ export interface TripListing extends Listing {
   /** Total trip capacity — used when prefilling the edit form. */
   capacityKg?: number;
 }
+
+export function getTripsWithAvailableSpace<T extends { weightKg: number }>(
+  trips: T[],
+): T[] {
+  return trips.filter((trip) => trip.weightKg > 0);
+}

@@ -13,6 +13,7 @@ import {
 } from "../_shared/stripe/connectAccount.ts";
 import { transferTravelerPayoutForPayment, retryPendingTravelerTransfersForUser } from "../_shared/stripe/travelerTransfer.ts";
 import { notifyTravelerBankPayoutPaid } from "../_shared/stripe/travelerBankPayoutNotification.ts";
+import { processCarryRequestEventEmails } from "../_shared/emailQueueProcessor.ts";
 
 // TODO: handle charge.refunded — restore carry request / notify parties
 // TODO: handle charge.dispute.created — flag request and alert ops
@@ -160,6 +161,26 @@ async function handlePaymentIntentSucceeded(
   if (finalizeError) {
     console.error("finalize_carry_request_payment failed", finalizeError.message);
     throw finalizeError;
+  }
+
+  const finalizeOk =
+    typeof finalizeResult === "object" &&
+    finalizeResult !== null &&
+    (finalizeResult as { ok?: boolean }).ok === true;
+
+  if (finalizeOk) {
+    const emailOutcome = await processCarryRequestEventEmails(
+      supabaseAdmin,
+      carryRequestId,
+      "PAYMENT_COMPLETED",
+      Deno.env.get("RESEND_API_KEY"),
+    );
+
+    console.info("payment_intent.succeeded emails processed", {
+      carryRequestId,
+      processed: emailOutcome.processed,
+      queued: emailOutcome.results.length,
+    });
   }
 
   console.info("payment_intent.succeeded processed", {

@@ -54,6 +54,25 @@ export function isTravelerStripeVerified(profile: TravelerStripeProfile): boolea
   );
 }
 
+/** Sender checkout — trust DB when traveler already completed Stripe setup. */
+export function isTravelerProfileVerifiedForSenderPayment(
+  profile: TravelerStripeProfile | null | undefined,
+): boolean {
+  if (!profile?.stripe_account_id) {
+    return false;
+  }
+
+  if (profile.stripe_verification_status === "verified") {
+    return true;
+  }
+
+  if (profile.stripe_details_submitted === true && profile.stripe_payouts_enabled === true) {
+    return true;
+  }
+
+  return isTravelerStripeVerified(profile);
+}
+
 export function mapStripeVerificationStatus(account: {
   details_submitted: boolean;
   charges_enabled: boolean;

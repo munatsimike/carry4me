@@ -1,18 +1,7 @@
 import type Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
-import { isStripeLiveMode } from "./client.ts";
-import {
-  reconcileTravelerStripeConnectProfile,
-  syncStripeConnectAccountToProfile,
-} from "./connectAccount.ts";
-import {
-  isMissingStripeAccountError,
-  stripeErrorMessage,
-} from "./errors.ts";
-import {
-  loadTravelerProfile,
-  type TravelerStripeProfile,
-} from "./profiles.ts";
+import { resolveTravelerConnectAccountForPayment } from "./connectAccount.ts";
+import { stripeErrorMessage } from "./errors.ts";
 
 type TransferResult =
   | { ok: true; transferId: string }
@@ -26,109 +15,17 @@ function chargeIdFromPaymentIntent(paymentIntent: Stripe.PaymentIntent): string 
   return latestCharge?.id ?? null;
 }
 
-/** Stripe is the source of truth — DB flags can lag after Connect profile changes. */
-function isStripeAccountReadyForTravelerTransfer(
-  account: Pick<
-    Stripe.Account,
-    "details_submitted" | "payouts_enabled" | "capabilities"
-  >,
-): boolean {
-  if (account.details_submitted !== true) {
-    return false;
-  }
-
-  if (account.payouts_enabled === true) {
-    return true;
-  }
-
-  return account.capabilities?.transfers === "active";
-}
-
-async function isStoredAccountReadyForTransfer(
-  stripe: Stripe,
-  supabaseAdmin: SupabaseClient,
-  userId: string,
-  accountId: string,
-): Promise<boolean> {
-  try {
-    const account = await stripe.accounts.retrieve(accountId);
-    if (account.livemode !== isStripeLiveMode()) {
-      return false;
-    }
-    if (!isStripeAccountReadyForTravelerTransfer(account)) {
-      return false;
-    }
-
-    await syncStripeConnectAccountToProfile(supabaseAdmin, userId, account);
-    return true;
-  } catch (err) {
-    if (isMissingStripeAccountError(err)) {
-      return false;
-    }
-
-    console.warn(
-      "isStoredAccountReadyForTransfer failed",
-      accountId,
-      stripeErrorMessage(err),
-    );
-    return false;
-  }
-}
-
 /** Returns the traveler's Connect account id when they can receive platform transfers. */
 export async function resolveTravelerPayoutDestinationAccount(
   stripe: Stripe,
   supabaseAdmin: SupabaseClient,
   travelerUserId: string,
 ): Promise<string | null> {
-  return resolveTravelerDestinationAccount(stripe, supabaseAdmin, travelerUserId);
-}
-
-async function resolveTravelerDestinationAccount(
-  stripe: Stripe,
-  supabaseAdmin: SupabaseClient,
-  travelerUserId: string,
-): Promise<string | null> {
-  let profile = await loadTravelerProfile(supabaseAdmin, travelerUserId);
-  if (!profile) {
-    return null;
-  }
-
-  try {
-    profile = await reconcileTravelerStripeConnectProfile(
-      stripe,
-      supabaseAdmin,
-      travelerUserId,
-      profile,
-    );
-  } catch (err) {
-    console.warn(
-      "resolveTravelerDestinationAccount reconcile failed",
-      travelerUserId,
-      stripeErrorMessage(err),
-    );
-  }
-
-  const candidateIds = collectTransferAccountCandidates(profile);
-
-  for (const accountId of candidateIds) {
-    const ready = await isStoredAccountReadyForTransfer(
-      stripe,
-      supabaseAdmin,
-      travelerUserId,
-      accountId,
-    );
-    if (ready) {
-      return accountId;
-    }
-  }
-
-  return null;
-}
-
-function collectTransferAccountCandidates(profile: TravelerStripeProfile): string[] {
-  const storedId = profile.stripe_account_id?.trim();
-  return storedId ? [storedId] : [];
+  return resolveTravelerConnectAccountForPayment(
+    stripe,
+    supabaseAdmin,
+    travelerUserId,
+  );
 }
 
 async function paymentIntentWithCharge(
@@ -150,7 +47,7 @@ export async function retryPendingTravelerTransfersForUser(
   supabaseAdmin: SupabaseClient,
   travelerUserId: string,
 ): Promise<void> {
-  const destinationReady = await resolveTravelerDestinationAccount(
+  const destinationReady = await resolveTravelerPayoutDestinationAccount(
     stripe,
     supabaseAdmin,
     travelerUserId,
@@ -229,7 +126,7 @@ export async function transferTravelerPayoutForPayment(
     return { ok: false, reason: "INVALID_PAYOUT_AMOUNT" };
   }
 
-  const destinationAccountId = await resolveTravelerDestinationAccount(
+  const destinationAccountId = await resolveTravelerPayoutDestinationAccount(
     stripe,
     supabaseAdmin,
     input.travelerUserId,

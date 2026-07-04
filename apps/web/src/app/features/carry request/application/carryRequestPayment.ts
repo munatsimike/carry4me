@@ -24,11 +24,17 @@ export function paymentSetupErrorMessage(error: unknown): string {
   }
 
   if (appError.code === "TRAVELER_STRIPE_LOOKUP_FAILED") {
-    return "Could not verify the traveler's payout account. Ask them to complete Stripe verification, then try again.";
+    return (
+      appError.message ||
+      "Could not verify the traveler's payout account. Ask them to complete Stripe verification, then try again."
+    );
   }
 
   if (appError.code === "TRAVELER_STRIPE_OUTDATED") {
-    return "The traveler's payout account is outdated. Ask them to complete Stripe verification again.";
+    return (
+      appError.message ||
+      "The traveler's payout account is not ready yet. Ask them to open Profile and refresh payout status, then try again."
+    );
   }
 
   return appError.message;

@@ -16,7 +16,10 @@ import { getParcelUseCase, getTripUseCase } from "@/app/lib/useCases";
 import Parcels from "@/app/features/parcels/ui/Parcels";
 import Travelers from "@/app/features/trips/ui/Travelers";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
-import type { TripListing } from "../../trips/domain/Trip";
+import {
+  getTripsWithAvailableSpace,
+  type TripListing,
+} from "../../trips/domain/Trip";
 import { cn } from "@/app/lib/cn";
 
 export type SuggestedMatchesData = {
@@ -190,20 +193,25 @@ export default function SuggestedMatchesTabs({
         }
       }
 
-      if (trips.length === 0) {
-        toast("Post a trip first to match with a sender.", {
-          variant: "warning",
-        });
+      const availableTrips = getTripsWithAvailableSpace(trips);
+
+      if (availableTrips.length === 0) {
+        toast(
+          trips.length === 0
+            ? "Post a trip first to match with a sender."
+            : "None of your trips have available space to carry this parcel.",
+          { variant: "warning" },
+        );
         return;
       }
 
-      setUserTrips(trips);
+      setUserTrips(availableTrips);
 
-      if (trips.length === 1) {
-        setSelectedTrip(trips[0]);
+      if (availableTrips.length === 1) {
+        setSelectedTrip(availableTrips[0]);
       }
 
-      if (trips.length > 1) {
+      if (availableTrips.length > 1) {
         setTripSelectionOpen(true);
       }
 

@@ -36,6 +36,7 @@ import {
 import { completeCarryRequestPayment } from "../application/completeCarryRequestPayment";
 import { AppError } from "@/app/shared/domain/AppError";
 import { ServiceFeeRow } from "./CarryRequestCostSummary";
+import { buildStripePaymentAppearance } from "./stripePaymentAppearance";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
@@ -195,22 +196,36 @@ function PaymentCheckoutForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [expressCheckoutAvailable, setExpressCheckoutAvailable] = useState(false);
-
-  const handleExpressAvailabilityChange = useCallback((available: boolean) => {
-    setExpressCheckoutAvailable(available);
-  }, []);
+  const [hasSelectedPaymentMethod, setHasSelectedPaymentMethod] = useState(false);
 
   const showIdealCheckout =
     paymentCurrency?.toLowerCase() === "eur" &&
     isNetherlandsOrigin(originCountry);
 
+  const handleExpressAvailabilityChange = useCallback((available: boolean) => {
+    setExpressCheckoutAvailable(available);
+  }, []);
+
+  const handlePaymentElementChange = useCallback(
+    (event: { collapsed?: boolean; value?: { type?: string } }) => {
+      const selected = Boolean(event.value?.type) || event.collapsed === false;
+      if (selected) {
+        setHasSelectedPaymentMethod(true);
+        setErrorMessage(null);
+      }
+    },
+    [],
+  );
+
   const paymentElementOptions = useMemo(() => {
     const options: Parameters<typeof PaymentElement>[0]["options"] = {
-      layout: {
-        type: "accordion",
-        defaultCollapsed: false,
-        radios: "never",
-      },
+      layout: showIdealCheckout
+        ? { type: "tabs", defaultCollapsed: false }
+        : {
+            type: "accordion",
+            defaultCollapsed: true,
+            radios: "never",
+          },
       wallets: {
         applePay: "never",
         googlePay: "never",
@@ -293,6 +308,11 @@ function PaymentCheckoutForm({
   const handlePay = async () => {
     if (!stripe || !elements) return;
 
+    if (!hasSelectedPaymentMethod) {
+      setErrorMessage("Select a payment method first.");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage(null);
 
@@ -355,8 +375,15 @@ function PaymentCheckoutForm({
         </div>
       ) : null}
 
-      <div id="payment-element" className="w-full">
-        <PaymentElement className="w-full" options={paymentElementOptions} />
+      <div
+        id="payment-element"
+        className="w-full min-h-[12rem] rounded-2xl border border-slate-200 bg-white p-3 sm:p-4"
+      >
+        <PaymentElement
+          className="w-full"
+          options={paymentElementOptions}
+          onChange={handlePaymentElementChange}
+        />
       </div>
 
       {errorMessage ? (
@@ -741,12 +768,7 @@ export default function PayCarryRequestPage() {
               stripe={stripeInstance}
               options={{
                 clientSecret,
-                appearance: {
-                  theme: "stripe",
-                  variables: {
-                    spacingUnit: "4px",
-                  },
-                },
+                appearance: buildStripePaymentAppearance(),
               }}
             >
               <PaymentCheckoutForm

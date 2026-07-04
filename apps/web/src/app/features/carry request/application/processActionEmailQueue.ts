@@ -14,13 +14,23 @@ export function processActionEmailQueue(
     return;
   }
 
+  const paymentAlreadyFinalized =
+    response.action === UIACTIONKEYS.PAY && response.reason === "ALREADY_PAID";
+
   const eventType =
     response.event_type ??
     (response.action === UIACTIONKEYS.CONFIRM_HANDOVER
       ? "HANDOVER_CONFIRMED"
-      : undefined);
+      : paymentAlreadyFinalized
+        ? "PAYMENT_COMPLETED"
+        : undefined);
 
-  if (response.progressed === false && eventType !== "HANDOVER_CONFIRMED") {
+  const shouldProcessEmail =
+    response.progressed !== false ||
+    eventType === "HANDOVER_CONFIRMED" ||
+    paymentAlreadyFinalized;
+
+  if (!shouldProcessEmail) {
     return;
   }
 

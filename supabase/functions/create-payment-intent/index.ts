@@ -7,8 +7,7 @@ import {
 } from "../_shared/stripe/auth.ts";
 import { getStripe, isStripeLiveMode } from "../_shared/stripe/client.ts";
 import { stripeErrorMessage } from "../_shared/stripe/errors.ts";
-import { loadTravelerProfile } from "../_shared/stripe/profiles.ts";
-import { resolveTravelerPayoutDestinationAccount } from "../_shared/stripe/travelerTransfer.ts";
+import { loadTravelerProfile, isTravelerProfileVerifiedForSenderPayment } from "../_shared/stripe/profiles.ts";
 
 type RequestBody = {
   carry_request_id?: string;
@@ -119,26 +118,22 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Request is not awaiting payment" }, 400);
     }
 
-    const travelerDestinationAccountId = await resolveTravelerPayoutDestinationAccount(
-      stripe,
+    // Sender checkout must not block on live Stripe Connect lookups.
+    // Traveler payout transfer runs after payment succeeds (webhook).
+    const travelerProfile = await loadTravelerProfile(
       supabaseAdmin,
       carryRequest.traveler_user_id,
     );
-    if (!travelerDestinationAccountId) {
-      const travelerProfile = await loadTravelerProfile(
-        supabaseAdmin,
-        carryRequest.traveler_user_id,
-      );
-      const code = travelerProfile?.stripe_account_id
-        ? "TRAVELER_STRIPE_OUTDATED"
-        : "TRAVELER_STRIPE_LOOKUP_FAILED";
+    const travelerStripeAccountId = travelerProfile?.stripe_account_id?.trim() ?? "";
 
+    if (
+      !travelerStripeAccountId &&
+      !isTravelerProfileVerifiedForSenderPayment(travelerProfile)
+    ) {
       return jsonResponse(
         {
-          error: code === "TRAVELER_STRIPE_LOOKUP_FAILED"
-            ? "The traveler must complete Stripe payout setup before you can pay."
-            : "The traveler's Stripe payout account is not ready yet. Ask them to finish verification, then try again.",
-          code,
+          error: "The traveler must complete Stripe payout setup before you can pay.",
+          code: "TRAVELER_STRIPE_LOOKUP_FAILED",
         },
         400,
       );
@@ -236,16 +231,20 @@ Deno.serve(async (req) => {
     try {
       // Platform charge only — sender checkout never depends on traveler Connect.
       // Traveler payout is attempted after payment succeeds (webhook transfer).
+      const paymentMetadata: Record<string, string> = {
+        carry_request_id: carryRequestId,
+        sender_user_id: user.id,
+        traveler_user_id: carryRequest.traveler_user_id,
+        traveler_payout_amount: String(amounts.travelerPayoutAmount),
+        platform_fee_amount: String(amounts.platformFeeAmount),
+      };
+      if (travelerStripeAccountId) {
+        paymentMetadata.traveler_stripe_account_id = travelerStripeAccountId;
+      }
+
       const createParams = buildPaymentIntentCreateParams(
         amounts,
-        {
-          carry_request_id: carryRequestId,
-          sender_user_id: user.id,
-          traveler_user_id: carryRequest.traveler_user_id,
-          traveler_stripe_account_id: travelerDestinationAccountId,
-          traveler_payout_amount: String(amounts.travelerPayoutAmount),
-          platform_fee_amount: String(amounts.platformFeeAmount),
-        },
+        paymentMetadata,
         `Carry4Me carry request ${carryRequestId.slice(0, 8)}`,
       );
 
