@@ -129,10 +129,10 @@ function Header({
   const isMobile = useMediaQuery();
 
   return (
-    <header className="sticky top-0 z-50 border border-slate-100 bg-white shadow-sm">
+    <header className="sticky top-0 z-50 border border-slate-100 bg-gradient-to-r from-primary-50/90 via-white to-sky-50/80 shadow-sm">
       <div
         className={cn(
-          "relative mx-auto flex min-h-14 max-w-container items-center justify-between gap-3 bg-white px-3 py-2 shadow-sm sm:min-h-16 sm:px-4 sm:shadow-none",
+          "relative mx-auto flex min-h-14 max-w-container items-center justify-between gap-3 px-3 py-2 shadow-sm sm:min-h-16 sm:px-4 sm:shadow-none",
           pathname === "/" ? "pr-4" : "pr-3 sm:pr-4",
         )}
       >
@@ -145,7 +145,7 @@ function Header({
         <div className="hidden sm:flex">
           <DesktopNavigationMenu
             userLoggedIn={isAuthed}
-            userProfile={profile} // can be null sometimes, that's ok
+            userProfile={profile}
           />
         </div>
 
