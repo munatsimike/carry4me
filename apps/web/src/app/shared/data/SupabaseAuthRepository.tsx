@@ -5,6 +5,7 @@ import {
   type AccountStatus,
 } from "../Authentication/domain/accountStatus";
 import { isProfileIncomplete } from "../Authentication/domain/profileCompletion";
+import { toProfileType } from "../Authentication/domain/profileType";
 import { supabase } from "@/app/shared/supabase/client";
 import type { UpdateProfileDto } from "../Authentication/application/updateProfileDTO";
 import type { UpdateAuthDto } from "../Authentication/application/UpdateAuthDto";
@@ -149,6 +150,7 @@ function toUserProfile(profile: Record<string, any>): UserProfile {
     emailVerified: profile.email_verified === true,
     phoneVerified: profile.phone_verified === true,
     accountStatus: toAccountStatus(profile.account_status),
+    profileType: toProfileType(profile.profile_type),
     stripeAccountId: profile.stripe_account_id ?? null,
     stripeDetailsSubmitted: profile.stripe_details_submitted === true,
     stripeChargesEnabled: profile.stripe_charges_enabled === true,

@@ -23,8 +23,8 @@ export const FALLBACK_CITIES_BY_COUNTRY_CODE: Record<string, string[]> = {
   NL: ["Amsterdam", "Rotterdam", "The Hague", "Utrecht", "Eindhoven"],
   FR: ["Paris", "Lyon", "Marseille", "Mulhouse"],
   France: ["Paris", "Lyon", "Marseille"],
-  Zimbabwe: ["Harare", "Bulawayo"],
-  ZW: ["Harare", "Bulawayo"],
+  Zimbabwe: ["Harare", "Mutare", "Bulawayo", "Gweru", "Masvingo"],
+  ZW: ["Harare", "Mutare", "Bulawayo", "Gweru", "Masvingo"],
 };
 
 export const tagToVariant = {

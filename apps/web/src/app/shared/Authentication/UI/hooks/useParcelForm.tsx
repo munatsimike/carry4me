@@ -41,6 +41,7 @@ import toGoodsMapper from "@/app/features/goods/domain/toGoodsMapper";
 import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
+import { applyLockedListingOriginCountry } from "@/app/shared/locations/listingOriginCountry";
 import {
   citySchema,
   confirmNoProhibitedItemsSchema,
@@ -167,8 +168,9 @@ export default function useParcelForm({
 
     if (!initialFormValues?.id) return;
     try {
+      const normalizedValues = applyLockedListingOriginCountry(values, profile);
       await editParcelUseCase.execute(
-        toParcelDtoMapper(initialFormValues?.id, values, dirtyFields),
+        toParcelDtoMapper(initialFormValues?.id, normalizedValues, dirtyFields),
       );
 
       if (dirtyFields.goodsCategoryIds) {
@@ -217,8 +219,9 @@ export default function useParcelForm({
     if (!ok) return;
 
     try {
+      const normalizedValues = applyLockedListingOriginCountry(values, profile);
       const parcelId = await createParcel(
-        values,
+        normalizedValues,
         user.id,
         createParcelUseCase,
         showSupabaseError,

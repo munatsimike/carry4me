@@ -38,6 +38,7 @@ import { useNavigate } from "react-router-dom";
 import { useMarketplaceActionGuard } from "./useMarketplaceActionGuard";
 import { startTravelerStripeOnboarding } from "@/app/features/carry request/application/travelerStripeVerification";
 import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
+import { applyLockedListingOriginCountry } from "@/app/shared/locations/listingOriginCountry";
 import {
   citySchema,
   countrySchema,
@@ -166,8 +167,9 @@ export function useTripForm({
 
     if (!initialFormValues?.id) return;
     try {
+      const normalizedValues = applyLockedListingOriginCountry(values, profile);
       await editTripUseCase.execute(
-        toTripDtoMapper(initialFormValues?.id, values, dirtyFields),
+        toTripDtoMapper(initialFormValues?.id, normalizedValues, dirtyFields),
       );
 
       if (dirtyFields.goodsCategoryIds) {
@@ -216,8 +218,9 @@ export function useTripForm({
     if (!ok) return;
 
     try {
+      const normalizedValues = applyLockedListingOriginCountry(values, profile);
       const tripId = await createTrip(
-        values,
+        normalizedValues,
         user.id,
         createTripUseCase,
         showSupabaseError,

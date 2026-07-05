@@ -20,6 +20,18 @@ export function getDestinationDefaultsFromProfile(): {
   };
 }
 
+export function getProfileOriginCountryCode(
+  profile: UserProfile | null | undefined,
+): string {
+  if (!profile) return "";
+
+  return (
+    profile.countryCode?.trim() ||
+    normalizeCountryCode(profile.country ?? "") ||
+    ""
+  );
+}
+
 export function getOriginDefaultsFromProfile(
   profile: UserProfile | null | undefined,
   locations?: MyLocation[],
@@ -36,10 +48,7 @@ export function getOriginDefaultsFromProfile(
 
   if (!profile) return empty;
 
-  const originCountry =
-    profile.countryCode?.trim() ||
-    normalizeCountryCode(profile.country ?? "") ||
-    "";
+  const originCountry = getProfileOriginCountryCode(profile);
 
   if (!originCountry) return empty;
 

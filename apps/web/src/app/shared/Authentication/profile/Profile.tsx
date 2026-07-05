@@ -20,8 +20,10 @@ import {
   type Control,
   type UseFormSetValue,
 } from "react-hook-form";
+import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
 import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
+import { formatProfileTypeLabel, isAdminProfile, PROFILE_TYPES } from "../domain/profileType";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 import { toDialCode, toflag } from "@/app/Mapper";
@@ -407,11 +409,15 @@ export default function ProfilePage() {
       const values = getValues();
 
       try {
+        const countryCode = isAdminProfile(profile)
+          ? values.country
+          : getProfileOriginCountryCode(profile) || values.country;
+
         await updateProfileUseCase.execute(user?.id, {
           fullName: `${values.firstName} ${values.lastName}`,
           id: null,
           avatarUrl: null,
-          countryCode: values.country,
+          countryCode,
           city: values.city,
           email: values.emailAddress,
           phoneNumber: profile.phoneNumber,
@@ -692,6 +698,8 @@ function LocationSection({
   setEditing,
 }: LocationSectionProps) {
   const isEditing = editing === "location";
+  const lockCountry = !isAdminProfile(profile);
+  const lockedCountryCode = getProfileOriginCountryCode(profile);
   const countryCode = formProps.watch("country");
   const countryValue = profile.country ?? countryCode;
   const countryDisplayName = getCountryName(countryValue);
@@ -748,6 +756,8 @@ function LocationSection({
               getCountryName={getCountryName}
               getCountryCode={getCountryCode}
               selectedCountry={countryCode}
+              lockCountry={lockCountry && !!lockedCountryCode}
+              lockedCountryCode={lockedCountryCode}
             />
           </motion.div>
         )}
@@ -1020,6 +1030,12 @@ function PersonalDetailsSection({
                   : undefined
               }
             />
+            <InfoRow
+              label="Account type"
+              value={formatProfileTypeLabel(
+                profile.profileType ?? PROFILE_TYPES.ORDINARY,
+              )}
+            />
             {showTravelerPayouts ? (
               <TravelerPayoutStatusRow
                 profile={profile}
@@ -1132,6 +1148,8 @@ type LocationEditFormProps = {
   control: Control<UserDetailsFields>;
   setValue: UseFormSetValue<UserDetailsFields>;
   formBtns: ActionButtonProps;
+  lockCountry?: boolean;
+  lockedCountryCode?: string;
 };
 
 function LocationEditForm({
@@ -1144,6 +1162,8 @@ function LocationEditForm({
   getCountryCode,
   selectedCountry,
   isSubmitting,
+  lockCountry = false,
+  lockedCountryCode = "",
 }: LocationEditFormProps & {
   cities: string[];
   countryNames: string[];
@@ -1152,6 +1172,15 @@ function LocationEditForm({
   selectedCountry: string;
   isSubmitting: boolean;
 }) {
+  useEffect(() => {
+    if (!lockCountry || !lockedCountryCode) return;
+
+    setValue("country", lockedCountryCode, {
+      shouldDirty: false,
+      shouldValidate: true,
+    });
+  }, [lockCountry, lockedCountryCode, setValue]);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:max-w-[320px]">
@@ -1164,7 +1193,10 @@ function LocationEditForm({
               placeholder="Select country"
               menuItems={countryNames}
               value={getCountryName(field.value)}
+              disabled={lockCountry}
+              disabledMessage="Locked to your verified number"
               onValueChange={(nextCountryName) => {
+                if (lockCountry) return;
                 field.onChange(getCountryCode(nextCountryName) ?? nextCountryName);
                 setValue("city", "", {
                   shouldDirty: true,

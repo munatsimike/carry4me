@@ -33,6 +33,9 @@ import {
   parcelStep3Fields,
 } from "./parcelFormSteps";
 import { FormStepActions } from "@/app/components/forms/FormStepActions";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
+import { shouldLockListingOriginCountry } from "@/app/shared/locations/listingOriginCountry";
 
 export type ParcelFormMode = "edit" | "create";
 
@@ -104,6 +107,9 @@ export default function CreateParcelForm({
   const isPageVariant = variant === "page";
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { profile } = useAuth();
+  const lockOriginCountry = shouldLockListingOriginCountry(profile);
+  const lockedOriginCountry = getProfileOriginCountryCode(profile);
   const handleCancel = () => {
     const returnTo = searchParams.get("returnTo");
     navigate(returnTo ?? "/my/parcels");
@@ -166,7 +172,13 @@ export default function CreateParcelForm({
             {...stepMotion}
           >
             <LineDivider heightClass={dividerHeight} />
-            <RouteFieldRow control={control} setValue={setValue} watch={watch} />
+            <RouteFieldRow
+              control={control}
+              setValue={setValue}
+              watch={watch}
+              lockOriginCountry={lockOriginCountry && !!lockedOriginCountry}
+              lockedOriginCountry={lockedOriginCountry}
+            />
             <LineDivider heightClass={dividerHeight} />
             <GoodsCategoryGrid
               label="What items are you sending?"

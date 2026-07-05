@@ -35,6 +35,9 @@ import { sortTripGoodsCategories } from "@/app/features/goods/domain/goodsCatego
 import TripFormReview from "./TripFormReview";
 import { tripStep1Fields, tripStep2Fields } from "./tripFormSteps";
 import { FormStepActions } from "@/app/components/forms/FormStepActions";
+import { useAuth } from "@/app/shared/supabase/AuthProvider";
+import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
+import { shouldLockListingOriginCountry } from "@/app/shared/locations/listingOriginCountry";
 
 const stepMotion = {
   initial: { opacity: 0, x: 12 },
@@ -116,6 +119,9 @@ export function CreateTripForm({
   const isEditMode = mode === "edit";
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { profile } = useAuth();
+  const lockOriginCountry = shouldLockListingOriginCountry(profile);
+  const lockedOriginCountry = getProfileOriginCountryCode(profile);
   const handleCancel = () => {
     const returnTo = searchParams.get("returnTo");
     navigate(returnTo ?? "/my/trips");
@@ -165,7 +171,13 @@ export function CreateTripForm({
             {...stepMotion}
           >
             <LineDivider heightClass={dividerHeight} />
-            <RouteFieldRow control={control} setValue={setValue} watch={watch} />
+            <RouteFieldRow
+              control={control}
+              setValue={setValue}
+              watch={watch}
+              lockOriginCountry={lockOriginCountry && !!lockedOriginCountry}
+              lockedOriginCountry={lockedOriginCountry}
+            />
             <LineDivider heightClass={dividerHeight} />
             <DateField<TripFormFields>
               error={errors.departureDate?.message}

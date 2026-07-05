@@ -1,4 +1,5 @@
 import type { AccountStatus } from "./accountStatus";
+import type { ProfileType } from "./profileType";
 
 export type LogoutResult =
   | { success: true }
@@ -24,6 +25,7 @@ export type UserProfile = {
   phoneNumber: string | null;
   phoneVerified?: boolean;
   accountStatus?: AccountStatus;
+  profileType?: ProfileType;
   email: string;
   emailVerified?: boolean;
   stripeAccountId?: string | null;
