@@ -5,13 +5,13 @@ export type BrowseMarketplaceTone = "trips" | "parcels";
 /** Light browse surface for trip actions (matches dashboard). */
 export const browseTripsSurfaceClass = cn(
   "border border-primary-200 bg-primary-50 shadow-sm",
-  "hover:border-primary-300 hover:bg-primary-100 hover:shadow-md",
+  "enabled:hover:border-primary-300 enabled:hover:bg-primary-100 enabled:hover:shadow-md",
 );
 
 /** Light browse surface for parcel actions (matches dashboard). */
 export const browseParcelsSurfaceClass = cn(
   "border border-slate-700/20 bg-slate-700/10 shadow-sm",
-  "hover:border-slate-700/30 hover:bg-slate-700/15 hover:shadow-md",
+  "enabled:hover:border-slate-700/30 enabled:hover:bg-slate-700/15 enabled:hover:shadow-md",
 );
 
 export const browseMarketplaceSurfaceClass: Record<

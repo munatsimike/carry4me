@@ -406,7 +406,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           iconSize="lg"
           textVariant="onDark"
           showArrow
-          buttonClassName="border border-primary-600 bg-primary-500 shadow-sm hover:border-primary-700 hover:bg-primary-600 hover:shadow-md"
+          buttonClassName="border border-primary-600 bg-primary-500 shadow-sm enabled:hover:border-primary-700 enabled:hover:bg-primary-600 enabled:hover:shadow-md"
           iconClassName="text-white"
           textClassName="text-white"
         />
@@ -421,7 +421,7 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
           iconSize="lg"
           textVariant="onDark"
           showArrow
-          buttonClassName="border border-[#475569] bg-[#334155] shadow-sm hover:border-[#64748b] hover:bg-[#475569] hover:shadow-md"
+          buttonClassName="border border-[#475569] bg-[#334155] shadow-sm enabled:hover:border-[#64748b] enabled:hover:bg-[#475569] enabled:hover:shadow-md"
           iconClassName="text-white"
           textClassName="text-white"
         />

@@ -258,30 +258,34 @@ export function ArchivedCarryRequestDetails({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2">
         <ArchivedDetailField
           label="Goods"
           value={categories || "—"}
           icon={META_ICONS.parcelBoxOutlined}
           bordered
+          className="h-fit"
         />
-        <ArchivedDetailField
-          label="Delivery date"
-          value={deliveryDateLabel}
-          icon={META_ICONS.calender}
-          bordered
-        />
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <ArchivedDetailField
+            label="Delivery date"
+            value={deliveryDateLabel}
+            icon={META_ICONS.calender}
+            bordered
+          />
+          <button
+            type="button"
+            onClick={() => setCostModalOpen(true)}
+            className={cn(
+              "w-fit px-2.5 text-left text-sm font-medium text-primary-600 underline-offset-2 transition-colors",
+              "hover:text-primary-700 hover:underline",
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 rounded",
+            )}
+          >
+            Show cost
+          </button>
+        </div>
       </div>
-
-      <button
-        type="button"
-        onClick={() => setCostModalOpen(true)}
-        className="flex w-full items-center justify-center rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 hover:border-primary-100/70 group-hover/card:border-primary-100/70"
-      >
-        <CustomText textVariant="label" textSize="xs" as="span">
-          Show cost
-        </CustomText>
-      </button>
 
       <AnimatePresence>
         {costModalOpen ? (
