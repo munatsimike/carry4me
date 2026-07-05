@@ -37,7 +37,7 @@ interface RawEvent {
   created_at?: string;
 }
 
-export interface RawCarryRequestRow {
+interface RawCarryRequestRow {
   id: string;
   parcel_id: string;
   trip_id: string;
@@ -46,6 +46,9 @@ export interface RawCarryRequestRow {
   initiator_role: CarryRequest["initiatorRole"];
   status: CarryRequest["status"];
   payment_expires_at?: string | null;
+  expired_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
   stripe_payment_intent_id?: string | null;
   payment_status?: string | null;
   handover_confirmations: RawConfirmation[];
@@ -54,37 +57,43 @@ export interface RawCarryRequestRow {
   events: RawEvent | RawEvent[] | null;
 }
 
-function resolveLatestEvent(
+function normalizeRawEvents(
   events: RawCarryRequestRow["events"],
   requestId: string,
-): RawEvent {
+): RawEvent[] {
   if (Array.isArray(events)) {
-    if (events.length === 0) {
-      return {
-        carry_request_id: requestId,
-        type: "REQUEST_SENT",
-        actor_user_id: null,
-        metadata: {},
-      };
-    }
-
-    return [...events].sort(
-      (a, b) =>
-        new Date(b.created_at ?? 0).getTime() -
-        new Date(a.created_at ?? 0).getTime(),
-    )[0]!;
-  }
-
-  if (events && typeof events === "object") {
     return events;
   }
 
-  return {
-    carry_request_id: requestId,
-    type: "REQUEST_SENT",
-    actor_user_id: null,
-    metadata: {},
-  };
+  if (events && typeof events === "object") {
+    return [events];
+  }
+
+  return [
+    {
+      carry_request_id: requestId,
+      type: "REQUEST_SENT",
+      actor_user_id: null,
+      metadata: {},
+    },
+  ];
+}
+
+function resolveLatestEvent(events: RawEvent[]): RawEvent {
+  if (events.length === 0) {
+    return {
+      carry_request_id: "",
+      type: "REQUEST_SENT",
+      actor_user_id: null,
+      metadata: {},
+    };
+  }
+
+  return [...events].sort(
+    (a, b) =>
+      new Date(b.created_at ?? 0).getTime() -
+      new Date(a.created_at ?? 0).getTime(),
+  )[0]!;
 }
 
 export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
@@ -102,7 +111,8 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
     throw new Error("Invalid carry request row (missing snapshots)");
   }
 
-  const latestEvent = resolveLatestEvent(row.events, row.id);
+  const rawEvents = normalizeRawEvents(row.events, row.id);
+  const latestEvent = resolveLatestEvent(rawEvents);
 
   if (
     !row.parcel_snapshot.origin ||
@@ -125,6 +135,8 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
     paymentExpiresAt: row.payment_expires_at ?? null,
     stripePaymentIntentId: row.stripe_payment_intent_id ?? null,
     paymentStatus: row.payment_status ?? null,
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+    expiredAt: row.expired_at ?? null,
 
     handoverState: {
       senderConfirmed,
@@ -166,5 +178,9 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
       actorUserId: latestEvent.actor_user_id ?? "",
       metadata: latestEvent.metadata,
     },
+    eventHistory: rawEvents.map((event) => ({
+      type: event.type as CarryRequest["eventHistory"][number]["type"],
+      createdAt: event.created_at ?? null,
+    })),
   };
 }

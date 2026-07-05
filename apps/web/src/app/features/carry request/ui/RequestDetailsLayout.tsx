@@ -9,11 +9,9 @@ import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDes
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import type { SvgIconComponent } from "@/types/Ui";
-import { format } from "date-fns";
 import { AnimatePresence } from "framer-motion";
 import { MoveRight } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { dateFormat } from "@/types/Ui";
 import {
   CarryRequestCostSummary,
   RequestCostSummarySection,
@@ -212,8 +210,10 @@ export function RequestDetailsGrid({
 export function ArchivedCarryRequestDetails({
   trip,
   parcel,
+  statusDateLabel,
+  statusDateValue,
 }: {
-  trip: { traveler_name: string; departure_date: string };
+  trip: { traveler_name: string };
   parcel: {
     sender_name: string;
     origin: { country: string; city?: string };
@@ -222,6 +222,8 @@ export function ArchivedCarryRequestDetails({
     weight_kg: number;
     price_per_kg: number;
   };
+  statusDateLabel: string;
+  statusDateValue: string;
 }) {
   const [costModalOpen, setCostModalOpen] = useState(false);
   const categories = parcel.goods_category.map((item) => item.name).join(", ");
@@ -231,7 +233,6 @@ export function ArchivedCarryRequestDetails({
     originCity: parcel.origin.city,
     destinationCity: parcel.destination.city,
   };
-  const deliveryDateLabel = formatArchivedTripDate(trip.departure_date);
 
   return (
     <div className="flex flex-col gap-2 rounded-2xl border border-slate-100/90 bg-secondary-50/60 p-2 sm:p-2.5 transition-colors duration-200 group-hover/card:border-primary-100/80 group-hover/card:bg-secondary-50">
@@ -268,8 +269,8 @@ export function ArchivedCarryRequestDetails({
         />
         <div className="flex min-w-0 flex-col gap-1.5">
           <ArchivedDetailField
-            label="Delivery date"
-            value={deliveryDateLabel}
+            label={statusDateLabel}
+            value={statusDateValue}
             icon={META_ICONS.calender}
             bordered
           />
@@ -315,15 +316,6 @@ export function ArchivedCarryRequestDetails({
       </AnimatePresence>
     </div>
   );
-}
-
-function formatArchivedTripDate(iso: string | undefined): string {
-  if (!iso?.trim()) return "—";
-
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-
-  return format(date, dateFormat);
 }
 
 function ArchivedDetailField({

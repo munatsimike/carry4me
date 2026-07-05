@@ -94,6 +94,7 @@ import {
   RequestParcelDetailsSection,
   RequestTripDetailsSection,
 } from "./RequestDetailsLayout";
+import { getArchivedRequestDateDisplay } from "../application/archivedRequestDate";
 import { usePaymentTimeRemaining } from "../hooks/usePaymentTimeRemaining";
 
 export type SelectedTab =
@@ -837,6 +838,7 @@ function CarryRequestCard({
       Boolean(actions.infoBlock?.displayText) ||
       Boolean(actions.primary) ||
       Boolean(actions.secondary);
+    const archivedDate = getArchivedRequestDateDisplay(effectiveStatus, request);
 
     return (
       <Card
@@ -859,6 +861,8 @@ function CarryRequestCard({
         <ArchivedCarryRequestDetails
           trip={request.tripSnapshot}
           parcel={request.parcelSnapshot}
+          statusDateLabel={archivedDate.label}
+          statusDateValue={archivedDate.value}
         />
 
         {hasFooter ? (
