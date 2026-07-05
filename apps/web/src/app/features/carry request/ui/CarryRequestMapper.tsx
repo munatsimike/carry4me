@@ -93,9 +93,11 @@ export function mapCarryRequestToUI(
 
     case CARRY_REQUEST_STATUSES.PAID_OUT:
       currentStep = 6;
-      title = "Payment released";
+      title = "Request complete";
       description =
-        "Your payment has been successfully released to the traveler.";
+        viewerRole === ROLES.SENDER
+          ? "Payment was released to the traveler. This request is now complete."
+          : "Payout was released. This request is now complete.";
       break;
 
     case CARRY_REQUEST_STATUSES.REJECTED:
