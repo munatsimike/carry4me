@@ -331,36 +331,42 @@ function RequestProgressItem({ activityList }: { activityList: StatsItem[] }) {
       {activityList.map((item) => {
         const isInteractive = (item.count ?? 0) > 0 && !!item.link;
 
-        return (
-          <span
-            key={item.itemName}
-            className={[
-              "inline-flex min-w-0 items-center justify-between gap-3 rounded-xl border border-neutral-100 bg-neutral-50 px-3 py-2.5 transition-all",
-              isInteractive
-                ? "hover:bg-neutral-100 hover:-translate-y-0.5"
-                : "hover:bg-neutral-100",
-            ].join(" ")}
-          >
-          <span className="inline-flex min-w-0 items-center gap-2.5">
-            <span
-              className={`h-2 w-2 rounded-full ${item.status && toColorMapper[item.status]}`}
-            />
-            <Link to={`${isInteractive ? item.link : ""}`}>
+        const rowClassName = [
+          "inline-flex min-w-0 w-full items-center justify-between gap-3 rounded-xl border border-neutral-100 bg-neutral-50 px-3 py-2.5 transition-all",
+          isInteractive
+            ? "cursor-pointer hover:bg-neutral-100 hover:-translate-y-0.5"
+            : "hover:bg-neutral-100",
+        ].join(" ");
+
+        const content = (
+          <>
+            <span className="inline-flex min-w-0 items-center gap-2.5">
+              <span
+                className={`h-2 w-2 shrink-0 rounded-full ${item.status && toColorMapper[item.status]}`}
+              />
               <CustomText
-                textVariant={`${isInteractive ? "secondary" : "helperText"}`}
-                className={`${isInteractive ? "cursor-pointer" : "cursor-text"}`}
+                textVariant={isInteractive ? "secondary" : "helperText"}
               >
                 {item.itemName}
               </CustomText>
-            </Link>
-          </span>
-          <CustomText
-            textVariant={`${isInteractive ? "secondary" : "helperText"}`}
-            textSize="xs"
-            className="rounded-full bg-white px-2 py-0.5"
-          >
-            {item.count}
-          </CustomText>
+            </span>
+            <CustomText
+              textVariant={isInteractive ? "secondary" : "helperText"}
+              textSize="xs"
+              className="shrink-0 rounded-full bg-white px-2 py-0.5"
+            >
+              {item.count}
+            </CustomText>
+          </>
+        );
+
+        return isInteractive ? (
+          <Link key={item.itemName} to={item.link!} className={rowClassName}>
+            {content}
+          </Link>
+        ) : (
+          <span key={item.itemName} className={rowClassName}>
+            {content}
           </span>
         );
       })}
