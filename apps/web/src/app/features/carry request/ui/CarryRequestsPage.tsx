@@ -61,7 +61,7 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Package, Wallet } from "lucide-react";
+import { CheckCircle2, Package } from "lucide-react";
 import { cn, dialogIconStyle } from "@/app/lib/cn";
 import {
   carryRequestCardDividerHoverClass,
@@ -852,7 +852,7 @@ function CarryRequestCard({
           title={requestUI.title}
           description={requestUI.description}
           requestId={request.carryRequestId.slice(-6)}
-          showWalletIcon={effectiveStatus === CARRY_REQUEST_STATUSES.PAID_OUT}
+          showCompletedIcon={effectiveStatus === CARRY_REQUEST_STATUSES.PAID_OUT}
         />
 
         <ArchivedCarryRequestDetails
@@ -1140,22 +1140,25 @@ function ArchivedCardHeader({
   title,
   description,
   requestId,
-  showWalletIcon = false,
+  showCompletedIcon = false,
 }: {
   title: string;
   description: string;
   requestId: string;
-  showWalletIcon?: boolean;
+  showCompletedIcon?: boolean;
 }) {
   return (
     <div className="flex items-start justify-between gap-2 rounded-2xl bg-secondary-50/50 px-2 py-2 transition-colors duration-200 group-hover/card:bg-primary-50/30 sm:px-2.5">
       <div className="flex min-w-0 flex-1 items-start gap-2.5">
-        {showWalletIcon ? (
+        {showCompletedIcon ? (
           <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-50"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success-50"
             aria-hidden
           >
-            <Wallet className="h-4 w-4 text-success-600" strokeWidth={1.75} />
+            <CheckCircle2
+              className="h-5 w-5 text-success-600"
+              strokeWidth={1.75}
+            />
           </div>
         ) : null}
         <div className="min-w-0 flex-1">
