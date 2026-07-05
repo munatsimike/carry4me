@@ -64,6 +64,7 @@ function buildPaymentIntentCreateParams(
     description,
     automatic_payment_methods: {
       enabled: true,
+      allow_redirects: "always",
     },
   } as const;
 }

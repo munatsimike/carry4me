@@ -61,9 +61,9 @@ const EXPRESS_CHECKOUT_ELEMENT_OPTIONS: StripeExpressCheckoutElementOptions = {
     link: "auto",
     amazonPay: "never",
     paypal: "never",
-    klarna: "never",
+    klarna: "auto",
   },
-  paymentMethodOrder: ["google_pay", "apple_pay", "link"],
+  paymentMethodOrder: ["google_pay", "apple_pay", "link", "klarna"],
 };
 
 function isExpressCheckoutMethodAvailable(
@@ -86,7 +86,8 @@ function hasAvailableExpressCheckoutMethods(
   return (
     isExpressCheckoutMethodAvailable(methods.googlePay) ||
     isExpressCheckoutMethodAvailable(methods.applePay) ||
-    isExpressCheckoutMethodAvailable(methods.link)
+    isExpressCheckoutMethodAvailable(methods.link) ||
+    isExpressCheckoutMethodAvailable(methods.klarna)
   );
 }
 
@@ -233,7 +234,7 @@ function PaymentCheckoutForm({
     };
 
     if (showIdealCheckout) {
-      options.paymentMethodOrder = ["ideal", "card"];
+      options.paymentMethodOrder = ["ideal", "klarna", "card"];
       options.defaultValues = {
         billingDetails: {
           address: {
