@@ -61,7 +61,7 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Package } from "lucide-react";
+import { Package, Wallet } from "lucide-react";
 import { cn, dialogIconStyle } from "@/app/lib/cn";
 import {
   carryRequestCardDividerHoverClass,
@@ -87,6 +87,7 @@ import {
   type MobileSection,
 } from "./CarryRequestPageMobile";
 import {
+  ArchivedCarryRequestDetails,
   RequestCostSummarySection,
   RequestDetailsGrid,
   RequestParcelDetailsSection,
@@ -100,6 +101,24 @@ export type SelectedTab =
   | "declined"
   | "cancelled"
   | "expired";
+
+function isArchivedCarryRequestTab(tab: SelectedTab | null): boolean {
+  return (
+    tab === "completed" ||
+    tab === "cancelled" ||
+    tab === "expired" ||
+    tab === "declined"
+  );
+}
+
+function isArchivedCarryRequestStatus(status: CarryRequestStatus): boolean {
+  return (
+    status === CARRY_REQUEST_STATUSES.PAID_OUT ||
+    status === CARRY_REQUEST_STATUSES.CANCELLED ||
+    status === CARRY_REQUEST_STATUSES.EXPIRED ||
+    status === CARRY_REQUEST_STATUSES.REJECTED
+  );
+}
 
 const statusToTab: Record<CarryRequestStatus, SelectedTab> = {
   PENDING_ACCEPTANCE: "ongoing",
@@ -716,17 +735,25 @@ export default function CarryRequestsPage() {
       </PageSection>
 
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
-        <div className="flex flex-col gap-6">
+        <div
+          className={cn(
+            isArchivedCarryRequestTab(selectedTab)
+              ? "grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2"
+              : "flex flex-col gap-6",
+          )}
+        >
           {emptyStateMessage && (
-            <EmptyState
-              title={emptyStateMessage.title}
-              description={emptyStateMessage.body}
-              action={
-                emptyStateMessage.actions ? (
-                  <BrowseMarketplaceActions actions={emptyStateMessage.actions} />
-                ) : undefined
-              }
-            />
+            <div className="col-span-full">
+              <EmptyState
+                title={emptyStateMessage.title}
+                description={emptyStateMessage.body}
+                action={
+                  emptyStateMessage.actions ? (
+                    <BrowseMarketplaceActions actions={emptyStateMessage.actions} />
+                  ) : undefined
+                }
+              />
+            </div>
           )}
           {displayList?.map((request) => (
             <CarryRequestCard
@@ -801,6 +828,61 @@ function CarryRequestCard({
     request.parcelSnapshot.price_per_kg,
     request.parcelSnapshot.weight_kg,
   );
+
+  const isArchived = isArchivedCarryRequestStatus(effectiveStatus);
+
+  if (isArchived) {
+    const hasFooter =
+      Boolean(actions.infoBlock?.displayText) ||
+      Boolean(actions.primary) ||
+      Boolean(actions.secondary);
+
+    return (
+      <Card
+        key={request.carryRequestId}
+        sizeClass="max-w-none"
+        borderClass=""
+        shadowClass=""
+        className={cn(
+          "group/card flex w-full min-w-0 flex-col gap-3 px-3 py-3.5 sm:gap-3.5 sm:px-5 sm:py-4",
+          carryRequestCardHoverClass,
+        )}
+      >
+        <ArchivedCardHeader
+          title={requestUI.title}
+          description={requestUI.description}
+          requestId={request.carryRequestId.slice(-6)}
+          showWalletIcon={effectiveStatus === CARRY_REQUEST_STATUSES.PAID_OUT}
+        />
+
+        <ArchivedCarryRequestDetails
+          trip={request.tripSnapshot}
+          parcel={request.parcelSnapshot}
+        />
+
+        {hasFooter ? (
+          <div className="pt-0.5">
+            {actions.infoBlock?.displayText ? (
+              <RequestCompleted actions={actions} compact />
+            ) : (
+              <RequestActions
+                actions={actions}
+                request={request}
+                inputValue={inputValue}
+                setValue={setValue}
+                onInputValueChange={onInputValueChange}
+                otpInputInvalid={otpInputInvalid}
+                onPrimaryAction={onPrimaryAction}
+                onSecondaryAction={onSecondaryAction}
+                pendingActionSlot={pendingActionSlot}
+                compact
+              />
+            )}
+          </div>
+        ) : null}
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -910,6 +992,7 @@ function RequestActions({
   onPrimaryAction,
   onSecondaryAction,
   pendingActionSlot,
+  compact = false,
 }: {
   actions: UIActions;
   request: CarryRequest;
@@ -920,6 +1003,7 @@ function RequestActions({
   onPrimaryAction: (actions: UIActions, request: CarryRequest) => void;
   onSecondaryAction: (actions: UIActions, request: CarryRequest) => void;
   pendingActionSlot: PendingActionSlot | null;
+  compact?: boolean;
 }) {
   const isActionPending = pendingActionSlot !== null;
   const actionsDisabled = isActionPending;
@@ -939,8 +1023,8 @@ function RequestActions({
             ? "trips"
             : "parcels"
         }
-        size="md"
-        className="w-full sm:w-auto"
+        size={compact ? "sm" : "md"}
+        className={compact ? "w-full" : "w-full sm:w-auto"}
         disabled={actionsDisabled}
         isBusy={isSecondaryPending}
         onClick={() => onSecondaryAction(actions, request)}
@@ -949,7 +1033,7 @@ function RequestActions({
       </BrowseMarketplaceButton>
     ) : (
       <Button
-        className="w-full sm:w-auto"
+        className={compact ? "w-full" : "w-full sm:w-auto"}
         onClick={() => onSecondaryAction(actions, request)}
         variant="outline"
         size="md"
@@ -963,7 +1047,14 @@ function RequestActions({
   ) : null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-4">
+    <div
+      className={cn(
+        "flex gap-4",
+        compact
+          ? "w-full flex-col items-stretch"
+          : "flex-col items-center justify-end sm:flex-row sm:items-center",
+      )}
+    >
       {showDisplayInfo && (
         <InfoBlockDisplay actions={actions} action={secondaryButton} />
       )}
@@ -980,8 +1071,8 @@ function RequestActions({
                 ? "trips"
                 : "parcels"
             }
-            size="md"
-            className="w-full sm:w-auto"
+            size={compact ? "sm" : "md"}
+            className={compact ? "w-full" : "w-full sm:w-auto"}
             disabled={actionsDisabled}
             isBusy={isPrimaryPending}
             onClick={() => onPrimaryAction(actions, request)}
@@ -990,7 +1081,7 @@ function RequestActions({
           </BrowseMarketplaceButton>
         ) : (
           <Button
-            className="w-full sm:w-auto"
+            className={compact ? "w-full" : "w-full sm:w-auto"}
             onClick={() => onPrimaryAction(actions, request)}
             variant="primary"
             size="md"
@@ -1018,15 +1109,75 @@ function RequestActions({
   );
 }
 
-function RequestCompleted({ actions }: { actions: UIActions }) {
+function RequestCompleted({
+  actions,
+  compact = false,
+}: {
+  actions: UIActions;
+  compact?: boolean;
+}) {
+  if (compact) {
+    return (
+      <p className="rounded-2xl border border-slate-100 bg-secondary-50/80 px-3 py-2.5 text-center text-xs text-ink-secondary transition-colors duration-200 group-hover/card:border-primary-100 group-hover/card:bg-primary-50/40">
+        {actions.infoBlock?.displayText?.title}
+      </p>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center gap-2 pb-2 text-center">
-      <CustomText textVariant="primary">
+    <div className="flex flex-col items-center gap-1 pb-2 text-center">
+      <CustomText textVariant="primary" textSize="md">
         {actions.infoBlock?.displayText?.title}
       </CustomText>
-      <CustomText textSize="xs">
+      <CustomText textSize="xs" textVariant="secondary">
         {actions.infoBlock?.displayText?.description}
       </CustomText>
+    </div>
+  );
+}
+
+function ArchivedCardHeader({
+  title,
+  description,
+  requestId,
+  showWalletIcon = false,
+}: {
+  title: string;
+  description: string;
+  requestId: string;
+  showWalletIcon?: boolean;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-2 rounded-2xl bg-secondary-50/50 px-2 py-2 transition-colors duration-200 group-hover/card:bg-primary-50/30 sm:px-2.5">
+      <div className="flex min-w-0 flex-1 items-start gap-2.5">
+        {showWalletIcon ? (
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-50"
+            aria-hidden
+          >
+            <Wallet className="h-4 w-4 text-success-600" strokeWidth={1.75} />
+          </div>
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <CustomText
+            textSize="sm"
+            textVariant="primary"
+            className="font-semibold font-heading leading-snug text-ink-primary"
+          >
+            {title}
+          </CustomText>
+          <CustomText
+            textSize="xs"
+            textVariant="secondary"
+            className="mt-0.5 line-clamp-2 leading-snug"
+          >
+            {description}
+          </CustomText>
+        </div>
+      </div>
+      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-medium text-slate-500">
+        #{requestId}
+      </span>
     </div>
   );
 }

@@ -1,13 +1,26 @@
+import { META_ICONS } from "@/app/icons/MetaIcon";
+import CustomModal from "@/app/components/CustomModal";
+import RouteRow from "@/app/components/RouteRow";
 import CardLabel from "@/app/components/card/CardLabel";
 import { toflag } from "@/app/Mapper";
 import { cn } from "@/app/lib/cn";
+import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
 import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDestination";
 import CustomText from "@/components/ui/CustomText";
-import SvgIcon from "@/components/ui/SvgIcon";
+import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import type { SvgIconComponent } from "@/types/Ui";
+import { format } from "date-fns";
+import { AnimatePresence } from "framer-motion";
 import { MoveRight } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { dateFormat } from "@/types/Ui";
+import {
+  CarryRequestCostSummary,
+  RequestCostSummarySection,
+  ServiceFeeRow,
+} from "./CarryRequestCostSummary";
 
+export { CarryRequestCostSummary, RequestCostSummarySection, ServiceFeeRow };
 export type RequestRoute = {
   originCountry: string;
   destinationCountry: string;
@@ -18,11 +31,13 @@ export type RequestRoute = {
 type RequestRouteDisplayProps = {
   route: RequestRoute;
   highlightOrigin?: boolean;
+  compact?: boolean;
 };
 
 export function RequestRouteDisplay({
   route,
   highlightOrigin = false,
+  compact = false,
 }: RequestRouteDisplayProps) {
   const originCityLabel = route.originCity?.trim();
   const destinationCityLabel = formatDestinationCityForDisplay(
@@ -41,7 +56,7 @@ export function RequestRouteDisplay({
       <CountryFlag country={route.originCountry} />
       <CustomText
         textVariant="primary"
-        textSize="md"
+        textSize={compact ? "sm" : "md"}
         className={cn(
           "font-medium",
           highlightOrigin &&
@@ -51,11 +66,18 @@ export function RequestRouteDisplay({
         {route.originCountry}
       </CustomText>
       <MoveRight
-        className="h-5 w-4 shrink-0 text-neutral-800 transition-transform duration-300 ease-out group-hover/route:translate-x-0.5"
+        className={cn(
+          "shrink-0 text-neutral-800",
+          compact ? "h-3.5 w-3.5" : "h-5 w-4",
+        )}
         strokeWidth={1.5}
       />
       <CountryFlag country={route.destinationCountry} />
-      <CustomText textVariant="primary" textSize="md" className="font-medium">
+      <CustomText
+        textVariant="primary"
+        textSize={compact ? "sm" : "md"}
+        className="font-medium"
+      >
         {route.destinationCountry}
       </CustomText>
 
@@ -166,12 +188,6 @@ export function RequestParcelDetailsSection({
   );
 }
 
-export {
-  CarryRequestCostSummary,
-  RequestCostSummarySection,
-  ServiceFeeRow,
-} from "./CarryRequestCostSummary";
-
 /** Horizontal on md+, stacked on mobile — matches carry request card details. */
 export function RequestDetailsGrid({
   children,
@@ -188,6 +204,161 @@ export function RequestDetailsGrid({
       )}
     >
       {children}
+    </div>
+  );
+}
+
+/** Compact details for completed, cancelled, expired, and declined requests. */
+export function ArchivedCarryRequestDetails({
+  trip,
+  parcel,
+}: {
+  trip: { traveler_name: string; departure_date: string };
+  parcel: {
+    sender_name: string;
+    origin: { country: string; city?: string };
+    destination: { country: string; city?: string };
+    goods_category: { name: string }[];
+    weight_kg: number;
+    price_per_kg: number;
+  };
+}) {
+  const [costModalOpen, setCostModalOpen] = useState(false);
+  const categories = parcel.goods_category.map((item) => item.name).join(", ");
+  const route = {
+    originCountry: parcel.origin.country,
+    destinationCountry: parcel.destination.country,
+    originCity: parcel.origin.city,
+    destinationCity: parcel.destination.city,
+  };
+  const deliveryDateLabel = formatArchivedTripDate(trip.departure_date);
+
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-slate-100/90 bg-secondary-50/60 p-2 sm:p-2.5 transition-colors duration-200 group-hover/card:border-primary-100/80 group-hover/card:bg-secondary-50">
+      <RouteRow
+        origin={route.originCountry}
+        destination={route.destinationCountry}
+        originCity={route.originCity}
+        destinationCity={route.destinationCity}
+      />
+
+      <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-slate-100">
+        <ArchivedDetailField
+          label="Sender"
+          value={formatPersonDisplayName(parcel.sender_name)}
+          icon={META_ICONS.userIconOutlined}
+          className="sm:pr-2.5"
+        />
+        <ArchivedDetailField
+          label="Traveler"
+          value={formatPersonDisplayName(trip.traveler_name)}
+          icon={META_ICONS.travelerOutline}
+          iconColor="tonal"
+          className="sm:pl-2.5"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <ArchivedDetailField
+          label="Goods"
+          value={categories || "—"}
+          icon={META_ICONS.parcelBoxOutlined}
+          bordered
+        />
+        <ArchivedDetailField
+          label="Delivery date"
+          value={deliveryDateLabel}
+          icon={META_ICONS.calender}
+          bordered
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setCostModalOpen(true)}
+        className="flex w-full items-center justify-center rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 hover:border-primary-100/70 group-hover/card:border-primary-100/70"
+      >
+        <CustomText textVariant="label" textSize="xs" as="span">
+          Show cost
+        </CustomText>
+      </button>
+
+      <AnimatePresence>
+        {costModalOpen ? (
+          <CustomModal
+            width="sm"
+            scrollable={false}
+            onClose={() => setCostModalOpen(false)}
+          >
+            <CustomText
+              as="h2"
+              textSize="md"
+              textVariant="primary"
+              className="mb-4 pr-8 font-semibold text-ink-primary"
+            >
+              Cost breakdown
+            </CustomText>
+            <CarryRequestCostSummary
+              weightKg={parcel.weight_kg}
+              pricePerKg={parcel.price_per_kg}
+              priceCountry={parcel.origin.country}
+              showServiceFee
+              totalLabel="Total"
+              variant="receipt"
+            />
+          </CustomModal>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function formatArchivedTripDate(iso: string | undefined): string {
+  if (!iso?.trim()) return "—";
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return format(date, dateFormat);
+}
+
+function ArchivedDetailField({
+  label,
+  value,
+  icon,
+  iconColor = "neutral",
+  className,
+  bordered = false,
+}: {
+  label: string;
+  value: string;
+  icon?: SvgIconComponent;
+  iconColor?: IconColor;
+  className?: string;
+  bordered?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "min-w-0",
+        bordered && "rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70",
+        className,
+      )}
+    >
+      <div className="mb-1 flex items-center gap-1.5">
+        {icon ? <SvgIcon size="sm" Icon={icon} color={iconColor} /> : null}
+        <CustomText textVariant="label" textSize="xs" as="span">
+          {label}
+        </CustomText>
+      </div>
+      <CustomText
+        textVariant="primary"
+        textSize="sm"
+        as="p"
+        className="font-medium leading-snug sm:truncate"
+      >
+        {value}
+      </CustomText>
     </div>
   );
 }

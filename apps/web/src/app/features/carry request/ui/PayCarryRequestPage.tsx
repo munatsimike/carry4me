@@ -54,6 +54,40 @@ function isNetherlandsOrigin(country: string): boolean {
   return normalized === "nl" || normalized === "netherlands";
 }
 
+function isKlarnaEligibleCurrency(currency: string | null | undefined): boolean {
+  const normalized = currency?.trim().toLowerCase();
+  return normalized === "gbp" || normalized === "eur" || normalized === "usd";
+}
+
+function toStripeBillingCountry(country: string): string | undefined {
+  const normalized = country.trim().toLowerCase();
+  switch (normalized) {
+    case "uk":
+    case "gb":
+    case "united kingdom":
+      return "GB";
+    case "nl":
+    case "netherlands":
+      return "NL";
+    case "usa":
+    case "us":
+    case "united states":
+    case "united states of america":
+      return "US";
+    case "ie":
+    case "ireland":
+      return "IE";
+    case "fr":
+    case "france":
+      return "FR";
+    case "zw":
+    case "zimbabwe":
+      return "ZW";
+    default:
+      return undefined;
+  }
+}
+
 const EXPRESS_CHECKOUT_ELEMENT_OPTIONS: StripeExpressCheckoutElementOptions = {
   paymentMethods: {
     googlePay: "auto",
@@ -93,12 +127,19 @@ function hasAvailableExpressCheckoutMethods(
 
 function getLivePaymentDescription(
   showIdealCheckout: boolean,
+  showKlarnaCheckout: boolean,
   expressCheckoutAvailable: boolean,
 ): string {
   if (showIdealCheckout) {
     return expressCheckoutAvailable
-      ? "Pay securely with Apple Pay, Google Pay, Link, iDEAL, or card."
-      : "Pay securely with iDEAL or card.";
+      ? "Pay securely with Apple Pay, Google Pay, Link, iDEAL, Klarna, or card."
+      : "Pay securely with iDEAL, Klarna, or card.";
+  }
+
+  if (showKlarnaCheckout) {
+    return expressCheckoutAvailable
+      ? "Pay securely with Apple Pay, Google Pay, Link, Klarna, or card."
+      : "Pay securely with Klarna or card.";
   }
 
   return expressCheckoutAvailable
@@ -202,6 +243,8 @@ function PaymentCheckoutForm({
   const showIdealCheckout =
     paymentCurrency?.toLowerCase() === "eur" &&
     isNetherlandsOrigin(originCountry);
+  const showKlarnaCheckout = isKlarnaEligibleCurrency(paymentCurrency);
+  const showTabbedPaymentMethods = showIdealCheckout || showKlarnaCheckout;
 
   const handleExpressAvailabilityChange = useCallback((available: boolean) => {
     setExpressCheckoutAvailable(available);
@@ -219,8 +262,10 @@ function PaymentCheckoutForm({
   );
 
   const paymentElementOptions = useMemo(() => {
+    const billingCountry = toStripeBillingCountry(originCountry);
+
     const options: Parameters<typeof PaymentElement>[0]["options"] = {
-      layout: showIdealCheckout
+      layout: showTabbedPaymentMethods
         ? { type: "tabs", defaultCollapsed: false }
         : {
             type: "accordion",
@@ -235,17 +280,22 @@ function PaymentCheckoutForm({
 
     if (showIdealCheckout) {
       options.paymentMethodOrder = ["ideal", "klarna", "card"];
+    } else if (showKlarnaCheckout) {
+      options.paymentMethodOrder = ["klarna", "card"];
+    }
+
+    if (billingCountry) {
       options.defaultValues = {
         billingDetails: {
           address: {
-            country: "NL",
+            country: billingCountry,
           },
         },
       };
     }
 
     return options;
-  }, [showIdealCheckout]);
+  }, [originCountry, showIdealCheckout, showKlarnaCheckout, showTabbedPaymentMethods]);
 
   const completeSuccessfulPayment = async () => {
     const syncResult = await syncCarryRequestPayment(carryRequestId);
@@ -354,7 +404,11 @@ function PaymentCheckoutForm({
     <div className="flex flex-col gap-6">
       <CustomText textSize="sm" textVariant="secondary">
         {isStripeLiveMode()
-          ? getLivePaymentDescription(showIdealCheckout, expressCheckoutAvailable)
+          ? getLivePaymentDescription(
+              showIdealCheckout,
+              showKlarnaCheckout,
+              expressCheckoutAvailable,
+            )
           : "Pay securely with Stripe test mode. Use a test card — no real charge."}
       </CustomText>
 
@@ -366,11 +420,13 @@ function PaymentCheckoutForm({
         />
       ) : null}
 
-      {showIdealCheckout && expressCheckoutAvailable ? (
+      {showTabbedPaymentMethods && expressCheckoutAvailable ? (
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-slate-200" />
           <CustomText textSize="xs" textVariant="secondary">
-            Or pay with iDEAL or card
+            {showIdealCheckout
+              ? "Or pay with iDEAL, Klarna, or card"
+              : "Or pay with Klarna or card"}
           </CustomText>
           <div className="h-px flex-1 bg-slate-200" />
         </div>

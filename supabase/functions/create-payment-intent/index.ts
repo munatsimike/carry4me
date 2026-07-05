@@ -38,6 +38,29 @@ function senderPaymentErrorMessage(err: unknown): string {
   return "Could not start payment. Try again in a moment or contact support if this continues.";
 }
 
+function isKlarnaEligibleCurrency(currency: string): boolean {
+  const normalized = currency.toLowerCase();
+  return normalized === "gbp" || normalized === "eur" || normalized === "usd";
+}
+
+function paymentIntentAllowsRedirectCheckout(
+  automaticPaymentMethods: {
+    enabled?: boolean;
+    allow_redirects?: string;
+  } | null | undefined,
+  currency: string,
+): boolean {
+  if (automaticPaymentMethods?.enabled !== true) {
+    return false;
+  }
+
+  if (isKlarnaEligibleCurrency(currency)) {
+    return automaticPaymentMethods.allow_redirects === "always";
+  }
+
+  return automaticPaymentMethods.allow_redirects !== "never";
+}
+
 function buildPaymentIntentCreateParams(
   amounts: {
     paymentAmount: number;
@@ -195,15 +218,15 @@ Deno.serve(async (req) => {
           carryRequest.stripe_payment_intent_id,
         );
 
-        const hasAutomaticPaymentMethods =
-          existing.automatic_payment_methods?.enabled === true;
-        const allowsRedirectPaymentMethods =
-          existing.automatic_payment_methods?.allow_redirects !== "never";
+        const allowsRedirectPaymentMethods = paymentIntentAllowsRedirectCheckout(
+          existing.automatic_payment_methods,
+          amounts.currency,
+        );
 
         const canReuse =
           existing.livemode === stripeLiveMode &&
           existing.currency === amounts.currency.toLowerCase() &&
-          hasAutomaticPaymentMethods &&
+          existing.amount === amounts.paymentAmount &&
           allowsRedirectPaymentMethods &&
           (existing.status === "requires_payment_method" ||
             existing.status === "requires_confirmation" ||

@@ -12,16 +12,22 @@ const serviceFeeTooltipClass =
 export function ServiceFeeRow({
   priceCountry,
   serviceFee,
+  compact = false,
 }: {
   priceCountry: string;
   serviceFee: number;
+  compact?: boolean;
 }) {
   return (
     <div className="group/service-fee relative col-span-2 grid grid-cols-[minmax(0,1fr)_auto] overflow-visible">
-      <CustomText textVariant="secondary" textSize="sm">
+      <CustomText textVariant="secondary" textSize={compact ? "xs" : "sm"}>
         Service fee
       </CustomText>
-      <CustomText textVariant="primary" textSize="sm" className="text-right tabular-nums">
+      <CustomText
+        textVariant="primary"
+        textSize={compact ? "xs" : "sm"}
+        className="text-right tabular-nums"
+      >
         {formatCurrencyByCountry(priceCountry, serviceFee)}
       </CustomText>
       <span className={serviceFeeTooltipClass}>{SERVICE_FEE_TOOLTIP}</span>
@@ -37,6 +43,7 @@ type CarryRequestCostSummaryProps = {
   showServiceFee?: boolean;
   totalLabel?: string;
   size?: "default" | "compact";
+  variant?: "default" | "embedded" | "receipt";
   className?: string;
 };
 
@@ -48,6 +55,7 @@ export function CarryRequestCostSummary({
   showServiceFee = true,
   totalLabel,
   size = "default",
+  variant = "default",
   className,
 }: CarryRequestCostSummaryProps) {
   const { deliveryTotal, serviceFee, totalWithFee } = calculateCarryRequestPricing(
@@ -57,6 +65,105 @@ export function CarryRequestCostSummary({
   const resolvedTotalLabel =
     totalLabel ?? (showServiceFee ? "Total to pay" : "Total");
   const displayTotal = showServiceFee ? totalWithFee : deliveryTotal;
+  const isEmbedded = variant === "embedded";
+  const isReceipt = variant === "receipt";
+  const labelSize = isEmbedded || isReceipt ? "xs" : size === "compact" ? "xs" : "sm";
+  const valueSize = isEmbedded || isReceipt ? "xs" : "sm";
+  const totalSize = isReceipt ? "sm" : isEmbedded ? "sm" : "md";
+
+  const lineItems = (
+    <>
+      <CustomText textVariant="secondary" textSize={labelSize}>
+        Parcel weight
+      </CustomText>
+      <CustomText textVariant="primary" textSize={valueSize} className="text-right">
+        {weightKg}kg
+      </CustomText>
+
+      <CustomText textVariant="secondary" textSize={labelSize}>
+        Price per kg
+      </CustomText>
+      <CustomText
+        textVariant="primary"
+        textSize={valueSize}
+        className="text-right tabular-nums"
+      >
+        {formatCurrencyByCountry(priceCountry, pricePerKg)}
+      </CustomText>
+
+      {showServiceFee ? (
+        <ServiceFeeRow
+          priceCountry={priceCountry}
+          serviceFee={serviceFee}
+          compact={isEmbedded || isReceipt || size === "compact"}
+        />
+      ) : null}
+    </>
+  );
+
+  const totalRow = (
+    <>
+      <CustomText
+        textVariant="primary"
+        textSize={isReceipt ? "sm" : totalSize}
+        className={cn("font-semibold", !isReceipt && isEmbedded && "pt-0.5")}
+      >
+        {resolvedTotalLabel}
+      </CustomText>
+      <CustomText
+        textVariant="primary"
+        textSize={totalSize}
+        className={cn(
+          "text-right font-semibold tabular-nums",
+          isReceipt && "text-lg font-bold text-success-600",
+          !isReceipt && isEmbedded && "pt-0.5",
+        )}
+      >
+        {formatCurrencyByCountry(priceCountry, displayTotal)}
+      </CustomText>
+    </>
+  );
+
+  const rows = (
+    <div
+      className={cn(
+        "grid grid-cols-[minmax(0,1fr)_auto] overflow-visible",
+        isEmbedded || isReceipt ? "gap-y-0.5" : "gap-y-1",
+      )}
+    >
+      {lineItems}
+      {!isReceipt ? totalRow : null}
+    </div>
+  );
+
+  if (isReceipt) {
+    return (
+      <section
+        className={cn(
+          "min-w-0 overflow-visible rounded-xl border border-slate-100/90 bg-white p-2.5 transition-colors duration-200 group-hover/card:border-primary-100/70",
+          className,
+        )}
+      >
+        {rows}
+        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center border-t border-slate-100 pt-2">
+          {totalRow}
+        </div>
+      </section>
+    );
+  }
+
+  if (isEmbedded) {
+    return (
+      <section
+        className={cn(
+          "min-w-0 overflow-visible border-t border-slate-200/70 pt-2",
+          className,
+        )}
+      >
+        {rows}
+      </section>
+    );
+  }
 
   return (
     <section className={cn("min-w-0 space-y-3 overflow-visible", className)}>
@@ -78,36 +185,7 @@ export function CarryRequestCostSummary({
         </CustomText>
       </span>
 
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1 overflow-visible">
-        <CustomText textVariant="secondary" textSize="sm">
-          Parcel weight
-        </CustomText>
-        <CustomText textVariant="primary" textSize="sm" className="text-right">
-          {weightKg}kg
-        </CustomText>
-
-        <CustomText textVariant="secondary" textSize="sm">
-          Price per kg
-        </CustomText>
-        <CustomText textVariant="primary" textSize="sm" className="text-right tabular-nums">
-          {formatCurrencyByCountry(priceCountry, pricePerKg)}
-        </CustomText>
-
-        {showServiceFee ? (
-          <ServiceFeeRow priceCountry={priceCountry} serviceFee={serviceFee} />
-        ) : null}
-
-        <CustomText textVariant="primary" textSize="md" className="font-medium">
-          {resolvedTotalLabel}
-        </CustomText>
-        <CustomText
-          textVariant="primary"
-          textSize="md"
-          className="text-right font-semibold tabular-nums"
-        >
-          {formatCurrencyByCountry(priceCountry, displayTotal)}
-        </CustomText>
-      </div>
+      {rows}
     </section>
   );
 }
