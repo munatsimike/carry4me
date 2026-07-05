@@ -1,4 +1,5 @@
 import { Card } from "@/app/components/card/Card";
+import { marketplaceListingGridClassName } from "@/app/components/MarketplaceListingGrid";
 import LineDivider from "@/app/components/LineDivider";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
 import { META_ICONS } from "@/app/icons/MetaIcon";
@@ -738,7 +739,7 @@ export default function CarryRequestsPage() {
         <div
           className={cn(
             isArchivedCarryRequestTab(selectedTab)
-              ? "grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2"
+              ? cn(marketplaceListingGridClassName, "w-full lg:grid-cols-2")
               : "flex flex-col gap-6",
           )}
         >
@@ -1152,7 +1153,7 @@ function ArchivedCardHeader({
       <div className="flex min-w-0 flex-1 items-start gap-2.5">
         {showCompletedIcon ? (
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success-50"
+            className="shrink-0 rounded-full bg-success-50 p-1"
             aria-hidden
           >
             <CheckCircle2
