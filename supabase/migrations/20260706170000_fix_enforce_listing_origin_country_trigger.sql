@@ -1,5 +1,5 @@
--- Ordinary users must post parcels/trips from their verified profile country.
--- Admin profiles may choose any origin country.
+-- Fix trip inserts: PL/pgSQL validates all NEW.* references in CASE branches,
+-- so a shared trigger function cannot reference sender_user_id on trips.
 
 create or replace function public.assert_profile_origin_country(
   p_user_id uuid,
@@ -80,25 +80,4 @@ before insert or update of origin_country on public.trips
 for each row
 execute function public.enforce_trip_origin_country();
 
-create or replace function public.protect_profile_country()
-returns trigger
-language plpgsql
-as $$
-begin
-  if auth.role() is distinct from 'service_role' then
-    if coalesce(old.profile_type, 'ordinary') <> 'admin' then
-      new.country := old.country;
-      new.country_code := old.country_code;
-    end if;
-  end if;
-
-  return new;
-end;
-$$;
-
-drop trigger if exists profiles_protect_country on public.profiles;
-
-create trigger profiles_protect_country
-before update on public.profiles
-for each row
-execute function public.protect_profile_country();
+drop function if exists public.enforce_listing_origin_country();

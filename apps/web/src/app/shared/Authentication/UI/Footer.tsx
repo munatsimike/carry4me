@@ -167,7 +167,9 @@ function OurLocation() {
           </span>
 
           <p className="mt-0.5 text-sm leading-5 text-slate-500">
-            London <span className="text-[12px]">(Head office)</span>
+            84 Victoria Road, Surbiton, London
+            <br />
+            <span className="text-[12px]">(Head office)</span>
           </p>
         </li>
 

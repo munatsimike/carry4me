@@ -452,13 +452,3 @@ entrypoint = "./functions/delete-account/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/notify-admin-listing-posted/index.ts"
-
-[functions.send-email-login-otp]
-enabled = true
-verify_jwt = false
-entrypoint = "./functions/send-email-login-otp/index.ts"
-
-[functions.verify-email-login-otp]
-enabled = true
-verify_jwt = false
-entrypoint = "./functions/verify-email-login-otp/index.ts"

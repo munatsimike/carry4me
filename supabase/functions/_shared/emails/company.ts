@@ -9,6 +9,9 @@ export type EmailCompanyConfig = {
   supportEmail: string;
   phone: string;
   address: string;
+  headOfficeCountry: string;
+  headOfficeAddressLine: string;
+  headOfficeLabel: string;
   websiteUrl: string;
   logoUrl: string;
   whatsappUrl: string | null;
@@ -19,6 +22,10 @@ export type EmailCompanyConfig = {
   };
   copyrightText: string;
 };
+
+export const HEAD_OFFICE_COUNTRY = "United Kingdom";
+export const HEAD_OFFICE_ADDRESS_LINE = "84 Victoria Road, Surbiton, London";
+export const HEAD_OFFICE_LABEL = "Head office";
 
 function trimTrailingSlash(url: string): string {
   return url.replace(/\/$/, "");
@@ -58,7 +65,10 @@ export function getEmailCompanyConfig(): EmailCompanyConfig {
     phone,
     address:
       Deno.env.get("EMAIL_ADDRESS")?.trim() ||
-      "London, United Kingdom (Head office)",
+      `${HEAD_OFFICE_ADDRESS_LINE} (${HEAD_OFFICE_LABEL})`,
+    headOfficeCountry: HEAD_OFFICE_COUNTRY,
+    headOfficeAddressLine: HEAD_OFFICE_ADDRESS_LINE,
+    headOfficeLabel: HEAD_OFFICE_LABEL,
     websiteUrl,
     logoUrl,
     whatsappUrl:

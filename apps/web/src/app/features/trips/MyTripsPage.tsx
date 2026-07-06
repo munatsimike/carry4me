@@ -24,11 +24,25 @@ import {
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { confirmListingDelete, confirmListingStatusChange } from "@/app/shared/listings/listingStatusConfirmation";
+import {
+  HorizontalMenu,
+  type TabItem,
+} from "@/app/shared/Authentication/UI/SegmentedTabs";
+import {
+  countMyTripsByStatusFilter,
+  getMyTripsFilterEmptyState,
+  matchesMyTripsStatusFilter,
+  MY_TRIPS_STATUS_FILTERS,
+  type MyTripsStatusFilter,
+} from "./application/myTripsStatusFilter";
 
 export function MyTripsPage() {
   const { user } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const [tripreview, setTripPreview] = useState<TripListing | null>(null);
+  const [statusFilter, setStatusFilter] = useState<MyTripsStatusFilter>(
+    MY_TRIPS_STATUS_FILTERS.ACTIVE,
+  );
   const { toast } = useToast();
   const navigate = useNavigate();
   const { confirm } = useUniversalModal();
@@ -42,6 +56,41 @@ export function MyTripsPage() {
   const sortedTrips = useMemo(() => {
     return [...myTrips].sort((a, b) => (a.departDate > b.departDate ? 1 : -1));
   }, [myTrips]);
+
+  const filterTabs = useMemo<TabItem<MyTripsStatusFilter>[]>(
+    () => [
+      {
+        id: MY_TRIPS_STATUS_FILTERS.ACTIVE,
+        label: "Active",
+        count: countMyTripsByStatusFilter(
+          myTrips,
+          MY_TRIPS_STATUS_FILTERS.ACTIVE,
+        ),
+      },
+      {
+        id: MY_TRIPS_STATUS_FILTERS.FULL,
+        label: "Full",
+        count: countMyTripsByStatusFilter(myTrips, MY_TRIPS_STATUS_FILTERS.FULL),
+      },
+      {
+        id: MY_TRIPS_STATUS_FILTERS.COMPLETED,
+        label: "Completed",
+        count: countMyTripsByStatusFilter(
+          myTrips,
+          MY_TRIPS_STATUS_FILTERS.COMPLETED,
+        ),
+      },
+    ],
+    [myTrips],
+  );
+
+  const filteredTrips = useMemo(() => {
+    return sortedTrips.filter((trip) =>
+      matchesMyTripsStatusFilter(trip.status, statusFilter),
+    );
+  }, [sortedTrips, statusFilter]);
+
+  const filterEmptyState = getMyTripsFilterEmptyState(statusFilter);
 
   const deleteTrip = async (listing: Listing) => {
     const shouldProceed = await confirmListingDelete(listing, confirm);
@@ -92,6 +141,13 @@ export function MyTripsPage() {
           title="My trips"
           subtitle="Manage the trips you've posted. Edit details or deactivate a trip to hide it from senders."
         />
+        {sortedTrips.length > 0 ? (
+          <HorizontalMenu
+            tabs={filterTabs}
+            selectedTab={statusFilter}
+            setTab={setStatusFilter}
+          />
+        ) : null}
       </div>
       {isLoading ? (
         <PageLoadingSpinner />
@@ -112,11 +168,16 @@ export function MyTripsPage() {
             </Button>
           }
         />
+      ) : filteredTrips.length === 0 ? (
+        <EmptyState
+          title={filterEmptyState.title}
+          description={filterEmptyState.description}
+        />
       ) : (
         <>
           <div className="w-full min-w-0 pb-24 lg:hidden">
             <MobileListingCard
-              data={myTrips}
+              data={filteredTrips}
               onEdit={handleEdit}
               onDelete={deleteTrip}
               onToggleStatus={toggleTripStatus}
@@ -126,7 +187,7 @@ export function MyTripsPage() {
           </div>
           <div className="hidden min-w-0 lg:block">
             <ListingTable
-              data={myTrips}
+              data={filteredTrips}
               onEdit={handleEdit}
               onDelete={deleteTrip}
               onToggleStatus={toggleTripStatus}

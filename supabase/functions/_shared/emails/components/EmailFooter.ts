@@ -53,7 +53,9 @@ export function renderEmailFooter(): string {
 
   const addressBlock = `
     <div style="font-size:13px;line-height:20px;font-weight:700;color:#0f172a;margin-bottom:6px;">Address</div>
-    <div style="font-size:13px;line-height:20px;color:#475569;">${escapeHtml(config.address)}</div>`;
+    <div style="font-size:13px;line-height:20px;font-weight:700;color:#0f172a;">${escapeHtml(config.headOfficeCountry)}</div>
+    <div style="font-size:13px;line-height:20px;color:#475569;margin-top:4px;">${escapeHtml(config.headOfficeAddressLine)}</div>
+    <div style="font-size:12px;line-height:18px;color:#64748b;margin-top:4px;">(${escapeHtml(config.headOfficeLabel)})</div>`;
 
   const contactBlock = `
     <div style="font-size:13px;line-height:20px;font-weight:700;color:#0f172a;margin-bottom:6px;">Contact</div>
@@ -145,7 +147,9 @@ export function renderEmailFooterText(): string {
   const lines = [
     config.companyName,
     config.websiteUrl,
-    config.address,
+    config.headOfficeCountry,
+    config.headOfficeAddressLine,
+    `(${config.headOfficeLabel})`,
     `Email: ${config.supportEmail}`,
     `Phone: ${config.phone}`,
   ];

@@ -24,10 +24,24 @@ import {
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { confirmListingDelete, confirmListingStatusChange } from "@/app/shared/listings/listingStatusConfirmation";
+import {
+  HorizontalMenu,
+  type TabItem,
+} from "@/app/shared/Authentication/UI/SegmentedTabs";
+import {
+  countMyParcelsByStatusFilter,
+  getMyParcelsFilterEmptyState,
+  matchesMyParcelsStatusFilter,
+  MY_PARCELS_STATUS_FILTERS,
+  type MyParcelsStatusFilter,
+} from "./application/myParcelsStatusFilter";
 
 export function MyParcelsPage() {
   const [parcelPreview, setParcelPreview] = useState<ParcelListing | null>(
     null,
+  );
+  const [statusFilter, setStatusFilter] = useState<MyParcelsStatusFilter>(
+    MY_PARCELS_STATUS_FILTERS.ACTIVE,
   );
   const { user } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
@@ -46,6 +60,44 @@ export function MyParcelsPage() {
       a.departDate > b.departDate ? 1 : -1,
     );
   }, [myParcels]);
+
+  const filterTabs = useMemo<TabItem<MyParcelsStatusFilter>[]>(
+    () => [
+      {
+        id: MY_PARCELS_STATUS_FILTERS.ACTIVE,
+        label: "Active",
+        count: countMyParcelsByStatusFilter(
+          myParcels,
+          MY_PARCELS_STATUS_FILTERS.ACTIVE,
+        ),
+      },
+      {
+        id: MY_PARCELS_STATUS_FILTERS.MATCHED,
+        label: "Matched",
+        count: countMyParcelsByStatusFilter(
+          myParcels,
+          MY_PARCELS_STATUS_FILTERS.MATCHED,
+        ),
+      },
+      {
+        id: MY_PARCELS_STATUS_FILTERS.COMPLETED,
+        label: "Completed",
+        count: countMyParcelsByStatusFilter(
+          myParcels,
+          MY_PARCELS_STATUS_FILTERS.COMPLETED,
+        ),
+      },
+    ],
+    [myParcels],
+  );
+
+  const filteredParcels = useMemo(() => {
+    return sortedParcels.filter((parcel) =>
+      matchesMyParcelsStatusFilter(parcel.status, statusFilter),
+    );
+  }, [sortedParcels, statusFilter]);
+
+  const filterEmptyState = getMyParcelsFilterEmptyState(statusFilter);
 
   const deleteParcel = async (listing: Listing) => {
     const shouldProceed = await confirmListingDelete(listing, confirm);
@@ -103,6 +155,13 @@ export function MyParcelsPage() {
           title="My parcels"
           subtitle="Manage the parcels you've posted. Edit details or deactivate a parcel to hide it from travelers."
         />
+        {sortedParcels.length > 0 ? (
+          <HorizontalMenu
+            tabs={filterTabs}
+            selectedTab={statusFilter}
+            setTab={setStatusFilter}
+          />
+        ) : null}
       </div>
       {isLoading ? (
         <PageLoadingSpinner />
@@ -123,12 +182,17 @@ export function MyParcelsPage() {
             </Button>
           }
         />
+      ) : filteredParcels.length === 0 ? (
+        <EmptyState
+          title={filterEmptyState.title}
+          description={filterEmptyState.description}
+        />
       ) : (
         <>
           <div className="w-full min-w-0 pb-24 lg:hidden">
             <MobileListingCard
               setListingPreview={setParcelPreview}
-              data={myParcels}
+              data={filteredParcels}
               onEdit={handleEdit}
               onDelete={deleteParcel}
               onToggleStatus={toggleParcelStatus}
@@ -138,7 +202,7 @@ export function MyParcelsPage() {
           <div className="hidden min-w-0 lg:block">
             <ListingTable
               setListingPreview={setParcelPreview}
-              data={myParcels}
+              data={filteredParcels}
               onEdit={handleEdit}
               onDelete={deleteParcel}
               onToggleStatus={toggleParcelStatus}
