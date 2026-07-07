@@ -138,7 +138,7 @@ export default function CustomModal({
       <motion.div
         className={`relative z-[110] w-full ${sizes[width]} ${
           bare
-            ? "rounded-t-3xl sm:rounded-3xl"
+            ? "overflow-x-hidden rounded-t-3xl sm:rounded-3xl"
             : "rounded-t-2xl border border-neutral-300 bg-white px-4 py-4 shadow-xl sm:rounded-2xl sm:px-6 sm:py-4"
         } ${
           scrollable
