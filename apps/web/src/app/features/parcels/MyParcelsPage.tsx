@@ -214,12 +214,12 @@ export function MyParcelsPage() {
       )}
 
       {parcelPreview && (
-        <CustomModal onClose={() => setParcelPreview(null)} width="md">
+        <CustomModal onClose={() => setParcelPreview(null)} width="md" bare>
           <ParcelCard
             toggleLike={() => null}
             parcel={parcelPreview}
             onClick={() => null}
-            mode="preview"
+            hideSendRequest
           />
         </CustomModal>
       )}

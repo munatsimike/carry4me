@@ -36,7 +36,6 @@ export async function confirmListingStatusChange(
       : "Your parcel will be hidden from the marketplace. You can activate it again at any time.",
     confirmText: `Deactivate ${noun}`,
     cancelText: "Cancel",
-    destructive: true,
   });
 }
 

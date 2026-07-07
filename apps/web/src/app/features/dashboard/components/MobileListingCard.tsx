@@ -12,6 +12,7 @@ import CategoryRow from "@/app/components/CategoryRow";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 import {
+  canManageOwnListing,
   formatListingStatus,
   getListingStatusToggleLabel,
   statusBadgeClass,
@@ -31,6 +32,7 @@ export function MobileListingCard<T extends Listing>({
         const formattedStatus = formatListingStatus(row.status);
         const toggleLabel = getListingStatusToggleLabel(row);
         const isTrip = row.type === "trip";
+        const canManage = canManageOwnListing(row);
         const goodsCategories = isTrip
           ? formatTripAcceptedCategoryLabels(row.goodsCategory)
           : row.goodsCategory.map((x: GoodsCategory) => x.name);
@@ -114,16 +116,20 @@ export function MobileListingCard<T extends Listing>({
 
             {/* Footer actions */}
             <LineDivider heightClass="my-0" />
-            <div className="grid grid-cols-2 gap-2 mt-2 sm:grid-cols-4">
+            <div
+              className={`mt-2 grid gap-2 ${canManage ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-1"}`}
+            >
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => setListingPreview(row as T)}
                 className="rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
               >
-                Preview
+                View
               </motion.button>
 
+              {canManage ? (
+                <>
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 type="button"
@@ -176,6 +182,8 @@ export function MobileListingCard<T extends Listing>({
               >
                 Delete
               </motion.button>
+                </>
+              ) : null}
             </div>
           </Card>
         );

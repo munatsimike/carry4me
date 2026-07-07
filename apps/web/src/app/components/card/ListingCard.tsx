@@ -44,6 +44,7 @@ interface ListingCardProps<T extends Listing> {
   listing: T;
   toggleLike: (v: string) => void;
   onClick: (d: T) => void;
+  hideSendRequest?: boolean;
 }
 
 export function ListingCard<T extends Listing>({
@@ -51,12 +52,14 @@ export function ListingCard<T extends Listing>({
   listing,
   onClick,
   toggleLike,
+  hideSendRequest = false,
 }: ListingCardProps<T>) {
   const { user } = useAuth();
   const { toast } = useToast();
   const toggleFavourite = useToggleFavouriteMutation();
 
   const isDisplayMode = mode === "display";
+  const showMarketplaceActions = isDisplayMode && !hideSendRequest;
   const isTripListing = listing.type === "trip";
   const cardTone: BrowseMarketplaceTone = isTripListing ? "trips" : "parcels";
   const goodsCategories = isTripListing
@@ -113,7 +116,7 @@ export function ListingCard<T extends Listing>({
         </span>
 
         <HeartToggle
-          isActive={isDisplayMode}
+          isActive={showMarketplaceActions}
           isLiked={listing.isLiked}
           onToggleLike={() => {
             handleToggleLike();
@@ -154,15 +157,19 @@ export function ListingCard<T extends Listing>({
         price={listing.pricePerKg}
         country={listing.route.originCountry}
       />
-      <LineDivider heightClass="my-2" className={dividerHoverClass} />
-      <SendRequestBtn
-        isActive={!isDisplayMode}
-        buttonTextVariant="onDark"
-        buttonVariant="primary"
-        payLoad={listing}
-        primaryAction={onClick}
-        listingType={listing.type}
-      />
+      {showMarketplaceActions ? (
+        <>
+          <LineDivider heightClass="my-2" className={dividerHoverClass} />
+          <SendRequestBtn
+            isActive={!isDisplayMode}
+            buttonTextVariant="onDark"
+            buttonVariant="primary"
+            payLoad={listing}
+            primaryAction={onClick}
+            listingType={listing.type}
+          />
+        </>
+      ) : null}
     </Card>
   );
 }

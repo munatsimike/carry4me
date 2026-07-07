@@ -16,6 +16,8 @@ type Props = {
   scrollable?: boolean;
   /** When false, backdrop clicks do not close the modal (e.g. payment). */
   closeOnBackdropClick?: boolean;
+  /** When true, the panel has no chrome (border/padding/bg) so the child fills it flush (e.g. listing preview). */
+  bare?: boolean;
 };
 
 const sizes: Record<Width, string> = {
@@ -34,6 +36,7 @@ export default function CustomModal({
   width = "2xl",
   scrollable = true,
   closeOnBackdropClick = true,
+  bare = false,
 }: Props) {
   const modalId = useId();
   const isMobile = useMediaQuery();
@@ -133,7 +136,11 @@ export default function CustomModal({
       />
 
       <motion.div
-        className={`relative z-[110] w-full ${sizes[width]} rounded-t-2xl border border-neutral-300 bg-white px-4 py-4 shadow-xl sm:rounded-2xl sm:px-6 sm:py-4 ${
+        className={`relative z-[110] w-full ${sizes[width]} ${
+          bare
+            ? "rounded-t-3xl sm:rounded-3xl"
+            : "rounded-t-2xl border border-neutral-300 bg-white px-4 py-4 shadow-xl sm:rounded-2xl sm:px-6 sm:py-4"
+        } ${
           scrollable
             ? "max-h-[calc(100vh-1rem)] overflow-y-auto sm:max-h-[calc(100vh-2rem)]"
             : "max-h-none overflow-visible"

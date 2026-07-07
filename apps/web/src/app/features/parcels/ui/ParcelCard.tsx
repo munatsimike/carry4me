@@ -7,12 +7,14 @@ type ParcelProps = {
   onClick: (parcel: ParcelListing) => void;
   mode?: CardMode;
   toggleLike: (v: string) => void;
+  hideSendRequest?: boolean;
 };
 export default function ParcelCard({
   parcel,
   onClick,
   toggleLike,
   mode = "display",
+  hideSendRequest = false,
 }: ParcelProps) {
   return (
     <ListingCard
@@ -20,6 +22,7 @@ export default function ParcelCard({
       mode={mode}
       listing={parcel}
       onClick={onClick}
+      hideSendRequest={hideSendRequest}
     />
   );
 }

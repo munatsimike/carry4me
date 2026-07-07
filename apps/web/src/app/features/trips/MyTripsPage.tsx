@@ -199,11 +199,11 @@ export function MyTripsPage() {
       )}
 
       {tripreview && (
-        <CustomModal onClose={() => setTripPreview(null)} width="md">
+        <CustomModal onClose={() => setTripPreview(null)} width="md" bare>
           <TravelerCard
             trip={tripreview}
             onClick={() => null}
-            mode="preview"
+            hideSendRequest
             setTrips={() => null}
           />
         </CustomModal>

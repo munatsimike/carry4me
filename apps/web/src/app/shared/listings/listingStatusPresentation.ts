@@ -32,15 +32,26 @@ export function statusBadgeClass(status: string): string {
   return "bg-neutral-100 text-neutral-600 border-neutral-200";
 }
 
+export function canManageOwnTripListing(listing: Listing): boolean {
+  return listing.type === "trip" && listing.status === TRIPSTATUSES.ACTIVE;
+}
+
+export function canManageOwnParcelListing(listing: Listing): boolean {
+  return listing.type === "parcel" && listing.status === PARCELSTATUSES.OPEN;
+}
+
+export function canManageOwnListing(listing: Listing): boolean {
+  if (listing.type === "trip") return canManageOwnTripListing(listing);
+  if (listing.type === "parcel") return canManageOwnParcelListing(listing);
+  return false;
+}
+
 export function getListingStatusToggleLabel(
   listing: Listing,
 ): "Deactivate" | "Activate" | null {
   if (listing.type === "trip") {
     if (listing.status === TRIPSTATUSES.INACTIVE) return "Activate";
-    if (
-      listing.status === TRIPSTATUSES.ACTIVE ||
-      listing.status === TRIPSTATUSES.FULL
-    ) {
+    if (listing.status === TRIPSTATUSES.ACTIVE) {
       return "Deactivate";
     }
     return null;

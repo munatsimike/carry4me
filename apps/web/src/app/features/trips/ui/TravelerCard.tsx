@@ -7,6 +7,7 @@ type TravelerProps = {
   mode?: CardMode;
   onClick: (trip: TripListing) => void;
   setTrips: (v:string)=>void;
+  hideSendRequest?: boolean;
 };
 
 export default function TravelerCard({
@@ -14,6 +15,7 @@ export default function TravelerCard({
   onClick,
   setTrips,
   mode = "display",
+  hideSendRequest = false,
 }: TravelerProps) {
   return (
     <ListingCard
@@ -21,6 +23,7 @@ export default function TravelerCard({
       listing={trip}
       onClick={onClick}
       toggleLike={setTrips}
+      hideSendRequest={hideSendRequest}
     />
   );
 }

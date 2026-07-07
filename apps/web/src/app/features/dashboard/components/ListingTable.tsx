@@ -1,12 +1,12 @@
 import CustomText from "@/components/ui/CustomText";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
-import { useState } from "react";
 import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import type { FormValues } from "@/types/Ui";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 import {
+  canManageOwnListing,
   formatListingStatus,
   getListingStatusToggleLabel,
   statusBadgeClass,
@@ -63,7 +63,6 @@ export function ListingTable<T extends Listing>({
   const textStyle = "font-medium text-ink-primary py-4";
   const headerStyle = `pl-4 ${textStyle}`;
   const bodyCellClass = "min-w-0 pl-4 py-3";
-  const [hoverId, setHoverId] = useState<string | null>(null);
   const columnCount = showDateColumn ? 6 : 5;
 
   return (
@@ -110,11 +109,12 @@ export function ListingTable<T extends Listing>({
               </TableTd>
             </tr>
           ) : null}
-          {data.map((row: Listing) => (
+          {data.map((row: Listing) => {
+            const canManage = canManageOwnListing(row);
+
+            return (
             <motion.tr
               key={row.id}
-              onMouseEnter={() => setHoverId(row.id)}
-              onMouseLeave={() => setHoverId(null)}
               variants={rowVariants}
               whileHover={{ y: -1, scale: 1.002 }}
               transition={{ type: "spring", stiffness: 500, damping: 32 }}
@@ -122,33 +122,11 @@ export function ListingTable<T extends Listing>({
               style={{ transformOrigin: "center" }}
             >
               <TableTd className={bodyCellClass}>
-                <span className="relative inline-flex w-full min-w-0 items-center pr-4">
-                  <span
-                    className="block min-w-0 truncate text-sm text-ink-primary"
-                    title={`${row.route.originCountry} / ${row.route.originCity} → ${row.route.destinationCountry ?? ""} / ${row.route.destinationCity}`}
-                  >
-                    {`${row.route.originCountry} / ${row.route.originCity} → ${row.route.destinationCountry ?? ""} / ${row.route.destinationCity}`}
-                  </span>
-
-                  {/* Preview floats on the right, doesn't affect layout */}
-                  <AnimatePresence>
-                    {hoverId === row.id && (
-                      <motion.button
-                        type="button"
-                        aria-label="Preview listing"
-                        onClick={() => {
-                          setListingPreview(row as T);
-                        }}
-                        initial={{ opacity: 0, x: 6, scale: 0.98 }}
-                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: 6, scale: 0.98 }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
-                        className="absolute right-0 inline-flex items-center gap-1 rounded-lg px-3 py-1 text-sm text-blue-600 hover:bg-blue-100 hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                      >
-                        Preview
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
+                <span
+                  className="block min-w-0 truncate text-sm text-ink-primary"
+                  title={`${row.route.originCountry} / ${row.route.originCity} → ${row.route.destinationCountry ?? ""} / ${row.route.destinationCity}`}
+                >
+                  {`${row.route.originCountry} / ${row.route.originCity} → ${row.route.destinationCountry ?? ""} / ${row.route.destinationCity}`}
                 </span>
               </TableTd>
 
@@ -188,6 +166,19 @@ export function ListingTable<T extends Listing>({
 
               <TableTd className={`${bodyCellClass} pl-6`}>
                 <div className="flex flex-nowrap items-center gap-1">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    aria-label="View listing"
+                    className="shrink-0 whitespace-nowrap rounded-md px-2 py-1 text-xs text-blue-600 transition hover:bg-blue-50"
+                    onClick={() => setListingPreview(row as T)}
+                  >
+                    View
+                  </motion.button>
+
+                  {canManage ? (
+                    <>
                   {(() => {
                     const toggleLabel = getListingStatusToggleLabel(row);
                     return toggleLabel && onToggleStatus ? (
@@ -248,10 +239,13 @@ export function ListingTable<T extends Listing>({
                   >
                     Delete
                   </motion.button>
+                    </>
+                  ) : null}
                 </div>
               </TableTd>
             </motion.tr>
-          ))}
+          );
+          })}
         </motion.tbody>
       </table>
       </div>
