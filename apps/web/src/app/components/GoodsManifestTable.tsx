@@ -43,7 +43,7 @@ function ManifestTable({
     <div className="w-full min-w-0 overflow-x-auto">
       <table className="w-full min-w-0 border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 text-xs text-neutral-500">
+          <tr className="border-b border-neutral-200 text-sm text-neutral-500">
             <th className="py-2 pr-3 font-medium">Item</th>
             <th className="py-2 pr-3 font-medium whitespace-nowrap">Qty</th>
             <th className="py-2 pr-3 font-medium">Size</th>
