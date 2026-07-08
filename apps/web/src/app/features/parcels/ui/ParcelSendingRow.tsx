@@ -5,6 +5,7 @@ import GoodsManifestTable, {
   normalizeGoodsItem,
 } from "@/app/components/GoodsManifestTable";
 import CustomModal from "@/app/components/CustomModal";
+import { ModalSeparator } from "@/app/components/ModalFooter";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 
@@ -55,14 +56,20 @@ export default function ParcelSendingRow({ items }: ParcelSendingRowProps) {
             scrollable
             onClose={() => setShowItemsModal(false)}
           >
-            <CustomText
-              as="h2"
-              textSize="lg"
-              className="mb-4 pr-8 font-medium text-ink-primary"
-            >
-              Items list
-            </CustomText>
-            <GoodsManifestTable items={visibleItems} hideSizeOnMobile />
+            <div className="flex flex-col">
+              <CustomText
+                as="h2"
+                textSize="md"
+                textVariant="primary"
+                className="pr-8 font-semibold"
+              >
+                Items list
+              </CustomText>
+              <ModalSeparator />
+              <div className="pt-4">
+                <GoodsManifestTable items={visibleItems} hideSizeOnMobile />
+              </div>
+            </div>
           </CustomModal>
         ) : null}
       </AnimatePresence>
