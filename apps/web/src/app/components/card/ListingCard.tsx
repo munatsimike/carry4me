@@ -153,6 +153,11 @@ export function ListingCard<T extends Listing>({
       <WeightAndPrice
         weightLabel={isTripListing ? "Available space" : "Parcel weight"}
         weight={listing.weightKg}
+        capacityKg={
+          isTripListing && typeof listing.capacityKg === "number"
+            ? listing.capacityKg
+            : undefined
+        }
         priceLabel={isTripListing ? "Price per kg" : "Budget per kg"}
         price={listing.pricePerKg}
         country={listing.route.originCountry}
