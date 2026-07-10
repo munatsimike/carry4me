@@ -44,7 +44,7 @@ export default function StatsSection({ statsList }: StatsSectionProps) {
           <ul className="flex flex-col">
             {statsList.map((item, index) => {
               const Icon = iconForStat(item.itemName);
-              const isInteractive = false;
+              const isInteractive = Boolean(item.link);
 
               return (
                 <li key={item.itemName}>
@@ -54,7 +54,7 @@ export default function StatsSection({ statsList }: StatsSectionProps) {
                       "flex items-center justify-between gap-3 rounded-2xl px-3 py-3 transition-colors",
                       isInteractive
                         ? "hover:bg-neutral-50"
-                        : "hover:bg-neutral-50 cursor-text",
+                        : "cursor-default",
                       index < statsList.length - 1
                         ? "border-b border-neutral-100"
                         : "",

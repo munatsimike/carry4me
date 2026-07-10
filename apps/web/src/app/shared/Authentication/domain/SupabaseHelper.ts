@@ -7,10 +7,44 @@ import { toParcelMapper } from "@/app/features/parcels/domain/toParcelMapper";
 
 export type Table = "parcels" | "trips";
 
+const ACTIVE_CARRY_REQUEST_STATUSES = [
+  "PENDING_ACCEPTANCE",
+  "PENDING_PAYMENT",
+  "PENDING_HANDOVER",
+  "IN_TRANSIT",
+  "PENDING_PAYOUT",
+] as const;
+
+async function assertListingHasNoActiveCarryRequests(
+  listingId: string,
+  table: Table,
+): Promise<void> {
+  const listingColumn = table === "trips" ? "trip_id" : "parcel_id";
+  const listingLabel = table === "trips" ? "trip" : "parcel";
+
+  const { data, error, status } = await supabase
+    .from("carry_requests")
+    .select("id")
+    .eq(listingColumn, listingId)
+    .in("status", [...ACTIVE_CARRY_REQUEST_STATUSES])
+    .limit(1);
+
+  throwIfSupabaseError(error, status);
+
+  if ((data ?? []).length > 0) {
+    throw new AppError({
+      code: "ACTIVE_REQUEST_EXISTS",
+      message: `This ${listingLabel} has an active request. Cancel the request first before deleting it.`,
+    });
+  }
+}
+
 export async function deleteById(
   listingId: string,
   table: Table,
 ): Promise<string> {
+  await assertListingHasNoActiveCarryRequests(listingId, table);
+
   const { data, error, status } = await supabase
     .from(table)
     .delete()
@@ -22,7 +56,9 @@ export async function deleteById(
   if (!data || data.length === 0) {
     throw new AppError({
       code: "NOT_FOUND",
-      message: "Parcel not found or not authorized.",
+      message: `${
+        table === "trips" ? "Trip" : "Parcel"
+      } not found or not authorized.`,
     });
   }
 
