@@ -11,7 +11,10 @@ import { dateFormat, progress } from "@/types/Ui";
 import CustomModal from "@/app/components/CustomModal";
 import LineDivider from "@/app/components/LineDivider";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
-import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
+import {
+  formatSenderPartyDisplay,
+  formatTravelerPartyDisplay,
+} from "../application/formatCarryRequestPartyDisplay";
 import { CarryRequestCostSummary } from "./CarryRequestCostSummary";
 export type MobileSection = "details" | "timeline";
 
@@ -19,11 +22,13 @@ export function MobileFirstHeader({
   trip,
   totalPrice,
   toggleSection,
+  viewerRole,
 }: {
   trip: TripSnapshot;
   parcel: ParcelSnapshot;
   totalPrice: number;
   toggleSection: (v: MobileSection) => void;
+  viewerRole: Role;
 }) {
   return (
     <>
@@ -58,7 +63,7 @@ export function MobileFirstHeader({
               textVariant="primary"
               className="truncate font-medium"
             >
-              {formatPersonDisplayName(trip.traveler_name)}
+              {formatTravelerPartyDisplay(viewerRole, trip.traveler_name)}
             </CustomText>
           </div>
 
@@ -121,6 +126,7 @@ export function MobileDetailsSection({
 
 export function TripDetailsMobile({
   trip,
+  viewerRole,
 }: {
   trip: TripSnapshot;
   viewerRole: Role;
@@ -147,7 +153,7 @@ export function TripDetailsMobile({
           Traveler
         </CustomText>
         <CustomText textVariant="primary" textSize="sm">
-          {formatPersonDisplayName(trip.traveler_name)}
+          {formatTravelerPartyDisplay(viewerRole, trip.traveler_name)}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
@@ -163,6 +169,7 @@ export function TripDetailsMobile({
 
 export function ParcelDetailsMobile({
   parcel,
+  viewerRole,
 }: {
   parcel: ParcelSnapshot;
   viewerRole: Role;
@@ -192,7 +199,7 @@ export function ParcelDetailsMobile({
           Sender
         </CustomText>
         <CustomText textVariant="primary" textSize="sm">
-          {formatPersonDisplayName(parcel.sender_name)}
+          {formatSenderPartyDisplay(viewerRole, parcel.sender_name)}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">

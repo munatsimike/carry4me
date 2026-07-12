@@ -1,16 +1,28 @@
 import { PARCELSTATUSES } from "@/app/features/parcels/domain/Parcel";
 import { TRIPSTATUSES } from "@/app/features/trips/domain/Trip";
-import type { Listing } from "@/app/shared/Authentication/domain/Listing";
+import type {
+  Listing,
+  ListingType,
+} from "@/app/shared/Authentication/domain/Listing";
 
-export function formatListingStatus(status: string): string {
+export function formatListingStatus(
+  status: string,
+  listingType?: ListingType,
+): string {
   const normalized = status.trim().toUpperCase();
   if (normalized === TRIPSTATUSES.INACTIVE || normalized === PARCELSTATUSES.INACTIVE) {
     return "Inactive";
   }
+  if (listingType === "parcel" && normalized === PARCELSTATUSES.ARCHIVED) {
+    return "Delivered";
+  }
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 }
 
-export function statusBadgeClass(status: string): string {
+export function statusBadgeClass(
+  status: string,
+  listingType?: ListingType,
+): string {
   const normalized = status.trim().toUpperCase();
 
   if (normalized === "ACTIVE" || normalized === "OPEN") {
@@ -23,6 +35,10 @@ export function statusBadgeClass(status: string): string {
 
   if (normalized === "FULL" || normalized === "MATCHED") {
     return "bg-primary-50 text-primary-500 border-primary-200";
+  }
+
+  if (listingType === "parcel" && normalized === PARCELSTATUSES.ARCHIVED) {
+    return "bg-success-50 text-success-500 border-success-200";
   }
 
   if (normalized === "ARCHIVED") {

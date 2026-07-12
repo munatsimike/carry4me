@@ -4,7 +4,11 @@ import RouteRow from "@/app/components/RouteRow";
 import CardLabel from "@/app/components/card/CardLabel";
 import { toflag } from "@/app/Mapper";
 import { cn } from "@/app/lib/cn";
-import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
+import {
+  formatSenderPartyDisplay,
+  formatTravelerPartyDisplay,
+} from "../application/formatCarryRequestPartyDisplay";
+import type { Role } from "../domain/CreateCarryRequest";
 import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDestination";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
@@ -210,6 +214,7 @@ export function RequestDetailsGrid({
 export function ArchivedCarryRequestDetails({
   trip,
   parcel,
+  viewerRole,
   statusDateLabel,
   statusDateValue,
 }: {
@@ -222,6 +227,7 @@ export function ArchivedCarryRequestDetails({
     weight_kg: number;
     price_per_kg: number;
   };
+  viewerRole: Role;
   statusDateLabel: string;
   statusDateValue: string;
 }) {
@@ -246,13 +252,13 @@ export function ArchivedCarryRequestDetails({
       <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-slate-100">
         <ArchivedDetailField
           label="Sender"
-          value={formatPersonDisplayName(parcel.sender_name)}
+          value={formatSenderPartyDisplay(viewerRole, parcel.sender_name)}
           icon={META_ICONS.userIconOutlined}
           className="sm:pr-2.5"
         />
         <ArchivedDetailField
           label="Traveler"
-          value={formatPersonDisplayName(trip.traveler_name)}
+          value={formatTravelerPartyDisplay(viewerRole, trip.traveler_name)}
           icon={META_ICONS.travelerOutline}
           iconColor="tonal"
           className="sm:pl-2.5"

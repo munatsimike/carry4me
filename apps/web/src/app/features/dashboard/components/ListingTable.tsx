@@ -159,8 +159,8 @@ export function ListingTable<T extends Listing>({
               </TableTd>
 
               <TableTd className={bodyCellClass}>
-                <span className={`inline-flex max-w-full rounded-full border px-2 py-1 text-[12px] ${statusBadgeClass(row.status)}`}>
-                  {formatListingStatus(row.status)}
+                <span className={`inline-flex max-w-full rounded-full border px-2 py-1 text-[12px] ${statusBadgeClass(row.status, row.type)}`}>
+                  {formatListingStatus(row.status, row.type)}
                 </span>
               </TableTd>
 

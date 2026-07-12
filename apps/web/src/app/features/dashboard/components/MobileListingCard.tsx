@@ -29,7 +29,7 @@ export function MobileListingCard<T extends Listing>({
   return (
     <div className="flex w-full min-w-0 flex-col gap-3 sm:gap-4">
       {data.map((row) => {
-        const formattedStatus = formatListingStatus(row.status);
+        const formattedStatus = formatListingStatus(row.status, row.type);
         const toggleLabel = getListingStatusToggleLabel(row);
         const isTrip = row.type === "trip";
         const canManage = canManageOwnListing(row);
@@ -48,7 +48,7 @@ export function MobileListingCard<T extends Listing>({
                 />
 
                 <span
-                  className={`inline-flex rounded-full border px-2.5 py-1 text-[12px] font-medium ${statusBadgeClass(row.status)}`}
+                  className={`inline-flex rounded-full border px-2.5 py-1 text-[12px] font-medium ${statusBadgeClass(row.status, row.type)}`}
                 >
                   {formattedStatus}
                 </span>

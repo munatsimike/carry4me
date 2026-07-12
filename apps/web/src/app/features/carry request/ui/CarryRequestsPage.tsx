@@ -74,7 +74,10 @@ import {
 } from "../application/listingAvailabilityForRequest";
 import { confirmCarryRequestAction } from "../application/carryRequestActionConfirmation";
 import { useToast } from "@/app/components/Toast";
-import { formatPersonDisplayName } from "@/app/shared/application/formatPersonDisplayName";
+import {
+  formatSenderPartyDisplay,
+  formatTravelerPartyDisplay,
+} from "../application/formatCarryRequestPartyDisplay";
 import { format } from "date-fns";
 import { getEffectiveCarryRequestStatus } from "../domain/carryRequestEffectiveStatus";
 import {
@@ -861,6 +864,7 @@ function CarryRequestCard({
         <ArchivedCarryRequestDetails
           trip={request.tripSnapshot}
           parcel={request.parcelSnapshot}
+          viewerRole={viewerRole}
           statusDateLabel={archivedDate.label}
           statusDateValue={archivedDate.value}
         />
@@ -924,6 +928,7 @@ function CarryRequestCard({
               trip={request.tripSnapshot}
               parcel={request.parcelSnapshot}
               totalPrice={totalWithFee}
+              viewerRole={viewerRole}
             />
           </div>
         </div>
@@ -1289,6 +1294,7 @@ function InfoBlockDisplay({
 function DetailsSection({
   trip,
   parcel,
+  viewerRole,
 }: {
   trip: TripSnapshot;
   parcel: ParcelSnapshot;
@@ -1305,7 +1311,7 @@ function DetailsSection({
           originCity: trip.origin.city,
           destinationCity: trip.destination.city,
         }}
-        travelerName={formatPersonDisplayName(trip.traveler_name)}
+        travelerName={formatTravelerPartyDisplay(viewerRole, trip.traveler_name)}
         departsLabel={format(new Date(trip.departure_date), dateFormat)}
       />
       <RequestParcelDetailsSection
@@ -1315,7 +1321,7 @@ function DetailsSection({
           originCity: parcel.origin.city,
           destinationCity: parcel.destination.city,
         }}
-        senderName={formatPersonDisplayName(parcel.sender_name)}
+        senderName={formatSenderPartyDisplay(viewerRole, parcel.sender_name)}
         itemsLabel={categories}
       />
       <RequestCostSummarySection
