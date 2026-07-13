@@ -59,18 +59,21 @@ export function ListingCard<T extends Listing>({
   const toggleFavourite = useToggleFavouriteMutation();
 
   const isDisplayMode = mode === "display";
+  const isOwnerPreview = hideSendRequest;
   const showMarketplaceActions = isDisplayMode && !hideSendRequest;
   const isTripListing = listing.type === "trip";
   const cardTone: BrowseMarketplaceTone = isTripListing ? "trips" : "parcels";
   const goodsCategories = isTripListing
     ? formatTripAcceptedCategoryLabels(listing.goodsCategory)
     : listing.goodsCategory.map((x: GoodsCategory) => x.name);
-  const cardSurfaceClass = isDisplayMode
-    ? listingCardHoverClass[cardTone]
-    : listingCardPreviewClass[cardTone];
-  const dividerHoverClass = isDisplayMode
-    ? listingCardDividerHoverClass[cardTone]
-    : "";
+  const cardSurfaceClass =
+    isDisplayMode && !isOwnerPreview
+      ? listingCardHoverClass[cardTone]
+      : listingCardPreviewClass[cardTone];
+  const dividerHoverClass =
+    isDisplayMode && !isOwnerPreview
+      ? listingCardDividerHoverClass[cardTone]
+      : "";
 
   const handleToggleLike = () => {
     if (!user?.id) {
@@ -94,9 +97,9 @@ export function ListingCard<T extends Listing>({
 
   return (
     <Card
-      enableHover={isDisplayMode}
+      enableHover={isDisplayMode && !isOwnerPreview}
       sizeClass="max-w-none"
-      className={`group/card ${cardSurfaceClass}`}
+      className={`${isOwnerPreview ? "" : "group/card"} ${cardSurfaceClass}`}
       borderClass=""
       shadowClass=""
     >
