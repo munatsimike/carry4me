@@ -23,7 +23,7 @@ import {
 import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
 import LineDivider from "@/app/components/LineDivider";
 import type { UserProfile } from "../domain/authTypes";
-import { formatProfileTypeLabel, isAdminProfile, PROFILE_TYPES } from "../domain/profileType";
+import { isAdminProfile } from "../domain/profileType";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 import { toDialCode, toflag } from "@/app/Mapper";
@@ -1029,12 +1029,6 @@ function PersonalDetailsSection({
                   ? nameParts.slice(1).join(" ")
                   : undefined
               }
-            />
-            <InfoRow
-              label="Account type"
-              value={formatProfileTypeLabel(
-                profile.profileType ?? PROFILE_TYPES.ORDINARY,
-              )}
             />
             {showTravelerPayouts ? (
               <TravelerPayoutStatusRow

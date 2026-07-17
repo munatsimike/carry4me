@@ -17,7 +17,7 @@ const DIAL_CODES_LONGEST_FIRST = [...SUPPORTED_PHONE_COUNTRIES].sort(
 /** Used when a country exists in the DB but has no seeded cities yet. */
 export const FALLBACK_CITIES_BY_COUNTRY_CODE: Record<string, string[]> = {
   UK: ["London", "Birmingham", "Manchester"],
-  USA: ["Houston", "Dallas", "Atlanta"],
+  USA: ["Houston", "Dallas", "Atlanta", "Arizona"],
   IE: ["Dublin", "Cork", "Galway"],
   Ireland: ["Dublin", "Cork", "Galway"],
   NL: ["Amsterdam", "Rotterdam", "The Hague", "Utrecht", "Eindhoven"],
