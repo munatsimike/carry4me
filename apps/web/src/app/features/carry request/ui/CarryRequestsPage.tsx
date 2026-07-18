@@ -865,6 +865,9 @@ function CarryRequestCard({
           trip={request.tripSnapshot}
           parcel={request.parcelSnapshot}
           viewerRole={viewerRole}
+          viewerUserId={user?.id}
+          senderUserId={request.senderUserId}
+          travelerUserId={request.travelerUserId}
           statusDateLabel={archivedDate.label}
           statusDateValue={archivedDate.value}
         />
@@ -929,6 +932,8 @@ function CarryRequestCard({
               parcel={request.parcelSnapshot}
               totalPrice={totalWithFee}
               viewerRole={viewerRole}
+              viewerUserId={user?.id}
+              travelerUserId={request.travelerUserId}
             />
           </div>
         </div>
@@ -948,6 +953,9 @@ function CarryRequestCard({
             trip={request.tripSnapshot}
             parcel={request.parcelSnapshot}
             viewerRole={viewerRole}
+            viewerUserId={user?.id}
+            senderUserId={request.senderUserId}
+            travelerUserId={request.travelerUserId}
           />
         </div>
         {/**requestUI.title !== "Request cancelled" && (
@@ -979,6 +987,9 @@ function CarryRequestCard({
           trip={request.tripSnapshot}
           parcel={request.parcelSnapshot}
           viewerRole={viewerRole}
+          viewerUserId={user?.id}
+          senderUserId={request.senderUserId}
+          travelerUserId={request.travelerUserId}
         />
       )}
 
@@ -1295,10 +1306,16 @@ function DetailsSection({
   trip,
   parcel,
   viewerRole,
+  viewerUserId,
+  senderUserId,
+  travelerUserId,
 }: {
   trip: TripSnapshot;
   parcel: ParcelSnapshot;
   viewerRole: Role;
+  viewerUserId?: string | null;
+  senderUserId?: string | null;
+  travelerUserId?: string | null;
 }) {
   const categories = parcel.goods_category.map((item) => item.name).join(", ");
 
@@ -1311,7 +1328,11 @@ function DetailsSection({
           originCity: trip.origin.city,
           destinationCity: trip.destination.city,
         }}
-        travelerName={formatTravelerPartyDisplay(viewerRole, trip.traveler_name)}
+        travelerName={formatTravelerPartyDisplay(
+          viewerRole,
+          trip.traveler_name,
+          { viewerUserId, partyUserId: travelerUserId },
+        )}
         departsLabel={format(new Date(trip.departure_date), dateFormat)}
       />
       <RequestParcelDetailsSection
@@ -1321,7 +1342,11 @@ function DetailsSection({
           originCity: parcel.origin.city,
           destinationCity: parcel.destination.city,
         }}
-        senderName={formatSenderPartyDisplay(viewerRole, parcel.sender_name)}
+        senderName={formatSenderPartyDisplay(
+          viewerRole,
+          parcel.sender_name,
+          { viewerUserId, partyUserId: senderUserId },
+        )}
         itemsLabel={categories}
       />
       <RequestCostSummarySection

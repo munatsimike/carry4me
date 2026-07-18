@@ -23,12 +23,16 @@ export function MobileFirstHeader({
   totalPrice,
   toggleSection,
   viewerRole,
+  viewerUserId,
+  travelerUserId,
 }: {
   trip: TripSnapshot;
   parcel: ParcelSnapshot;
   totalPrice: number;
   toggleSection: (v: MobileSection) => void;
   viewerRole: Role;
+  viewerUserId?: string | null;
+  travelerUserId?: string | null;
 }) {
   return (
     <>
@@ -63,7 +67,10 @@ export function MobileFirstHeader({
               textVariant="primary"
               className="truncate font-medium"
             >
-              {formatTravelerPartyDisplay(viewerRole, trip.traveler_name)}
+              {formatTravelerPartyDisplay(viewerRole, trip.traveler_name, {
+                viewerUserId,
+                partyUserId: travelerUserId,
+              })}
             </CustomText>
           </div>
 
@@ -104,19 +111,35 @@ export function MobileDetailsSection({
   trip,
   parcel,
   viewerRole,
+  viewerUserId,
+  senderUserId,
+  travelerUserId,
   setOpenSection,
 }: {
   trip: TripSnapshot;
   parcel: ParcelSnapshot;
   viewerRole: Role;
+  viewerUserId?: string | null;
+  senderUserId?: string | null;
+  travelerUserId?: string | null;
   setOpenSection: () => void;
 }) {
   return (
     <CustomModal onClose={setOpenSection}>
       <div className="flex flex-col gap-4">
-        <TripDetailsMobile trip={trip} viewerRole={viewerRole} />
+        <TripDetailsMobile
+          trip={trip}
+          viewerRole={viewerRole}
+          viewerUserId={viewerUserId}
+          travelerUserId={travelerUserId}
+        />
         <LineDivider heightClass="" />
-        <ParcelDetailsMobile parcel={parcel} viewerRole={viewerRole} />
+        <ParcelDetailsMobile
+          parcel={parcel}
+          viewerRole={viewerRole}
+          viewerUserId={viewerUserId}
+          senderUserId={senderUserId}
+        />
         <LineDivider heightClass="" />
         <CostSummaryMobile parcel={parcel} />
       </div>
@@ -127,9 +150,13 @@ export function MobileDetailsSection({
 export function TripDetailsMobile({
   trip,
   viewerRole,
+  viewerUserId,
+  travelerUserId,
 }: {
   trip: TripSnapshot;
   viewerRole: Role;
+  viewerUserId?: string | null;
+  travelerUserId?: string | null;
 }) {
   return (
     <section className="space-y-2">
@@ -153,7 +180,10 @@ export function TripDetailsMobile({
           Traveler
         </CustomText>
         <CustomText textVariant="primary" textSize="sm">
-          {formatTravelerPartyDisplay(viewerRole, trip.traveler_name)}
+          {formatTravelerPartyDisplay(viewerRole, trip.traveler_name, {
+            viewerUserId,
+            partyUserId: travelerUserId,
+          })}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
@@ -170,9 +200,13 @@ export function TripDetailsMobile({
 export function ParcelDetailsMobile({
   parcel,
   viewerRole,
+  viewerUserId,
+  senderUserId,
 }: {
   parcel: ParcelSnapshot;
   viewerRole: Role;
+  viewerUserId?: string | null;
+  senderUserId?: string | null;
 }) {
   const categories = parcel.goods_category.map((item) => item.name).join(", ");
 
@@ -199,7 +233,10 @@ export function ParcelDetailsMobile({
           Sender
         </CustomText>
         <CustomText textVariant="primary" textSize="sm">
-          {formatSenderPartyDisplay(viewerRole, parcel.sender_name)}
+          {formatSenderPartyDisplay(viewerRole, parcel.sender_name, {
+            viewerUserId,
+            partyUserId: senderUserId,
+          })}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">

@@ -27,7 +27,11 @@ import {
   RequestParcelDetailsSection,
   RequestTripDetailsSection,
 } from "../features/carry request/ui/RequestDetailsLayout";
-import { formatPersonDisplayName } from "../shared/application/formatPersonDisplayName";
+import {
+  formatSenderPartyDisplay,
+  formatTravelerPartyDisplay,
+} from "../features/carry request/application/formatCarryRequestPartyDisplay";
+import { ROLES } from "../features/carry request/domain/CreateCarryRequest";
 import { tripAcceptsParcelCategories } from "../features/goods/domain/goodsCategoryConstants";
 
 type RequestSummaryProps = {
@@ -297,13 +301,27 @@ export default function RequestSummary({
       <RequestDetailsGrid>
         <RequestTripDetailsSection
           route={tripRoute}
-          travelerName={formatPersonDisplayName(trip.user?.fullName)}
+          travelerName={formatTravelerPartyDisplay(
+            isSenderRequesting ? ROLES.SENDER : ROLES.TRAVELER,
+            trip.user?.fullName ?? "",
+            {
+              viewerUserId: loggedInUserId,
+              partyUserId: trip.user?.id,
+            },
+          )}
           departsLabel={format(new Date(trip.departDate), dateFormat)}
           highlightOrigin={routeMismatch.originMismatch}
         />
         <RequestParcelDetailsSection
           route={parcelRoute}
-          senderName={formatPersonDisplayName(parcel.user.fullName)}
+          senderName={formatSenderPartyDisplay(
+            isSenderRequesting ? ROLES.SENDER : ROLES.TRAVELER,
+            parcel.user.fullName,
+            {
+              viewerUserId: loggedInUserId,
+              partyUserId: parcel.user.id,
+            },
+          )}
           itemsLabel={parcelItems}
           highlightOrigin={routeMismatch.originMismatch}
         />

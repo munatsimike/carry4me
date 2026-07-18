@@ -215,6 +215,9 @@ export function ArchivedCarryRequestDetails({
   trip,
   parcel,
   viewerRole,
+  viewerUserId,
+  senderUserId,
+  travelerUserId,
   statusDateLabel,
   statusDateValue,
 }: {
@@ -228,6 +231,9 @@ export function ArchivedCarryRequestDetails({
     price_per_kg: number;
   };
   viewerRole: Role;
+  viewerUserId?: string | null;
+  senderUserId?: string | null;
+  travelerUserId?: string | null;
   statusDateLabel: string;
   statusDateValue: string;
 }) {
@@ -252,13 +258,19 @@ export function ArchivedCarryRequestDetails({
       <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-slate-100">
         <ArchivedDetailField
           label="Sender"
-          value={formatSenderPartyDisplay(viewerRole, parcel.sender_name)}
+          value={formatSenderPartyDisplay(viewerRole, parcel.sender_name, {
+            viewerUserId,
+            partyUserId: senderUserId,
+          })}
           icon={META_ICONS.userIconOutlined}
           className="sm:pr-2.5"
         />
         <ArchivedDetailField
           label="Traveler"
-          value={formatTravelerPartyDisplay(viewerRole, trip.traveler_name)}
+          value={formatTravelerPartyDisplay(viewerRole, trip.traveler_name, {
+            viewerUserId,
+            partyUserId: travelerUserId,
+          })}
           icon={META_ICONS.travelerOutline}
           iconColor="tonal"
           className="sm:pl-2.5"
