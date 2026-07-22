@@ -11,7 +11,7 @@ import {
   findProfileIdByStripeAccountId,
   syncStripeConnectAccountToProfile,
 } from "../_shared/stripe/connectAccount.ts";
-import { transferTravelerPayoutForPayment, retryPendingTravelerTransfersForUser } from "../_shared/stripe/travelerTransfer.ts";
+import { retryPendingTravelerTransfersForUser } from "../_shared/stripe/travelerTransfer.ts";
 import { notifyTravelerBankPayoutPaid } from "../_shared/stripe/travelerBankPayoutNotification.ts";
 import { processCarryRequestEventEmails } from "../_shared/emailQueueProcessor.ts";
 
@@ -99,9 +99,7 @@ async function handlePaymentIntentSucceeded(
 
   const { data: carryRequest, error: loadError } = await supabaseAdmin
     .from("carry_requests")
-    .select(
-      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id",
-    )
+    .select("id, stripe_payment_intent_id")
     .eq("id", carryRequestId)
     .maybeSingle();
 
@@ -124,30 +122,8 @@ async function handlePaymentIntentSucceeded(
     throw updateError;
   }
 
-  const stripe = getStripe();
-  const transferResult = await transferTravelerPayoutForPayment(
-    stripe,
-    supabaseAdmin,
-    {
-      carryRequestId,
-      travelerUserId: carryRequest.traveler_user_id,
-      paymentIntent,
-      travelerPayoutAmount: Number(carryRequest.traveler_payout_amount ?? 0),
-      paymentCurrency: carryRequest.payment_currency ?? paymentIntent.currency,
-    },
-  );
-
-  if (!transferResult.ok) {
-    console.warn("stripe-webhook traveler payout deferred", {
-      carryRequestId,
-      reason: transferResult.reason,
-    });
-  } else {
-    console.info("stripe-webhook traveler payout transferred", {
-      carryRequestId,
-      transferId: transferResult.transferId,
-    });
-  }
+  // Traveler Connect transfer waits until delivery OTP is verified.
+  // Funds remain on the platform account until then.
 
   // Reuses the same transition as perform_carry_request_action PAY (RPC).
   const { data: finalizeResult, error: finalizeError } = await supabaseAdmin.rpc(
@@ -187,7 +163,6 @@ async function handlePaymentIntentSucceeded(
     carryRequestId,
     paymentIntentId: paymentIntent.id,
     finalizeResult,
-    travelerTransfer: transferResult.ok ? "sent" : transferResult.reason,
   });
 }
 

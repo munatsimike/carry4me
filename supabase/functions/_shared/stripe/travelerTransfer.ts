@@ -15,6 +15,10 @@ function chargeIdFromPaymentIntent(paymentIntent: Stripe.PaymentIntent): string 
   return latestCharge?.id ?? null;
 }
 
+function travelerPayoutIdempotencyKey(carryRequestId: string): string {
+  return `traveler-payout-${carryRequestId}`;
+}
+
 /** Returns the traveler's Connect account id when they can receive platform transfers. */
 export async function resolveTravelerPayoutDestinationAccount(
   stripe: Stripe,
@@ -41,7 +45,58 @@ async function paymentIntentWithCharge(
   });
 }
 
-/** Retry traveler transfers after Connect onboarding completes or profile syncs. */
+async function loadStoredStripeTransferId(
+  supabaseAdmin: SupabaseClient,
+  carryRequestId: string,
+): Promise<string | null> {
+  const { data, error } = await supabaseAdmin
+    .from("carry_requests")
+    .select("stripe_transfer_id")
+    .eq("id", carryRequestId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "loadStoredStripeTransferId failed",
+      carryRequestId,
+      error.message,
+    );
+    return null;
+  }
+
+  const transferId = data?.stripe_transfer_id?.trim();
+  return transferId || null;
+}
+
+/** Persist transfer id; returns the confirmed DB value, or null if not saved. */
+async function persistStripeTransferId(
+  supabaseAdmin: SupabaseClient,
+  carryRequestId: string,
+  transferId: string,
+): Promise<string | null> {
+  const { error: updateError } = await supabaseAdmin
+    .from("carry_requests")
+    .update({
+      stripe_transfer_id: transferId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", carryRequestId)
+    .is("stripe_transfer_id", null);
+
+  if (updateError) {
+    console.error(
+      "persistStripeTransferId update failed",
+      carryRequestId,
+      transferId,
+      updateError.message,
+    );
+  }
+
+  const stored = await loadStoredStripeTransferId(supabaseAdmin, carryRequestId);
+  return stored;
+}
+
+/** Retry traveler transfers after Connect is ready — only for OTP-verified requests. */
 export async function retryPendingTravelerTransfersForUser(
   stripe: Stripe,
   supabaseAdmin: SupabaseClient,
@@ -59,11 +114,14 @@ export async function retryPendingTravelerTransfersForUser(
   const { data: carryRequests, error } = await supabaseAdmin
     .from("carry_requests")
     .select(
-      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id, payment_status",
+      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id, payment_status, delivery_otp_verified_at, status, stripe_transfer_id",
     )
     .eq("traveler_user_id", travelerUserId)
     .eq("payment_status", "SUCCEEDED")
-    .not("stripe_payment_intent_id", "is", null);
+    .not("stripe_payment_intent_id", "is", null)
+    .not("delivery_otp_verified_at", "is", null)
+    .is("stripe_transfer_id", null)
+    .in("status", ["PENDING_PAYOUT", "PAID_OUT"]);
 
   if (error) {
     console.warn(
@@ -126,6 +184,14 @@ export async function transferTravelerPayoutForPayment(
     return { ok: false, reason: "INVALID_PAYOUT_AMOUNT" };
   }
 
+  const existingTransferId = await loadStoredStripeTransferId(
+    supabaseAdmin,
+    input.carryRequestId,
+  );
+  if (existingTransferId) {
+    return { ok: true, transferId: existingTransferId };
+  }
+
   const destinationAccountId = await resolveTravelerPayoutDestinationAccount(
     stripe,
     supabaseAdmin,
@@ -143,7 +209,9 @@ export async function transferTravelerPayoutForPayment(
     return { ok: false, reason: "MISSING_CHARGE" };
   }
 
+  let transferId: string;
   try {
+    // Idempotency key ensures retries reuse the same Stripe Transfer.
     const transfer = await stripe.transfers.create(
       {
         amount: input.travelerPayoutAmount,
@@ -157,15 +225,99 @@ export async function transferTravelerPayoutForPayment(
         },
       },
       {
-        idempotencyKey: `traveler-payout-${input.carryRequestId}`,
+        idempotencyKey: travelerPayoutIdempotencyKey(input.carryRequestId),
       },
     );
-
-    return { ok: true, transferId: transfer.id };
+    transferId = transfer.id;
   } catch (err) {
     console.error(
       "transferTravelerPayoutForPayment failed",
       input.carryRequestId,
+      stripeErrorMessage(err),
+    );
+    return { ok: false, reason: "TRANSFER_FAILED" };
+  }
+
+  const persistedId = await persistStripeTransferId(
+    supabaseAdmin,
+    input.carryRequestId,
+    transferId,
+  );
+
+  if (!persistedId) {
+    console.error(
+      "transferTravelerPayoutForPayment persist failed after Stripe transfer",
+      input.carryRequestId,
+      transferId,
+    );
+    return { ok: false, reason: "TRANSFER_ID_PERSIST_FAILED" };
+  }
+
+  return { ok: true, transferId: persistedId };
+}
+
+/**
+ * After delivery OTP is verified, move the traveler share from the platform
+ * balance to their Connect account. Funds stay on the platform until this runs.
+ */
+export async function releaseTravelerPayoutAfterDeliveryVerification(
+  stripe: Stripe,
+  supabaseAdmin: SupabaseClient,
+  carryRequestId: string,
+): Promise<TransferResult> {
+  const { data: carryRequest, error } = await supabaseAdmin
+    .from("carry_requests")
+    .select(
+      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id, payment_status, delivery_otp_verified_at, status, stripe_transfer_id",
+    )
+    .eq("id", carryRequestId)
+    .maybeSingle();
+
+  if (error || !carryRequest) {
+    return { ok: false, reason: "NOT_FOUND" };
+  }
+
+  const existingTransferId = carryRequest.stripe_transfer_id?.trim();
+  if (existingTransferId) {
+    return { ok: true, transferId: existingTransferId };
+  }
+
+  if (!carryRequest.delivery_otp_verified_at) {
+    return { ok: false, reason: "OTP_NOT_VERIFIED" };
+  }
+
+  if (carryRequest.payment_status !== "SUCCEEDED") {
+    return { ok: false, reason: "PAYMENT_NOT_CONFIRMED" };
+  }
+
+  if (!carryRequest.stripe_payment_intent_id) {
+    return { ok: false, reason: "MISSING_PAYMENT_INTENT" };
+  }
+
+  if (
+    carryRequest.status !== "PENDING_PAYOUT" &&
+    carryRequest.status !== "PAID_OUT"
+  ) {
+    return { ok: false, reason: "INVALID_STATUS" };
+  }
+
+  try {
+    const paymentIntent = await paymentIntentWithCharge(
+      stripe,
+      await stripe.paymentIntents.retrieve(carryRequest.stripe_payment_intent_id),
+    );
+
+    return await transferTravelerPayoutForPayment(stripe, supabaseAdmin, {
+      carryRequestId: carryRequest.id,
+      travelerUserId: carryRequest.traveler_user_id,
+      paymentIntent,
+      travelerPayoutAmount: Number(carryRequest.traveler_payout_amount ?? 0),
+      paymentCurrency: carryRequest.payment_currency ?? paymentIntent.currency,
+    });
+  } catch (err) {
+    console.error(
+      "releaseTravelerPayoutAfterDeliveryVerification failed",
+      carryRequestId,
       stripeErrorMessage(err),
     );
     return { ok: false, reason: "TRANSFER_FAILED" };

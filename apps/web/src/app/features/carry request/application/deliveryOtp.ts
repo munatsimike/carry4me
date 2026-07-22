@@ -30,5 +30,18 @@ export function deliveryOtpFailureMessage(result: VerifyDeliveryOtpResponse): st
   if (result.reason === "OTP_ATTEMPTS_EXCEEDED") {
     return "Too many failed attempts. Ask the sender for a new code.";
   }
+  if (result.reason === "TRAVELER_PAYOUT_NOT_READY") {
+    return "Complete Stripe payout setup before releasing payment.";
+  }
+  if (
+    result.reason === "TRANSFER_FAILED" ||
+    result.reason === "MISSING_CHARGE" ||
+    result.reason === "TRANSFER_ID_PERSIST_FAILED"
+  ) {
+    return "Could not release payment to your payout account. Try again in a moment.";
+  }
+  if (result.reason === "TRANSFER_NOT_CONFIRMED") {
+    return "Traveler payout has not been confirmed yet. Verify the delivery code again.";
+  }
   return "Could not verify the delivery code.";
 }

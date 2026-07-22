@@ -254,7 +254,7 @@ Deno.serve(async (req) => {
     let paymentIntent;
     try {
       // Platform charge only — sender checkout never depends on traveler Connect.
-      // Traveler payout is attempted after payment succeeds (webhook transfer).
+      // Traveler payout transfers after delivery OTP verification, not on payment success.
       const paymentMetadata: Record<string, string> = {
         carry_request_id: carryRequestId,
         sender_user_id: user.id,

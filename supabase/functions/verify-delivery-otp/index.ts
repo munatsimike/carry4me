@@ -4,7 +4,9 @@ import {
   isResponse,
   jsonResponse,
 } from "../_shared/stripe/auth.ts";
+import { getStripe } from "../_shared/stripe/client.ts";
 import { verifyDeliveryOtpRpc } from "../_shared/deliveryOtp.ts";
+import { releaseTravelerPayoutAfterDeliveryVerification } from "../_shared/stripe/travelerTransfer.ts";
 
 type RequestBody = {
   carry_request_id?: string;
@@ -19,6 +21,19 @@ const REASON_MESSAGES: Record<string, string> = {
   INVALID_STATUS: "This request is not ready for payout release.",
   FORBIDDEN: "Only the traveler can verify the delivery code.",
   NOT_FOUND: "Carry request not found.",
+  OTP_NOT_VERIFIED: "Verify the delivery code before releasing payment.",
+  PAYMENT_NOT_CONFIRMED: "Sender payment is not confirmed yet.",
+  TRAVELER_PAYOUT_NOT_READY:
+    "Complete Stripe payout setup before releasing payment.",
+  TRANSFER_FAILED:
+    "Could not release payment to your payout account. Try again in a moment.",
+  TRANSFER_ID_PERSIST_FAILED:
+    "Payment transfer was created but not saved yet. Try again in a moment.",
+  TRANSFER_NOT_CONFIRMED:
+    "Traveler payout has not been confirmed yet. Verify the delivery code again.",
+  MISSING_CHARGE: "Payment charge is not ready yet. Try again in a moment.",
+  MISSING_PAYMENT_INTENT: "No payment was found for this request.",
+  INVALID_PAYOUT_AMOUNT: "Payout amount is invalid. Contact support.",
 };
 
 Deno.serve(async (req) => {
@@ -38,7 +53,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "carry_request_id and otp are required" }, 400);
     }
 
-    const { supabaseUser } = await getAuthenticatedUser(req);
+    const { supabaseUser, supabaseAdmin } = await getAuthenticatedUser(req);
 
     const result = await verifyDeliveryOtpRpc(supabaseUser, carryRequestId, otp);
 
@@ -55,7 +70,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    return jsonResponse({ ok: true });
+    // Funds stay on the platform until OTP succeeds; transfer only after verification.
+    const transferResult = await releaseTravelerPayoutAfterDeliveryVerification(
+      getStripe(),
+      supabaseAdmin,
+      carryRequestId,
+    );
+
+    if (!transferResult.ok) {
+      const message =
+        REASON_MESSAGES[transferResult.reason] ??
+        "Could not release payment to your payout account. Try again in a moment.";
+      console.warn("verify-delivery-otp traveler transfer deferred", {
+        carryRequestId,
+        reason: transferResult.reason,
+      });
+      return jsonResponse({
+        ok: false,
+        reason: transferResult.reason,
+        message,
+      });
+    }
+
+    console.info("verify-delivery-otp traveler payout transferred", {
+      carryRequestId,
+      transferId: transferResult.transferId,
+    });
+
+    return jsonResponse({ ok: true, transfer_id: transferResult.transferId });
   } catch (err) {
     if (isResponse(err)) return err;
     console.error("verify-delivery-otp error", err);
