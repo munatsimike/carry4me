@@ -129,7 +129,7 @@ export function normalizeSupabaseError(
   // Show actionable API / edge-function messages as-is (not generic transport errors).
   if (
     !isGenericClientTransportMessage(message) &&
-    message.trim().length > 24
+    message.trim().length > 16
   ) {
     const isClientValidation =
       includesAny(normalizedMessage, [
@@ -145,6 +145,7 @@ export function normalizeSupabaseError(
       appError.status === 400 ||
       appError.status === 403 ||
       appError.status === 422 ||
+      appError.status === 502 ||
       includesAny(normalizedMessage, [
         "active carry requests",
         "complete or cancel",
@@ -154,9 +155,13 @@ export function normalizeSupabaseError(
         "not awaiting payment",
         "stripe verification",
         "could not verify",
+        "payout",
+        "delivery code",
+        "transfer",
+        "try again",
       ]);
 
-    if (!isClientValidation && isServerActionMessage) {
+    if (!isClientValidation && (isServerActionMessage || message.trim().length > 24)) {
       return {
         category: "VALIDATION",
         title: titleForServerMessage(message),
@@ -382,7 +387,11 @@ export function normalizeSupabaseError(
       return {
         category: "SERVER",
         title: "Server error",
-        message: "Something went wrong on our side. Please try again.",
+        message:
+          message.trim().length > 0 &&
+          !isGenericClientTransportMessage(message)
+            ? message
+            : "Something went wrong on our side. Please try again.",
         action: "retry",
       };
   }
@@ -546,13 +555,25 @@ export function normalizeSupabaseError(
         action: "signIn",
       };
 
-    default:
+    default: {
+      const hasUsefulMessage =
+        message.trim().length > 0 &&
+        !isGenericClientTransportMessage(message) &&
+        !includesAny(normalizedMessage, [
+          "unexpected error",
+          "unknown error",
+          "an unexpected error occurred",
+        ]);
+
       return {
         category: "UNKNOWN",
-        title: "Unexpected error",
-        message: "An unexpected error occurred. Please try again.",
+        title: hasUsefulMessage ? "Unable to continue" : "Unexpected error",
+        message: hasUsefulMessage
+          ? message
+          : "An unexpected error occurred. Please try again.",
         action: "retry",
       };
+    }
   }
 }
 

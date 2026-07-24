@@ -132,9 +132,14 @@ async function throwInvokeStripeFunctionError<T>(
         error?: string;
         message?: string;
         code?: string;
+        reason?: string;
       };
-      serverError = payload?.error ?? payload?.message ?? serverError;
-      code = payload?.code ?? code;
+      serverError =
+        payload?.error ??
+        payload?.message ??
+        (payload?.reason ? `Request failed: ${payload.reason}` : null) ??
+        serverError;
+      code = payload?.code ?? payload?.reason ?? code;
     } catch {
       // Response body may be empty or non-JSON.
     }
@@ -155,7 +160,11 @@ async function throwInvokeStripeFunctionError<T>(
         ? `Could not reach "${name}". Make sure your edge functions are deployed and CORS is configured.`
         : raw;
 
-  throw new AppError({ message, status, code: code ?? undefined });
+  throw new AppError({
+    message: code ? `${message} (${code})` : message,
+    status,
+    code: code ?? undefined,
+  });
 }
 
 export async function invokeStripeFunction<T>(
@@ -182,6 +191,11 @@ export async function invokeStripeFunction<T>(
 
   if (error) {
     await throwInvokeStripeFunctionError(name, data, error);
+  }
+
+  // Domain responses like { ok: false, message } must be returned to the caller.
+  if (data && typeof data === "object" && "ok" in (data as object)) {
+    return data as T;
   }
 
   const dataError = parseEdgeFunctionErrorBody(data);

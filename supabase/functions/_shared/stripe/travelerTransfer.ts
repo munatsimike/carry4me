@@ -169,6 +169,26 @@ export async function retryPendingTravelerTransfersForUser(
   }
 }
 
+async function findExistingTravelerTransferId(
+  stripe: Stripe,
+  carryRequestId: string,
+): Promise<string | null> {
+  try {
+    const listed = await stripe.transfers.list({ limit: 100 });
+    const match = listed.data.find(
+      (transfer) => transfer.metadata?.carry_request_id === carryRequestId,
+    );
+    return match?.id ?? null;
+  } catch (err) {
+    console.warn(
+      "findExistingTravelerTransferId failed",
+      carryRequestId,
+      stripeErrorMessage(err),
+    );
+    return null;
+  }
+}
+
 export async function transferTravelerPayoutForPayment(
   stripe: Stripe,
   supabaseAdmin: SupabaseClient,
@@ -209,9 +229,9 @@ export async function transferTravelerPayoutForPayment(
     return { ok: false, reason: "MISSING_CHARGE" };
   }
 
-  let transferId: string;
+  let transferId: string | null = null;
   try {
-    // Idempotency key ensures retries reuse the same Stripe Transfer.
+    // Idempotency key ensures retries reuse the same Stripe Transfer (within 24h).
     const transfer = await stripe.transfers.create(
       {
         amount: input.travelerPayoutAmount,
@@ -235,7 +255,13 @@ export async function transferTravelerPayoutForPayment(
       input.carryRequestId,
       stripeErrorMessage(err),
     );
-    return { ok: false, reason: "TRANSFER_FAILED" };
+
+    // Older requests may already have been paid out under the previous timing;
+    // recover the existing transfer instead of failing permanently.
+    transferId = await findExistingTravelerTransferId(stripe, input.carryRequestId);
+    if (!transferId) {
+      return { ok: false, reason: "TRANSFER_FAILED" };
+    }
   }
 
   const persistedId = await persistStripeTransferId(

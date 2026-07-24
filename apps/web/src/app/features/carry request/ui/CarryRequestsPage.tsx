@@ -16,6 +16,7 @@ import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
 import { useCarryRequestRealtimeSync } from "@/app/hooks/useCarryRequestRealtimeSync";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import { performCarryRequestActionUseCase } from "@/app/lib/useCases";
+import { AppError } from "@/app/shared/domain/AppError";
 import { processActionEmailQueue } from "../application/processActionEmailQueue";
 import { processEmailQueueInBackground } from "@/app/shared/supabase/processEmailQueue";
 import {
@@ -204,7 +205,7 @@ export default function CarryRequestsPage() {
   useQueryErrorEffect(error, !!user?.id);
   useCarryRequestRealtimeSync(user?.id);
 
-  const { openInfo, showSupabaseError, confirm } = useUniversalModal();
+  const { openInfo, openError, showSupabaseError, confirm } = useUniversalModal();
  
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -568,13 +569,31 @@ export default function CarryRequestsPage() {
           );
           if (!verifyResult.ok) {
             setOtpErrorRequestId(carryRequest.carryRequestId);
-            toast(deliveryOtpFailureMessage(verifyResult), { variant: "error" });
+            const detail = deliveryOtpFailureMessage(verifyResult);
+            openError({
+              category: "VALIDATION",
+              title: "Could not release payout",
+              message: [
+                detail,
+                verifyResult.reason ? `Reason: ${verifyResult.reason}` : null,
+              ]
+                .filter(Boolean)
+                .join("\n"),
+              action: "retry",
+            });
             return;
           }
           setOtpErrorRequestId(null);
         } catch (err) {
           setOtpErrorRequestId(carryRequest.carryRequestId);
-          showSupabaseError(err);
+          const appError = AppError.fromUnknown(err);
+          openError({
+            category: "SERVER",
+            title: "Could not release payout",
+            message: appError.message || String(err),
+            action: "retry",
+          });
+          console.error("verifyDeliveryOtp failed", err);
           return;
         }
       }
@@ -590,6 +609,14 @@ export default function CarryRequestsPage() {
             title: "Delivery code required",
             message:
               "Verify the sender's 6-digit code before releasing payment.",
+            label: "Close",
+          });
+        } else if (response.reason === "TRANSFER_NOT_CONFIRMED") {
+          openInfo({
+            title: "Payout not confirmed",
+            message:
+              response.message ??
+              "Traveler payout has not been confirmed yet. Verify the delivery code again.",
             label: "Close",
           });
         }
@@ -634,6 +661,22 @@ export default function CarryRequestsPage() {
           { variant: "success" },
         );
       }
+    } catch (err) {
+      const appError = AppError.fromUnknown(err);
+      openError({
+        category: "SERVER",
+        title:
+          actions.primary?.key === UIACTIONKEYS.RELEASE_PAYMENT
+            ? "Could not release payout"
+            : "Request action failed",
+        message: appError.message || String(err),
+        action: "retry",
+      });
+      console.error("carry request primary action failed", {
+        action: actions.primary?.key,
+        carryRequestId: carryRequest.carryRequestId,
+        err,
+      });
     } finally {
       setPendingAction(null);
     }
