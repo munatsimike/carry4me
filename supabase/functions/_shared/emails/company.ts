@@ -58,6 +58,15 @@ export function getEmailCompanyConfig(): EmailCompanyConfig {
       ? "+44 7471366706"
       : configuredPhone;
 
+  const configuredWhatsappUrl =
+    Deno.env.get("EMAIL_WHATSAPP_URL")?.trim() || null;
+  const whatsappUrl =
+    !configuredWhatsappUrl ||
+      configuredWhatsappUrl.includes("31622528250") ||
+      configuredWhatsappUrl.includes("622528250")
+      ? "https://wa.me/447471366706"
+      : configuredWhatsappUrl;
+
   return {
     companyName,
     supportEmail:
@@ -71,8 +80,7 @@ export function getEmailCompanyConfig(): EmailCompanyConfig {
     headOfficeLabel: HEAD_OFFICE_LABEL,
     websiteUrl,
     logoUrl,
-    whatsappUrl:
-      Deno.env.get("EMAIL_WHATSAPP_URL")?.trim() || "https://wa.me/31622528250",
+    whatsappUrl,
     social: {
       facebook: Deno.env.get("EMAIL_FACEBOOK_URL")?.trim() || null,
       instagram: Deno.env.get("EMAIL_INSTAGRAM_URL")?.trim() || null,

@@ -5,7 +5,7 @@ import { stripeErrorMessage } from "./errors.ts";
 
 type TransferResult =
   | { ok: true; transferId: string }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string; message?: string };
 
 function chargeIdFromPaymentIntent(paymentIntent: Stripe.PaymentIntent): string | null {
   const latestCharge = paymentIntent.latest_charge;
@@ -15,8 +15,71 @@ function chargeIdFromPaymentIntent(paymentIntent: Stripe.PaymentIntent): string 
   return latestCharge?.id ?? null;
 }
 
-function travelerPayoutIdempotencyKey(carryRequestId: string): string {
-  return `traveler-payout-${carryRequestId}`;
+function travelerPayoutIdempotencyKey(
+  carryRequestId: string,
+  currency: string,
+): string {
+  // Include currency so a corrected currency retry is not blocked by Stripe
+  // replaying an earlier failed attempt under the same key.
+  return `traveler-payout-v3-${carryRequestId}-${normalizeCurrency(currency)}`;
+}
+
+function normalizeCurrency(currency: string): string {
+  return currency.trim().toLowerCase();
+}
+
+type SourceChargeTransferBasis = {
+  chargeId: string;
+  /** Currency of the funds available to transfer (balance transaction). */
+  currency: string;
+  /** Traveler payout amount in balance-transaction minor units. */
+  amount: number;
+};
+
+/**
+ * Stripe requires transfer.currency to match the charge's balance_transaction
+ * currency — which can differ from PaymentIntent.currency after FX settlement.
+ */
+async function resolveSourceChargeTransferBasis(
+  stripe: Stripe,
+  chargeId: string,
+  travelerPayoutAmount: number,
+  fallbackCurrency: string,
+): Promise<SourceChargeTransferBasis> {
+  const charge = await stripe.charges.retrieve(chargeId, {
+    expand: ["balance_transaction"],
+  });
+
+  const balanceTx = charge.balance_transaction;
+  const balanceCurrency =
+    typeof balanceTx === "object" && balanceTx && "currency" in balanceTx
+      ? normalizeCurrency(String(balanceTx.currency))
+      : normalizeCurrency(charge.currency || fallbackCurrency || "usd");
+
+  const chargeCurrency = normalizeCurrency(charge.currency || fallbackCurrency || "usd");
+  const balanceAmount =
+    typeof balanceTx === "object" && balanceTx && typeof balanceTx.amount === "number"
+      ? balanceTx.amount
+      : null;
+
+  let amount = Math.round(travelerPayoutAmount);
+  if (
+    balanceAmount != null &&
+    charge.amount > 0 &&
+    balanceCurrency !== chargeCurrency
+  ) {
+    // Scale traveler share from presentment currency into settlement currency.
+    amount = Math.max(
+      1,
+      Math.floor((travelerPayoutAmount * balanceAmount) / charge.amount),
+    );
+  }
+
+  return {
+    chargeId: charge.id,
+    currency: balanceCurrency,
+    amount,
+  };
 }
 
 /** Returns the traveler's Connect account id when they can receive platform transfers. */
@@ -158,6 +221,12 @@ export async function retryPendingTravelerTransfersForUser(
           carryRequestId: carryRequest.id,
           transferId: result.transferId,
         });
+      } else {
+        console.warn("retryPendingTravelerTransfersForUser transfer failed", {
+          carryRequestId: carryRequest.id,
+          reason: result.reason,
+          message: result.message,
+        });
       }
     } catch (err) {
       console.warn(
@@ -172,13 +241,53 @@ export async function retryPendingTravelerTransfersForUser(
 async function findExistingTravelerTransferId(
   stripe: Stripe,
   carryRequestId: string,
+  sourceChargeId?: string | null,
 ): Promise<string | null> {
   try {
-    const listed = await stripe.transfers.list({ limit: 100 });
-    const match = listed.data.find(
-      (transfer) => transfer.metadata?.carry_request_id === carryRequestId,
-    );
-    return match?.id ?? null;
+    let startingAfter: string | undefined;
+
+    for (let page = 0; page < 10; page++) {
+      const listed = await stripe.transfers.list({
+        limit: 100,
+        ...(startingAfter ? { starting_after: startingAfter } : {}),
+      });
+
+      const match = listed.data.find((transfer) => {
+        if (transfer.metadata?.carry_request_id === carryRequestId) {
+          return true;
+        }
+        if (
+          sourceChargeId &&
+          typeof transfer.source_transaction === "string" &&
+          transfer.source_transaction === sourceChargeId
+        ) {
+          return true;
+        }
+        if (
+          sourceChargeId &&
+          transfer.source_transaction &&
+          typeof transfer.source_transaction === "object" &&
+          "id" in transfer.source_transaction &&
+          transfer.source_transaction.id === sourceChargeId
+        ) {
+          return true;
+        }
+        return false;
+      });
+
+      if (match) {
+        return match.id;
+      }
+
+      if (!listed.has_more || listed.data.length === 0) {
+        break;
+      }
+
+      startingAfter = listed.data[listed.data.length - 1]?.id;
+      if (!startingAfter) break;
+    }
+
+    return null;
   } catch (err) {
     console.warn(
       "findExistingTravelerTransferId failed",
@@ -201,7 +310,11 @@ export async function transferTravelerPayoutForPayment(
   },
 ): Promise<TransferResult> {
   if (input.travelerPayoutAmount <= 0) {
-    return { ok: false, reason: "INVALID_PAYOUT_AMOUNT" };
+    return {
+      ok: false,
+      reason: "INVALID_PAYOUT_AMOUNT",
+      message: `Invalid traveler payout amount: ${input.travelerPayoutAmount}`,
+    };
   }
 
   const existingTransferId = await loadStoredStripeTransferId(
@@ -219,48 +332,119 @@ export async function transferTravelerPayoutForPayment(
   );
 
   if (!destinationAccountId) {
-    return { ok: false, reason: "TRAVELER_PAYOUT_NOT_READY" };
+    return {
+      ok: false,
+      reason: "TRAVELER_PAYOUT_NOT_READY",
+      message:
+        "Traveler Stripe Connect account is not ready to receive transfers.",
+    };
   }
 
-  const sourceTransaction = chargeIdFromPaymentIntent(
-    await paymentIntentWithCharge(stripe, input.paymentIntent),
-  );
+  const chargedIntent = await paymentIntentWithCharge(stripe, input.paymentIntent);
+  const sourceTransaction = chargeIdFromPaymentIntent(chargedIntent);
   if (!sourceTransaction) {
-    return { ok: false, reason: "MISSING_CHARGE" };
+    return {
+      ok: false,
+      reason: "MISSING_CHARGE",
+      message: "PaymentIntent has no charge to transfer from yet.",
+    };
+  }
+
+  let transferBasis: SourceChargeTransferBasis;
+  try {
+    transferBasis = await resolveSourceChargeTransferBasis(
+      stripe,
+      sourceTransaction,
+      input.travelerPayoutAmount,
+      chargedIntent.currency || input.paymentCurrency || "usd",
+    );
+  } catch (err) {
+    return {
+      ok: false,
+      reason: "TRANSFER_FAILED",
+      message: stripeErrorMessage(err),
+    };
+  }
+
+  const currency = transferBasis.currency;
+  const transferAmount = transferBasis.amount;
+
+  // Prefer recovering an existing transfer before creating a new one
+  // (covers older requests that were paid out at payment time).
+  const preexisting = await findExistingTravelerTransferId(
+    stripe,
+    input.carryRequestId,
+    sourceTransaction,
+  );
+  if (preexisting) {
+    const persistedExisting = await persistStripeTransferId(
+      supabaseAdmin,
+      input.carryRequestId,
+      preexisting,
+    );
+    if (persistedExisting) {
+      return { ok: true, transferId: persistedExisting };
+    }
+    return {
+      ok: false,
+      reason: "TRANSFER_ID_PERSIST_FAILED",
+      message: `Found existing Stripe transfer ${preexisting} but could not save it on the request.`,
+    };
   }
 
   let transferId: string | null = null;
+  let stripeFailureMessage: string | null = null;
   try {
-    // Idempotency key ensures retries reuse the same Stripe Transfer (within 24h).
     const transfer = await stripe.transfers.create(
       {
-        amount: input.travelerPayoutAmount,
-        currency: input.paymentCurrency,
+        amount: transferAmount,
+        currency,
         destination: destinationAccountId,
         source_transaction: sourceTransaction,
         metadata: {
           carry_request_id: input.carryRequestId,
           payment_intent_id: input.paymentIntent.id,
           traveler_user_id: input.travelerUserId,
+          presentment_currency: normalizeCurrency(
+            chargedIntent.currency || input.paymentCurrency || currency,
+          ),
+          presentment_amount: String(input.travelerPayoutAmount),
         },
       },
       {
-        idempotencyKey: travelerPayoutIdempotencyKey(input.carryRequestId),
+        idempotencyKey: travelerPayoutIdempotencyKey(
+          input.carryRequestId,
+          currency,
+        ),
       },
     );
     transferId = transfer.id;
   } catch (err) {
+    stripeFailureMessage = stripeErrorMessage(err);
     console.error(
       "transferTravelerPayoutForPayment failed",
-      input.carryRequestId,
-      stripeErrorMessage(err),
+      {
+        carryRequestId: input.carryRequestId,
+        amount: transferAmount,
+        presentmentAmount: input.travelerPayoutAmount,
+        currency,
+        destinationAccountId,
+        sourceTransaction,
+        stripeError: stripeFailureMessage,
+      },
     );
 
-    // Older requests may already have been paid out under the previous timing;
-    // recover the existing transfer instead of failing permanently.
-    transferId = await findExistingTravelerTransferId(stripe, input.carryRequestId);
+    transferId = await findExistingTravelerTransferId(
+      stripe,
+      input.carryRequestId,
+      sourceTransaction,
+    );
     if (!transferId) {
-      return { ok: false, reason: "TRANSFER_FAILED" };
+      return {
+        ok: false,
+        reason: "TRANSFER_FAILED",
+        message: stripeFailureMessage,
+      };
     }
   }
 
@@ -276,7 +460,11 @@ export async function transferTravelerPayoutForPayment(
       input.carryRequestId,
       transferId,
     );
-    return { ok: false, reason: "TRANSFER_ID_PERSIST_FAILED" };
+    return {
+      ok: false,
+      reason: "TRANSFER_ID_PERSIST_FAILED",
+      message: `Stripe transfer ${transferId} was created but could not be saved. Try again.`,
+    };
   }
 
   return { ok: true, transferId: persistedId };
@@ -300,7 +488,11 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
     .maybeSingle();
 
   if (error || !carryRequest) {
-    return { ok: false, reason: "NOT_FOUND" };
+    return {
+      ok: false,
+      reason: "NOT_FOUND",
+      message: error?.message ?? "Carry request not found.",
+    };
   }
 
   const existingTransferId = carryRequest.stripe_transfer_id?.trim();
@@ -313,7 +505,11 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
   }
 
   if (carryRequest.payment_status !== "SUCCEEDED") {
-    return { ok: false, reason: "PAYMENT_NOT_CONFIRMED" };
+    return {
+      ok: false,
+      reason: "PAYMENT_NOT_CONFIRMED",
+      message: `Payment status is ${carryRequest.payment_status ?? "null"}, expected SUCCEEDED.`,
+    };
   }
 
   if (!carryRequest.stripe_payment_intent_id) {
@@ -324,7 +520,11 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
     carryRequest.status !== "PENDING_PAYOUT" &&
     carryRequest.status !== "PAID_OUT"
   ) {
-    return { ok: false, reason: "INVALID_STATUS" };
+    return {
+      ok: false,
+      reason: "INVALID_STATUS",
+      message: `Request status is ${carryRequest.status}, expected PENDING_PAYOUT.`,
+    };
   }
 
   try {
@@ -341,11 +541,12 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
       paymentCurrency: carryRequest.payment_currency ?? paymentIntent.currency,
     });
   } catch (err) {
+    const message = stripeErrorMessage(err);
     console.error(
       "releaseTravelerPayoutAfterDeliveryVerification failed",
       carryRequestId,
-      stripeErrorMessage(err),
+      message,
     );
-    return { ok: false, reason: "TRANSFER_FAILED" };
+    return { ok: false, reason: "TRANSFER_FAILED", message };
   }
 }

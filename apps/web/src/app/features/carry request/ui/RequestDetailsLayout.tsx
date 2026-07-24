@@ -9,6 +9,7 @@ import {
   formatTravelerPartyDisplay,
 } from "../application/formatCarryRequestPartyDisplay";
 import type { Role } from "../domain/CreateCarryRequest";
+import { ROLES } from "../domain/CreateCarryRequest";
 import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDestination";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
@@ -19,7 +20,9 @@ import { useState, type ReactNode } from "react";
 import {
   CarryRequestCostSummary,
   RequestCostSummarySection,
+  SenderPaymentDetailsSummary,
   ServiceFeeRow,
+  TravelerPaymentDetailsSummary,
 } from "./CarryRequestCostSummary";
 
 export { CarryRequestCostSummary, RequestCostSummarySection, ServiceFeeRow };
@@ -301,7 +304,7 @@ export function ArchivedCarryRequestDetails({
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 rounded",
             )}
           >
-            Show cost
+            Payment details
           </button>
         </div>
       </div>
@@ -309,7 +312,7 @@ export function ArchivedCarryRequestDetails({
       <AnimatePresence>
         {costModalOpen ? (
           <CustomModal
-            width="sm"
+            width="md"
             scrollable={false}
             onClose={() => setCostModalOpen(false)}
           >
@@ -319,16 +322,21 @@ export function ArchivedCarryRequestDetails({
               textVariant="primary"
               className="mb-4 pr-8 font-semibold text-ink-primary"
             >
-              Cost breakdown
+              Payment details
             </CustomText>
-            <CarryRequestCostSummary
-              weightKg={parcel.weight_kg}
-              pricePerKg={parcel.price_per_kg}
-              priceCountry={parcel.origin.country}
-              showServiceFee
-              totalLabel="Total"
-              variant="receipt"
-            />
+            {viewerRole === ROLES.TRAVELER ? (
+              <TravelerPaymentDetailsSummary
+                weightKg={parcel.weight_kg}
+                pricePerKg={parcel.price_per_kg}
+                priceCountry={parcel.origin.country}
+              />
+            ) : (
+              <SenderPaymentDetailsSummary
+                weightKg={parcel.weight_kg}
+                pricePerKg={parcel.price_per_kg}
+                priceCountry={parcel.origin.country}
+              />
+            )}
           </CustomModal>
         ) : null}
       </AnimatePresence>

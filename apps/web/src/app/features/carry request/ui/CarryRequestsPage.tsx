@@ -573,12 +573,7 @@ export default function CarryRequestsPage() {
             openError({
               category: "VALIDATION",
               title: "Could not release payout",
-              message: [
-                detail,
-                verifyResult.reason ? `Reason: ${verifyResult.reason}` : null,
-              ]
-                .filter(Boolean)
-                .join("\n"),
+              message: detail,
               action: "retry",
             });
             return;

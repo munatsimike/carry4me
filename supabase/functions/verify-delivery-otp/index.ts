@@ -26,7 +26,7 @@ const REASON_MESSAGES: Record<string, string> = {
   TRAVELER_PAYOUT_NOT_READY:
     "Complete Stripe payout setup before releasing payment.",
   TRANSFER_FAILED:
-    "Could not release payment to your payout account. Try again in a moment.",
+    "Could not release payment to your payout account. If the problem persists, contact Carry4Me.",
   TRANSFER_ID_PERSIST_FAILED:
     "Payment transfer was created but not saved yet. Try again in a moment.",
   TRANSFER_NOT_CONFIRMED:
@@ -78,17 +78,19 @@ Deno.serve(async (req) => {
     );
 
     if (!transferResult.ok) {
-      const message =
+      const friendly =
         REASON_MESSAGES[transferResult.reason] ??
-        "Could not release payment to your payout account. Try again in a moment.";
+        "Could not release payment to your payout account. If the problem persists, contact Carry4Me.";
+      // Keep Stripe/raw details in logs only — never in the client-facing message.
       console.warn("verify-delivery-otp traveler transfer deferred", {
         carryRequestId,
         reason: transferResult.reason,
+        message: transferResult.message,
       });
       return jsonResponse({
         ok: false,
         reason: transferResult.reason,
-        message,
+        message: friendly,
       });
     }
 

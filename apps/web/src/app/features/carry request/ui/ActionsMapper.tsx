@@ -184,16 +184,7 @@ function requestRejected(viewerRole: Role): UIActions {
 }**/
 
 function paidOut(): UIActions {
-  return {
-    infoBlock: {
-      mode: INFOMODES.DISPLAY,
-      displayText: {
-        title: "Thank you for using Carry4Me.",
-        description:
-          "Need help or have feedback? WhatsApp +31 622 528 250 or email info@carry4me.uk.",
-      },
-    },
-  };
+  return {};
 }
 function pendingPayout(viewerRole: Role): UIActions {
   if (viewerRole === ROLES.SENDER) {

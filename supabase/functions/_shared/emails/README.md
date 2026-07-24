@@ -43,9 +43,9 @@ Layout wraps content and appends `EmailFooter` automatically.
 | `EMAIL_LOGO_URL` | `{website}/logo.svg` |
 | `EMAIL_COMPANY_NAME` | Carry4Me |
 | `EMAIL_SUPPORT_EMAIL` | info@carry4me.uk |
-| `EMAIL_PHONE` | +31 622528250 |
+| `EMAIL_PHONE` | +44 7471366706 |
 | `EMAIL_ADDRESS` | London, United Kingdom (Head office) |
-| `EMAIL_WHATSAPP_URL` | https://wa.me/31622528250 |
+| `EMAIL_WHATSAPP_URL` | https://wa.me/447471366706 |
 | `EMAIL_FACEBOOK_URL` | (optional) |
 | `EMAIL_INSTAGRAM_URL` | (optional) |
 | `EMAIL_TWITTER_URL` | (optional) |

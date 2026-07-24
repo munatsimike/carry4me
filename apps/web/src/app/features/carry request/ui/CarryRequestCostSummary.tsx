@@ -47,6 +47,177 @@ type CarryRequestCostSummaryProps = {
   className?: string;
 };
 
+/**
+ * Traveler-facing payout breakdown for completed requests.
+ * Gross = sender total paid; fee = platform cut; net = traveler payout.
+ */
+export function TravelerPaymentDetailsSummary({
+  weightKg,
+  pricePerKg,
+  priceCountry,
+  className,
+}: {
+  weightKg: number;
+  pricePerKg: number;
+  priceCountry: string;
+  className?: string;
+}) {
+  const { deliveryTotal, serviceFee, totalWithFee } = calculateCarryRequestPricing(
+    pricePerKg,
+    weightKg,
+  );
+  const rateLabel = `${formatCurrencyByCountry(priceCountry, pricePerKg)}/kg`;
+  const feeLabel = `-${formatCurrencyByCountry(priceCountry, serviceFee)}`;
+
+  return (
+    <section
+      className={cn(
+        "min-w-0 overflow-visible rounded-xl border border-slate-100/90 bg-white p-2.5",
+        className,
+      )}
+    >
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1.5 overflow-visible">
+        <CustomText textVariant="secondary" textSize="sm">
+          Parcel weight
+        </CustomText>
+        <CustomText textVariant="primary" textSize="sm" className="text-right">
+          {weightKg} kg
+        </CustomText>
+
+        <CustomText textVariant="secondary" textSize="sm">
+          Rate
+        </CustomText>
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="text-right tabular-nums"
+        >
+          {rateLabel}
+        </CustomText>
+
+        <CustomText textVariant="secondary" textSize="sm" className="pt-2.5">
+          Gross earnings
+        </CustomText>
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="pt-2.5 text-right tabular-nums"
+        >
+          {formatCurrencyByCountry(priceCountry, totalWithFee)}
+        </CustomText>
+
+        <CustomText textVariant="secondary" textSize="sm">
+          Carry4Me fee
+        </CustomText>
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="text-right tabular-nums text-red-600"
+        >
+          {feeLabel}
+        </CustomText>
+      </div>
+
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center border-t border-slate-100 pt-3">
+        <CustomText textVariant="primary" textSize="sm" className="font-semibold">
+          Net payout
+        </CustomText>
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="text-right text-lg font-bold tabular-nums text-success-600"
+        >
+          {formatCurrencyByCountry(priceCountry, deliveryTotal)}
+        </CustomText>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Sender-facing payment breakdown for completed requests.
+ */
+export function SenderPaymentDetailsSummary({
+  weightKg,
+  pricePerKg,
+  priceCountry,
+  className,
+}: {
+  weightKg: number;
+  pricePerKg: number;
+  priceCountry: string;
+  className?: string;
+}) {
+  const { deliveryTotal, serviceFee, totalWithFee } = calculateCarryRequestPricing(
+    pricePerKg,
+    weightKg,
+  );
+
+  return (
+    <section
+      className={cn(
+        "min-w-0 overflow-visible rounded-xl border border-slate-100/90 bg-white p-2.5",
+        className,
+      )}
+    >
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1.5 overflow-visible">
+        <CustomText textVariant="secondary" textSize="sm">
+          Parcel weight
+        </CustomText>
+        <CustomText textVariant="primary" textSize="sm" className="text-right">
+          {weightKg} kg
+        </CustomText>
+
+        <CustomText textVariant="secondary" textSize="sm">
+          Rate per kg
+        </CustomText>
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="text-right tabular-nums"
+        >
+          {formatCurrencyByCountry(priceCountry, pricePerKg)}
+        </CustomText>
+
+        <CustomText textVariant="secondary" textSize="sm" className="pt-2.5">
+          Delivery charge
+        </CustomText>
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="pt-2.5 text-right tabular-nums"
+        >
+          {formatCurrencyByCountry(priceCountry, deliveryTotal)}
+        </CustomText>
+
+        <CustomText textVariant="secondary" textSize="sm">
+          Carry4Me fee
+        </CustomText>
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="text-right tabular-nums"
+        >
+          {formatCurrencyByCountry(priceCountry, serviceFee)}
+        </CustomText>
+      </div>
+
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center border-t border-slate-100 pt-3">
+        <CustomText textVariant="primary" textSize="sm" className="font-semibold">
+          Total paid
+        </CustomText>
+        <CustomText
+          textVariant="primary"
+          textSize="sm"
+          className="text-right text-lg font-bold tabular-nums text-success-600"
+        >
+          {formatCurrencyByCountry(priceCountry, totalWithFee)}
+        </CustomText>
+      </div>
+    </section>
+  );
+}
+
 /** Reusable cost block for review request modal and carry request cards. */
 export function CarryRequestCostSummary({
   weightKg,
@@ -77,7 +248,7 @@ export function CarryRequestCostSummary({
         Parcel weight
       </CustomText>
       <CustomText textVariant="primary" textSize={valueSize} className="text-right">
-        {weightKg}kg
+        {weightKg} kg
       </CustomText>
 
       <CustomText textVariant="secondary" textSize={labelSize}>
@@ -92,11 +263,27 @@ export function CarryRequestCostSummary({
       </CustomText>
 
       {showServiceFee ? (
-        <ServiceFeeRow
-          priceCountry={priceCountry}
-          serviceFee={serviceFee}
-          compact={isEmbedded || isReceipt || size === "compact"}
-        />
+        <>
+          <CustomText
+            textVariant="secondary"
+            textSize={labelSize}
+            className="pt-2.5"
+          >
+            Subtotal
+          </CustomText>
+          <CustomText
+            textVariant="primary"
+            textSize={valueSize}
+            className="pt-2.5 text-right tabular-nums"
+          >
+            {formatCurrencyByCountry(priceCountry, deliveryTotal)}
+          </CustomText>
+          <ServiceFeeRow
+            priceCountry={priceCountry}
+            serviceFee={serviceFee}
+            compact={isEmbedded || isReceipt || size === "compact"}
+          />
+        </>
       ) : null}
     </>
   );

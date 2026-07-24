@@ -1,4 +1,7 @@
+import { format } from "date-fns";
+import { dateFormat } from "@/types/Ui";
 import type { CarryRequest } from "../domain/CarryRequest";
+import { CARRY_REQUEST_EVENT_TYPES } from "../domain/CarryRequestEvent";
 import {
   CARRY_REQUEST_STATUSES,
   ROLES,
@@ -12,6 +15,25 @@ export type CarryRequestUI = {
   title: string;
   description: string;
 };
+
+function formatPayoutReleasedDate(request: CarryRequest): string {
+  const matches = request.eventHistory.filter(
+    (event) => event.type === CARRY_REQUEST_EVENT_TYPES.PAYMENT_RELEASED,
+  );
+  const iso =
+    (matches.length > 0
+      ? [...matches].sort(
+          (a, b) =>
+            new Date(b.createdAt ?? 0).getTime() -
+            new Date(a.createdAt ?? 0).getTime(),
+        )[0]?.createdAt
+      : null) ?? request.updatedAt;
+
+  const date = iso ? new Date(iso) : null;
+  if (!date || Number.isNaN(date.getTime())) return "";
+
+  return format(date, dateFormat);
+}
 
 export function mapCarryRequestToUI(
   request: CarryRequest,
@@ -91,14 +113,18 @@ export function mapCarryRequestToUI(
           : "Enter the payment code to receive your payout.";
       break;
 
-    case CARRY_REQUEST_STATUSES.PAID_OUT:
+    case CARRY_REQUEST_STATUSES.PAID_OUT: {
       currentStep = 6;
       title = "Request complete";
+      const payoutDate = formatPayoutReleasedDate(request);
       description =
         viewerRole === ROLES.SENDER
           ? "Payment was released to the traveler. This request is now complete."
-          : "Payout was released. This request is now complete.";
+          : payoutDate
+            ? `Payout released on ${payoutDate}.`
+            : "Payout was released. This request is now complete.";
       break;
+    }
 
     case CARRY_REQUEST_STATUSES.REJECTED:
       currentStep = 1;
