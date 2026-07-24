@@ -2,7 +2,7 @@ import LineDivider from "@/app/components/LineDivider";
 import { AnimatePresence, motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { PriceField } from "../../dashboard/components/PriceField";
-import { formatCurrencyByCountry } from "@/app/lib/currency";
+import { formatCurrencyByCountry, getCurrencySymbolByCountry } from "@/app/lib/currency";
 import { TRIP_PRICE_PER_KG_HINT } from "@/app/shared/listingFormHints";
 import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { WeightField } from "../../dashboard/components/WeightField";
@@ -244,7 +244,8 @@ export function CreateTripForm({
                   value={priceValue}
                 />
                 <CustomText as="p" textSize="xs" className="text-neutral-500">
-                  Most travelers charge $8–15 per kg.
+                  Most travelers charge {getCurrencySymbolByCountry(originCountry)}
+                  12–20 per kg.
                 </CustomText>
               </div>
             </div>

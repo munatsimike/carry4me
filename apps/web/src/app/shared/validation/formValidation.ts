@@ -78,12 +78,12 @@ export const listingWeightSchema = z
 export const pricePerKgSchema = z
   .number({ error: "Enter a valid price" })
   .finite("Enter a valid price")
-  .min(1, "Price per kg must be at least 1");
+  .min(12, "Minimum is 12");
 
 export const budgetPerKgSchema = z
   .number({ error: "Enter a valid budget" })
   .finite("Enter a valid budget")
-  .min(1, "Budget per kg must be at least 1");
+  .min(12, "Minimum is 12");
 
 export const goodsCategoriesSchema = z
   .array(z.string())

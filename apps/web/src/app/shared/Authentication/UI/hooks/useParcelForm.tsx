@@ -96,7 +96,7 @@ const emptyDefaultsValues = {
     { quantity: 1, description: "", size: "", condition: "new" as const },
   ],
   weight: 0,
-  pricePerKg: 0,
+  pricePerKg: 12,
   confirmNoProhibitedItems: false,
   understandTravelerInspection: false,
 };

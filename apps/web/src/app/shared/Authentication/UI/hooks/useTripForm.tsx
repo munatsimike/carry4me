@@ -82,7 +82,7 @@ const emptyDefaultsValues = {
   destinationCountry: FIXED_DESTINATION_COUNTRY,
   destinationCity: FIXED_DESTINATION_CITY,
   departureDate: "",
-  pricePerKg: 10,
+  pricePerKg: 12,
   weight: 0,
   goodsCategoryIds: [],
 };

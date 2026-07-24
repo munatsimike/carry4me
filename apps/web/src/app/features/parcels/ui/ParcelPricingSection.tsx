@@ -22,7 +22,7 @@ import {
   type UseFormSetValue,
 } from "react-hook-form";
 
-const SUGGESTED_PRICES = [8, 10, 12, 15];
+const SUGGESTED_PRICES = [12, 15, 18, 20];
 
 type ParcelPricingSectionProps = {
   originCountry: string;
@@ -114,7 +114,7 @@ export default function ParcelPricingSection({
         </div>
 
         <CustomText as="p" textSize="xs" className="text-neutral-500">
-          Typical offers are {currencySymbol}8–15 per kg.
+          Typical offers start from {currencySymbol}12 per kg.
         </CustomText>
       </div>
 

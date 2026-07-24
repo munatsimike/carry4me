@@ -16,11 +16,13 @@ export function PriceField<T extends FieldValues>({
   country,
   prefix,
   hint,
+  min = 12,
   ...props
 }: PriceFieldProps<T>) {
   return (
     <NumberInputField
       {...props}
+      min={min}
       label={props.label ?? "Price per kg"}
       labelHint={hint}
       prefix={prefix ?? getCurrencySymbolByCountry(country)}
