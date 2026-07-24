@@ -11,8 +11,17 @@ export function useToggleFavouriteMutation() {
   return useMutation({
     mutationFn: (input: FavouriteState) => updateFavouriteUseCase.execute(input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.favourites.list(variables.userId),
+      const { userId, listingType } = variables;
+      const listingRootKey =
+        listingType === "trip" ? queryKeys.trips.all : queryKeys.parcels.all;
+
+      // Favourites removal must also clear hearts on browse / suggested matches.
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.favourites.list(userId),
+      });
+      void queryClient.invalidateQueries({ queryKey: listingRootKey });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.suggestedMatches(userId),
       });
     },
     onError: (err) => showSupabaseError(err),

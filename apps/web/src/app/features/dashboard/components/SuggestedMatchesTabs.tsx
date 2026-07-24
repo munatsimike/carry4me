@@ -10,7 +10,6 @@ import { useToast } from "@/app/components/Toast";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useUniversalModal } from "@/app/shared/Authentication/application/DialogBoxModalProvider";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
-import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
 import { queryKeys } from "@/app/lib/queryKeys";
 import { getParcelUseCase, getTripUseCase } from "@/app/lib/useCases";
 import Parcels from "@/app/features/parcels/ui/Parcels";
@@ -67,7 +66,6 @@ export default function SuggestedMatchesTabs({
   const { toast } = useToast();
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
-  const toggleFavourite = useToggleFavouriteMutation();
 
   const tripCount = data.suggestedTrips.length;
   const parcelCount = data.suggestedParcels.length;
@@ -96,27 +94,51 @@ export default function SuggestedMatchesTabs({
   const [userParcels, setUserParcels] = useState<ParcelListing[]>([]);
   const [userTrips, setUserTrips] = useState<TripListing[]>([]);
 
-  const invalidateSuggestedMatches = () => {
+  const patchSuggestedMatchLike = (
+    listingId: string,
+    listingType: "trip" | "parcel",
+  ) => {
     if (!user?.id) return;
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.dashboard.suggestedMatches(user.id),
-    });
+
+    queryClient.setQueryData<SuggestedMatchesData>(
+      queryKeys.dashboard.suggestedMatches(user.id),
+      (prev) => {
+        if (!prev) return prev;
+
+        const toggle = <T extends { id: string; isLiked: boolean }>(
+          items: T[],
+        ) =>
+          items.map((item) =>
+            item.id === listingId ? { ...item, isLiked: !item.isLiked } : item,
+          );
+
+        if (listingType === "trip") {
+          return {
+            ...prev,
+            suggestedTrips: toggle(prev.suggestedTrips),
+            matchingTrips: toggle(prev.matchingTrips),
+            activeTrips: toggle(prev.activeTrips),
+          };
+        }
+
+        return {
+          ...prev,
+          suggestedParcels: toggle(prev.suggestedParcels),
+          matchingParcels: toggle(prev.matchingParcels),
+          activeParcels: toggle(prev.activeParcels),
+        };
+      },
+    );
   };
 
+  // ListingCard already toggles the favourite in the API.
+  // Only update suggested-match UI here — do not mutate again.
   const handleToggleTripLike = (tripId: string) => {
-    if (!user?.id) return;
-    toggleFavourite.mutate(
-      { userId: user.id, listingId: tripId, listingType: "trip" },
-      { onSuccess: invalidateSuggestedMatches },
-    );
+    patchSuggestedMatchLike(tripId, "trip");
   };
 
   const handleToggleParcelLike = (parcelId: string) => {
-    if (!user?.id) return;
-    toggleFavourite.mutate(
-      { userId: user.id, listingId: parcelId, listingType: "parcel" },
-      { onSuccess: invalidateSuggestedMatches },
-    );
+    patchSuggestedMatchLike(parcelId, "parcel");
   };
 
   const handleTripRequest = async (trip: TripListing) => {
