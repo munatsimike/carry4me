@@ -35,7 +35,6 @@ import { queryKeys } from "@/app/lib/queryKeys";
 import { getParcelUseCase } from "@/app/lib/useCases";
 import type { ListingPageParams } from "@/types/Pagination";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
-import { isAdminProfile } from "@/app/shared/Authentication/domain/profileType";
 import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
 
 const PAGE_SIZE = 9;
@@ -47,10 +46,11 @@ export default function TravelersPage() {
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
 
-  const lockedSearchCountry =
-    profile && !isAdminProfile(profile)
-      ? getProfileOriginCountryCode(profile)
-      : undefined;
+  const defaultCountries = useMemo(() => {
+    const code = getProfileOriginCountryCode(profile);
+    return code ? [code] : [];
+  }, [profile]);
+
   const [selectedTrip, setTrip] = useState<TripListing | null>(null);
   const [parcels, setParcel] = useState<ParcelListing[]>([]);
   const [modalState, setModalState] = useState<boolean>(false);
@@ -67,6 +67,7 @@ export default function TravelersPage() {
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
+  const [originCountries, setOriginCountries] = useState<string[]>([]);
 
   const [priceRange, setPriceRange] = useState<CustomRange>({
     min: 0,
@@ -93,6 +94,7 @@ export default function TravelersPage() {
         priceRange,
         weightRange,
         goodsCategories: goodsCategory,
+        originCountries,
         sortOption,
       },
     }),
@@ -104,6 +106,7 @@ export default function TravelersPage() {
       priceRange,
       weightRange,
       goodsCategory,
+      originCountries,
       sortOption,
     ],
   );
@@ -130,6 +133,7 @@ export default function TravelersPage() {
     priceRange,
     weightRange,
     goodsCategory,
+    originCountries,
     sortOption,
   ]);
 
@@ -199,7 +203,9 @@ export default function TravelersPage() {
     setPriceRange,
     setWeightRange,
     setGoodsCategory,
+    setOriginCountries,
     setSortOption,
+    defaultCountries,
   });
 
   const { clearFilters, hasFilter } = filterForm;
@@ -217,7 +223,6 @@ export default function TravelersPage() {
       setSearchCity={setSearchCity}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
-      lockedCountry={lockedSearchCountry || undefined}
     />
   );
 

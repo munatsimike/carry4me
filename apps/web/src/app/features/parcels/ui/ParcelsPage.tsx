@@ -38,7 +38,6 @@ import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersF
 import FAB from "@/app/components/FAB";
 import type { ListingPageParams } from "@/types/Pagination";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
-import { isAdminProfile } from "@/app/shared/Authentication/domain/profileType";
 import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
 
 const PAGE_SIZE = 9;
@@ -50,10 +49,11 @@ export default function ParcelsPage() {
   const { openSignInModal } = useSignInModal();
   const { guardAction } = useMarketplaceActionGuard();
 
-  const lockedSearchCountry =
-    profile && !isAdminProfile(profile)
-      ? getProfileOriginCountryCode(profile)
-      : undefined;
+  const defaultCountries = useMemo(() => {
+    const code = getProfileOriginCountryCode(profile);
+    return code ? [code] : [];
+  }, [profile]);
+
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
   const [modalState, setModalState] = useState<boolean>(false);
   const { toast } = useToast();
@@ -82,6 +82,7 @@ export default function ParcelsPage() {
   const [, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
+  const [originCountries, setOriginCountries] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
@@ -94,6 +95,7 @@ export default function ParcelsPage() {
       priceRange,
       weightRange,
       goodsCategories: goodsCategory,
+      originCountries,
       sortOption,
     },
   }), [
@@ -103,6 +105,7 @@ export default function ParcelsPage() {
     priceRange,
     weightRange,
     goodsCategory,
+    originCountries,
     sortOption,
   ]);
   const {
@@ -126,6 +129,7 @@ export default function ParcelsPage() {
     priceRange,
     weightRange,
     goodsCategory,
+    originCountries,
     sortOption,
   ]);
   //
@@ -200,7 +204,9 @@ export default function ParcelsPage() {
     setPriceRange,
     setWeightRange,
     setGoodsCategory,
+    setOriginCountries,
     setSortOption,
+    defaultCountries,
   });
 
   const { clearFilters, hasFilter } = filterForm;
@@ -219,7 +225,6 @@ export default function ParcelsPage() {
       setSearchCountry={setSearchCountry}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
-      lockedCountry={lockedSearchCountry || undefined}
     />
   );
   const handleOnClick = () => {

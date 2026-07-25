@@ -5,6 +5,7 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import {
   filterByCountryCity,
   filterByGoodsCategory,
+  filterByOriginCountries,
   filterByPriceRange,
   filterByWeightRange,
 } from "@/app/util/filters";
@@ -30,7 +31,6 @@ import { useOutletContext } from "react-router-dom";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 import type { MyFavTabs } from "../domain/types";
-import { isAdminProfile } from "@/app/shared/Authentication/domain/profileType";
 import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
 
 export type { MyFavTabs };
@@ -47,10 +47,11 @@ export function MyFavouritesPage() {
   const [clearSearchResults, setClearResults] = useState<boolean>(false);
   const { user, profile } = useAuth();
 
-  const lockedSearchCountry =
-    profile && !isAdminProfile(profile)
-      ? getProfileOriginCountryCode(profile)
-      : undefined;
+  const defaultCountries = useMemo(() => {
+    const code = getProfileOriginCountryCode(profile);
+    return code ? [code] : [];
+  }, [profile]);
+
   const country = searchCountry.toLowerCase().trim();
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
@@ -66,6 +67,7 @@ export function MyFavouritesPage() {
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
+  const [originCountries, setOriginCountries] = useState<string[]>([]);
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
   const { data: favListing = [], isLoading, error } = useFavourites(user?.id);
   useQueryErrorEffect(error);
@@ -78,7 +80,9 @@ export function MyFavouritesPage() {
     setPriceRange,
     setWeightRange,
     setGoodsCategory,
+    setOriginCountries,
     setSortOption,
+    defaultCountries,
   });
   const { clearFilters, hasFilter } = filterForm;
 
@@ -89,6 +93,10 @@ export function MyFavouritesPage() {
 
   const displayedFavourites = useMemo(() => {
     let result = visibleFavourites;
+
+    if (originCountries.length > 0) {
+      result = filterByOriginCountries(originCountries, result);
+    }
 
     if (isSearchActive) {
       result = filterByCountryCity(searchCity, searchCountry, result);
@@ -117,6 +125,7 @@ export function MyFavouritesPage() {
     return result;
   }, [
     visibleFavourites,
+    originCountries,
     isSearchActive,
     searchCity,
     searchCountry,
@@ -164,7 +173,6 @@ export function MyFavouritesPage() {
       setSearchCountry={setSearchCountry}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
-      lockedCountry={lockedSearchCountry || undefined}
     />
   );
   return (

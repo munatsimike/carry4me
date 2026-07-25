@@ -8,6 +8,7 @@ import {
 import {
   Calendar,
   ChevronDown,
+  Globe2,
   Package,
   Scale,
   ArrowUpDown,
@@ -26,6 +27,9 @@ import {
   useFiltersForm,
   type FiltersFormValues,
 } from "../shared/Authentication/UI/hooks/useFiltersForm";
+import { useLocations } from "../hookes/useLocation";
+import { toflag } from "../Mapper";
+import SvgIcon from "@/components/ui/SvgIcon";
 
 type FilterChipProps = {
   label: string;
@@ -139,6 +143,7 @@ export function FilterOptionsRow({
     hasPrice,
     hasSpace,
     hasCategory,
+    hasCountry,
     hasSort,
     hasFilter,
   } = filterForm;
@@ -150,6 +155,19 @@ export function FilterOptionsRow({
       <span className="text-sm text-neutral-500 whitespace-nowrap">
         Filter by
       </span>
+
+      <FilterByCountryMenu
+        hasCountry={hasCountry}
+        baseProps={{
+          register: register,
+          openMenu: openMenu,
+          toggleMenu: toggleMenu,
+          submitFilters: submitFilters,
+          control: control,
+          setValue: setValue,
+          clearFilters: handleClearAndClose,
+        }}
+      />
 
       {isTraveler && (
         <FilterByDate
@@ -530,6 +548,110 @@ function SortMenu({ isTraveler, hasSort, baseProps }: SortMenuProps) {
               )}
             />
           </div>
+          <ActionButton setValue={setValue} onClear={clearFilters} />
+        </form>
+      </Popover>
+    </FilterMenuWrapper>
+  );
+}
+
+type FilterByCountryMenuProps = {
+  hasCountry: boolean;
+  baseProps: BaseProps;
+};
+
+function FilterByCountryMenu({
+  hasCountry,
+  baseProps,
+}: FilterByCountryMenuProps) {
+  const {
+    openMenu,
+    toggleMenu,
+    submitFilters,
+    control,
+    setValue,
+    clearFilters,
+  } = baseProps;
+  const { countryOptions, getCountryName } = useLocations();
+
+  return (
+    <FilterMenuWrapper>
+      <FilterChip
+        label="Country"
+        icon={<Globe2 className="h-4 w-4" />}
+        active={hasCountry}
+        isOpen={openMenu === "country"}
+        onClick={() => toggleMenu("country")}
+      />
+      <Popover open={openMenu === "country"}>
+        <form onSubmit={submitFilters} className="space-y-4">
+          <div>
+            <CustomText
+              textVariant="primary"
+              className="mb-3 block font-medium"
+              as="label"
+            >
+              Origin country
+            </CustomText>
+
+            <Controller
+              control={control}
+              name="countries"
+              render={({ field }) => (
+                <div className="max-h-64 space-y-2 overflow-y-auto">
+                  {countryOptions.map((countryCode) => {
+                    const checked = field.value?.includes(countryCode);
+                    const flag = toflag(countryCode);
+
+                    return (
+                      <label
+                        key={countryCode}
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
+                      >
+                        <span className="relative inline-flex">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                field.onChange([
+                                  ...(field.value ?? []),
+                                  countryCode,
+                                ]);
+                              } else {
+                                field.onChange(
+                                  (field.value ?? []).filter(
+                                    (item) => item !== countryCode,
+                                  ),
+                                );
+                              }
+                            }}
+                            className={checkBox}
+                          />
+                          <svg
+                            viewBox="0 0 24 24"
+                            className={checkBoxSvg}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </span>
+                        {flag ? <SvgIcon size="xs" Icon={flag} /> : null}
+                        <CustomText textVariant="primary">
+                          {getCountryName(countryCode)}
+                        </CustomText>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            />
+          </div>
+
           <ActionButton setValue={setValue} onClear={clearFilters} />
         </form>
       </Popover>

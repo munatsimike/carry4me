@@ -7,6 +7,8 @@ export type ListingFilters = {
   priceRange: CustomRange;
   weightRange: CustomRange;
   goodsCategories: string[];
+  /** Origin country codes to include (e.g. ["NL", "UK"]). Empty = no country filter. */
+  originCountries: string[];
   sortOption?: SortOption;
 };
 

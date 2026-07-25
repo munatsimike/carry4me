@@ -1,4 +1,5 @@
 import type { CustomRange } from "@/types/Ui";
+import { expandOriginCountryFilterValues } from "@/app/Mapper";
 import type { TripListing } from "../features/trips/domain/Trip";
 import type { Listing } from "../shared/Authentication/domain/Listing";
 import { tripAcceptsAllCategories } from "../features/goods/domain/goodsCategoryConstants";
@@ -21,6 +22,24 @@ export function filterByCountryCity<T extends Listing>(
   });
 
   return filtered;
+}
+
+/** Keeps listings whose origin country matches any selected code/name alias. */
+export function filterByOriginCountries<T extends Listing>(
+  originCountries: string[],
+  listings: T[],
+): T[] {
+  if (originCountries.length === 0) return listings;
+
+  const allowed = new Set(
+    expandOriginCountryFilterValues(originCountries).map((value) =>
+      value.toLowerCase().trim(),
+    ),
+  );
+
+  return listings.filter((listing) =>
+    allowed.has(listing.route.originCountry.toLowerCase().trim()),
+  );
 }
 
 export function filterByDepartDate(

@@ -1,6 +1,6 @@
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import { isAllGoodsCategory } from "@/app/features/goods/domain/goodsCategoryConstants";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useGoodsCategories } from "@/app/hooks/queries/useGoodsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
@@ -13,6 +13,7 @@ export type FiltersFormValues = {
   minSpace: string;
   maxSpace: string;
   categories: string[];
+  countries: string[];
   sort: SortOption | undefined;
 };
 
@@ -23,17 +24,8 @@ type FilterState = {
   minSpace: string;
   maxSpace: string;
   categories: string[];
+  countries: string[];
   sort?: SortOption;
-};
-
-const filterDefaults: FilterState = {
-  date: "",
-  minPrice: "0",
-  maxPrice: "",
-  minSpace: "1",
-  maxSpace: "",
-  categories: [],
-  sort: undefined,
 };
 
 type UseFiltersFormProps = {
@@ -41,7 +33,10 @@ type UseFiltersFormProps = {
   setPriceRange: (v: CustomRange) => void;
   setWeightRange: (v: CustomRange) => void;
   setGoodsCategory: (s: string[]) => void;
+  setOriginCountries: (s: string[]) => void;
   setSortOption: (v: SortOption | undefined) => void;
+  /** Profile country codes checked by default (e.g. ["NL"]). */
+  defaultCountries?: string[];
 };
 
 export function useFiltersForm({
@@ -49,15 +44,32 @@ export function useFiltersForm({
   setPriceRange,
   setWeightRange,
   setGoodsCategory,
+  setOriginCountries,
   setSortOption,
+  defaultCountries = [],
 }: UseFiltersFormProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [defaultsApplied, setDefaultsApplied] = useState(false);
   const { data, error } = useGoodsCategories();
   useQueryErrorEffect(error);
 
   const goodsCategory: GoodsCategory[] = useMemo(
     () => (data ?? []).filter((category) => !isAllGoodsCategory(category)),
     [data],
+  );
+
+  const filterDefaults = useMemo<FilterState>(
+    () => ({
+      date: "",
+      minPrice: "0",
+      maxPrice: "",
+      minSpace: "1",
+      maxSpace: "",
+      categories: [],
+      countries: defaultCountries,
+      sort: undefined,
+    }),
+    [defaultCountries],
   );
 
   const form = useForm<FiltersFormValues>({
@@ -74,16 +86,38 @@ export function useFiltersForm({
     formState: { dirtyFields },
   } = form;
 
+  // Apply profile country once it loads.
+  useEffect(() => {
+    if (defaultsApplied) return;
+    if (defaultCountries.length === 0) return;
+
+    setValue("countries", defaultCountries, {
+      shouldDirty: false,
+      shouldTouch: false,
+    });
+    setOriginCountries(defaultCountries);
+    setDefaultsApplied(true);
+  }, [defaultCountries, defaultsApplied, setOriginCountries, setValue]);
+
   const values = watch();
 
   const hasDate = !!values.date;
   const hasPrice = !!values.maxPrice;
   const hasSpace = !!values.maxSpace;
   const hasCategory = values.categories.length > 0;
+  const defaultCountryKey = defaultCountries.slice().sort().join("|");
+  const selectedCountryKey = (values.countries ?? []).slice().sort().join("|");
+  const hasCountry = (values.countries?.length ?? 0) > 0;
+  const hasCountryFilter = selectedCountryKey !== defaultCountryKey;
   const hasSort = !!values.sort;
 
   const hasFilter =
-    hasDate || hasPrice || hasSpace || hasCategory || hasSort;
+    hasDate ||
+    hasPrice ||
+    hasSpace ||
+    hasCategory ||
+    hasCountryFilter ||
+    hasSort;
 
   const toggleMenu = (menuName: string) => {
     setOpenMenu((prev) => (prev === menuName ? null : menuName));
@@ -114,6 +148,9 @@ export function useFiltersForm({
       setGoodsCategory(formValues.categories);
     }
 
+    // Always apply — country defaults are set without dirtying the field.
+    setOriginCountries(formValues.countries ?? []);
+
     if (dirtyFields.sort) {
       setSortOption(formValues.sort);
     }
@@ -126,8 +163,12 @@ export function useFiltersForm({
     setPriceRange({ min: 0, max: 0 });
     setWeightRange({ min: 0, max: 0 });
     setGoodsCategory([]);
+    setOriginCountries(defaultCountries);
     setSortOption(undefined);
-    reset(filterDefaults);
+    reset({
+      ...filterDefaults,
+      countries: defaultCountries,
+    });
   };
 
   const handleClearAndClose = () => {
@@ -150,6 +191,7 @@ export function useFiltersForm({
     hasPrice,
     hasSpace,
     hasCategory,
+    hasCountry,
     hasSort,
     hasFilter,
   };

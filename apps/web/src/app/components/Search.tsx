@@ -14,7 +14,6 @@ import {
   citySchema,
   countrySchema,
 } from "@/app/shared/validation/formValidation";
-import { toflag } from "@/app/Mapper";
 
 const searchScema = z.object({
   country: countrySchema,
@@ -28,8 +27,6 @@ type SearchProps = {
   setSearchCity: (s: string) => void;
   setClearResults: () => void;
   clearResults: boolean;
-  /** When set, country is fixed (ordinary users scoped to profile country). */
-  lockedCountry?: string;
 };
 
 export default function Search({
@@ -37,69 +34,36 @@ export default function Search({
   setSearchCountry,
   clearResults,
   setClearResults,
-  lockedCountry,
 }: SearchProps) {
   const { control, watch, handleSubmit, reset, setValue } =
     useForm<SearchFields>({
     resolver: zodResolver(searchScema),
     defaultValues: {
-      country: lockedCountry ?? "",
+      country: "",
       city: "",
     },
     mode: "onChange",
     reValidateMode: "onChange",
     });
 
-  // Prefill + sync parent when profile country becomes available.
-  useEffect(() => {
-    if (!lockedCountry) return;
-    setValue("country", lockedCountry, {
-      shouldDirty: false,
-      shouldValidate: true,
-    });
-    setSearchCountry(lockedCountry);
-  }, [lockedCountry, setValue, setSearchCountry]);
-
   useEffect(() => {
     if (clearResults) {
-      reset({
-        country: lockedCountry ?? "",
-        city: "",
-      });
+      reset();
       setSearchCity("");
-      setSearchCountry(lockedCountry ?? "");
+      setSearchCountry("");
       setClearResults();
     }
-  }, [
-    clearResults,
-    lockedCountry,
-    reset,
-    setSearchCity,
-    setSearchCountry,
-    setClearResults,
-  ]);
+  }, [clearResults, reset, setSearchCity, setSearchCountry, setClearResults]);
 
   const countryValue = watch("country");
   const cityValue = watch("city");
 
-  const { countryOptions, cityOptions } = useLocations(
-    lockedCountry || countryValue,
-  );
-  // Keep locked country visible even before location options finish loading.
-  const visibleCountryOptions = lockedCountry
-    ? Array.from(
-        new Set([
-          lockedCountry,
-          ...countryOptions.filter((option) => option === lockedCountry),
-        ]),
-      )
-    : countryOptions;
+  const { countryOptions, cityOptions } = useLocations(countryValue);
 
   const handleSearch = () => {
-    const country = lockedCountry || countryValue;
-    if (!country || !cityValue) return;
+    if (!countryValue || !cityValue) return;
     setSearchCity(cityValue);
-    setSearchCountry(country);
+    setSearchCountry(countryValue);
   };
 
   return (
@@ -111,42 +75,31 @@ export default function Search({
     >
       <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">
         <div className="w-full sm:min-w-[180px] sm:flex-1">
-          {lockedCountry ? (
-            <div className="flex w-full items-center gap-2 whitespace-nowrap rounded-xl border bg-white px-3 py-1.5 shadow-sm">
-              {toflag(lockedCountry) ? (
-                <SvgIcon size="xs" Icon={toflag(lockedCountry)!} />
-              ) : null}
-              <CustomText as="span" textSize="xs" className="text-neutral-700">
-                {lockedCountry}
-              </CustomText>
-            </div>
-          ) : (
-            <Controller
-              name="country"
-              control={control}
-              render={({ field, fieldState }) => (
-                <ComboBox
-                  heightClass="py-1.5"
-                  className="w-full rounded-xl"
-                  placeholder="Select country"
-                  menuItems={visibleCountryOptions}
-                  value={field.value}
-                  onValueChange={(nextCountry) => {
-                    field.onChange(nextCountry);
-                    setValue("city", "", {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                      shouldTouch: true,
-                    });
-                  }}
-                  isDirty={fieldState.isDirty}
-                  isTouched={fieldState.isTouched}
-                  error={fieldState.error?.message}
-                  searchable
-                />
-              )}
-            />
-          )}
+          <Controller
+            name="country"
+            control={control}
+            render={({ field, fieldState }) => (
+              <ComboBox
+                heightClass="py-1.5"
+                className="w-full rounded-xl"
+                placeholder="Select country"
+                menuItems={countryOptions}
+                value={field.value}
+                onValueChange={(nextCountry) => {
+                  field.onChange(nextCountry);
+                  setValue("city", "", {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  });
+                }}
+                isDirty={fieldState.isDirty}
+                isTouched={fieldState.isTouched}
+                error={fieldState.error?.message}
+                searchable
+              />
+            )}
+          />
         </div>
 
         <div className="w-full sm:min-w-[180px] sm:flex-1">
@@ -159,7 +112,7 @@ export default function Search({
                 className="w-full rounded-xl"
                 placeholder="Select city"
                 menuItems={cityOptions}
-                disabled={!lockedCountry && !countryValue}
+                disabled={!countryValue}
                 disabledMessage="Select a country first"
                 value={field.value}
                 onValueChange={field.onChange}

@@ -165,15 +165,11 @@ export function normalizeCountryCode(
 
   const value = country.trim();
 
-  if (toCountryName(value)) return value;
-
   switch (value) {
     case "GB":
-      return "UK";
-    case "US":
-      return "USA";
     case "United Kingdom":
       return "UK";
+    case "US":
     case "United States":
     case "United States of America":
       return "USA";
@@ -185,11 +181,45 @@ export function normalizeCountryCode(
       return "FR";
     case "Zimbabwe":
       return "ZW";
+    case "UK":
+    case "USA":
+    case "IE":
+    case "NL":
+    case "FR":
     case "ZW":
-      return "ZW";
+      return value;
     default:
       return value;
   }
+}
+
+/**
+ * Expands selected country codes/names to every stored alias so DB `.in()` /
+ * client filters match both code ("NL") and name ("Netherlands") rows.
+ */
+export function expandOriginCountryFilterValues(
+  countries: string[],
+): string[] {
+  const values = new Set<string>();
+
+  for (const raw of countries) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+
+    values.add(trimmed);
+
+    const code = normalizeCountryCode(trimmed);
+    if (code) {
+      values.add(code);
+      const name = toCountryName(code);
+      if (name) values.add(name);
+    }
+
+    const asName = toCountryName(trimmed);
+    if (asName) values.add(asName);
+  }
+
+  return [...values];
 }
 
 /** Reads the international dial prefix from a phone number (e.g. +44, +31, +1). */

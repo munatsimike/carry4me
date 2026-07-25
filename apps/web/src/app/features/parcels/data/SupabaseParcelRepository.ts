@@ -14,6 +14,7 @@ import {
   type ListingPageParams,
   type PaginatedResult,
 } from "@/types/Pagination";
+import { expandOriginCountryFilterValues } from "@/app/Mapper";
 
 type BrowseQuery = {
   ilike(column: string, pattern: string): unknown;
@@ -229,6 +230,13 @@ export class SupabaseParcelRepository implements ParcelRepository {
 
     if (filters.searchCountry.trim()) {
       query.ilike("origin_country", filters.searchCountry.trim());
+    }
+
+    if (filters.originCountries.length > 0) {
+      query.in(
+        "origin_country",
+        expandOriginCountryFilterValues(filters.originCountries),
+      );
     }
 
     if (filters.searchCity.trim()) {
