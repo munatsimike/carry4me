@@ -27,11 +27,7 @@ export function getTripCapacityUrgency(
 }
 
 export function getTripRemainingLabel(availableKg: number): string {
-  if (getTripCapacityUrgency(availableKg) === "comfortable") {
-    return `${availableKg} kg left`;
-  }
-
-  return `Only ${availableKg} kg left`;
+  return `${availableKg} kg left`;
 }
 
 export const tripCapacityUrgencyStyles: Record<
@@ -51,3 +47,10 @@ export const tripCapacityUrgencyStyles: Record<
     track: "bg-error-100",
   },
 };
+
+/** Unused capacity — full bar in a quiet neutral tone. */
+export const tripCapacityUnusedStyles = {
+  fill: "bg-neutral-300",
+  track: "bg-neutral-100",
+  dot: "bg-neutral-500",
+} as const;

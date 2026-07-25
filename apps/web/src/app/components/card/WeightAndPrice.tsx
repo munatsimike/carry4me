@@ -7,6 +7,7 @@ import {
   getTripCapacityUrgency,
   getTripRemainingLabel,
   tripCapacityUrgencyStyles,
+  tripCapacityUnusedStyles,
 } from "@/app/features/trips/domain/tripCapacityUsage";
 
 type WeightAndPriceProps = {
@@ -19,7 +20,7 @@ type WeightAndPriceProps = {
 };
 
 export function WeightAndPrice({
-  weightLabel = "Available space",
+  weightLabel = "Luggage space",
   weight,
   priceLabel = "Price per kg",
   price,
@@ -31,16 +32,22 @@ export function WeightAndPrice({
   const textSize = "sm";
   const isTripCapacityMode = capacityKg != null && capacityKg > 0;
   const bookedKg = getTripBookedWeightKg(capacityKg, weight);
-  const showCapacityBar = isTripCapacityMode && bookedKg > 0;
   const remainingPercent = getTripCapacityRemainingPercent(capacityKg, weight);
   const urgency = getTripCapacityUrgency(weight);
-  const urgencyStyles = tripCapacityUrgencyStyles[urgency];
+  const showUnusedDot = bookedKg === 0;
+  const barStyles =
+    bookedKg > 0
+      ? tripCapacityUrgencyStyles[urgency]
+      : tripCapacityUnusedStyles;
+  const weightDisplay = isTripCapacityMode
+    ? getTripRemainingLabel(weight)
+    : `${weight}kg`;
   const bookedTooltipClass =
     "pointer-events-none absolute left-1/2 bottom-full z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-md opacity-0 translate-y-1 scale-95 transition-all duration-200 ease-out group-hover/capacity:translate-y-0 group-hover/capacity:scale-100 group-hover/capacity:opacity-100";
 
   return (
     <div className={`flex flex-col gap-2`}>
-      {showCapacityBar ? (
+      {isTripCapacityMode ? (
         <div className="group/capacity relative flex items-center gap-2">
           <CustomText
             className={`${baseLabel} shrink-0 whitespace-nowrap`}
@@ -61,17 +68,30 @@ export function WeightAndPrice({
           >
             <div
               className={cn(
-                "h-2 overflow-hidden rounded-full",
-                urgencyStyles.track,
+                "relative h-2 overflow-visible rounded-full",
+                barStyles.track,
               )}
             >
               <div
-                className={cn(
-                  "h-full min-w-[0.5rem] rounded-full transition-[width] duration-300",
-                  urgencyStyles.fill,
-                )}
+                className="absolute inset-y-0 left-0 transition-[width] duration-300"
                 style={{ width: `${remainingPercent}%` }}
-              />
+              >
+                <div
+                  className={cn(
+                    "h-full min-w-[0.5rem] rounded-full",
+                    barStyles.fill,
+                  )}
+                />
+                {showUnusedDot ? (
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute left-0 top-1/2 size-2 -translate-y-1/2 rounded-full ring-2 ring-white",
+                      tripCapacityUnusedStyles.dot,
+                    )}
+                  />
+                ) : null}
+              </div>
             </div>
           </div>
 
@@ -83,12 +103,14 @@ export function WeightAndPrice({
             className={`${baseLabel} shrink-0 whitespace-nowrap`}
             textSize={textSize}
           >
-            {getTripRemainingLabel(weight)}
+            {weightDisplay}
           </CustomText>
 
-          <span className={bookedTooltipClass} role="tooltip">
-            {bookedKg} kg booked
-          </span>
+          {bookedKg > 0 ? (
+            <span className={bookedTooltipClass} role="tooltip">
+              {bookedKg} kg booked
+            </span>
+          ) : null}
         </div>
       ) : (
         <div className="flex items-center gap-2">
@@ -107,7 +129,7 @@ export function WeightAndPrice({
             className={`${baseLabel} shrink-0 whitespace-nowrap`}
             textSize={textSize}
           >
-            {weight}kg
+            {weightDisplay}
           </CustomText>
         </div>
       )}

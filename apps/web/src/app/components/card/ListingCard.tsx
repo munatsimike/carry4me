@@ -154,7 +154,7 @@ export function ListingCard<T extends Listing>({
       </Stack>
       <LineDivider heightClass="my-2" className={dividerHoverClass} />
       <WeightAndPrice
-        weightLabel={isTripListing ? "Available space" : "Parcel weight"}
+        weightLabel={isTripListing ? "Luggage space" : "Parcel weight"}
         weight={listing.weightKg}
         capacityKg={
           isTripListing && typeof listing.capacityKg === "number"
