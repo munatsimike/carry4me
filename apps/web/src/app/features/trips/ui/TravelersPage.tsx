@@ -35,16 +35,22 @@ import { queryKeys } from "@/app/lib/queryKeys";
 import { getParcelUseCase } from "@/app/lib/useCases";
 import type { ListingPageParams } from "@/types/Pagination";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
+import { isAdminProfile } from "@/app/shared/Authentication/domain/profileType";
+import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
 
 const PAGE_SIZE = 9;
 
 export default function TravelersPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
   const { openSignInModal } = useSignInModal();
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
 
+  const lockedSearchCountry =
+    profile && !isAdminProfile(profile)
+      ? getProfileOriginCountryCode(profile)
+      : undefined;
   const [selectedTrip, setTrip] = useState<TripListing | null>(null);
   const [parcels, setParcel] = useState<ParcelListing[]>([]);
   const [modalState, setModalState] = useState<boolean>(false);
@@ -211,6 +217,7 @@ export default function TravelersPage() {
       setSearchCity={setSearchCity}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
+      lockedCountry={lockedSearchCountry || undefined}
     />
   );
 

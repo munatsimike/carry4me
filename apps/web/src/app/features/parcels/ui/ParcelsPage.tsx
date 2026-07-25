@@ -38,16 +38,22 @@ import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersF
 import FAB from "@/app/components/FAB";
 import type { ListingPageParams } from "@/types/Pagination";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
+import { isAdminProfile } from "@/app/shared/Authentication/domain/profileType";
+import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
 
 const PAGE_SIZE = 9;
 
 export default function ParcelsPage() {
   const { showSupabaseError } = useUniversalModal();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { openSignInModal } = useSignInModal();
   const { guardAction } = useMarketplaceActionGuard();
 
+  const lockedSearchCountry =
+    profile && !isAdminProfile(profile)
+      ? getProfileOriginCountryCode(profile)
+      : undefined;
   const [selectedParcel, setParcel] = useState<ParcelListing | null>(null);
   const [modalState, setModalState] = useState<boolean>(false);
   const { toast } = useToast();
@@ -213,6 +219,7 @@ export default function ParcelsPage() {
       setSearchCountry={setSearchCountry}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
+      lockedCountry={lockedSearchCountry || undefined}
     />
   );
   const handleOnClick = () => {

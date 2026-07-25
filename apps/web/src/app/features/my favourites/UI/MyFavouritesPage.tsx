@@ -30,6 +30,8 @@ import { useOutletContext } from "react-router-dom";
 import Toolbar from "@/app/components/MobileFilterOptions";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 import type { MyFavTabs } from "../domain/types";
+import { isAdminProfile } from "@/app/shared/Authentication/domain/profileType";
+import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
 
 export type { MyFavTabs };
 
@@ -43,8 +45,12 @@ export function MyFavouritesPage() {
   const [searchCountry, setSearchCountry] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [clearSearchResults, setClearResults] = useState<boolean>(false);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
+  const lockedSearchCountry =
+    profile && !isAdminProfile(profile)
+      ? getProfileOriginCountryCode(profile)
+      : undefined;
   const country = searchCountry.toLowerCase().trim();
   const city = searchCity.toLowerCase().trim();
   const isSearchActive = !!country && !!city;
@@ -158,6 +164,7 @@ export function MyFavouritesPage() {
       setSearchCountry={setSearchCountry}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
+      lockedCountry={lockedSearchCountry || undefined}
     />
   );
   return (
