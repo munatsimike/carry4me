@@ -312,7 +312,7 @@ export function ArchivedCarryRequestDetails({
       <AnimatePresence>
         {costModalOpen ? (
           <CustomModal
-            width="md"
+            width="lg"
             scrollable={false}
             onClose={() => setCostModalOpen(false)}
           >

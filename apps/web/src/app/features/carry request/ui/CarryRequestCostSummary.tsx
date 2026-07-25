@@ -107,7 +107,7 @@ export function TravelerPaymentDetailsSummary({
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
-          Carry4Me fee
+          Service fee
         </CustomText>
         <CustomText
           textVariant="primary"
@@ -191,7 +191,7 @@ export function SenderPaymentDetailsSummary({
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
-          Carry4Me fee
+          Service fee
         </CustomText>
         <CustomText
           textVariant="primary"
