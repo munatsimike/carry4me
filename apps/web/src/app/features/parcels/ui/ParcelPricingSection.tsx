@@ -7,10 +7,7 @@ import {
 import { WeightField } from "../../dashboard/components/WeightField";
 import { PriceField } from "../../dashboard/components/PriceField";
 import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useParcelForm";
-import {
-  calculateCarryRequestPricing,
-  SERVICE_FEE_TOOLTIP,
-} from "@/app/features/carry request/domain/carryRequestPricing";
+import { calculateCarryRequestPricing } from "@/app/features/carry request/domain/carryRequestPricing";
 import {
   PARCEL_BUDGET_PER_KG_HINT,
   PARCEL_WEIGHT_MIN_HINT,
@@ -130,8 +127,8 @@ export default function ParcelPricingSection({
             </dd>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <dt className="text-neutral-600" title={SERVICE_FEE_TOOLTIP}>
-              Service fee (20%)
+            <dt className="text-neutral-600">
+              Service fee
             </dt>
             <dd className="font-medium text-ink-primary">
               {formatCurrencyByCountry(originCountry, serviceFee)}

@@ -1,13 +1,7 @@
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { cn } from "@/app/lib/cn";
 import CustomText from "@/components/ui/CustomText";
-import {
-  calculateCarryRequestPricing,
-  SERVICE_FEE_TOOLTIP,
-} from "../domain/carryRequestPricing";
-
-const serviceFeeTooltipClass =
-  "pointer-events-none absolute left-1/2 bottom-full z-50 mb-1 -translate-x-1/2 whitespace-nowrap rounded-full border border-yellow-100 bg-yellow-50 px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-lg opacity-0 translate-y-1 scale-95 transition-all duration-300 ease-out group-hover/service-fee:translate-y-0 group-hover/service-fee:scale-100 group-hover/service-fee:opacity-100";
+import { calculateCarryRequestPricing } from "../domain/carryRequestPricing";
 
 export function ServiceFeeRow({
   priceCountry,
@@ -19,7 +13,7 @@ export function ServiceFeeRow({
   compact?: boolean;
 }) {
   return (
-    <div className="group/service-fee relative col-span-2 grid grid-cols-[minmax(0,1fr)_auto] overflow-visible">
+    <div className="col-span-2 grid grid-cols-[minmax(0,1fr)_auto]">
       <CustomText textVariant="secondary" textSize={compact ? "xs" : "sm"}>
         Service fee
       </CustomText>
@@ -30,7 +24,6 @@ export function ServiceFeeRow({
       >
         {formatCurrencyByCountry(priceCountry, serviceFee)}
       </CustomText>
-      <span className={serviceFeeTooltipClass}>{SERVICE_FEE_TOOLTIP}</span>
     </div>
   );
 }

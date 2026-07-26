@@ -1,7 +1,6 @@
-/** Platform service fee: 20% of delivery subtotal (price × weight). */
+/** Platform service fee: 20% of delivery subtotal (price × weight) plus a flat 3. */
 export const PLATFORM_SERVICE_FEE_RATE = 0.2;
-
-export const SERVICE_FEE_TOOLTIP = "Service fee is 20% of total price.";
+export const PLATFORM_SERVICE_FEE_FLAT = 3;
 
 export type CarryRequestPricing = {
   deliveryTotal: number;
@@ -14,7 +13,10 @@ export function calculateCarryRequestPricing(
   weightKg: number,
 ): CarryRequestPricing {
   const deliveryTotal = pricePerKg * weightKg;
-  const serviceFee = deliveryTotal * PLATFORM_SERVICE_FEE_RATE;
+  const serviceFee =
+    deliveryTotal > 0
+      ? deliveryTotal * PLATFORM_SERVICE_FEE_RATE + PLATFORM_SERVICE_FEE_FLAT
+      : 0;
   return {
     deliveryTotal,
     serviceFee,
