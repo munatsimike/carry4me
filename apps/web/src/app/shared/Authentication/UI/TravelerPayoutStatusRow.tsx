@@ -148,7 +148,11 @@ export function TravelerPayoutStatusRow({
           disabled={loading}
           isBusy={loading}
         >
-          {connectState === "not_created" ? "Set up payouts" : "Continue Stripe setup"}
+          {loading
+            ? "Processing"
+            : connectState === "not_created"
+              ? "Set up payouts"
+              : "Continue Stripe setup"}
         </Button>
       ) : (
         <Button

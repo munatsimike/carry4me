@@ -60,8 +60,8 @@ async function buildOnboardingResponse(
     ? await refreshStripeConnectAccountStatus(
       stripe,
       supabaseAdmin,
-      userId,
       profile,
+      userId,
     )
     : profile;
 
