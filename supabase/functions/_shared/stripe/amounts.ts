@@ -1,6 +1,7 @@
-/** Platform fee: 20% of traveler payout. Sender pays payout + fee. */
+/** Platform fee: 20% of traveler payout plus a flat 3. Sender pays payout + fee. */
 
 const PLATFORM_FEE_RATE = 0.2;
+const PLATFORM_FEE_FLAT = 3;
 
 const euroCountryKeys = [
   "andorra",
@@ -98,7 +99,10 @@ export function calculatePaymentAmountsFromParcel(
 ): PaymentAmountBreakdown {
   const currency = currencyForCountry(originCountry);
   const travelerPayoutMajor = pricePerKg * weightKg;
-  const platformFeeMajor = travelerPayoutMajor * PLATFORM_FEE_RATE;
+  const platformFeeMajor =
+    travelerPayoutMajor > 0
+      ? travelerPayoutMajor * PLATFORM_FEE_RATE + PLATFORM_FEE_FLAT
+      : 0;
   const paymentMajor = travelerPayoutMajor + platformFeeMajor;
 
   const travelerPayoutAmount = toStripeAmount(travelerPayoutMajor, currency);

@@ -164,6 +164,7 @@ export function ListingCard<T extends Listing>({
         priceLabel={isTripListing ? "Price per kg" : "Budget per kg"}
         price={listing.pricePerKg}
         country={listing.route.originCountry}
+        showTotalPrice={!isTripListing}
       />
       {showMarketplaceActions ? (
         <>

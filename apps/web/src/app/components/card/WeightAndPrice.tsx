@@ -17,6 +17,8 @@ type WeightAndPriceProps = {
   price: number;
   country?: string | null;
   capacityKg?: number;
+  /** Parcel listings: show weight × price as total. */
+  showTotalPrice?: boolean;
 };
 
 export function WeightAndPrice({
@@ -26,6 +28,7 @@ export function WeightAndPrice({
   price,
   country,
   capacityKg,
+  showTotalPrice = false,
 }: WeightAndPriceProps) {
   const labelColor = "neutral";
   const baseLabel = "flex justify-end";
@@ -42,6 +45,7 @@ export function WeightAndPrice({
   const weightDisplay = isTripCapacityMode
     ? getTripRemainingLabel(weight)
     : `${weight}kg`;
+  const totalPrice = weight * price;
   const bookedTooltipClass =
     "pointer-events-none absolute left-1/2 bottom-full z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-md opacity-0 translate-y-1 scale-95 transition-all duration-200 ease-out group-hover/capacity:translate-y-0 group-hover/capacity:scale-100 group-hover/capacity:opacity-100";
 
@@ -141,17 +145,17 @@ export function WeightAndPrice({
       <div className="flex justify-between items-center">
         <CustomText
           as="div"
-          textVariant="primary"
-          className="font-medium"
-          textSize="md"
+          textVariant={showTotalPrice ? labelColor : "primary"}
+          className={showTotalPrice ? undefined : "font-medium"}
+          textSize={showTotalPrice ? textSize : "md"}
         >
           {priceLabel}
         </CustomText>
         <CustomText
-          className="leading-none font-medium"
           as="div"
-          textVariant="primary"
-          textSize="md"
+          textVariant={showTotalPrice ? labelColor : "primary"}
+          className={showTotalPrice ? undefined : "leading-none font-medium"}
+          textSize={showTotalPrice ? textSize : "md"}
         >
           {formatCurrencyByCountry(country, price, {
             minimumFractionDigits: 0,
@@ -159,6 +163,30 @@ export function WeightAndPrice({
           })}
         </CustomText>
       </div>
+
+      {showTotalPrice && totalPrice > 0 ? (
+        <div className="flex justify-between items-center">
+          <CustomText
+            as="div"
+            textVariant="primary"
+            className="font-semibold"
+            textSize="md"
+          >
+            Total price
+          </CustomText>
+          <CustomText
+            className="leading-none font-semibold"
+            as="div"
+            textVariant="primary"
+            textSize="md"
+          >
+            {formatCurrencyByCountry(country, totalPrice, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2,
+            })}
+          </CustomText>
+        </div>
+      ) : null}
     </div>
   );
 }
