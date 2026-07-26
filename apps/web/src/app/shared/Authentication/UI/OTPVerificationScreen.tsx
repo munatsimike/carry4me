@@ -32,12 +32,21 @@ interface OTPVerificationScreenProps {
   onVerified?: () => void;
   onVerificationComplete: () => void | Promise<void>;
   onPhoneEdit: () => void;
+  /** Override displayed phone number (defaults to PhoneVerificationContext). */
+  phoneNumberDisplay?: string;
+  /** Custom verify handler (e.g. phone-change). Defaults to signup/signin OTP verify. */
+  verifyCode?: (otp: string) => Promise<void>;
+  /** Custom resend handler (e.g. phone-change). Defaults to signup/signin OTP send. */
+  resendCode?: () => Promise<void>;
 }
 
 export function OTPVerificationScreen({
   onVerified,
   onVerificationComplete,
   onPhoneEdit,
+  phoneNumberDisplay,
+  verifyCode,
+  resendCode,
 }: OTPVerificationScreenProps) {
   const {
     register,
@@ -70,6 +79,8 @@ export function OTPVerificationScreen({
     [authRepo],
   );
 
+  const displayedPhone = phoneNumberDisplay?.trim() || phoneNumber;
+
   useEffect(() => {
     setSubmitError(null);
   }, [otpCode]);
@@ -83,19 +94,23 @@ export function OTPVerificationScreen({
   }, [resendTimer]);
 
   const handleVerifyOTP = async (values: OTPFormValues) => {
-    if (!selectedCountryCode) {
-      setError("Select a country code before verifying your phone number.");
-      setStep("phone-entry");
-      return;
-    }
-
     setSubmitError(null);
     try {
-      await verifyOTPUseCase.execute(
-        phoneNumber,
-        values.otpCode,
-        selectedCountryCode,
-      );
+      if (verifyCode) {
+        await verifyCode(values.otpCode);
+      } else {
+        if (!selectedCountryCode) {
+          setError("Select a country code before verifying your phone number.");
+          setStep("phone-entry");
+          return;
+        }
+
+        await verifyOTPUseCase.execute(
+          phoneNumber,
+          values.otpCode,
+          selectedCountryCode,
+        );
+      }
       onVerified?.();
       await onVerificationComplete();
     } catch (err) {
@@ -108,7 +123,11 @@ export function OTPVerificationScreen({
   const handleResendOTP = async () => {
     setResendLoading(true);
     try {
-      await sendOTPUseCase.execute(phoneNumber);
+      if (resendCode) {
+        await resendCode();
+      } else {
+        await sendOTPUseCase.execute(phoneNumber);
+      }
       setResendTimer(60);
     } catch (err) {
       showSupabaseError(err);
@@ -126,7 +145,7 @@ export function OTPVerificationScreen({
               Verify your phone
             </CustomText>
             <CustomText as="p" textVariant="label" textSize="sm">
-              We sent a 6-digit code to <strong>{phoneNumber}</strong>
+              We sent a 6-digit code to <strong>{displayedPhone}</strong>
             </CustomText>
           </span>
         </ErrorText>

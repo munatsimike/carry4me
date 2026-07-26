@@ -1,8 +1,19 @@
 import React, { createContext, useContext, useState } from "react";
 
 export type PhoneOtpMode = "signin" | "signup";
-export type AuthModalView = "signin" | "phone-otp" | "email-otp" | null;
+export type AuthModalView =
+  | "signin"
+  | "phone-otp"
+  | "email-otp"
+  | "phone-change-otp"
+  | null;
 export type SignInDefaultTab = "passkey" | "email" | "phone";
+
+export type PhoneChangeOtpPayload = {
+  userId: string;
+  phoneNumber: string;
+  countryCode: string;
+};
 
 export function isAuthModalActive(state: { isOpen: boolean }): boolean {
   return state.isOpen;
@@ -13,15 +24,20 @@ type SignInModalState = {
   view: AuthModalView;
   phoneOtpMode: PhoneOtpMode;
   emailOtpAddress: string | null;
+  phoneChange: PhoneChangeOtpPayload | null;
   signInDefaultTab: SignInDefaultTab;
   redirectTo?: string;
 };
 
 type SignInModalContextValue = {
   state: SignInModalState;
-  openSignInModal: (opts?: { redirectTo?: string; defaultTab?: SignInDefaultTab }) => void;
+  openSignInModal: (opts?: {
+    redirectTo?: string;
+    defaultTab?: SignInDefaultTab;
+  }) => void;
   openPhoneOtpModal: (mode: PhoneOtpMode, opts?: { redirectTo?: string }) => void;
   openEmailOtpModal: (email: string, opts?: { redirectTo?: string }) => void;
+  openPhoneChangeOtpModal: (payload: PhoneChangeOtpPayload) => void;
   openSignUpModal: (opts?: { redirectTo?: string }) => void;
   closeSignInModal: () => void;
 };
@@ -34,10 +50,14 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
     view: null,
     phoneOtpMode: "signup",
     emailOtpAddress: null,
+    phoneChange: null,
     signInDefaultTab: "passkey",
   });
 
-  function openSignInModal(opts?: { redirectTo?: string; defaultTab?: SignInDefaultTab }) {
+  function openSignInModal(opts?: {
+    redirectTo?: string;
+    defaultTab?: SignInDefaultTab;
+  }) {
     if (opts?.defaultTab === "phone") {
       openPhoneOtpModal("signin", { redirectTo: opts?.redirectTo });
       return;
@@ -49,6 +69,7 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
       view: "signin",
       phoneOtpMode: "signin",
       emailOtpAddress: null,
+      phoneChange: null,
       signInDefaultTab: opts?.defaultTab ?? "passkey",
       redirectTo: opts?.redirectTo,
     }));
@@ -64,6 +85,7 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
       view: "phone-otp",
       phoneOtpMode: mode,
       emailOtpAddress: null,
+      phoneChange: null,
       signInDefaultTab: mode === "signin" ? "phone" : "passkey",
       redirectTo: opts?.redirectTo ?? prev.redirectTo,
     }));
@@ -76,8 +98,21 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
       view: "email-otp",
       phoneOtpMode: "signin",
       emailOtpAddress: email,
+      phoneChange: null,
       signInDefaultTab: "email",
       redirectTo: opts?.redirectTo,
+    }));
+  }
+
+  function openPhoneChangeOtpModal(payload: PhoneChangeOtpPayload) {
+    setState((prev) => ({
+      ...prev,
+      isOpen: true,
+      view: "phone-change-otp",
+      phoneOtpMode: "signin",
+      emailOtpAddress: null,
+      phoneChange: payload,
+      redirectTo: undefined,
     }));
   }
 
@@ -90,6 +125,8 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
       ...prev,
       isOpen: false,
       view: null,
+      emailOtpAddress: null,
+      phoneChange: null,
     }));
   }
 
@@ -100,6 +137,7 @@ export function SignInModalProvider({ children }: { children: React.ReactNode })
         openSignInModal,
         openPhoneOtpModal,
         openEmailOtpModal,
+        openPhoneChangeOtpModal,
         openSignUpModal,
         closeSignInModal,
       }}

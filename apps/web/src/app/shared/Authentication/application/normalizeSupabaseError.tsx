@@ -126,6 +126,63 @@ export function normalizeSupabaseError(
     };
   }
 
+  // Duplicate identity / unique constraint conflicts — handle before raw message passthrough.
+  if (
+    includesAny(normalizedCode, [
+      "user_already_exists",
+      "email_exists",
+      "email_address_already_exists",
+      "phone_exists",
+      "phone_number_already_exists",
+      "identity_already_exists",
+      "23505",
+    ]) ||
+    includesAny(normalizedMessage, [
+      "already registered",
+      "already exists",
+      "duplicate key",
+      "unique constraint",
+      "duplicate phone",
+      "duplicate email",
+      "profiles_email_unique",
+    ])
+  ) {
+    if (
+      includesAny(normalizedMessage, [
+        "profiles_email_unique",
+        "duplicate email",
+        "email",
+      ]) &&
+      !includesAny(normalizedMessage, ["phone", "phone_number"])
+    ) {
+      return {
+        category: "CONFLICT",
+        title: "Email already in use",
+        message:
+          "This email is already linked to another account. Use a different email address.",
+        action: "close",
+      };
+    }
+
+    if (includesAny(normalizedMessage, ["phone", "phone_number"])) {
+      return {
+        category: "CONFLICT",
+        title: "Phone number already used",
+        message:
+          "This phone number is already linked to an account. Use a different number or sign in.",
+        action: "signIn",
+      };
+    }
+
+    return {
+      category: "CONFLICT",
+      title: "Account already exists",
+      message:
+        "These details are already linked to an account. Please sign in instead.",
+      action: "signIn",
+    };
+  }
+
   // Show actionable API / edge-function messages as-is (not generic transport errors).
   if (
     !isGenericClientTransportMessage(message) &&
@@ -398,13 +455,41 @@ export function normalizeSupabaseError(
 
   switch (code) {
     // Postgres / database errors
-    case "23505":
+    case "23505": {
+      if (
+        includesAny(normalizedMessage, [
+          "profiles_email_unique",
+          "duplicate email",
+          "email",
+        ]) &&
+        !includesAny(normalizedMessage, ["phone", "phone_number"])
+      ) {
+        return {
+          category: "CONFLICT",
+          title: "Email already in use",
+          message:
+            "This email is already linked to another account. Use a different email address.",
+          action: "close",
+        };
+      }
+
+      if (includesAny(normalizedMessage, ["phone", "phone_number"])) {
+        return {
+          category: "CONFLICT",
+          title: "Phone number already used",
+          message:
+            "This phone number is already linked to an account. Use a different number or sign in.",
+          action: "signIn",
+        };
+      }
+
       return {
         category: "CONFLICT",
         title: "Already exists",
         message: "These details are already in use. Try using a different value.",
-        action: "signIn",
+        action: "close",
       };
+    }
 
     case "23503":
       return {

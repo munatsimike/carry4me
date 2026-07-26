@@ -42,20 +42,18 @@ import {
   type UserDetailsFields,
 } from "../UI/CompleteProfilePage";
 import EmailVerificationBadge from "../UI/EmailVerificationBadge";
+import { useEmailVerification } from "../UI/EmailVerificationContext";
+import { sendEmailVerification } from "@/app/shared/supabase/sendEmailVerification";
 import { useLocations } from "@/app/hookes/useLocation";
 import CustomModal from "@/app/components/CustomModal";
-import { z } from "zod";
-import { otpCodeSchema } from "@/app/shared/validation/formValidation";
 import { toE164PhoneNumber } from "../application/toE164PhoneNumber";
 import PhoneNumberWithCountryFields from "../UI/components/PhoneNumberWithCountryFields";
+import { useSignInModal } from "../SignInModalContext";
 import {
   phoneWithCountrySchema,
   type PhoneWithCountryFields,
 } from "../validation/phoneWithCountrySchema";
-import {
-  useRequestPhoneChangeMutation,
-  useVerifyPhoneChangeMutation,
-} from "@/app/hooks/mutations/useAuthMutations";
+import { useRequestPhoneChangeMutation } from "@/app/hooks/mutations/useAuthMutations";
 import Spinner from "@/app/components/Spinner";
 import {
   enrollPasskey,
@@ -78,12 +76,7 @@ type ProfileSection = "personal" | "location" | "security";
 /** Set true to force Traveler payouts card visible for UI preview. */
 const PREVIEW_TRAVELER_PAYOUTS = false;
 
-const verifyPhoneChangeSchema = z.object({
-  otpCode: otpCodeSchema,
-});
-
-type VerifyPhoneChangeFields = z.infer<typeof verifyPhoneChangeSchema>;
-
+type ChangePhoneStep = "phone-entry" | "confirm";
 type FormProps = {
   register: UseFormRegister<UserDetailsFields>;
   watch: UseFormWatch<UserDetailsFields>;
@@ -164,6 +157,7 @@ export default function ProfilePage() {
   );
   const { toast } = useToast();
   const { showSupabaseError, confirm } = useUniversalModal();
+  const { openCheckEmailModal } = useEmailVerification();
 
   const {
     control,
@@ -378,12 +372,37 @@ export default function ProfilePage() {
       }
 
       const email = dirtyFields.emailAddress ? values.emailAddress : undefined;
+      const nextEmail = email?.trim() ?? "";
+
+      if (!nextEmail) return;
+
+      const shouldChangeEmail = await confirm({
+        title: "Change your email?",
+        message: `We'll update your email to ${nextEmail} and send a verification link there. Your account will stay unverified until you confirm the new address.`,
+        confirmText: "Change email",
+        cancelText: "Cancel",
+      });
+
+      if (!shouldChangeEmail) return;
 
       try {
-        await updateAuthDetails.excute(user.id, email);
-        toast("Profile updated successfully.", { variant: "success" });
+        await updateAuthDetails.excute(user.id, nextEmail);
         reset(getValues());
         await refreshProfile();
+
+        try {
+          await sendEmailVerification();
+          openCheckEmailModal({ email: nextEmail });
+        } catch (verificationError) {
+          console.error(
+            "Failed to send verification email:",
+            verificationError,
+          );
+          toast(
+            "Email updated, but we could not send a verification email.",
+            { variant: "warning" },
+          );
+        }
       } catch (err) {
         showSupabaseError(err);
       }
@@ -626,10 +645,6 @@ export default function ProfilePage() {
               currentPhoneNumber={profile.phoneNumber}
               profileCountry={profile.countryCode}
               onClose={() => setChangePhoneOpen(false)}
-              onVerified={async () => {
-                await refreshProfile();
-                reset(getValues(), { keepDirty: false, keepTouched: false });
-              }}
             />
           )}
         </AnimatePresence>
@@ -911,7 +926,7 @@ function SecurityDetailsCard({
               render={({ field, fieldState }) => (
                 <FloatingInputField
                   autoComplete="email"
-                  className="w-full sm:max-w-[350px]"
+                  className="w-full bg-white sm:max-w-[350px]"
                   label="Email address"
                   type="email"
                   value={field.value ?? ""}
@@ -1257,7 +1272,7 @@ function PersonalEditForm({
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:gap-5">
         <FloatingInputField
-          className="w-full sm:max-w-[200px]"
+          className="w-full bg-white sm:max-w-[200px]"
           hasValue={!!watch("firstName")}
           label="First name"
           isDirty={!!dirtyFields.firstName}
@@ -1265,7 +1280,7 @@ function PersonalEditForm({
           {...register("firstName")}
         />
         <FloatingInputField
-          className="w-full sm:max-w-[200px]"
+          className="w-full bg-white sm:max-w-[200px]"
           hasValue={!!watch("lastName")}
           label="Last name"
           isDirty={!!dirtyFields.lastName}
@@ -1287,7 +1302,6 @@ type ChangePhoneNumberModalProps = {
   currentPhoneNumber: string | null;
   profileCountry: string | null;
   onClose: () => void;
-  onVerified: () => Promise<void>;
 };
 
 function ChangePhoneNumberModal({
@@ -1295,14 +1309,16 @@ function ChangePhoneNumberModal({
   currentPhoneNumber,
   profileCountry,
   onClose,
-  onVerified,
 }: ChangePhoneNumberModalProps) {
+  const [step, setStep] = useState<ChangePhoneStep>("phone-entry");
   const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(
     null,
   );
+  const [pendingCountryCode, setPendingCountryCode] = useState<string | null>(
+    null,
+  );
   const requestPhoneChange = useRequestPhoneChangeMutation();
-  const verifyPhoneChange = useVerifyPhoneChangeMutation();
-  const { toast } = useToast();
+  const { openPhoneChangeOtpModal } = useSignInModal();
   const { showSupabaseError } = useUniversalModal();
 
   const {
@@ -1324,62 +1340,40 @@ function ChangePhoneNumberModal({
     mode: "onTouched",
   });
 
-  const {
-    register: registerOtp,
-    handleSubmit: handleOtpSubmit,
-    watch: watchOtp,
-    reset: resetOtp,
-    formState: {
-      errors: otpErrors,
-      dirtyFields: otpDirtyFields,
-      touchedFields: otpTouchedFields,
-    },
-  } = useForm<VerifyPhoneChangeFields>({
-    resolver: zodResolver(verifyPhoneChangeSchema),
-    defaultValues: {
-      otpCode: "",
-    },
-    mode: "onTouched",
-  });
-
-  const selectedCountryCode = watchPhone("countryCode");
-  const watchedOtpCode = watchOtp("otpCode");
   const isRequesting = requestPhoneChange.isPending;
-  const isVerifying = verifyPhoneChange.isPending;
 
-  const requestCode = async (values: PhoneWithCountryFields) => {
+  const goToConfirm = (values: PhoneWithCountryFields) => {
     const e164PhoneNumber = toE164PhoneNumber(
       values.countryCode,
       values.phoneNumber,
     );
     if (!e164PhoneNumber) return;
 
+    setPendingPhoneNumber(e164PhoneNumber);
+    setPendingCountryCode(values.countryCode);
+    setStep("confirm");
+  };
+
+  const sendCode = async () => {
+    if (!pendingPhoneNumber || !pendingCountryCode) return;
+
     try {
-      await requestPhoneChange.mutateAsync(e164PhoneNumber);
-      setPendingPhoneNumber(e164PhoneNumber);
-      resetOtp();
-      toast("Verification code sent.", { variant: "success" });
+      await requestPhoneChange.mutateAsync(pendingPhoneNumber);
+      openPhoneChangeOtpModal({
+        userId,
+        phoneNumber: pendingPhoneNumber,
+        countryCode: pendingCountryCode,
+      });
+      onClose();
     } catch (err) {
       showSupabaseError(err);
     }
   };
 
-  const verifyCode = async (values: VerifyPhoneChangeFields) => {
-    if (!pendingPhoneNumber || !selectedCountryCode) return;
-
-    try {
-      await verifyPhoneChange.mutateAsync({
-        userId,
-        phoneNumber: pendingPhoneNumber,
-        token: values.otpCode,
-        countryCode: selectedCountryCode,
-      });
-      toast("Phone number updated successfully.", { variant: "success" });
-      await onVerified();
-      onClose();
-    } catch (err) {
-      showSupabaseError(err);
-    }
+  const backToPhoneEntry = () => {
+    setStep("phone-entry");
+    setPendingPhoneNumber(null);
+    setPendingCountryCode(null);
   };
 
   return (
@@ -1393,114 +1387,89 @@ function ChangePhoneNumberModal({
           >
             Change phone number
           </CustomText>
-          <CustomText textVariant="secondary" textSize="sm">
-            Verify your new phone number before it replaces your current one.
-          </CustomText>
+          {step !== "confirm" ? (
+            <CustomText textVariant="secondary" textSize="sm">
+              Verify your new phone number before it replaces your current one.
+            </CustomText>
+          ) : null}
         </div>
 
         <LineDivider heightClass="my-0" />
 
-        <form
-          onSubmit={handlePhoneSubmit(requestCode)}
-          className="flex flex-col gap-4"
-        >
-          <div className="flex flex-col gap-3">
-            <div className="mx-auto w-full max-w-[360px]">
-              <PhoneNumberWithCountryFields
-                register={registerPhone}
-                setValue={setPhoneValue}
-                watch={watchPhone}
-                errors={phoneErrors}
-                dirtyFields={phoneDirtyFields}
-                touchedFields={phoneTouchedFields}
-                disabled={isRequesting || isVerifying}
-                defaultCountryCode={profileCountry}
-                phoneHelperText={
-                  pendingPhoneNumber
-                    ? `Code sent to ${pendingPhoneNumber}`
-                    : undefined
-                }
-              />
-            </div>
-            {currentPhoneNumber && (
-              <CustomText as="p" textVariant="secondary" textSize="xs">
-                Current phone:{" "}
-                <CustomText as="span" textVariant="primary" textSize="xs">
-                  {currentPhoneNumber}
-                </CustomText>
+        {step === "confirm" && pendingPhoneNumber ? (
+          <div className="flex flex-col gap-4">
+            <CustomText textVariant="secondary" textSize="sm">
+              We'll send a verification code to{" "}
+              <CustomText as="span" textVariant="primary" textSize="sm">
+                {pendingPhoneNumber}
               </CustomText>
-            )}
-          </div>
+              . Your phone number will update only after you enter that code.
+            </CustomText>
 
-          <LineDivider heightClass="my-0" />
-
-          <Button
-            type="submit"
-            variant="primary"
-            size="sm"
-            disabled={isRequesting || isVerifying}
-            className="w-full justify-center"
-          >
-            {isRequesting ? (
-              <span className="inline-flex items-center gap-2">
-                <Spinner />
-                Sending code...
-              </span>
-            ) : pendingPhoneNumber ? (
-              "Resend code"
-            ) : (
-              "Send verification code"
-            )}
-          </Button>
-        </form>
-
-        {pendingPhoneNumber && (
-          <>
             <LineDivider heightClass="my-0" />
-            <form
-              onSubmit={handleOtpSubmit(verifyCode)}
-              className="flex flex-col gap-3"
-            >
-              <FloatingInputField
-                className="mx-auto w-full max-w-[360px]"
-                hasValue={!!watchedOtpCode}
-                label="Verification code"
-                inputMode="numeric"
-                maxLength={6}
-                error={otpErrors.otpCode?.message}
-                isDirty={!!otpDirtyFields.otpCode}
-                isTouched={!!otpTouchedFields.otpCode}
-                disabled={isVerifying}
-                {...registerOtp("otpCode")}
-              />
-              <div className="flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="neutral"
-                  size="sm"
-                  onClick={onClose}
-                  disabled={isVerifying}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  disabled={isVerifying}
-                >
-                  {isVerifying ? (
-                    <span className="inline-flex items-center gap-2">
-                      <Spinner />
-                      Verifying...
-                    </span>
-                  ) : (
-                    "Verify and update"
-                  )}
-                </Button>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="neutral"
+                size="sm"
+                onClick={backToPhoneEntry}
+                disabled={isRequesting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => void sendCode()}
+                disabled={isRequesting}
+                isBusy={isRequesting}
+              >
+                {isRequesting ? "Sending code..." : "Send code"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form
+            onSubmit={handlePhoneSubmit(goToConfirm)}
+            className="flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-3">
+              <div className="mx-auto w-full max-w-[360px]">
+                <PhoneNumberWithCountryFields
+                  register={registerPhone}
+                  setValue={setPhoneValue}
+                  watch={watchPhone}
+                  errors={phoneErrors}
+                  dirtyFields={phoneDirtyFields}
+                  touchedFields={phoneTouchedFields}
+                  disabled={isRequesting}
+                  defaultCountryCode={profileCountry}
+                />
               </div>
-            </form>
-          </>
+              {currentPhoneNumber && (
+                <CustomText as="p" textVariant="secondary" textSize="xs">
+                  Current phone:{" "}
+                  <CustomText as="span" textVariant="primary" textSize="xs">
+                    {currentPhoneNumber}
+                  </CustomText>
+                </CustomText>
+              )}
+            </div>
+
+            <LineDivider heightClass="my-0" />
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              disabled={isRequesting}
+              className="w-full justify-center"
+            >
+              Continue
+            </Button>
+          </form>
         )}
       </div>
     </CustomModal>

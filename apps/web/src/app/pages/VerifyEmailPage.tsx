@@ -186,15 +186,15 @@ export default function VerifyEmailPage() {
             </Button>
           ) : null}
 
-          {status === "error" ? (
+          {status === "error" && user ? (
             <Button
               type="button"
               variant="outline"
               size="md"
               className="mt-2 w-full sm:w-auto"
-              onClick={() => navigate(user ? "/profile" : "/signin", { replace: true })}
+              onClick={() => navigate("/profile", { replace: true })}
             >
-              {user ? "Back to profile" : "Sign in"}
+              Back to profile
             </Button>
           ) : null}
         </motion.div>

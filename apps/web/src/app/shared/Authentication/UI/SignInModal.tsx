@@ -8,6 +8,7 @@ import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import LineDivider from "@/app/components/LineDivider";
 import Spinner from "@/app/components/Spinner";
+import { useToast } from "@/app/components/Toast";
 import { useSignInModal } from "../SignInModalContext";
 import {
   checkPasskeyBrowserSupport,
@@ -31,6 +32,10 @@ import { SignInModalTabs, type SignInTab } from "./SignInModalTabs";
 import { PhoneEntryScreen } from "./PhoneEntryScreen";
 import { OTPVerificationScreen } from "./OTPVerificationScreen";
 import { EmailOTPVerificationScreen } from "./EmailOTPVerificationScreen";
+import {
+  useRequestPhoneChangeMutation,
+  useVerifyPhoneChangeMutation,
+} from "@/app/hooks/mutations/useAuthMutations";
 
 function validateEmailValue(value: string): string | null {
   const normalized = value.trim().toLowerCase();
@@ -60,6 +65,9 @@ export function SignInModal() {
   } = usePhoneVerification();
   const { refreshProfile, user } = useAuth();
   const { requestPasskeyPromptCheck } = usePasskeyPrompt();
+  const { toast } = useToast();
+  const requestPhoneChange = useRequestPhoneChangeMutation();
+  const verifyPhoneChange = useVerifyPhoneChangeMutation();
   const authRepo = useMemo(() => new SupabaseAuthRepository(), []);
   const sendOTPUseCase = useMemo(() => new SendPhoneOTPUseCase(authRepo), [authRepo]);
   const phoneOtpFlowRef = useRef<"signin" | "signup" | null>(null);
@@ -90,7 +98,12 @@ export function SignInModal() {
     mode: "onTouched",
   });
 
-  const isAuthModalOpen = state.isOpen && !user && state.view !== null;
+  const isPhoneChangeOtp = state.view === "phone-change-otp";
+  // Phone-change OTP must stay available while signed in; other auth views are for guests.
+  const isAuthModalOpen =
+    state.isOpen &&
+    state.view !== null &&
+    (!user || isPhoneChangeOtp);
   const isSignInView = state.view === "signin";
 
   useEffect(() => {
@@ -228,6 +241,30 @@ export function SignInModal() {
     } finally {
       setLoadingEmailOtp(false);
     }
+  };
+
+  const handlePhoneChangeVerify = async (otp: string) => {
+    const phoneChange = state.phoneChange;
+    if (!phoneChange) return;
+
+    await verifyPhoneChange.mutateAsync({
+      userId: phoneChange.userId,
+      phoneNumber: phoneChange.phoneNumber,
+      token: otp,
+      countryCode: phoneChange.countryCode,
+    });
+  };
+
+  const handlePhoneChangeResend = async () => {
+    const phoneChange = state.phoneChange;
+    if (!phoneChange) return;
+    await requestPhoneChange.mutateAsync(phoneChange.phoneNumber);
+  };
+
+  const handlePhoneChangeComplete = async () => {
+    await refreshProfile({ silent: true });
+    toast("Phone number updated successfully.", { variant: "success" });
+    closeSignInModal();
   };
 
   return (
@@ -422,6 +459,16 @@ export function SignInModal() {
             <EmailOTPVerificationScreen
               onVerified={closeSignInModal}
               onVerificationComplete={handleVerificationComplete}
+            />
+          ) : null}
+
+          {isPhoneChangeOtp && state.phoneChange ? (
+            <OTPVerificationScreen
+              phoneNumberDisplay={state.phoneChange.phoneNumber}
+              verifyCode={handlePhoneChangeVerify}
+              resendCode={handlePhoneChangeResend}
+              onPhoneEdit={handleCloseModal}
+              onVerificationComplete={handlePhoneChangeComplete}
             />
           ) : null}
         </CustomModal>

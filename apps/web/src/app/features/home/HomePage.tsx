@@ -4,7 +4,7 @@ import { safetyRules, steps, benefits, questions } from "../../Data";
 import TrustAndSafety from "./sections/trust&safety/Trust&Safety";
 import Benefits from "./sections/benefits/Benefits";
 import FaqSection from "./sections/faqSection/FaqSection";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/app/components/Toast";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import CustomModal from "@/app/components/CustomModal";
@@ -16,26 +16,32 @@ import {
   isSuspended,
 } from "@/app/shared/Authentication/domain/accountStatus";
 import { getAuthenticatedLandingPath } from "@/app/shared/Authentication/application/postAuthNavigation";
+import { deleteStripeAccount } from "@/app/shared/stripe/application/deleteStripeAccount";
+import { AppError } from "@/app/shared/domain/AppError";
 
-/** Local-only Stripe delete panel on home. Keep false for Vercel/production. */
+/** Temp Stripe delete panel on home. Set false before production deploys. */
 const TEMP_DELETE_STRIPE_ENABLED = false;
+const TEMP_DELETE_STRIPE_PARAM = "deleteStripe";
 
 export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSignup = searchParams.get("signup") === "success";
+  const showTempDeleteStripe =
+    TEMP_DELETE_STRIPE_ENABLED ||
+    searchParams.get(TEMP_DELETE_STRIPE_PARAM) === "1";
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading, profile } = useAuth();
 
   useEffect(() => {
-    if (TEMP_DELETE_STRIPE_ENABLED) return;
+    if (showTempDeleteStripe) return;
     if (isSuspended(profile)) return;
 
     if (user && !loading && profile) {
       navigate(getAuthenticatedLandingPath(profile), { replace: true });
     }
-  }, [user, loading, profile, navigate]);
+  }, [user, loading, profile, navigate, showTempDeleteStripe]);
 
   useEffect(() => {
     if (location.hash !== "#how-it-works") return;
@@ -70,6 +76,12 @@ export default function HomePage() {
   };
   return (
     <>
+      {showTempDeleteStripe ? (
+        <TempDeleteStripePanel
+          loading={loading}
+          defaultAccountId={profile?.stripeAccountId ?? ""}
+        />
+      ) : null}
       <HeroSection />
       <HowItWorks steps={steps} />
       <TrustAndSafety items={safetyRules} />
@@ -79,6 +91,88 @@ export default function HomePage() {
         {isSignup && <Modal onClose={() => handleClose("signup")} />}
       </AnimatePresence>
     </>
+  );
+}
+
+type TempDeleteStripePanelProps = {
+  loading: boolean;
+  defaultAccountId: string;
+};
+
+function TempDeleteStripePanel({
+  loading,
+  defaultAccountId,
+}: TempDeleteStripePanelProps) {
+  const { toast } = useToast();
+  const [stripeAccountId, setStripeAccountId] = useState(defaultAccountId);
+  const [deleting, setDeleting] = useState(false);
+  const [lastResult, setLastResult] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!defaultAccountId) return;
+    setStripeAccountId((current) => current || defaultAccountId);
+  }, [defaultAccountId]);
+
+  const handleDelete = async () => {
+    const accountId = stripeAccountId.trim();
+
+    if (!accountId.startsWith("acct_")) {
+      toast("Enter a valid Stripe account id (acct_...)", { variant: "error" });
+      return;
+    }
+
+    setDeleting(true);
+    setLastResult(null);
+
+    try {
+      const result = await deleteStripeAccount(accountId);
+      const message = JSON.stringify(result, null, 2);
+      setLastResult(message);
+      toast(result.deleted ? "Stripe account deleted" : "Profile cleared", {
+        variant: "success",
+      });
+    } catch (err) {
+      const message = AppError.fromUnknown(err).message;
+      setLastResult(message);
+      toast(message, { variant: "error" });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <section className="border-b border-amber-300 bg-amber-50 px-4 py-4">
+      <div className="mx-auto flex max-w-3xl flex-col gap-3">
+        <CustomText as="p" textSize="sm" className="font-medium text-amber-900">
+          Temp: delete Stripe Connect account
+        </CustomText>
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            type="text"
+            value={stripeAccountId}
+            onChange={(event) => setStripeAccountId(event.target.value)}
+            placeholder="acct_..."
+            className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+          />
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled={deleting || loading}
+            onClick={() => void handleDelete()}
+          >
+            {deleting ? "Deleting..." : "Delete Stripe account"}
+          </Button>
+        </div>
+
+        {lastResult ? (
+          <pre className="overflow-x-auto rounded-md bg-white p-3 text-xs text-gray-800">
+            {lastResult}
+          </pre>
+        ) : null}
+      </div>
+    </section>
   );
 }
 

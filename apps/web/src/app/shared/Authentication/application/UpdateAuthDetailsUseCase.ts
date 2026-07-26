@@ -12,9 +12,11 @@ export class UpdateAuthDetailsUseCase {
   }
 
   toUpdateAuthDto(email: string | undefined) {
-    const dto: { email?: string } = {};
+    const dto: { email?: string; email_verified?: boolean } = {};
     if (email) {
-      dto.email = email;
+      dto.email = email.trim().toLowerCase();
+      // Changing email always requires a fresh verification link.
+      dto.email_verified = false;
     }
 
     if (Object.keys(dto).length === 0) {

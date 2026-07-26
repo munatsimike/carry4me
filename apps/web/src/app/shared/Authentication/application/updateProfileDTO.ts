@@ -6,4 +6,5 @@ export type UpdateProfileDto = {
   phone_number: string;
   avatar_url: string | null;
   email: string;
+  email_verified?: boolean;
 };
