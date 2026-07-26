@@ -150,13 +150,11 @@ export function ListingCard<T extends Listing>({
             />
           </>
         ) : (
-          <>
-            <CategoryRow
-              tag="sender"
-              category={goodsCategories}
-            />
-            <ParcelSendingRow items={listing.items} />
-          </>
+          <CategoryRow
+            tag="sender"
+            category={goodsCategories}
+            trailingAction={<ParcelSendingRow items={listing.items} />}
+          />
         )}
       </Stack>
       <LineDivider heightClass="my-2" className={dividerHoverClass} />

@@ -7,6 +7,8 @@ import GoodsManifestTable, {
 import CustomModal from "@/app/components/CustomModal";
 import { ModalSeparator } from "@/app/components/ModalFooter";
 import CustomText from "@/components/ui/CustomText";
+import SvgIcon from "@/components/ui/SvgIcon";
+import { META_ICONS } from "@/app/icons/MetaIcon";
 import { cn } from "@/app/lib/cn";
 
 type ParcelSendingRowProps = {
@@ -24,30 +26,20 @@ export default function ParcelSendingRow({ items }: ParcelSendingRowProps) {
 
   return (
     <>
-      <div className="flex min-w-0 w-full items-start gap-3">
-        <CustomText
-          as="span"
-          textSize="sm"
-          textVariant="neutral"
-          className="invisible shrink-0 leading-tight"
-          aria-hidden
-        >
-          Sending
-        </CustomText>
-        <div className="relative min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={() => setShowItemsModal(true)}
-            className={cn(
-              "px-2 w-fit text-left text-sm font-medium text-primary-600 underline-offset-2 transition-colors",
-              "hover:text-primary-700 hover:underline",
-              "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 rounded",
-            )}
-          >
-            View items list
-          </button>
-        </div>
-      </div>
+      <button
+        type="button"
+        onClick={() => setShowItemsModal(true)}
+        aria-label="View items list"
+        title="View items list"
+        className={cn(
+          "inline-flex h-7 w-7 items-center justify-center rounded-full",
+          "text-primary-600 transition-colors",
+          "hover:bg-primary-50 hover:text-primary-700",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2",
+        )}
+      >
+        <SvgIcon size="sm" Icon={META_ICONS.eyeOn} className="text-current" />
+      </button>
 
       <AnimatePresence>
         {showItemsModal ? (
