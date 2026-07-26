@@ -3,7 +3,7 @@ import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { cn } from "@/app/lib/cn";
 import {
   getTripBookedWeightKg,
-  getTripCapacityRemainingPercent,
+  getTripCapacityBookedPercent,
   getTripCapacityUrgency,
   getTripRemainingLabel,
   tripCapacityUrgencyStyles,
@@ -32,8 +32,8 @@ export function WeightAndPrice({
   const textSize = "sm";
   const isTripCapacityMode = capacityKg != null && capacityKg > 0;
   const bookedKg = getTripBookedWeightKg(capacityKg, weight);
-  const remainingPercent = getTripCapacityRemainingPercent(capacityKg, weight);
-  const urgency = getTripCapacityUrgency(weight);
+  const bookedPercent = getTripCapacityBookedPercent(capacityKg, weight);
+  const urgency = getTripCapacityUrgency(capacityKg, weight);
   const showUnusedDot = bookedKg === 0;
   const barStyles =
     bookedKg > 0
@@ -62,7 +62,7 @@ export function WeightAndPrice({
             className="w-[90px] shrink-0 rounded-full"
             aria-label={`${weight} kg remaining, ${bookedKg} kg booked`}
             role="progressbar"
-            aria-valuenow={weight}
+            aria-valuenow={bookedKg}
             aria-valuemin={0}
             aria-valuemax={capacityKg}
           >
@@ -72,17 +72,14 @@ export function WeightAndPrice({
                 barStyles.track,
               )}
             >
-              <div
-                className="absolute inset-y-0 left-0 transition-[width] duration-300"
-                style={{ width: `${remainingPercent}%` }}
-              >
-                <div
-                  className={cn(
-                    "h-full min-w-[0.5rem] rounded-full",
-                    barStyles.fill,
-                  )}
-                />
-                {showUnusedDot ? (
+              {showUnusedDot ? (
+                <>
+                  <div
+                    className={cn(
+                      "h-full w-full rounded-full",
+                      barStyles.fill,
+                    )}
+                  />
                   <span
                     aria-hidden
                     className={cn(
@@ -90,8 +87,17 @@ export function WeightAndPrice({
                       tripCapacityUnusedStyles.dot,
                     )}
                   />
-                ) : null}
-              </div>
+                </>
+              ) : (
+                <div
+                  className="absolute inset-y-0 left-0 transition-[width] duration-300"
+                  style={{ width: `${bookedPercent}%` }}
+                >
+                  <div
+                    className={cn("h-full rounded-full", barStyles.fill)}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
