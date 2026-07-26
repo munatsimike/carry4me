@@ -139,17 +139,24 @@ export function ListingCard<T extends Listing>({
           destination={listing.route.destinationCountry}
         />
 
-        <CategoryRow
-          tag={isTripListing ? "traveler" : "sender"}
-          category={goodsCategories}
-        />
-
         {isTripListing ? (
-          <DateRow
-            date={format(new Date(listing.departDate), dateFormat)}
-          />
+          <>
+            <DateRow
+              date={format(new Date(listing.departDate), dateFormat)}
+            />
+            <CategoryRow
+              tag="traveler"
+              category={goodsCategories}
+            />
+          </>
         ) : (
-          <ParcelSendingRow items={listing.items} />
+          <>
+            <CategoryRow
+              tag="sender"
+              category={goodsCategories}
+            />
+            <ParcelSendingRow items={listing.items} />
+          </>
         )}
       </Stack>
       <LineDivider heightClass="my-2" className={dividerHoverClass} />
