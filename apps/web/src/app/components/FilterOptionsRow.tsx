@@ -138,6 +138,7 @@ export function FilterOptionsRow({
     submitFilters,
     clearFilters,
     handleClearAndClose,
+    resetCountriesToDefault,
     goodsCategory,
     hasDate,
     hasPrice,
@@ -158,6 +159,8 @@ export function FilterOptionsRow({
 
       <FilterByCountryMenu
         hasCountry={hasCountry}
+        onResetCountries={resetCountriesToDefault}
+        defaultCountries={filterForm.defaultCountries}
         baseProps={{
           register: register,
           openMenu: openMenu,
@@ -558,19 +561,21 @@ function SortMenu({ isTraveler, hasSort, baseProps }: SortMenuProps) {
 type FilterByCountryMenuProps = {
   hasCountry: boolean;
   baseProps: BaseProps;
+  onResetCountries: () => void;
+  defaultCountries: string[];
 };
 
 function FilterByCountryMenu({
   hasCountry,
   baseProps,
+  onResetCountries,
+  defaultCountries,
 }: FilterByCountryMenuProps) {
   const {
     openMenu,
     toggleMenu,
     submitFilters,
     control,
-    setValue,
-    clearFilters,
   } = baseProps;
   const { countryOptions, getCountryName } = useLocations();
 
@@ -586,73 +591,128 @@ function FilterByCountryMenu({
       <Popover open={openMenu === "country"}>
         <form onSubmit={submitFilters} className="space-y-4">
           <div>
-            <CustomText
-              textVariant="primary"
-              className="mb-3 block font-medium"
-              as="label"
-            >
-              Origin country
-            </CustomText>
+            <div className="mb-3">
+              <CustomText
+                textVariant="primary"
+                className="block font-medium"
+                as="label"
+              >
+                Origin country
+              </CustomText>
+            </div>
 
             <Controller
               control={control}
               name="countries"
-              render={({ field }) => (
-                <div className="max-h-64 space-y-2 overflow-y-auto">
-                  {countryOptions.map((countryCode) => {
-                    const checked = field.value?.includes(countryCode);
-                    const flag = toflag(countryCode);
+              render={({ field }) => {
+                const selected = field.value ?? [];
+                const allSelected =
+                  countryOptions.length > 0 &&
+                  countryOptions.every((code) => selected.includes(code));
 
-                    return (
-                      <label
-                        key={countryCode}
-                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
-                      >
-                        <span className="relative inline-flex">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                field.onChange([
-                                  ...(field.value ?? []),
-                                  countryCode,
-                                ]);
-                              } else {
-                                field.onChange(
-                                  (field.value ?? []).filter(
-                                    (item) => item !== countryCode,
-                                  ),
-                                );
-                              }
-                            }}
-                            className={checkBox}
-                          />
-                          <svg
-                            viewBox="0 0 24 24"
-                            className={checkBoxSvg}
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </span>
-                        {flag ? <SvgIcon size="xs" Icon={flag} /> : null}
-                        <CustomText textVariant="primary">
-                          {getCountryName(countryCode)}
-                        </CustomText>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
+                return (
+                  <div className="max-h-64 space-y-2 overflow-y-auto">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50">
+                      <span className="relative inline-flex">
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          disabled={countryOptions.length === 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              field.onChange(countryOptions);
+                            } else {
+                              field.onChange(defaultCountries);
+                            }
+                          }}
+                          className={checkBox}
+                        />
+                        <svg
+                          viewBox="0 0 24 24"
+                          className={checkBoxSvg}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </span>
+                      <CustomText textVariant="primary" className="font-medium">
+                        Select all
+                      </CustomText>
+                    </label>
+
+                    {countryOptions.map((countryCode) => {
+                      const checked = selected.includes(countryCode);
+                      const flag = toflag(countryCode);
+
+                      return (
+                        <label
+                          key={countryCode}
+                          className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
+                        >
+                          <span className="relative inline-flex">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  field.onChange([...selected, countryCode]);
+                                } else {
+                                  field.onChange(
+                                    selected.filter(
+                                      (item) => item !== countryCode,
+                                    ),
+                                  );
+                                }
+                              }}
+                              className={checkBox}
+                            />
+                            <svg
+                              viewBox="0 0 24 24"
+                              className={checkBoxSvg}
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </span>
+                          {flag ? <SvgIcon size="xs" Icon={flag} /> : null}
+                          <CustomText textVariant="primary">
+                            {getCountryName(countryCode)}
+                          </CustomText>
+                        </label>
+                      );
+                    })}
+                  </div>
+                );
+              }}
             />
           </div>
 
-          <ActionButton setValue={setValue} onClear={clearFilters} />
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              onClick={onResetCountries}
+            >
+              Reset
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              type="submit"
+              className="rounded-xl bg-primary-500 px-4 py-2 text-sm text-white"
+            >
+              Apply
+            </Button>
+          </div>
         </form>
       </Popover>
     </FilterMenuWrapper>

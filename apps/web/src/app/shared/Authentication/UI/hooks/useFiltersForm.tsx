@@ -171,6 +171,15 @@ export function useFiltersForm({
     });
   };
 
+  const resetCountriesToDefault = () => {
+    setValue("countries", defaultCountries, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+    setOriginCountries(defaultCountries);
+    closeMenu();
+  };
+
   const handleClearAndClose = () => {
     clearFilters();
     closeMenu();
@@ -186,6 +195,8 @@ export function useFiltersForm({
     submitFilters,
     clearFilters,
     handleClearAndClose,
+    resetCountriesToDefault,
+    defaultCountries,
     goodsCategory,
     hasDate,
     hasPrice,

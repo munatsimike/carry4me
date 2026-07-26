@@ -106,11 +106,9 @@ export function WeightAndPrice({
             {weightDisplay}
           </CustomText>
 
-          {bookedKg > 0 ? (
-            <span className={bookedTooltipClass} role="tooltip">
-              {bookedKg} kg booked
-            </span>
-          ) : null}
+          <span className={bookedTooltipClass} role="tooltip">
+            {bookedKg} kg booked
+          </span>
         </div>
       ) : (
         <div className="flex items-center gap-2">

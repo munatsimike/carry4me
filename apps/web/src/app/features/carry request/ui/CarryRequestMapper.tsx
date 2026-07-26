@@ -119,7 +119,9 @@ export function mapCarryRequestToUI(
       const payoutDate = formatPayoutReleasedDate(request);
       description =
         viewerRole === ROLES.SENDER
-          ? "Payment was released to the traveler. This request is now complete."
+          ? payoutDate
+            ? `Payment released on ${payoutDate}.`
+            : "Payment released. Request complete."
           : payoutDate
             ? `Payout released on ${payoutDate}.`
             : "Payout was released. This request is now complete.";

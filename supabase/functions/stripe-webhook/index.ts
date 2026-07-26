@@ -14,9 +14,15 @@ import {
 import { retryPendingTravelerTransfersForUser } from "../_shared/stripe/travelerTransfer.ts";
 import { notifyTravelerBankPayoutPaid } from "../_shared/stripe/travelerBankPayoutNotification.ts";
 import { processCarryRequestEventEmails } from "../_shared/emailQueueProcessor.ts";
+import {
+  classifyRefundStatus,
+  findCarryRequestByPaymentIntentId,
+  paymentIntentIdFromStripeRef,
+  type CarryRequestPaymentRow,
+} from "../_shared/stripe/carryRequestPaymentLookup.ts";
+import { sendAdminPaymentAlertEmail } from "../_shared/emails/adminPaymentAlertEmail.ts";
 
-// TODO: handle charge.refunded — restore carry request / notify parties
-// TODO: handle charge.dispute.created — flag request and alert ops
+type SupabaseAdmin = ReturnType<typeof createClient>;
 
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
@@ -66,6 +72,21 @@ Deno.serve(async (req) => {
         await handlePaymentIntentFailed(supabaseAdmin, paymentIntent);
         break;
       }
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(supabaseAdmin, charge);
+        break;
+      }
+      case "charge.dispute.created": {
+        const dispute = event.data.object as Stripe.Dispute;
+        await handleDisputeCreated(supabaseAdmin, dispute);
+        break;
+      }
+      case "charge.dispute.closed": {
+        const dispute = event.data.object as Stripe.Dispute;
+        await handleDisputeClosed(supabaseAdmin, dispute);
+        break;
+      }
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
         await handleAccountUpdated(supabaseAdmin, account);
@@ -88,7 +109,7 @@ Deno.serve(async (req) => {
 });
 
 async function handlePaymentIntentSucceeded(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: SupabaseAdmin,
   paymentIntent: Stripe.PaymentIntent,
 ) {
   const carryRequestId = paymentIntent.metadata?.carry_request_id?.trim();
@@ -167,7 +188,7 @@ async function handlePaymentIntentSucceeded(
 }
 
 async function handlePaymentIntentFailed(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: SupabaseAdmin,
   paymentIntent: Stripe.PaymentIntent,
 ) {
   const carryRequestId = paymentIntent.metadata?.carry_request_id?.trim();
@@ -195,8 +216,358 @@ async function handlePaymentIntentFailed(
   });
 }
 
+/**
+ * Reconcile Stripe refunds onto carry_requests.
+ * Covers cancel-flow refunds (idempotent) and Dashboard / external refunds.
+ */
+async function handleChargeRefunded(
+  supabaseAdmin: SupabaseAdmin,
+  charge: Stripe.Charge,
+) {
+  const paymentIntentId = paymentIntentIdFromStripeRef(charge.payment_intent);
+  if (!paymentIntentId) {
+    console.warn("charge.refunded missing payment_intent", charge.id);
+    return;
+  }
+
+  const carryRequest = await findCarryRequestByPaymentIntentId(
+    supabaseAdmin,
+    paymentIntentId,
+  );
+  if (!carryRequest) {
+    console.info("charge.refunded ignored unknown payment intent", paymentIntentId);
+    return;
+  }
+
+  const amountRefunded = Number(charge.amount_refunded ?? 0);
+  if (amountRefunded <= 0) {
+    console.info("charge.refunded with zero amount", {
+      carryRequestId: carryRequest.id,
+      chargeId: charge.id,
+    });
+    return;
+  }
+
+  const paymentAmount = Number(carryRequest.payment_amount ?? 0);
+  const platformFee = Number(carryRequest.platform_fee_amount ?? 0);
+  const refundStatus = classifyRefundStatus(
+    amountRefunded,
+    paymentAmount,
+    platformFee,
+  );
+  const paymentStatus =
+    refundStatus === "FULL" ? "REFUNDED_FULL" : "REFUNDED_PARTIAL";
+
+  const latestRefund = latestRefundFromCharge(charge);
+  const stripeRefundId =
+    latestRefund?.id ?? carryRequest.stripe_refund_id ?? null;
+
+  const alreadySynced =
+    carryRequest.refund_status === refundStatus &&
+    Number(carryRequest.refunded_amount ?? 0) === amountRefunded &&
+    (carryRequest.payment_status === paymentStatus ||
+      carryRequest.payment_status === "REFUNDED_FULL" ||
+      carryRequest.payment_status === "REFUNDED_PARTIAL");
+
+  if (!alreadySynced) {
+    const { error: updateError } = await supabaseAdmin
+      .from("carry_requests")
+      .update({
+        refund_status: refundStatus,
+        refunded_amount: amountRefunded,
+        stripe_refund_id: stripeRefundId,
+        refunded_at: new Date().toISOString(),
+        payment_status: paymentStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", carryRequest.id);
+
+    if (updateError) {
+      console.error("charge.refunded update failed", updateError.message);
+      throw updateError;
+    }
+  }
+
+  // Notify parties only for refunds we have not already recorded (e.g. Dashboard).
+  const isNewRefundRecord =
+    !carryRequest.refund_status && !carryRequest.stripe_refund_id;
+
+  if (isNewRefundRecord) {
+    await insertPartyNotifications(supabaseAdmin, {
+      senderUserId: carryRequest.sender_user_id,
+      travelerUserId: carryRequest.traveler_user_id,
+      type: "PAYMENT_REFUNDED",
+      senderTitle: "Refund processed",
+      senderBody:
+        refundStatus === "FULL"
+          ? "A full refund has been processed for this carry request."
+          : "A partial refund has been processed for this carry request. The service fee may be non-refundable.",
+      travelerTitle: "Payment refunded",
+      travelerBody:
+        "The sender payment for this carry request was refunded. Check the request for details.",
+      carryRequestId: carryRequest.id,
+    });
+
+    const alert = await sendAdminPaymentAlertEmail(
+      {
+        subject: `Carry4Me refund synced (${refundStatus})`,
+        headline:
+          "A Stripe charge.refunded event updated a carry request that had no prior refund record (likely Dashboard or external refund).",
+        rows: [
+          { label: "Carry request", value: carryRequest.id },
+          { label: "Payment intent", value: paymentIntentId },
+          { label: "Charge", value: charge.id },
+          { label: "Refund status", value: refundStatus },
+          { label: "Amount refunded", value: String(amountRefunded) },
+          { label: "Request status", value: carryRequest.status },
+        ],
+      },
+      Deno.env.get("RESEND_API_KEY"),
+    );
+
+    console.info("charge.refunded admin alert", alert);
+  }
+
+  console.info("charge.refunded processed", {
+    carryRequestId: carryRequest.id,
+    paymentIntentId,
+    amountRefunded,
+    refundStatus,
+    alreadySynced,
+    isNewRefundRecord,
+  });
+}
+
+async function handleDisputeCreated(
+  supabaseAdmin: SupabaseAdmin,
+  dispute: Stripe.Dispute,
+) {
+  const carryRequest = await resolveCarryRequestForDispute(supabaseAdmin, dispute);
+  if (!carryRequest) {
+    console.info("charge.dispute.created ignored — no matching carry request", {
+      disputeId: dispute.id,
+    });
+    return;
+  }
+
+  const alreadyOpen =
+    carryRequest.stripe_dispute_id === dispute.id &&
+    Boolean(carryRequest.dispute_status);
+
+  if (!alreadyOpen) {
+    const { error: updateError } = await supabaseAdmin
+      .from("carry_requests")
+      .update({
+        stripe_dispute_id: dispute.id,
+        dispute_status: dispute.status,
+        dispute_reason: dispute.reason ?? null,
+        disputed_amount: dispute.amount ?? null,
+        disputed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", carryRequest.id);
+
+    if (updateError) {
+      console.error("charge.dispute.created update failed", updateError.message);
+      throw updateError;
+    }
+
+    await insertPartyNotifications(supabaseAdmin, {
+      senderUserId: carryRequest.sender_user_id,
+      travelerUserId: carryRequest.traveler_user_id,
+      type: "PAYMENT_DISPUTED",
+      senderTitle: "Payment dispute opened",
+      senderBody:
+        "Your bank or card issuer opened a dispute on this carry request payment. Carry4Me has been notified and will review it.",
+      travelerTitle: "Payment dispute opened",
+      travelerBody:
+        "A payment dispute was opened on this carry request. Payouts may be delayed until it is resolved.",
+      carryRequestId: carryRequest.id,
+    });
+  }
+
+  const alert = await sendAdminPaymentAlertEmail(
+    {
+      subject: `Carry4Me dispute opened — ${dispute.status}`,
+      headline:
+        "A Stripe chargeback/dispute was created. Review evidence in the Stripe Dashboard and follow up with both parties.",
+      rows: [
+        { label: "Carry request", value: carryRequest.id },
+        { label: "Dispute", value: dispute.id },
+        { label: "Status", value: dispute.status },
+        { label: "Reason", value: dispute.reason ?? "—" },
+        { label: "Amount", value: String(dispute.amount ?? 0) },
+        { label: "Currency", value: (dispute.currency ?? "—").toUpperCase() },
+        { label: "Request status", value: carryRequest.status },
+        {
+          label: "Payment intent",
+          value: paymentIntentIdFromStripeRef(dispute.payment_intent) ?? "—",
+        },
+      ],
+    },
+    Deno.env.get("RESEND_API_KEY"),
+  );
+
+  console.info("charge.dispute.created processed", {
+    carryRequestId: carryRequest.id,
+    disputeId: dispute.id,
+    status: dispute.status,
+    alreadyOpen,
+    alert,
+  });
+}
+
+async function handleDisputeClosed(
+  supabaseAdmin: SupabaseAdmin,
+  dispute: Stripe.Dispute,
+) {
+  const carryRequest = await resolveCarryRequestForDispute(supabaseAdmin, dispute);
+  if (!carryRequest) {
+    console.info("charge.dispute.closed ignored — no matching carry request", {
+      disputeId: dispute.id,
+    });
+    return;
+  }
+
+  const { error: updateError } = await supabaseAdmin
+    .from("carry_requests")
+    .update({
+      stripe_dispute_id: dispute.id,
+      dispute_status: dispute.status,
+      dispute_reason: dispute.reason ?? null,
+      disputed_amount: dispute.amount ?? null,
+      dispute_closed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", carryRequest.id);
+
+  if (updateError) {
+    console.error("charge.dispute.closed update failed", updateError.message);
+    throw updateError;
+  }
+
+  const outcomeLabel =
+    dispute.status === "won"
+      ? "won (funds kept / reinstated)"
+      : dispute.status === "lost"
+        ? "lost (funds returned to cardholder)"
+        : dispute.status;
+
+  await insertPartyNotifications(supabaseAdmin, {
+    senderUserId: carryRequest.sender_user_id,
+    travelerUserId: carryRequest.traveler_user_id,
+    type: "PAYMENT_DISPUTE_CLOSED",
+    senderTitle: "Payment dispute closed",
+    senderBody: `The payment dispute on this carry request was closed: ${outcomeLabel}.`,
+    travelerTitle: "Payment dispute closed",
+    travelerBody: `The payment dispute on this carry request was closed: ${outcomeLabel}.`,
+    carryRequestId: carryRequest.id,
+  });
+
+  const alert = await sendAdminPaymentAlertEmail(
+    {
+      subject: `Carry4Me dispute closed — ${dispute.status}`,
+      headline: "A Stripe dispute was closed. Confirm payouts and request status are still correct.",
+      rows: [
+        { label: "Carry request", value: carryRequest.id },
+        { label: "Dispute", value: dispute.id },
+        { label: "Status", value: dispute.status },
+        { label: "Reason", value: dispute.reason ?? "—" },
+        { label: "Amount", value: String(dispute.amount ?? 0) },
+        { label: "Request status", value: carryRequest.status },
+      ],
+    },
+    Deno.env.get("RESEND_API_KEY"),
+  );
+
+  console.info("charge.dispute.closed processed", {
+    carryRequestId: carryRequest.id,
+    disputeId: dispute.id,
+    status: dispute.status,
+    alert,
+  });
+}
+
+async function resolveCarryRequestForDispute(
+  supabaseAdmin: SupabaseAdmin,
+  dispute: Stripe.Dispute,
+): Promise<CarryRequestPaymentRow | null> {
+  const paymentIntentId = paymentIntentIdFromStripeRef(dispute.payment_intent);
+  if (paymentIntentId) {
+    const byPi = await findCarryRequestByPaymentIntentId(
+      supabaseAdmin,
+      paymentIntentId,
+    );
+    if (byPi) return byPi;
+  }
+
+  // Fallback: some dispute payloads omit payment_intent; resolve via charge → PI.
+  const chargeId = paymentIntentIdFromStripeRef(dispute.charge);
+  if (!chargeId) return null;
+
+  try {
+    const stripe = getStripe();
+    const charge = await stripe.charges.retrieve(chargeId);
+    const piFromCharge = paymentIntentIdFromStripeRef(charge.payment_intent);
+    if (!piFromCharge) return null;
+    return await findCarryRequestByPaymentIntentId(supabaseAdmin, piFromCharge);
+  } catch (err) {
+    console.error("resolveCarryRequestForDispute charge lookup failed", err);
+    return null;
+  }
+}
+
+function latestRefundFromCharge(charge: Stripe.Charge): Stripe.Refund | null {
+  const list = charge.refunds?.data;
+  if (!list || list.length === 0) return null;
+  return list[0] ?? null;
+}
+
+async function insertPartyNotifications(
+  supabaseAdmin: SupabaseAdmin,
+  args: {
+    senderUserId: string;
+    travelerUserId: string;
+    type: string;
+    senderTitle: string;
+    senderBody: string;
+    travelerTitle: string;
+    travelerBody: string;
+    carryRequestId: string;
+  },
+) {
+  const metadata = {
+    carry_request_id: args.carryRequestId,
+    source: "stripe_webhook",
+  };
+
+  const { error } = await supabaseAdmin.from("notifications").insert([
+    {
+      user_id: args.senderUserId,
+      type: args.type,
+      title: args.senderTitle,
+      body: args.senderBody,
+      link: "/requests",
+      metadata,
+    },
+    {
+      user_id: args.travelerUserId,
+      type: args.type,
+      title: args.travelerTitle,
+      body: args.travelerBody,
+      link: "/requests",
+      metadata,
+    },
+  ]);
+
+  if (error) {
+    console.error("stripe-webhook notification insert failed", error.message);
+    // Non-fatal: payment/dispute row updates are the source of truth.
+  }
+}
+
 async function handleAccountUpdated(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: SupabaseAdmin,
   account: Stripe.Account,
 ) {
   const userId = await findProfileIdByStripeAccountId(supabaseAdmin, account.id);
@@ -219,7 +590,7 @@ async function handleAccountUpdated(
 }
 
 async function handlePayoutPaid(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: SupabaseAdmin,
   payout: Stripe.Payout,
   connectedAccountId: string | null | undefined,
 ) {
