@@ -773,6 +773,9 @@ export default function PayCarryRequestPage() {
 
                   {paymentAmount !== null && platformFeeAmount !== null ? (
                     <>
+                      <div className="col-span-2 my-1">
+                        <LineDivider heightClass="my-0" />
+                      </div>
                       <CustomText textSize="sm" textVariant="secondary">
                         Service fee
                       </CustomText>
