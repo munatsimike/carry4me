@@ -35,7 +35,6 @@ import {
 } from "../application/carryRequestPayment";
 import { completeCarryRequestPayment } from "../application/completeCarryRequestPayment";
 import { AppError } from "@/app/shared/domain/AppError";
-import { ServiceFeeRow } from "./CarryRequestCostSummary";
 import { buildStripePaymentAppearance } from "./stripePaymentAppearance";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useCarryRequests } from "@/app/hooks/queries/useCarryRequestsQueries";
@@ -752,12 +751,34 @@ export default function PayCarryRequestPage() {
                     {formatParcelWeight(parcel.weight_kg)}
                   </CustomText>
 
+                  <CustomText textSize="sm" textVariant="secondary">
+                    Price per kg
+                  </CustomText>
+                  <CustomText textSize="sm" textVariant="primary" className="text-right tabular-nums">
+                    {formatCurrencyByCountry(originCountry, Number(parcel.price_per_kg) || 0)}
+                  </CustomText>
+
+                  <CustomText textSize="sm" textVariant="secondary">
+                    Subtotal
+                  </CustomText>
+                  <CustomText textSize="sm" textVariant="primary" className="text-right tabular-nums">
+                    {formatCurrencyByCountry(
+                      originCountry,
+                      paymentAmount !== null && platformFeeAmount !== null
+                        ? (paymentAmount - platformFeeAmount) / 100
+                        : (Number(parcel.price_per_kg) || 0) *
+                            (Number(parcel.weight_kg) || 0),
+                    )}
+                  </CustomText>
+
                   {paymentAmount !== null && platformFeeAmount !== null ? (
                     <>
-                      <ServiceFeeRow
-                        priceCountry={originCountry}
-                        serviceFee={platformFeeAmount / 100}
-                      />
+                      <CustomText textSize="sm" textVariant="secondary">
+                        Service fee
+                      </CustomText>
+                      <CustomText textSize="sm" textVariant="primary" className="text-right tabular-nums">
+                        {formatCurrencyByCountry(originCountry, platformFeeAmount / 100)}
+                      </CustomText>
                       <CustomText textSize="md" textVariant="primary" className="font-medium">
                         Total charged
                       </CustomText>
