@@ -137,6 +137,7 @@ export function ListingCard<T extends Listing>({
           origin={listing.route.originCountry}
           originCity={listing.route.originCity}
           destination={listing.route.destinationCountry}
+          destinationCity={listing.route.destinationCity}
         />
 
         {isTripListing ? (
