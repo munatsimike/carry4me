@@ -63,7 +63,7 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Package } from "lucide-react";
+import { CheckCircle2, Clock, Package } from "lucide-react";
 import { cn, dialogIconStyle } from "@/app/lib/cn";
 import {
   carryRequestCardDividerHoverClass,
@@ -1419,51 +1419,6 @@ function Header({
   paymentStatus,
   paymentTimeViewer,
 }: HeaderProps) {
-  return (
-    <div className="flex w-full flex-col gap-2">
-      <SpaceBetweenRow className="items-start gap-4">
-        <div className="inline-flex min-w-0 items-center gap-2">
-          <span
-            className={`inline-flex h-3 w-3 shrink-0 rounded-full ${statusColor(status)}`}
-          />
-          <span className="font-medium font-heading text-ink-primary text-lg sm:text-xl">
-            {title}
-          </span>
-        </div>
-        <CustomText
-          textSize="xs"
-          textVariant="secondary"
-          className="shrink-0 tracking-wide"
-        >
-          ID {requestId}
-        </CustomText>
-      </SpaceBetweenRow>
-      <CurrentStatus
-        description={description}
-        paymentExpiresAt={paymentExpiresAt}
-        requestStatus={requestStatus}
-        stripePaymentIntentId={stripePaymentIntentId}
-        paymentStatus={paymentStatus}
-        paymentTimeViewer={paymentTimeViewer}
-      />
-    </div>
-  );
-}
-function CurrentStatus({
-  description,
-  paymentExpiresAt,
-  requestStatus,
-  stripePaymentIntentId,
-  paymentStatus,
-  paymentTimeViewer,
-}: {
-  description: string;
-  paymentExpiresAt: string | null;
-  requestStatus: CarryRequestStatus;
-  stripePaymentIntentId?: string | null;
-  paymentStatus?: string | null;
-  paymentTimeViewer: PaymentTimeRemainingViewer;
-}) {
   const showTimer =
     requestStatus === CARRY_REQUEST_STATUSES.PENDING_PAYMENT &&
     !!paymentExpiresAt;
@@ -1478,20 +1433,41 @@ function CurrentStatus({
   );
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex w-full flex-col gap-2">
+      <SpaceBetweenRow className="items-center gap-4">
+        <div className="inline-flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1">
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <span
+              className={`inline-flex h-3 w-3 shrink-0 rounded-full ${statusColor(status)}`}
+            />
+            <span className="font-medium font-heading text-ink-primary text-lg sm:text-xl">
+              {title}
+            </span>
+          </span>
+          {showTimer && remainingLabel ? (
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-error-600">
+              <Clock className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+              <CustomText
+                textSize="sm"
+                textVariant="error"
+                className="font-medium"
+              >
+                {remainingLabel}
+              </CustomText>
+            </span>
+          ) : null}
+        </div>
+        <CustomText
+          textSize="xs"
+          textVariant="secondary"
+          className="shrink-0 tracking-wide"
+        >
+          ID {requestId}
+        </CustomText>
+      </SpaceBetweenRow>
       <span className="text-ink-secondary whitespace-normal text-base leading-relaxed">
         {description}
       </span>
-      {showTimer && remainingLabel ? (
-        <CustomText
-          as="p"
-          textSize="sm"
-          textVariant="error"
-          className="font-medium"
-        >
-          {remainingLabel}
-        </CustomText>
-      ) : null}
     </div>
   );
 }

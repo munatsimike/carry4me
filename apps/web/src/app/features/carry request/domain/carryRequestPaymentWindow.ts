@@ -24,16 +24,16 @@ function formatDurationRemaining(remainingMs: number): string {
   const minutes = totalMinutes % 60;
 
   if (hours > 0 && minutes > 0) {
-    return `${hours}h ${minutes}m remaining`;
+    return `${hours}h ${minutes}m left`;
   }
   if (hours > 0) {
-    return `${hours}h remaining`;
+    return `${hours}h left`;
   }
   if (minutes > 1) {
-    return `${minutes}m remaining`;
+    return `${minutes}m left`;
   }
 
-  return "Less than 1m remaining";
+  return "Less than 1m left";
 }
 
 function formatCheckoutGraceRemaining(remainingMs: number): string {
@@ -56,29 +56,10 @@ function formatCheckoutGraceRemaining(remainingMs: number): string {
 
 export type PaymentTimeRemainingViewer = "sender" | "traveler";
 
-function formatPaymentTimeRemainingForViewer(
-  label: string,
-  viewer: PaymentTimeRemainingViewer,
-): string {
-  if (viewer === "sender") {
-    return label;
-  }
-
-  if (label === "Expired") {
-    return "Payment window expired";
-  }
-
-  if (label.includes("complete checkout")) {
-    return `Sender is completing payment — ${label}`;
-  }
-
-  return `Sender has ${label.replace(" remaining", " to pay")}`;
-}
-
 export function formatPaymentTimeRemaining(
   fields: PaymentTimeRemainingFields,
   now = Date.now(),
-  viewer: PaymentTimeRemainingViewer = "sender",
+  _viewer: PaymentTimeRemainingViewer = "sender",
 ): string | null {
   if (!fields.paymentExpiresAt) {
     return null;
@@ -88,10 +69,7 @@ export function formatPaymentTimeRemaining(
   const remainingMs = expiresAt - now;
 
   if (remainingMs > 0) {
-    return formatPaymentTimeRemainingForViewer(
-      formatDurationRemaining(remainingMs),
-      viewer,
-    );
+    return formatDurationRemaining(remainingMs);
   }
 
   if (
@@ -100,12 +78,9 @@ export function formatPaymentTimeRemaining(
   ) {
     const graceRemainingMs = expiresAt + PAYMENT_CHECKOUT_GRACE_MS - now;
     if (graceRemainingMs > 0) {
-      return formatPaymentTimeRemainingForViewer(
-        formatCheckoutGraceRemaining(graceRemainingMs),
-        viewer,
-      );
+      return formatCheckoutGraceRemaining(graceRemainingMs);
     }
   }
 
-  return formatPaymentTimeRemainingForViewer("Expired", viewer);
+  return "Expired";
 }
