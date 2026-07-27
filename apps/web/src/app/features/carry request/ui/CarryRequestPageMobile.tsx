@@ -7,7 +7,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import { format } from "date-fns";
 import type { TripSnapshot } from "../domain/TripSnapshot";
 import { MoveRight } from "lucide-react";
-import { dateFormat, progress } from "@/types/Ui";
+import { dateFormat } from "@/types/Ui";
 import CustomModal from "@/app/components/CustomModal";
 import LineDivider from "@/app/components/LineDivider";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
@@ -16,6 +16,10 @@ import {
   formatTravelerPartyDisplay,
 } from "../application/formatCarryRequestPartyDisplay";
 import { CarryRequestCostSummary } from "./CarryRequestCostSummary";
+import {
+  getProgressStageLabel,
+  progressStepIcons,
+} from "./progressStepIcon";
 export type MobileSection = "details" | "timeline";
 
 export function MobileFirstHeader({
@@ -265,10 +269,12 @@ export function CostSummaryMobile({ parcel }: { parcel: ParcelSnapshot }) {
 export function MobileProgressSection({
   currentStep,
   isInitiator,
+  viewerRole,
   setOpenSection,
 }: {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
   isInitiator: boolean;
+  viewerRole: Role;
   setOpenSection: () => void;
 }) {
   const allSteps = isInitiator ? [1, 2, 3, 4, 5, 6] : [2, 3, 4, 5, 6];
@@ -277,23 +283,28 @@ export function MobileProgressSection({
     <CustomModal onClose={setOpenSection}>
       <div className="flex flex-col gap-3">
         {allSteps.map((step) => {
+          const stepKey = step as 1 | 2 | 3 | 4 | 5 | 6;
           const completed =
             step === 1
               ? isInitiator && currentStep >= 1
               : step - 1 < currentStep && currentStep !== 1;
+          const Icon = progressStepIcons[stepKey];
 
           return (
             <div key={step} className="flex items-center gap-3">
-              <SvgIcon
-                color={completed ? "success" : "grey"}
-                size="md"
-                Icon={META_ICONS.checkedIcon}
+              <Icon
+                className={
+                  completed
+                    ? "h-5 w-5 shrink-0 text-success-500"
+                    : "h-5 w-5 shrink-0 text-neutral-300"
+                }
+                strokeWidth={1.75}
               />
               <CustomText
                 textSize="sm"
                 textVariant={completed ? "primary" : "secondary"}
               >
-                {progress[step as 1 | 2 | 3 | 4 | 5 | 6]}
+                {getProgressStageLabel(stepKey, viewerRole)}
               </CustomText>
             </div>
           );

@@ -75,11 +75,11 @@ export type CardMode = "preview" | "display";
 
 export const progress = {
   1: "Request sent",
-  2: "Request accepted",
-  3: "Payment completed",
-  4: "Parcel received",
+  2: "Accepted",
+  3: "Paid",
+  4: "Collected",
   5: "Delivered",
-  6: "Payment released",
+  6: "Released",
 } as const;
 
 export const INFOMODES = {

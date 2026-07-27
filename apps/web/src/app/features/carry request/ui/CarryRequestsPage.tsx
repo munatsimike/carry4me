@@ -2,11 +2,9 @@ import { Card } from "@/app/components/card/Card";
 import { marketplaceListingGridClassName } from "@/app/components/MarketplaceListingGrid";
 import LineDivider from "@/app/components/LineDivider";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
-import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import SvgIcon from "@/components/ui/SvgIcon";
-import { dateFormat, INFOMODES, progress } from "@/types/Ui";
+import { dateFormat, INFOMODES } from "@/types/Ui";
 import { Button } from "@/components/ui/Button";
 import { mapCarryRequestToUI } from "@/app/features/carry request/ui/CarryRequestMapper";
 import PageSection from "@/app/components/PageSection";
@@ -63,7 +61,11 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Clock, Package } from "lucide-react";
+import { CheckCircle2, Clock, Package, type LucideIcon } from "lucide-react";
+import {
+  getProgressStageLabel,
+  progressStepIcons,
+} from "./progressStepIcon";
 import { cn, dialogIconStyle } from "@/app/lib/cn";
 import {
   carryRequestCardDividerHoverClass,
@@ -937,7 +939,7 @@ function CarryRequestCard({
   return (
     <>
       <Card
-        sizeClass="max-w-5xl"
+        sizeClass="max-w-4xl"
         key={request.carryRequestId}
         className={cn(
           "group/card mx-auto w-full flex flex-col gap-3 px-4 sm:px-6",
@@ -958,10 +960,6 @@ function CarryRequestCard({
             paymentStatus={request.paymentStatus}
             paymentTimeViewer={viewerRole === ROLES.SENDER ? "sender" : "traveler"}
           />
-          <LineDivider
-            heightClass="my-0"
-            className={carryRequestCardDividerHoverClass}
-          />
 
           <div className="block md:hidden">
             <MobileFirstHeader
@@ -980,11 +978,7 @@ function CarryRequestCard({
           <ProgressRow
             currentStep={requestUI.currentStep}
             isInitiator={viewerRole === request.initiatorRole}
-          />
-
-          <LineDivider
-            heightClass="my-0"
-            className={carryRequestCardDividerHoverClass}
+            viewerRole={viewerRole}
           />
 
           <DetailsSection
@@ -1036,6 +1030,7 @@ function CarryRequestCard({
           setOpenSection={() => setOpenSection(null)}
           currentStep={requestUI.currentStep}
           isInitiator={viewerRole === request.initiatorRole}
+          viewerRole={viewerRole}
         />
       )}
     </>
@@ -1474,21 +1469,30 @@ function Header({
 function ProgressRow({
   currentStep,
   isInitiator,
+  viewerRole,
 }: {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
   isInitiator: boolean;
+  viewerRole: Role;
 }) {
   const steps = [2, 3, 4, 5, 6] as const;
 
   return (
-    <div className="flex flex-wrap items-center gap-6 rounded-lg px-3 bg-secondary-50  py-4">
-      {isInitiator && <Step isCompleted stage={progress[1]} />}
+    <div className="inline-flex flex-wrap items-center gap-x-8 gap-y-3 rounded-lg bg-secondary-50 px-3 py-4">
+      {isInitiator && (
+        <Step
+          isCompleted
+          stage={getProgressStageLabel(1, viewerRole)}
+          Icon={progressStepIcons[1]}
+        />
+      )}
 
       {steps.map((step) => (
         <Step
           key={step}
           isCompleted={step - 1 < currentStep && currentStep !== 1}
-          stage={progress[step]}
+          stage={getProgressStageLabel(step, viewerRole)}
+          Icon={progressStepIcons[step]}
         />
       ))}
     </div>
@@ -1498,16 +1502,24 @@ function ProgressRow({
 function Step({
   isCompleted = false,
   stage,
+  Icon,
 }: {
   isCompleted?: boolean;
   stage: string;
+  Icon: LucideIcon;
 }) {
-  const iconColor = isCompleted ? "success" : "grey";
   const textColor = isCompleted ? "primary" : "secondary";
 
   return (
     <span className="inline-flex items-center gap-2">
-      <SvgIcon color={iconColor} size="md" Icon={META_ICONS.checkedIcon} />
+      <Icon
+        className={
+          isCompleted
+            ? "h-5 w-5 shrink-0 text-success-500"
+            : "h-5 w-5 shrink-0 text-neutral-300"
+        }
+        strokeWidth={1.75}
+      />
       <CustomText
         textSize="xs"
         textVariant={textColor}
