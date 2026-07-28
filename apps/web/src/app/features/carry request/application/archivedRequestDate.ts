@@ -90,7 +90,7 @@ export function getArchivedRequestDateDisplay(
       };
     default:
       return {
-        label: "Delivery date",
+        label: "Departure date",
         value: formatArchivedDate(request.tripSnapshot.departure_date),
       };
   }

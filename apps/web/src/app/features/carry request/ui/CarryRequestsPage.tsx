@@ -77,10 +77,6 @@ import {
 } from "../application/listingAvailabilityForRequest";
 import { confirmCarryRequestAction } from "../application/carryRequestActionConfirmation";
 import { useToast } from "@/app/components/Toast";
-import {
-  formatSenderPartyDisplay,
-  formatTravelerPartyDisplay,
-} from "../application/formatCarryRequestPartyDisplay";
 import { format } from "date-fns";
 import { getEffectiveCarryRequestStatus } from "../domain/carryRequestEffectiveStatus";
 import {
@@ -95,10 +91,6 @@ import {
 } from "./CarryRequestPageMobile";
 import {
   ArchivedCarryRequestDetails,
-  RequestCostSummarySection,
-  RequestDetailsGrid,
-  RequestParcelDetailsSection,
-  RequestTripDetailsSection,
 } from "./RequestDetailsLayout";
 import { getArchivedRequestDateDisplay } from "../application/archivedRequestDate";
 import { usePaymentTimeRemaining } from "../hooks/usePaymentTimeRemaining";
@@ -949,7 +941,7 @@ function CarryRequestCard({
   return (
     <>
       <Card
-        sizeClass="max-w-4xl"
+        sizeClass="max-w-3xl"
         key={request.carryRequestId}
         className={cn(
           "group/card mx-auto w-full flex flex-col gap-3 px-4 sm:px-6",
@@ -984,7 +976,7 @@ function CarryRequestCard({
           </div>
         </div>
 
-        <div className="hidden md:block md:flex md:flex-col gap-4">
+        <div className="hidden md:block md:flex md:flex-col gap-2">
           <ProgressRow
             currentStep={requestUI.currentStep}
             isInitiator={viewerRole === request.initiatorRole}
@@ -1003,10 +995,6 @@ function CarryRequestCard({
         {/**requestUI.title !== "Request cancelled" && (
           <LineDivider heightClass="my-0" />
         )*/}
-        <LineDivider
-          heightClass="my-0"
-          className={carryRequestCardDividerHoverClass}
-        />
         {actions.infoBlock?.displayText ? (
           <RequestCompleted actions={actions} />
         ) : (
@@ -1258,7 +1246,7 @@ function ArchivedCardHeader({
         ) : null}
         <div className="min-w-0 flex-1">
           <CustomText
-            textSize="sm"
+            textSize="md"
             textVariant="primary"
             className="font-semibold font-heading leading-snug text-ink-primary"
           >
@@ -1391,45 +1379,17 @@ function DetailsSection({
   senderUserId?: string | null;
   travelerUserId?: string | null;
 }) {
-  const categories = parcel.goods_category.map((item) => item.name).join(", ");
-
   return (
-    <RequestDetailsGrid>
-      <RequestTripDetailsSection
-        route={{
-          originCountry: trip.origin.country,
-          destinationCountry: trip.destination.country,
-          originCity: trip.origin.city,
-          destinationCity: trip.destination.city,
-        }}
-        travelerName={formatTravelerPartyDisplay(
-          viewerRole,
-          trip.traveler_name,
-          { viewerUserId, partyUserId: travelerUserId },
-        )}
-        departsLabel={format(new Date(trip.departure_date), dateFormat)}
-      />
-      <RequestParcelDetailsSection
-        route={{
-          originCountry: parcel.origin.country,
-          destinationCountry: parcel.destination.country,
-          originCity: parcel.origin.city,
-          destinationCity: parcel.destination.city,
-        }}
-        senderName={formatSenderPartyDisplay(
-          viewerRole,
-          parcel.sender_name,
-          { viewerUserId, partyUserId: senderUserId },
-        )}
-        itemsLabel={categories}
-      />
-      <RequestCostSummarySection
-        weightKg={parcel.weight_kg}
-        pricePerKg={parcel.price_per_kg}
-        priceCountry={parcel.origin.country}
-        showServiceFee
-      />
-    </RequestDetailsGrid>
+    <ArchivedCarryRequestDetails
+      trip={trip}
+      parcel={parcel}
+      viewerRole={viewerRole}
+      viewerUserId={viewerUserId}
+      senderUserId={senderUserId}
+      travelerUserId={travelerUserId}
+      statusDateLabel="Departure date"
+      statusDateValue={format(new Date(trip.departure_date), dateFormat)}
+    />
   );
 }
 type HeaderProps = {
@@ -1476,7 +1436,7 @@ function Header({
             <span
               className={`inline-flex h-3 w-3 shrink-0 rounded-full ${statusColor(status)}`}
             />
-            <span className="font-medium font-heading text-ink-primary text-lg sm:text-xl">
+            <span className="font-medium font-heading text-ink-primary text-xl sm:text-2xl">
               {title}
             </span>
           </span>

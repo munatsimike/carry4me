@@ -2,7 +2,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomModal from "@/app/components/CustomModal";
 import RouteRow from "@/app/components/RouteRow";
 import CardLabel from "@/app/components/card/CardLabel";
-import { toflag } from "@/app/Mapper";
+import { toCountryName, toflag } from "@/app/Mapper";
 import { cn } from "@/app/lib/cn";
 import {
   formatSenderPartyDisplay,
@@ -50,6 +50,9 @@ export function RequestRouteDisplay({
     route.destinationCountry,
   );
   const hasCities = !!originCityLabel || !!destinationCityLabel;
+  const originName = toCountryName(route.originCountry) ?? route.originCountry;
+  const destinationName =
+    toCountryName(route.destinationCountry) ?? route.destinationCountry;
 
   return (
     <span
@@ -68,7 +71,7 @@ export function RequestRouteDisplay({
             "rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-amber-950",
         )}
       >
-        {route.originCountry}
+        {originName}
       </CustomText>
       <MoveRight
         className={cn(
@@ -83,7 +86,7 @@ export function RequestRouteDisplay({
         textSize={compact ? "sm" : "md"}
         className="font-medium"
       >
-        {route.destinationCountry}
+        {destinationName}
       </CustomText>
 
       {hasCities ? (
@@ -101,7 +104,7 @@ export function RequestRouteDisplay({
             group-hover/route:opacity-100
           "
         >
-          <span>{originCityLabel || route.originCountry}</span>
+          <span>{originCityLabel || originName}</span>
           <span className="mx-1 text-neutral-400">→</span>
           <span>{destinationCityLabel}</span>
         </div>
@@ -148,17 +151,21 @@ export function RequestTripDetailsSection({
   travelerName,
   departsLabel,
   highlightOrigin,
+  showRoute = true,
 }: {
   route: RequestRoute;
   travelerName: string;
   departsLabel: string;
   highlightOrigin?: boolean;
+  showRoute?: boolean;
 }) {
   return (
     <section className="min-w-0 space-y-3 overflow-visible">
       <CardLabel variant="trip" label="Trip details" />
       <div className="space-y-2 overflow-visible">
-        <RequestRouteDisplay route={route} highlightOrigin={highlightOrigin} />
+        {showRoute ? (
+          <RequestRouteDisplay route={route} highlightOrigin={highlightOrigin} />
+        ) : null}
         <RequestDetailRows>
           <RequestDetailRow label="Traveler" value={travelerName} />
           <RequestDetailRow label="Departs" value={departsLabel} />
@@ -173,17 +180,21 @@ export function RequestParcelDetailsSection({
   senderName,
   itemsLabel,
   highlightOrigin,
+  showRoute = true,
 }: {
   route: RequestRoute;
   senderName: string;
   itemsLabel: string;
   highlightOrigin?: boolean;
+  showRoute?: boolean;
 }) {
   return (
     <section className="min-w-0 space-y-3 overflow-visible">
       <CardLabel variant="parcel" label="Parcel details" />
       <div className="space-y-2 overflow-visible">
-        <RequestRouteDisplay route={route} highlightOrigin={highlightOrigin} />
+        {showRoute ? (
+          <RequestRouteDisplay route={route} highlightOrigin={highlightOrigin} />
+        ) : null}
         <RequestDetailRows>
           <RequestDetailRow label="Sender" value={senderName} />
           <RequestDetailRow label="Items" value={itemsLabel} />
@@ -210,6 +221,71 @@ export function RequestDetailsGrid({
     >
       {children}
     </div>
+  );
+}
+
+export function PaymentDetailsButton({
+  viewerRole,
+  weightKg,
+  pricePerKg,
+  priceCountry,
+  className,
+}: {
+  viewerRole: Role;
+  weightKg: number;
+  pricePerKg: number;
+  priceCountry: string;
+  className?: string;
+}) {
+  const [costModalOpen, setCostModalOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setCostModalOpen(true)}
+        className={cn(
+          "w-fit px-2.5 text-left text-sm font-medium text-primary-600 underline-offset-2 transition-colors",
+          "hover:text-primary-700 hover:underline",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 rounded",
+          className,
+        )}
+      >
+        Payment details
+      </button>
+
+      <AnimatePresence>
+        {costModalOpen ? (
+          <CustomModal
+            width="lg"
+            scrollable={false}
+            onClose={() => setCostModalOpen(false)}
+          >
+            <CustomText
+              as="h2"
+              textSize="md"
+              textVariant="primary"
+              className="mb-4 pr-8 font-semibold text-ink-primary"
+            >
+              Payment details
+            </CustomText>
+            {viewerRole === ROLES.TRAVELER ? (
+              <TravelerPaymentDetailsSummary
+                weightKg={weightKg}
+                pricePerKg={pricePerKg}
+                priceCountry={priceCountry}
+              />
+            ) : (
+              <SenderPaymentDetailsSummary
+                weightKg={weightKg}
+                pricePerKg={pricePerKg}
+                priceCountry={priceCountry}
+              />
+            )}
+          </CustomModal>
+        ) : null}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -240,7 +316,6 @@ export function ArchivedCarryRequestDetails({
   statusDateLabel: string;
   statusDateValue: string;
 }) {
-  const [costModalOpen, setCostModalOpen] = useState(false);
   const categories = parcel.goods_category.map((item) => item.name).join(", ");
   const route = {
     originCountry: parcel.origin.country,
@@ -295,51 +370,14 @@ export function ArchivedCarryRequestDetails({
             icon={META_ICONS.calender}
             bordered
           />
-          <button
-            type="button"
-            onClick={() => setCostModalOpen(true)}
-            className={cn(
-              "w-fit px-2.5 text-left text-sm font-medium text-primary-600 underline-offset-2 transition-colors",
-              "hover:text-primary-700 hover:underline",
-              "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 rounded",
-            )}
-          >
-            Payment details
-          </button>
+          <PaymentDetailsButton
+            viewerRole={viewerRole}
+            weightKg={parcel.weight_kg}
+            pricePerKg={parcel.price_per_kg}
+            priceCountry={parcel.origin.country}
+          />
         </div>
       </div>
-
-      <AnimatePresence>
-        {costModalOpen ? (
-          <CustomModal
-            width="lg"
-            scrollable={false}
-            onClose={() => setCostModalOpen(false)}
-          >
-            <CustomText
-              as="h2"
-              textSize="md"
-              textVariant="primary"
-              className="mb-4 pr-8 font-semibold text-ink-primary"
-            >
-              Payment details
-            </CustomText>
-            {viewerRole === ROLES.TRAVELER ? (
-              <TravelerPaymentDetailsSummary
-                weightKg={parcel.weight_kg}
-                pricePerKg={parcel.price_per_kg}
-                priceCountry={parcel.origin.country}
-              />
-            ) : (
-              <SenderPaymentDetailsSummary
-                weightKg={parcel.weight_kg}
-                pricePerKg={parcel.price_per_kg}
-                priceCountry={parcel.origin.country}
-              />
-            )}
-          </CustomModal>
-        ) : null}
-      </AnimatePresence>
     </div>
   );
 }
@@ -362,22 +400,20 @@ function ArchivedDetailField({
   return (
     <div
       className={cn(
-        "min-w-0",
+        "flex min-w-0 items-center gap-1.5",
         bordered && "rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70",
         className,
       )}
     >
-      <div className="mb-1 flex items-center gap-1.5">
-        {icon ? <SvgIcon size="sm" Icon={icon} color={iconColor} /> : null}
-        <CustomText textVariant="label" textSize="xs" as="span">
-          {label}
-        </CustomText>
-      </div>
+      {icon ? <SvgIcon size="sm" Icon={icon} color={iconColor} /> : null}
+      <CustomText textVariant="label" textSize="xs" as="span" className="shrink-0">
+        {label}
+      </CustomText>
       <CustomText
         textVariant="primary"
         textSize="sm"
-        as="p"
-        className="font-medium leading-snug sm:truncate"
+        as="span"
+        className="min-w-0 font-medium leading-snug sm:truncate"
       >
         {value}
       </CustomText>

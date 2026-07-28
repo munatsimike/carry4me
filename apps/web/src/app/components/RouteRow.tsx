@@ -3,7 +3,7 @@ import { InlineRow } from "./InlineRow";
 import SvgIcon from "@/components/ui/SvgIcon";
 import CustomText from "@/components/ui/CustomText";
 import { MoveRight } from "lucide-react";
-import { toflag } from "@/app/Mapper";
+import { toCountryName, toflag } from "@/app/Mapper";
 import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDestination";
 import type { SvgIconComponent } from "@/types/Ui";
 
@@ -12,6 +12,10 @@ function CountryFlag({ country }: { country: string }) {
   if (!flag) return null;
 
   return <SvgIcon size="xs" Icon={flag as SvgIconComponent} />;
+}
+
+function countryLabel(country: string): string {
+  return toCountryName(country) ?? country;
 }
 
 export default function RouteRow({
@@ -30,6 +34,8 @@ export default function RouteRow({
     destinationCity,
     destination,
   );
+  const originName = countryLabel(origin);
+  const destinationName = countryLabel(destination);
 
   const hasOriginCity = !!originCityLabel;
   const hasDestinationCity = !!destinationCityLabel;
@@ -57,7 +63,7 @@ export default function RouteRow({
             textVariant="primary"
             className="font-medium whitespace-nowrap"
           >
-            {origin}
+            {originName}
           </CustomText>
         </InlineRow>
 
@@ -78,7 +84,7 @@ export default function RouteRow({
             textVariant="primary"
             className="font-medium whitespace-nowrap"
           >
-            {destination}
+            {destinationName}
           </CustomText>
         </InlineRow>
 
@@ -100,7 +106,7 @@ export default function RouteRow({
               group-hover/route:opacity-100
             "
           >
-            <span>{originCityLabel || origin}</span>
+            <span>{originCityLabel || originName}</span>
             <span className="mx-1 text-neutral-400">→</span>
             <span>{destinationCityLabel}</span>
           </div>

@@ -11,16 +11,21 @@ import { dateFormat } from "@/types/Ui";
 import CustomModal from "@/app/components/CustomModal";
 import LineDivider from "@/app/components/LineDivider";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
+import { toCountryName } from "@/app/Mapper";
 import {
   formatSenderPartyDisplay,
   formatTravelerPartyDisplay,
 } from "../application/formatCarryRequestPartyDisplay";
-import { CarryRequestCostSummary } from "./CarryRequestCostSummary";
+import { PaymentDetailsButton } from "./RequestDetailsLayout";
 import {
   getProgressStageLabel,
   progressStepIcons,
 } from "./progressStepIcon";
 export type MobileSection = "details" | "timeline";
+
+function countryLabel(country: string): string {
+  return toCountryName(country) ?? country;
+}
 
 export function MobileFirstHeader({
   trip,
@@ -48,7 +53,7 @@ export function MobileFirstHeader({
             textVariant="primary"
             className="font-medium"
           >
-            {trip.origin.country}
+            {countryLabel(trip.origin.country)}
           </CustomText>
           <MoveRight className="h-4 w-4 text-neutral-800" strokeWidth={1.5} />
           <SvgIcon size="xs" Icon={META_ICONS.zimFlag} />
@@ -57,7 +62,7 @@ export function MobileFirstHeader({
             textVariant="primary"
             className="font-medium"
           >
-            {trip.destination.country}
+            {countryLabel(trip.destination.country)}
           </CustomText>
         </div>
 
@@ -145,7 +150,13 @@ export function MobileDetailsSection({
           senderUserId={senderUserId}
         />
         <LineDivider heightClass="" />
-        <CostSummaryMobile parcel={parcel} />
+        <PaymentDetailsButton
+          viewerRole={viewerRole}
+          weightKg={parcel.weight_kg}
+          pricePerKg={parcel.price_per_kg}
+          priceCountry={parcel.origin.country}
+          className="px-0"
+        />
       </div>
     </CustomModal>
   );
@@ -175,9 +186,9 @@ export function TripDetailsMobile({
           textSize="sm"
           className="flex gap-2 items-center"
         >
-          {trip.origin.country}{" "}
+          {countryLabel(trip.origin.country)}{" "}
           <MoveRight className="text-neutral-800 h-4 w-4" strokeWidth={1.5} />{" "}
-          {trip.destination.country}
+          {countryLabel(trip.destination.country)}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
@@ -228,9 +239,9 @@ export function ParcelDetailsMobile({
           textVariant="primary"
           textSize="sm"
         >
-          {parcel.origin.country}{" "}
+          {countryLabel(parcel.origin.country)}{" "}
           <MoveRight className="text-neutral-800 h-4 w-4" strokeWidth={1.5} />{" "}
-          {parcel.destination.country}
+          {countryLabel(parcel.destination.country)}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
@@ -251,18 +262,6 @@ export function ParcelDetailsMobile({
         </CustomText>
       </div>
     </section>
-  );
-}
-
-export function CostSummaryMobile({ parcel }: { parcel: ParcelSnapshot }) {
-  return (
-    <CarryRequestCostSummary
-      weightKg={parcel.weight_kg}
-      pricePerKg={parcel.price_per_kg}
-      priceCountry={parcel.origin.country}
-      showServiceFee
-      size="compact"
-    />
   );
 }
 
