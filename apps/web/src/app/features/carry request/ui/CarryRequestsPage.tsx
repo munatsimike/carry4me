@@ -61,7 +61,7 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Clock, Package, type LucideIcon } from "lucide-react";
+import { Ban, CheckCircle2, Clock, Hourglass, Package, XCircle, type LucideIcon } from "lucide-react";
 import {
   getProgressStageLabel,
   progressStepIcons,
@@ -898,7 +898,17 @@ function CarryRequestCard({
           title={requestUI.title}
           description={requestUI.description}
           requestId={request.carryRequestId.slice(-6)}
-          showCompletedIcon={effectiveStatus === CARRY_REQUEST_STATUSES.PAID_OUT}
+          headingIcon={
+            effectiveStatus === CARRY_REQUEST_STATUSES.PAID_OUT
+              ? "completed"
+              : effectiveStatus === CARRY_REQUEST_STATUSES.EXPIRED
+                ? "expired"
+                : effectiveStatus === CARRY_REQUEST_STATUSES.CANCELLED
+                  ? "cancelled"
+                  : effectiveStatus === CARRY_REQUEST_STATUSES.REJECTED
+                    ? "declined"
+                    : null
+          }
         />
 
         <ArchivedCarryRequestDetails
@@ -1194,23 +1204,54 @@ function ArchivedCardHeader({
   title,
   description,
   requestId,
-  showCompletedIcon = false,
+  headingIcon = null,
 }: {
   title: string;
   description: string;
   requestId: string;
-  showCompletedIcon?: boolean;
+  headingIcon?: "completed" | "expired" | "cancelled" | "declined" | null;
 }) {
+  const icon = (() => {
+    switch (headingIcon) {
+      case "completed":
+        return {
+          Icon: CheckCircle2,
+          wrapClass: "bg-success-50",
+          iconClass: "text-success-600",
+        };
+      case "expired":
+        return {
+          Icon: Hourglass,
+          wrapClass: "bg-error-50",
+          iconClass: "text-error-600",
+        };
+      case "cancelled":
+        return {
+          Icon: Ban,
+          wrapClass: "bg-slate-100",
+          iconClass: "text-slate-600",
+        };
+      case "declined":
+        return {
+          Icon: XCircle,
+          wrapClass: "bg-error-50",
+          iconClass: "text-error-600",
+        };
+      default:
+        return null;
+    }
+  })();
+
   return (
     <div className="flex items-start justify-between gap-2 rounded-2xl bg-secondary-50/50 px-2 py-2 transition-colors duration-200 group-hover/card:bg-primary-50/30 sm:px-2.5">
       <div className="flex min-w-0 flex-1 items-start gap-2.5">
-        {showCompletedIcon ? (
+        {icon ? (
           <div
-            className="shrink-0 rounded-full bg-success-50 p-1"
+            className={cn("shrink-0 rounded-full p-1", icon.wrapClass)}
             aria-hidden
           >
-            <CheckCircle2
-              className="h-5 w-5 text-success-600"
+            <icon.Icon
+              className={cn("h-5 w-5", icon.iconClass)}
               strokeWidth={1.75}
             />
           </div>
