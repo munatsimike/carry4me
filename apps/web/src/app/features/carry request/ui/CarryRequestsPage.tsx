@@ -1432,7 +1432,7 @@ function Header({
             <span
               className={`inline-flex h-3 w-3 shrink-0 rounded-full ${statusColor(status)}`}
             />
-            <span className="font-medium font-heading text-ink-primary text-xl sm:text-2xl">
+            <span className="font-medium font-heading text-ink-primary text-lg sm:text-xl">
               {title}
             </span>
           </span>
