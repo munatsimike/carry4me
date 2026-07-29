@@ -15,8 +15,8 @@ import CustomText from "@/components/ui/CustomText";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import type { SvgIconComponent } from "@/types/Ui";
 import { AnimatePresence } from "framer-motion";
-import { MoveRight } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { ChevronDown, MoveRight } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   CarryRequestCostSummary,
   RequestCostSummarySection,
@@ -251,7 +251,7 @@ export function PaymentDetailsButton({
           className,
         )}
       >
-        Payment details
+        Cost summary
       </button>
 
       <AnimatePresence>
@@ -267,7 +267,7 @@ export function PaymentDetailsButton({
               textVariant="primary"
               className="mb-4 pr-8 font-semibold text-ink-primary"
             >
-              Payment details
+              Cost summary
             </CustomText>
             {viewerRole === ROLES.TRAVELER ? (
               <TravelerPaymentDetailsSummary
@@ -316,7 +316,9 @@ export function ArchivedCarryRequestDetails({
   statusDateLabel: string;
   statusDateValue: string;
 }) {
-  const categories = parcel.goods_category.map((item) => item.name).join(", ");
+  const categoryNames = parcel.goods_category
+    .map((item) => item.name.trim())
+    .filter(Boolean);
   const route = {
     originCountry: parcel.origin.country,
     destinationCountry: parcel.destination.country,
@@ -356,13 +358,7 @@ export function ArchivedCarryRequestDetails({
       </div>
 
       <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2">
-        <ArchivedDetailField
-          label="Goods"
-          value={categories || "—"}
-          icon={META_ICONS.parcelBoxOutlined}
-          bordered
-          className="h-fit"
-        />
+        <GoodsCategoriesField categories={categoryNames} />
         <div className="flex min-w-0 flex-col gap-1.5">
           <ArchivedDetailField
             label={statusDateLabel}
@@ -378,6 +374,131 @@ export function ArchivedCarryRequestDetails({
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+const CARRY_REQUEST_CARD_SELECTOR = ".group\\/card";
+
+function GoodsCategoriesField({ categories }: { categories: string[] }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const requestCard = rootRef.current?.closest(CARRY_REQUEST_CARD_SELECTOR);
+    if (!requestCard) return;
+
+    const closeIfOutsideRequest = (target: EventTarget | null) => {
+      if (!(target instanceof Node) || !requestCard.contains(target)) {
+        setOpen(false);
+      }
+    };
+
+    const onFocusIn = (event: FocusEvent) => {
+      closeIfOutsideRequest(event.target);
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      closeIfOutsideRequest(event.target);
+    };
+
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open]);
+
+  if (categories.length <= 1) {
+    return (
+      <ArchivedDetailField
+        label="Goods"
+        value={categories[0] || "—"}
+        icon={META_ICONS.parcelBoxOutlined}
+        bordered
+        className="h-fit"
+      />
+    );
+  }
+
+  const extraCount = categories.length - 1;
+
+  return (
+    <div
+      ref={rootRef}
+      className="relative min-w-0"
+      onMouseLeave={() => {
+        if (open) setOpen(false);
+      }}
+    >
+      <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70">
+        <SvgIcon size="sm" Icon={META_ICONS.parcelBoxOutlined} color="neutral" />
+        <CustomText textVariant="label" textSize="xs" as="span" className="shrink-0">
+          Goods
+        </CustomText>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-label={
+            open
+              ? "Hide all goods categories"
+              : `Show all goods categories, ${extraCount} more`
+          }
+          onClick={() => setOpen((prev) => !prev)}
+          className={cn(
+            "inline-flex min-w-0 flex-1 items-center gap-1.5 rounded text-left",
+            "text-ink-primary hover:text-ink-primary",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-1",
+          )}
+        >
+          <CustomText
+            textVariant="primary"
+            textSize="sm"
+            as="span"
+            className="min-w-0 truncate font-medium leading-snug"
+          >
+            {categories[0]}
+          </CustomText>
+          <CustomText
+            textVariant="secondary"
+            textSize="xs"
+            as="span"
+            className="ml-1.5 shrink-0 whitespace-nowrap"
+          >
+            +{extraCount} more
+          </CustomText>
+          <ChevronDown
+            className="h-3.5 w-3.5 shrink-0 text-neutral-500"
+            strokeWidth={2}
+            aria-hidden
+          />
+        </button>
+      </div>
+
+      {open ? (
+        <div
+          role="listbox"
+          className="absolute bottom-full left-0 right-0 z-50 mb-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-lg"
+        >
+          <ul className="grid list-disc grid-cols-2 gap-x-3 gap-y-1 pl-4">
+            {categories.map((name) => (
+              <li key={name} role="option">
+                <CustomText
+                  textVariant="primary"
+                  textSize="sm"
+                  as="span"
+                  className="font-medium leading-snug"
+                >
+                  {name}
+                </CustomText>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

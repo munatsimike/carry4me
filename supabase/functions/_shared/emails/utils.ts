@@ -27,7 +27,7 @@ export function resolveCtaLabel(notification: NotificationEmailInput): string | 
 export function getDefaultCtaLabel(type: string): string | null {
   switch (type) {
     case "REQUEST_SENT":
-      return "Accept request";
+      return "View request";
     case "REQUEST_REJECTED":
       return "Browse trips";
     case "REQUEST_CANCELED":
