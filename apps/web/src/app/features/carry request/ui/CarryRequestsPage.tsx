@@ -1,6 +1,5 @@
 import { Card } from "@/app/components/card/Card";
 import { marketplaceListingGridClassName } from "@/app/components/MarketplaceListingGrid";
-import LineDivider from "@/app/components/LineDivider";
 import SpaceBetweenRow from "@/app/components/SpaceBetweenRow";
 import CustomText from "@/components/ui/CustomText";
 import DefaultContainer from "@/components/ui/DefualtContianer";
@@ -68,7 +67,6 @@ import {
 } from "./progressStepIcon";
 import { cn, dialogIconStyle } from "@/app/lib/cn";
 import {
-  carryRequestCardDividerHoverClass,
   carryRequestCardHoverClass,
 } from "@/app/shared/marketplace/browseMarketplaceStyles";
 import {
@@ -992,9 +990,6 @@ function CarryRequestCard({
             travelerUserId={request.travelerUserId}
           />
         </div>
-        {/**requestUI.title !== "Request cancelled" && (
-          <LineDivider heightClass="my-0" />
-        )*/}
         {actions.infoBlock?.displayText ? (
           <RequestCompleted actions={actions} />
         ) : (
