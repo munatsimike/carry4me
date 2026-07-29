@@ -910,6 +910,7 @@ function CarryRequestCard({
           travelerUserId={request.travelerUserId}
           statusDateLabel={archivedDate.label}
           statusDateValue={archivedDate.value}
+          statusDateHoverValue={archivedDate.hoverValue}
         />
 
         {hasFooter ? (

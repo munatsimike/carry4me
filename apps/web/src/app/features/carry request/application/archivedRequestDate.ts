@@ -11,6 +11,7 @@ import {
 } from "../domain/CreateCarryRequest";
 
 const archivedDateTimeFormat = "d MMM yyyy, HH:mm";
+const archivedTimeFormat = "HH:mm";
 
 function findEventCreatedAt(
   events: CarryRequest["eventHistory"],
@@ -40,10 +41,19 @@ function formatArchivedDate(
   return format(date, withTime ? archivedDateTimeFormat : dateFormat);
 }
 
+function formatArchivedTime(iso: string | null | undefined): string {
+  if (!iso?.trim()) return "—";
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return format(date, archivedTimeFormat);
+}
+
 export function getArchivedRequestDateDisplay(
   status: CarryRequestStatus,
   request: CarryRequest,
-): { label: string; value: string } {
+): { label: string; value: string; hoverValue?: string } {
   switch (status) {
     case CARRY_REQUEST_STATUSES.PAID_OUT:
       return {
@@ -60,14 +70,14 @@ export function getArchivedRequestDateDisplay(
             request.updatedAt,
         ),
       };
-    case CARRY_REQUEST_STATUSES.EXPIRED:
+    case CARRY_REQUEST_STATUSES.EXPIRED: {
+      const expiredIso = request.expiredAt ?? request.updatedAt;
       return {
         label: "Expired on",
-        value: formatArchivedDate(
-          request.expiredAt ?? request.updatedAt,
-          true,
-        ),
+        value: formatArchivedDate(expiredIso),
+        hoverValue: formatArchivedTime(expiredIso),
       };
+    }
     case CARRY_REQUEST_STATUSES.CANCELLED:
       return {
         label: "Cancelled on",

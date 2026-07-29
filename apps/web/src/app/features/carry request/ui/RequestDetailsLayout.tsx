@@ -15,7 +15,7 @@ import CustomText from "@/components/ui/CustomText";
 import SvgIcon, { type IconColor } from "@/components/ui/SvgIcon";
 import type { SvgIconComponent } from "@/types/Ui";
 import { AnimatePresence } from "framer-motion";
-import { ChevronDown, MoveRight } from "lucide-react";
+import { ChevronDown, Clock, MoveRight } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   CarryRequestCostSummary,
@@ -299,6 +299,7 @@ export function ArchivedCarryRequestDetails({
   travelerUserId,
   statusDateLabel,
   statusDateValue,
+  statusDateHoverValue,
 }: {
   trip: { traveler_name: string };
   parcel: {
@@ -315,6 +316,7 @@ export function ArchivedCarryRequestDetails({
   travelerUserId?: string | null;
   statusDateLabel: string;
   statusDateValue: string;
+  statusDateHoverValue?: string;
 }) {
   const categoryNames = parcel.goods_category
     .map((item) => item.name.trim())
@@ -363,6 +365,7 @@ export function ArchivedCarryRequestDetails({
           <ArchivedDetailField
             label={statusDateLabel}
             value={statusDateValue}
+            hoverValue={statusDateHoverValue}
             icon={META_ICONS.calender}
             bordered
           />
@@ -506,6 +509,7 @@ function GoodsCategoriesField({ categories }: { categories: string[] }) {
 function ArchivedDetailField({
   label,
   value,
+  hoverValue,
   icon,
   iconColor = "neutral",
   className,
@@ -513,15 +517,18 @@ function ArchivedDetailField({
 }: {
   label: string;
   value: string;
+  hoverValue?: string;
   icon?: SvgIconComponent;
   iconColor?: IconColor;
   className?: string;
   bordered?: boolean;
 }) {
+  const showHover = !!hoverValue && hoverValue !== value;
+
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-1.5",
+        "group/date relative flex min-w-0 items-center gap-1.5",
         bordered && "rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70",
         className,
       )}
@@ -538,6 +545,27 @@ function ArchivedDetailField({
       >
         {value}
       </CustomText>
+      {showHover ? (
+        <div
+          className="
+            pointer-events-none absolute left-1/2 bottom-full z-50
+            mb-1 -translate-x-1/2
+            inline-flex items-center gap-1.5
+            whitespace-nowrap rounded-full
+            border border-neutral-200 bg-white px-3 py-1.5
+            text-xs font-medium text-neutral-700 shadow-lg
+            opacity-0 translate-y-1 scale-95
+            transition-all duration-300 ease-out
+            group-hover/date:translate-y-0
+            group-hover/date:scale-100
+            group-hover/date:opacity-100
+          "
+        >
+          <Clock className="h-3.5 w-3.5 shrink-0 text-neutral-500" strokeWidth={1.75} />
+          <span className="text-neutral-500">Time</span>
+          <span className="font-medium text-ink-primary">{hoverValue}</span>
+        </div>
+      ) : null}
     </div>
   );
 }
