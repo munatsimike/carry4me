@@ -20,6 +20,7 @@ type ComboBoxProps = {
   searchable?: boolean;
   roundedClass?: string;
   disabledMessage?: string;
+  borderless?: boolean;
 };
 
 export default function ComboBox({
@@ -38,6 +39,7 @@ export default function ComboBox({
   error,
   searchable = false,
   disabledMessage,
+  borderless = false,
 }: ComboBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState(value);
@@ -114,12 +116,21 @@ export default function ComboBox({
 
   const selectedFlagIcon =
     value && (!searchable || !isOpen) ? toflag(value) : null;
+  const borderStateClass = error
+    ? inputError
+    : showSuccess
+      ? inputSuccess
+      : borderless
+        ? "border-0 shadow-none focus-within:ring-0"
+        : inputNeutral;
+
   const baseClasses = cn(
     `${heightClass} w-full min-w-0 bg-white pl-3 pr-10 text-sm`,
-    "text-ellipsis whitespace-nowrap border outline-none",
+    "text-ellipsis whitespace-nowrap outline-none",
+    borderless ? "border-0" : "border",
     className,
     textVariant,
-    error ? inputError : showSuccess ? inputSuccess : inputNeutral,
+    borderStateClass,
     disabled && "cursor-not-allowed bg-neutral-50 text-neutral-400",
   );
 

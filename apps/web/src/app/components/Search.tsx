@@ -70,7 +70,7 @@ export default function Search({
     <form
       onSubmit={handleSubmit(handleSearch)}
       className={cn(
-        "flex w-full sm:max-w-2xl lg:max-w-3xl flex-col gap-3 rounded-3xl sm:bg-primary-50 sm:border border-primary-100 pt-10 pb-3 px-3 sm:p-1 sm:px-1.5 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
+        "flex w-full sm:max-w-2xl lg:max-w-3xl flex-col gap-3 rounded-3xl sm:bg-primary-50 sm:border border-primary-100 pt-10 pb-3 px-3 sm:p-2 sm:px-2.5 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
       )}
     >
       <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">
@@ -97,6 +97,7 @@ export default function Search({
                 isTouched={fieldState.isTouched}
                 error={fieldState.error?.message}
                 searchable
+                borderless
               />
             )}
           />
@@ -120,6 +121,7 @@ export default function Search({
                 isTouched={fieldState.isTouched}
                 error={fieldState.error?.message}
                 searchable
+                borderless
               />
             )}
           />
@@ -135,7 +137,7 @@ export default function Search({
           Destination
         </CustomText>
 
-        <div className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl border bg-white px-3 py-1.5 shadow-sm sm:min-w-[150px]">
+        <div className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white px-3 py-1.5 shadow-sm sm:min-w-[150px]">
           <SvgIcon size="xs" Icon={META_ICONS.zimFlag} />
           <CustomText as="span" textSize="xs" className="text-neutral-700">
             Zimbabwe

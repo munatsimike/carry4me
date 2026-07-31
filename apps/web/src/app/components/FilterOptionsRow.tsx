@@ -9,10 +9,10 @@ import {
   Calendar,
   ChevronDown,
   Globe2,
+  CircleDollarSign,
   Package,
   Scale,
   ArrowUpDown,
-  PoundSterling,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -51,10 +51,10 @@ function FilterChip({
       type="button"
       onClick={onClick}
       className={[
-        "inline-flex items-center gap-2 rounded-full border px-4 py-1.5 transition-colors",
+        "inline-flex items-center gap-2 rounded-full px-4 py-1.5 transition-colors",
         active || isOpen
-          ? "border-primary-500 bg-primary-50"
-          : "border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-100",
+          ? "bg-primary-50"
+          : "bg-white hover:bg-neutral-100",
       ].join(" ")}
     >
       <span
@@ -387,7 +387,7 @@ function FilterByPriceMenu({
     <FilterMenuWrapper>
       <FilterChip
         label={isTraveler ? "Price" : "Budget"}
-        icon={<PoundSterling className="h-4 w-4" />}
+        icon={<CircleDollarSign className="h-4 w-4" />}
         active={hasPrice}
         isOpen={openMenu === "price"}
         onClick={() => toggleMenu("price")}
@@ -533,7 +533,7 @@ function SortMenu({ isTraveler, hasSort, baseProps }: SortMenuProps) {
                   {sortOptions.map((option) => (
                     <label
                       key={option.value}
-                      className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
+                      className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-neutral-50"
                     >
                       <input
                         type="radio"
@@ -612,7 +612,7 @@ function FilterByCountryMenu({
 
                 return (
                   <div className="max-h-64 space-y-2 overflow-y-auto">
-                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-neutral-50">
                       <span className="relative inline-flex">
                         <input
                           type="checkbox"
@@ -651,7 +651,7 @@ function FilterByCountryMenu({
                       return (
                         <label
                           key={countryCode}
-                          className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
+                          className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-neutral-50"
                         >
                           <span className="relative inline-flex">
                             <input
@@ -769,7 +769,7 @@ function FilterByGoodsMenu({
                     return (
                       <label
                         key={category.name}
-                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 px-3 py-2 hover:bg-neutral-50"
+                        className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-neutral-50"
                       >
                         <span className="relative inline-flex">
                           <input
