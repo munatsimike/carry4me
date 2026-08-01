@@ -64,12 +64,12 @@ const listingCardParcelHoverClass =
 
 const listingCardHoverTinted: Record<BrowseMarketplaceTone, string> = {
   trips: cn(
-    "border border-primary-200 bg-white shadow-sm",
+    "border border-primary-200 bg-white shadow-md",
     listingCardTransition,
-    "hover:border-primary-300 hover:bg-primary-100 hover:shadow-md hover:shadow-primary-100/40",
+    "hover:border-primary-300 hover:bg-primary-100 hover:shadow-lg hover:shadow-primary-100/40",
   ),
   parcels: cn(
-    "border border-slate-700/20 bg-white shadow-sm",
+    "border border-slate-700/20 bg-white shadow-md",
     listingCardTransition,
     listingCardParcelHoverClass,
   ),
@@ -97,8 +97,8 @@ export const listingCardHoverClass: Record<BrowseMarketplaceTone, string> =
     : listingCardHoverTinted;
 
 export const listingCardPreviewClass: Record<BrowseMarketplaceTone, string> = {
-  trips: "border border-primary-200 bg-white",
-  parcels: "border border-slate-700/20 bg-white",
+  trips: "border border-primary-200 bg-white shadow-md",
+  parcels: "border border-slate-700/20 bg-white shadow-md",
 };
 
 const listingCardDividerHoverTinted: Record<BrowseMarketplaceTone, string> = {

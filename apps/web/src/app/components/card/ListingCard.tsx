@@ -118,7 +118,7 @@ export function ListingCard<T extends Listing>({
       sizeClass="max-w-none"
       className={`${isOwnerPreview ? "" : "group/card"} ${cardSurfaceClass}`}
       borderClass=""
-      shadowClass=""
+      shadowClass="shadow-md"
     >
       <div className="flex min-w-0 justify-between gap-3 pb-1">
         <span className="flex min-w-0 flex-col gap-2">
