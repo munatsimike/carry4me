@@ -449,7 +449,7 @@ function GoodsCategoriesField({ categories }: { categories: string[] }) {
           aria-label={
             open
               ? "Hide all goods categories"
-              : `Show all goods categories, ${extraCount} more`
+              : `Show all goods categories, +${extraCount}`
           }
           onClick={() => setOpen((prev) => !prev)}
           className={cn(
@@ -472,7 +472,7 @@ function GoodsCategoriesField({ categories }: { categories: string[] }) {
             as="span"
             className="ml-1.5 shrink-0 whitespace-nowrap"
           >
-            +{extraCount} more
+            +{extraCount}
           </CustomText>
           <ChevronDown
             className="h-3.5 w-3.5 shrink-0 text-neutral-500"
@@ -485,7 +485,7 @@ function GoodsCategoriesField({ categories }: { categories: string[] }) {
       {open ? (
         <div
           role="listbox"
-          className="absolute bottom-full left-0 right-0 z-50 mb-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-lg"
+          className="absolute bottom-full left-0 z-50 mb-1 w-max min-w-[18rem] max-w-[22rem] rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-lg"
         >
           <ul className="grid list-disc grid-cols-2 gap-x-3 gap-y-1 pl-4">
             {categories.map((name) => (

@@ -136,12 +136,36 @@ export function mapCarryRequestToUI(
         `${isInitiator ? "trips" : "parcels"}.`;
       break;
 
-    case CARRY_REQUEST_STATUSES.CANCELLED:
+    case CARRY_REQUEST_STATUSES.CANCELLED: {
       currentStep = 3;
       title = "Request cancelled";
-      description =
-        "You’ve canceled this request. The traveler has been notified.";
+      const cancelReason =
+        typeof request.events.metadata?.reason === "string"
+          ? request.events.metadata.reason
+          : null;
+      const actorId = request.events.actorUserId;
+      const canceledBySender = actorId === request.senderUserId;
+      const canceledByTraveler = actorId === request.travelerUserId;
+      const travelDatePassed =
+        cancelReason === "TRIP_DATE_PASSED_NO_RESPONSE" || !actorId;
+
+      if (travelDatePassed) {
+        description = "Traveler did not respond. Travel date passed.";
+      } else if (canceledBySender) {
+        description =
+          viewerRole === ROLES.SENDER
+            ? "You’ve canceled this request. The traveler has been notified."
+            : "The sender cancelled this request.";
+      } else if (canceledByTraveler) {
+        description =
+          viewerRole === ROLES.TRAVELER
+            ? "You’ve canceled this request. The sender has been notified."
+            : "The traveler cancelled this request.";
+      } else {
+        description = "This request was cancelled.";
+      }
       break;
+    }
 
     case CARRY_REQUEST_STATUSES.EXPIRED:
       currentStep = 2;
