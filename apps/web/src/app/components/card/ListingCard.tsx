@@ -2,7 +2,6 @@ import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import { Card } from "./Card";
 import CardLabel from "./CardLabel";
 import HeartToggle from "../HeartToggle";
-import LineDivider from "../LineDivider";
 import RouteRow from "../RouteRow";
 import Stack from "../Stack";
 import DateRow from "../DateRow";
@@ -18,13 +17,29 @@ import { format } from "date-fns";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "../Toast";
 import { useToggleFavouriteMutation } from "@/app/hooks/mutations/useFavouriteMutations";
+import { cn } from "@/app/lib/cn";
 import {
-  listingCardDividerHoverClass,
   listingCardHoverClass,
   listingCardPreviewClass,
   type BrowseMarketplaceTone,
 } from "@/app/shared/marketplace/browseMarketplaceStyles";
 
+function CardSectionFade({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <div
+      role="separator"
+      aria-hidden
+      className={cn(
+        "my-2.5 h-px w-full bg-gradient-to-r from-transparent via-neutral-200 to-transparent",
+        className,
+      )}
+    />
+  );
+}
 function formatListingCardUserName(fullName: string | null | undefined): string {
   if (!fullName?.trim()) return "";
 
@@ -70,9 +85,11 @@ export function ListingCard<T extends Listing>({
     isDisplayMode && !isOwnerPreview
       ? listingCardHoverClass[cardTone]
       : listingCardPreviewClass[cardTone];
-  const dividerHoverClass =
+  const sectionFadeClass =
     isDisplayMode && !isOwnerPreview
-      ? listingCardDividerHoverClass[cardTone]
+      ? cardTone === "trips"
+        ? "transition-[background] duration-200 group-hover/card:via-primary-200"
+        : "transition-[background] duration-200 group-hover/card:via-slate-300"
       : "";
 
   const handleToggleLike = () => {
@@ -131,7 +148,7 @@ export function ListingCard<T extends Listing>({
         userName={formatListingCardUserName(listing.user.fullName)}
         avatar={listing.user.avatarUrl}
       />
-      <LineDivider heightClass="my-2" className={dividerHoverClass} />
+      <CardSectionFade className={sectionFadeClass} />
       <Stack>
         <RouteRow
           origin={listing.route.originCountry}
@@ -158,7 +175,7 @@ export function ListingCard<T extends Listing>({
           />
         )}
       </Stack>
-      <LineDivider heightClass="my-2" className={dividerHoverClass} />
+      <CardSectionFade className={sectionFadeClass} />
       <WeightAndPrice
         weightLabel={isTripListing ? "Luggage space" : "Parcel weight"}
         weight={listing.weightKg}
@@ -174,7 +191,7 @@ export function ListingCard<T extends Listing>({
       />
       {showMarketplaceActions ? (
         <>
-          <LineDivider heightClass="my-2" className={dividerHoverClass} />
+          <CardSectionFade className={sectionFadeClass} />
           <SendRequestBtn
             isActive={!isDisplayMode}
             buttonTextVariant="onDark"
