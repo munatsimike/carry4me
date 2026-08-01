@@ -51,7 +51,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       className={[
-        "inline-flex items-center gap-2 rounded-full px-4 py-1.5 transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-colors",
         active || isOpen
           ? "bg-primary-50"
           : "bg-white hover:bg-neutral-100",
@@ -152,7 +152,7 @@ export function FilterOptionsRow({
   const isTraveler = tag === "traveler";
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 pb-2 items-start md:items-center">
+    <div className="flex flex-col sm:flex-row gap-1.5 pb-2 items-start md:items-center">
       <span className="text-sm text-neutral-500 whitespace-nowrap">
         Filter by
       </span>
