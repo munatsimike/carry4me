@@ -2,7 +2,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import CustomModal from "@/app/components/CustomModal";
 import RouteRow from "@/app/components/RouteRow";
 import CardLabel from "@/app/components/card/CardLabel";
-import { toCountryName, toflag } from "@/app/Mapper";
+import { normalizeCountryCode, toCountryName, toflag } from "@/app/Mapper";
 import { cn } from "@/app/lib/cn";
 import {
   formatSenderPartyDisplay,
@@ -50,7 +50,8 @@ export function RequestRouteDisplay({
     route.destinationCountry,
   );
   const hasCities = !!originCityLabel || !!destinationCityLabel;
-  const originName = toCountryName(route.originCountry) ?? route.originCountry;
+  const originName =
+    normalizeCountryCode(route.originCountry) ?? route.originCountry;
   const destinationName =
     toCountryName(route.destinationCountry) ?? route.destinationCountry;
 

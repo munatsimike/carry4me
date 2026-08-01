@@ -27,7 +27,6 @@ import {
   useDashboardSuggestedMatches,
 } from "@/app/hooks/queries/useDashboardQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
-import LineDivider from "@/app/components/LineDivider";
 import { formatRelativeTime } from "./application/formatRelativeTime";
 import { cn } from "@/app/lib/cn";
 import { iconForActivity } from "./application/iconForActivity";
@@ -250,7 +249,11 @@ function RecentActivity({
                 {"Recent activity"}
               </CustomText>
             </span>
-            <LineDivider heightClass="my-1" />
+            <div
+              role="separator"
+              aria-hidden
+              className="mx-1 border-t border-neutral-100"
+            />
           </span>
 
           {recentActivities.length > 0 &&
@@ -276,7 +279,11 @@ function RecentActivity({
                   </div>
                 </div>
                 {index !== recentActivities.length - 1 && (
-                  <LineDivider heightClass="my-1" />
+                  <div
+                    role="separator"
+                    aria-hidden
+                    className="ml-11 mr-2 border-t border-neutral-100"
+                  />
                 )}
               </div>
             ))}

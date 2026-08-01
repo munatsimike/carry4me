@@ -3,7 +3,7 @@ import { InlineRow } from "./InlineRow";
 import SvgIcon from "@/components/ui/SvgIcon";
 import CustomText from "@/components/ui/CustomText";
 import { MoveRight } from "lucide-react";
-import { toCountryName, toflag } from "@/app/Mapper";
+import { normalizeCountryCode, toCountryName, toflag } from "@/app/Mapper";
 import { formatDestinationCityForDisplay } from "@/app/shared/locations/fixedDestination";
 import type { SvgIconComponent } from "@/types/Ui";
 
@@ -14,7 +14,11 @@ function CountryFlag({ country }: { country: string }) {
   return <SvgIcon size="xs" Icon={flag as SvgIconComponent} />;
 }
 
-function countryLabel(country: string): string {
+function originCountryLabel(country: string): string {
+  return normalizeCountryCode(country) ?? country;
+}
+
+function destinationCountryLabel(country: string): string {
   return toCountryName(country) ?? country;
 }
 
@@ -34,8 +38,8 @@ export default function RouteRow({
     destinationCity,
     destination,
   );
-  const originName = countryLabel(origin);
-  const destinationName = countryLabel(destination);
+  const originName = originCountryLabel(origin);
+  const destinationName = destinationCountryLabel(destination);
 
   const hasOriginCity = !!originCityLabel;
   const hasDestinationCity = !!destinationCityLabel;
