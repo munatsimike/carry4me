@@ -65,7 +65,7 @@ export function TravelerPaymentDetailsSummary({
   return (
     <section
       className={cn(
-        "min-w-0 overflow-visible rounded-xl border border-slate-100/90 bg-white p-2.5",
+        "min-w-0 overflow-visible rounded-xl border border-slate-100/55 bg-white p-2.5",
         className,
       )}
     >
@@ -149,7 +149,7 @@ export function SenderPaymentDetailsSummary({
   return (
     <section
       className={cn(
-        "min-w-0 overflow-visible rounded-xl border border-slate-100/90 bg-white p-2.5",
+        "min-w-0 overflow-visible rounded-xl border border-slate-100/55 bg-white p-2.5",
         className,
       )}
     >
@@ -320,7 +320,7 @@ export function CarryRequestCostSummary({
     return (
       <section
         className={cn(
-          "min-w-0 overflow-visible rounded-xl border border-slate-100/90 bg-white p-2.5 transition-colors duration-200 group-hover/card:border-primary-100/70",
+          "min-w-0 overflow-visible rounded-xl border border-slate-100/55 bg-white p-2.5 transition-colors duration-200 group-hover/card:border-primary-100/70",
           className,
         )}
       >

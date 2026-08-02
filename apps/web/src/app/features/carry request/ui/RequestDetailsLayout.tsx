@@ -330,7 +330,7 @@ export function ArchivedCarryRequestDetails({
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-slate-100/90 bg-secondary-50/60 p-2 sm:p-2.5 transition-colors duration-200 group-hover/card:border-primary-100/80 group-hover/card:bg-secondary-50">
+    <div className="flex flex-col gap-2 rounded-2xl border border-slate-100/55 bg-secondary-50/60 p-2 sm:p-2.5 transition-colors duration-200 group-hover/card:border-primary-100/55 group-hover/card:bg-secondary-50">
       <RouteRow
         origin={route.originCountry}
         destination={route.destinationCountry}
@@ -338,7 +338,7 @@ export function ArchivedCarryRequestDetails({
         destinationCity={route.destinationCity}
       />
 
-      <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-slate-100">
+      <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-100/55 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/55 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-slate-100/55">
         <ArchivedDetailField
           label="Sender"
           value={formatSenderPartyDisplay(viewerRole, parcel.sender_name, {
@@ -437,7 +437,7 @@ function GoodsCategoriesField({ categories }: { categories: string[] }) {
         if (open) setOpen(false);
       }}
     >
-      <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70">
+      <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-slate-100/55 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/55">
         <SvgIcon size="sm" Icon={META_ICONS.parcelBoxOutlined} color="neutral" />
         <CustomText textVariant="label" textSize="xs" as="span" className="shrink-0">
           Goods
@@ -485,7 +485,7 @@ function GoodsCategoriesField({ categories }: { categories: string[] }) {
       {open ? (
         <div
           role="listbox"
-          className="absolute bottom-full left-0 z-50 mb-1 w-max min-w-[18rem] max-w-[22rem] rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-lg"
+          className="absolute bottom-full left-0 z-50 mb-1 w-max min-w-[18rem] max-w-[22rem] rounded-xl border border-slate-200/55 bg-white px-3 py-2.5 shadow-lg"
         >
           <ul className="grid list-disc grid-cols-2 gap-x-3 gap-y-1 pl-4">
             {categories.map((name) => (
@@ -530,7 +530,7 @@ function ArchivedDetailField({
     <div
       className={cn(
         "group/date relative flex min-w-0 items-center gap-1.5",
-        bordered && "rounded-xl border border-slate-100/90 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/70",
+        bordered && "rounded-xl border border-slate-100/55 bg-white px-2.5 py-2 transition-colors duration-200 group-hover/card:border-primary-100/55",
         className,
       )}
     >

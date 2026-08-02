@@ -11,9 +11,9 @@ export default function CardLabel({
   label: string;
 }) {
   const styles: Record<Variant, string> = {
-    trip: "bg-primary-50 text-primary-500 border-primary-100 group-hover/card:bg-white",
+    trip: "bg-primary-50 text-primary-500 border-primary-100/55 group-hover/card:bg-white",
     parcel:
-      "bg-[#334155]/10 text-[#334155] border-[#334155]/15 group-hover/card:bg-white",
+      "bg-[#334155]/10 text-[#334155] border-[#334155]/10 group-hover/card:bg-white",
   };
 
   const Icon =

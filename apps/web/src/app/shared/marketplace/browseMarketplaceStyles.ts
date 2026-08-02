@@ -60,16 +60,16 @@ const listingCardTransition =
 
 /** Parcel card hover: lighter than browse button (/15), still visible on white. */
 const listingCardParcelHoverClass =
-  "hover:border-slate-700/28 hover:bg-slate-700/10 hover:shadow-md hover:shadow-slate-200/50";
+  "hover:border-slate-700/18 hover:bg-slate-700/10 hover:shadow-md hover:shadow-slate-200/50";
 
 const listingCardHoverTinted: Record<BrowseMarketplaceTone, string> = {
   trips: cn(
-    "border border-primary-200 bg-white shadow-md",
+    "border border-primary-200/55 bg-white shadow-md",
     listingCardTransition,
-    "hover:border-primary-300 hover:bg-primary-100 hover:shadow-lg hover:shadow-primary-100/40",
+    "hover:border-primary-300/70 hover:bg-primary-100 hover:shadow-lg hover:shadow-primary-100/40",
   ),
   parcels: cn(
-    "border border-slate-700/20 bg-white shadow-md",
+    "border border-slate-700/12 bg-white shadow-md",
     listingCardTransition,
     listingCardParcelHoverClass,
   ),
@@ -77,15 +77,15 @@ const listingCardHoverTinted: Record<BrowseMarketplaceTone, string> = {
 
 const listingCardHoverOutline: Record<BrowseMarketplaceTone, string> = {
   trips: cn(
-    "border border-primary-200 bg-white shadow-sm ring-0 ring-offset-0",
+    "border border-primary-200/55 bg-white shadow-sm ring-0 ring-offset-0",
     listingCardTransition,
-    "hover:border-primary-400 hover:shadow-xl hover:shadow-primary-900/5",
+    "hover:border-primary-400/70 hover:shadow-xl hover:shadow-primary-900/5",
     "hover:ring-2 hover:ring-primary-200/90 hover:ring-offset-2",
   ),
   parcels: cn(
-    "border border-[#334155]/20 bg-white shadow-sm ring-0 ring-offset-0",
+    "border border-[#334155]/12 bg-white shadow-sm ring-0 ring-offset-0",
     listingCardTransition,
-    "hover:border-[#334155]/45 hover:shadow-xl hover:shadow-slate-900/5",
+    "hover:border-[#334155]/30 hover:shadow-xl hover:shadow-slate-900/5",
     "hover:ring-2 hover:ring-slate-300/90 hover:ring-offset-2",
   ),
 };
@@ -97,8 +97,8 @@ export const listingCardHoverClass: Record<BrowseMarketplaceTone, string> =
     : listingCardHoverTinted;
 
 export const listingCardPreviewClass: Record<BrowseMarketplaceTone, string> = {
-  trips: "border border-primary-200 bg-white shadow-md",
-  parcels: "border border-slate-700/20 bg-white shadow-md",
+  trips: "border border-primary-200/55 bg-white shadow-md",
+  parcels: "border border-slate-700/12 bg-white shadow-md",
 };
 
 const listingCardDividerHoverTinted: Record<BrowseMarketplaceTone, string> = {
@@ -122,8 +122,12 @@ export const listingCardDividerHoverClass: Record<
 
 export const browseMarketplaceTextClass = browseMarketplaceTitleClass;
 
-/** Carry request cards on /requests — same hover as trip listing cards. */
-export const carryRequestCardHoverClass = listingCardHoverClass.trips;
+/** Carry request cards on /requests — softer border, same hover tint as trips. */
+export const carryRequestCardHoverClass = cn(
+  "border border-primary-200/55 bg-white shadow-md",
+  listingCardTransition,
+  "hover:border-primary-300/70 hover:bg-primary-100 hover:shadow-lg hover:shadow-primary-100/40",
+);
 
 export const carryRequestCardDividerHoverClass =
   listingCardDividerHoverClass.trips;

@@ -1166,7 +1166,7 @@ function RequestCompleted({
 }) {
   if (compact) {
     return (
-      <p className="rounded-2xl border border-slate-100 bg-secondary-50/80 px-3 py-2.5 text-center text-xs text-ink-secondary transition-colors duration-200 group-hover/card:border-primary-100 group-hover/card:bg-primary-50/40">
+      <p className="rounded-2xl border border-slate-100/55 bg-secondary-50/80 px-3 py-2.5 text-center text-xs text-ink-secondary transition-colors duration-200 group-hover/card:border-primary-100/55 group-hover/card:bg-primary-50/40">
         {actions.infoBlock?.displayText?.title}
       </p>
     );
