@@ -38,36 +38,82 @@ export default function TrustAndSafety({ items }: InfoItemsProps) {
           </CustomText>
         </div>
 
-        <div className="grid gap-x-8 sm:grid-cols-2">
-          {items.map((item, index) => (
+        <div className="flex flex-col">
+          <div
+            role="separator"
+            aria-hidden
+            className="mx-1 border-t border-neutral-100"
+          />
+
+          <div className="relative grid sm:grid-cols-2">
             <div
-              key={item.label}
-              className="flex gap-4 border-t border-slate-200 py-5 first:border-t-0 sm:first:border-t lg:odd:border-r lg:odd:pr-8 lg:even:pl-2"
-            >
-              <CircleBadge size="lg" bgColor={variant}>
-                <SvgIcon
-                  size="lg"
-                  Icon={item.Icon!}
-                  className={
-                    safetyIconColors[index % safetyIconColors.length]
-                  }
-                />
-              </CircleBadge>
-              <div className="flex min-w-0 flex-col gap-1">
-                <CustomText
-                  as="h4"
-                  textVariant="primary"
-                  textSize="lg"
-                  className="font-medium"
+              role="separator"
+              aria-hidden
+              className="pointer-events-none absolute inset-y-3 left-1/2 hidden w-px -translate-x-1/2 bg-neutral-100 sm:block"
+            />
+
+            {items.map((item, index) => {
+              const isLeftCol = index % 2 === 0;
+              const isTopRow = index < 2;
+
+              return (
+                <div
+                  key={item.label}
+                  className={`relative flex gap-4 py-5 ${
+                    isLeftCol ? "sm:pr-8" : "sm:pl-8"
+                  }`}
                 >
-                  {item.label}
-                </CustomText>
-                <CustomText as="p" textSize="sm" className="leading-relaxed">
-                  {item.value}
-                </CustomText>
-              </div>
-            </div>
-          ))}
+                  {index > 0 ? (
+                    <div
+                      role="separator"
+                      aria-hidden
+                      className="absolute top-0 right-3 left-3 border-t border-neutral-100 sm:hidden"
+                    />
+                  ) : null}
+                  {!isTopRow ? (
+                    <div
+                      role="separator"
+                      aria-hidden
+                      className="absolute top-0 right-3 left-3 hidden border-t border-neutral-100 sm:block"
+                    />
+                  ) : null}
+
+                  <CircleBadge size="lg" bgColor={variant}>
+                    <SvgIcon
+                      size="lg"
+                      Icon={item.Icon!}
+                      className={
+                        safetyIconColors[index % safetyIconColors.length]
+                      }
+                    />
+                  </CircleBadge>
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <CustomText
+                      as="h4"
+                      textVariant="primary"
+                      textSize="lg"
+                      className="font-medium"
+                    >
+                      {item.label}
+                    </CustomText>
+                    <CustomText
+                      as="p"
+                      textSize="sm"
+                      className="leading-relaxed"
+                    >
+                      {item.value}
+                    </CustomText>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div
+            role="separator"
+            aria-hidden
+            className="mx-1 border-t border-neutral-100"
+          />
         </div>
       </div>
     </DefaultContainer>

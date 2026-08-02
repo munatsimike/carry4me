@@ -63,46 +63,55 @@ function FaqDesktopPanel({
   const selectedItem = items[openIndex] ?? items[0];
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(280px,0.75fr)_minmax(0,1.25fr)] gap-8 mb-6 lg:gap-10">
-      <div className="flex flex-col gap-2">
+    <div className="mx-auto mb-6 grid w-full max-w-6xl grid-cols-[minmax(280px,0.75fr)_minmax(0,1.25fr)] gap-8 lg:gap-10">
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-neutral-100 bg-white">
         {items.map((item, index) => {
           const isOpen = openIndex === index;
+          const isLast = index === items.length - 1;
 
           return (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => onSelect(index)}
-              className={cn(
-                "rounded-2xl border p-4 text-left transition-all duration-300",
-                isOpen
-                  ? "border-primary-200 bg-primary-50/70"
-                  : "border-slate-200 bg-white hover:border-primary-100 hover:bg-slate-50",
-              )}
-            >
-              <span className="flex items-center gap-3">
-                <span
-                  className={cn(
-                    "h-2.5 w-2.5 shrink-0 rounded-full",
-                    isOpen ? "bg-primary-500" : "bg-slate-300",
-                  )}
+            <div key={item.label} className="flex flex-col">
+              <button
+                type="button"
+                onClick={() => onSelect(index)}
+                className={cn(
+                  "p-4 text-left transition-colors duration-300",
+                  isOpen
+                    ? "bg-primary-50/70"
+                    : "bg-white hover:bg-slate-50",
+                )}
+              >
+                <span className="flex items-center gap-3">
+                  <span
+                    className={cn(
+                      "h-2.5 w-2.5 shrink-0 rounded-full",
+                      isOpen ? "bg-primary-500" : "bg-slate-300",
+                    )}
+                  />
+                  <CustomText
+                    as="span"
+                    textVariant="primary"
+                    textSize="sm"
+                    className="font-medium"
+                  >
+                    {item.label}
+                  </CustomText>
+                </span>
+              </button>
+              {!isLast ? (
+                <div
+                  role="separator"
+                  aria-hidden
+                  className="mx-3 border-t border-neutral-100"
                 />
-                <CustomText
-                  as="span"
-                  textVariant="primary"
-                  textSize="sm"
-                  className="font-medium"
-                >
-                  {item.label}
-                </CustomText>
-              </span>
-            </button>
+              ) : null}
+            </div>
           );
         })}
       </div>
 
       {selectedItem && (
-        <div className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
+        <div className="min-w-0 rounded-[2rem] border border-neutral-100 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
           {selectedItem.tag && (
             <span
               className={cn(
