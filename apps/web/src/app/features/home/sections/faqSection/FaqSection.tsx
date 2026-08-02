@@ -63,8 +63,8 @@ function FaqDesktopPanel({
   const selectedItem = items[openIndex] ?? items[0];
 
   return (
-    <div className="mx-auto mb-6 grid w-full max-w-6xl grid-cols-[minmax(280px,0.75fr)_minmax(0,1.25fr)] gap-8 lg:gap-10">
-      <div className="flex flex-col overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+    <div className="mx-auto mb-6 grid w-full max-w-6xl grid-cols-[max-content_minmax(0,1fr)] gap-8 lg:gap-10">
+      <div className="flex w-max max-w-full flex-col overflow-hidden rounded-2xl border border-neutral-100 bg-white">
         {items.map((item, index) => {
           const isOpen = openIndex === index;
           const isLast = index === items.length - 1;
@@ -75,7 +75,7 @@ function FaqDesktopPanel({
                 type="button"
                 onClick={() => onSelect(index)}
                 className={cn(
-                  "p-4 text-left transition-colors duration-300",
+                  "px-4 py-3.5 pr-5 text-left transition-colors duration-300",
                   isOpen
                     ? "bg-primary-50/70"
                     : "bg-white hover:bg-slate-50",
@@ -92,7 +92,7 @@ function FaqDesktopPanel({
                     as="span"
                     textVariant="primary"
                     textSize="sm"
-                    className="font-medium"
+                    className="whitespace-nowrap font-medium"
                   >
                     {item.label}
                   </CustomText>
