@@ -57,9 +57,13 @@ export default function ParcelSendingRow({ items }: ParcelSendingRowProps) {
               >
                 Items list
               </CustomText>
-              <ModalSeparator />
+              <ModalSeparator className="mx-1 border-neutral-100" />
               <div className="pt-4">
-                <GoodsManifestTable items={visibleItems} hideSizeOnMobile />
+                <GoodsManifestTable
+                  items={visibleItems}
+                  hideSizeOnMobile
+                  insetDividers
+                />
               </div>
             </div>
           </CustomModal>

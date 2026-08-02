@@ -28,34 +28,55 @@ type GoodsManifestTableProps = {
   variant?: "default" | "review";
   /** Hide the Size column on small screens (e.g. view-items modal on mobile). */
   hideSizeOnMobile?: boolean;
+  /** Use inset rules under the header (and between rows) instead of full-bleed borders. */
+  insetDividers?: boolean;
 };
 
 function ManifestTable({
   rows,
   compact = false,
   rowBorder = true,
+  insetDividers = false,
 }: {
   rows: GoodsItem[];
   compact?: boolean;
   rowBorder?: boolean;
+  insetDividers?: boolean;
 }) {
   return (
     <div className="w-full min-w-0 overflow-x-auto">
       <table className="w-full min-w-0 border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 text-sm text-neutral-500">
+          <tr
+            className={cn(
+              "text-sm text-neutral-500",
+              !insetDividers && "border-b border-neutral-200",
+            )}
+          >
             <th className="py-2 pr-3 font-medium">Item</th>
             <th className="py-2 pr-3 font-medium whitespace-nowrap">Qty</th>
             <th className="py-2 pr-3 font-medium">Size</th>
             <th className="py-2 font-medium">Condition</th>
           </tr>
+          {insetDividers ? (
+            <tr aria-hidden="true">
+              <td colSpan={4} className="p-0">
+                <div
+                  role="separator"
+                  className="mx-1 border-t border-neutral-100"
+                />
+              </td>
+            </tr>
+          ) : null}
         </thead>
         <tbody>
           {rows.map((item, index) => (
             <tr
               key={`${item.description}-${index}`}
               className={cn(
-                rowBorder && "border-b border-neutral-100 last:border-0",
+                !insetDividers &&
+                  rowBorder &&
+                  "border-b border-neutral-100 last:border-0",
                 "transition-colors hover:bg-neutral-50",
               )}
             >
@@ -107,6 +128,7 @@ export default function GoodsManifestTable({
   className,
   variant = "default",
   hideSizeOnMobile = false,
+  insetDividers = false,
 }: GoodsManifestTableProps) {
   const rows = items.map(normalizeGoodsItem).filter((item) => item.description);
 
@@ -157,7 +179,11 @@ export default function GoodsManifestTable({
       </div>
 
       <div className="hidden sm:block">
-        <ManifestTable rows={rows} compact={compact} />
+        <ManifestTable
+          rows={rows}
+          compact={compact}
+          insetDividers={insetDividers}
+        />
       </div>
     </div>
   );
