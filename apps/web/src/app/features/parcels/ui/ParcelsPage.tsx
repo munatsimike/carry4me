@@ -2,7 +2,7 @@ import CustomModal from "@/app/components/CustomModal";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import { useEffect, useMemo, useState } from "react";
 import Parcels from "./Parcels";
-import Search, { SearchResults } from "@/app/components/Search";
+import Search from "@/app/components/Search";
 import type { ParcelListing } from "@/app/features/parcels/domain/Parcel";
 import {
   getTripsWithAvailableSpace,
@@ -225,6 +225,8 @@ export default function ParcelsPage() {
       setSearchCountry={setSearchCountry}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
+      showClear={isSearchActive && totalParcels > 0}
+      onClearSearch={() => setClearResults(true)}
     />
   );
   const handleOnClick = () => {
@@ -276,12 +278,6 @@ export default function ParcelsPage() {
           )}
         </AnimatePresence>
         {!isMobile && filterContent}
-
-        <SearchResults
-          isSearchActive={isSearchActive}
-          searchResults={totalParcels}
-          onClick={() => setClearResults(true)}
-        />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {displayedParcels.length > 0 && (
@@ -295,6 +291,21 @@ export default function ParcelsPage() {
           <EmptyState
             title="No matching parcels"
             description="Try adjusting your search or filters to find more parcels."
+            action={
+              isSearchActive ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setClearResults(true)}
+                  className="mt-1 border border-primary-200 bg-white text-primary-600 hover:bg-primary-50"
+                >
+                  <CustomText textSize="sm" className="text-primary-600">
+                    Clear search
+                  </CustomText>
+                </Button>
+              ) : undefined
+            }
           />
         )}
         {displayedParcels.length === 0 && isFetched && !hasFilter && !isSearchActive && (

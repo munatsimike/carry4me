@@ -5,7 +5,6 @@ import { META_ICONS } from "../icons/MetaIcon";
 import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import ComboBox from "./ComboBox";
 import { cn } from "../lib/cn";
@@ -27,6 +26,9 @@ type SearchProps = {
   setSearchCity: (s: string) => void;
   setClearResults: () => void;
   clearResults: boolean;
+  /** Show Clear next to Search when an active search returned matches. */
+  showClear?: boolean;
+  onClearSearch?: () => void;
 };
 
 export default function Search({
@@ -34,6 +36,8 @@ export default function Search({
   setSearchCountry,
   clearResults,
   setClearResults,
+  showClear = false,
+  onClearSearch,
 }: SearchProps) {
   const { control, watch, handleSubmit, reset, setValue } =
     useForm<SearchFields>({
@@ -70,11 +74,12 @@ export default function Search({
     <form
       onSubmit={handleSubmit(handleSearch)}
       className={cn(
-        "flex w-full sm:max-w-2xl lg:max-w-3xl flex-col gap-3 rounded-3xl sm:bg-primary-50 sm:border border-primary-100 pt-10 pb-3 px-3 sm:p-2 sm:px-2.5 lg:flex-row lg:items-center lg:justify-center lg:gap-3",
+        "flex w-full flex-col gap-3 rounded-3xl border-primary-100 pt-10 pb-3 px-3 sm:border sm:bg-primary-50 sm:p-2 sm:px-2.5 lg:flex-row lg:items-center lg:gap-2.5",
+        showClear ? "sm:max-w-3xl lg:max-w-4xl" : "sm:max-w-2xl lg:max-w-3xl",
       )}
     >
-      <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">
-        <div className="w-full sm:min-w-[180px] sm:flex-1">
+      <div className="flex min-w-0 w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:flex-1 lg:flex-nowrap">
+        <div className="w-full min-w-0 sm:min-w-[140px] sm:flex-1">
           <Controller
             name="country"
             control={control}
@@ -103,7 +108,7 @@ export default function Search({
           />
         </div>
 
-        <div className="w-full sm:min-w-[180px] sm:flex-1">
+        <div className="w-full min-w-0 sm:min-w-[140px] sm:flex-1">
           <Controller
             name="city"
             control={control}
@@ -128,28 +133,43 @@ export default function Search({
         </div>
       </div>
 
-      <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:w-auto">
+      <div className="flex w-full shrink-0 flex-col items-stretch gap-2.5 sm:flex-row sm:items-center lg:w-auto">
         <CustomText
           as="span"
           textSize="xs"
-          className="text-center text-neutral-500 sm:text-left whitespace-nowrap"
+          className="whitespace-nowrap text-center text-neutral-500 sm:text-left"
         >
           Destination
         </CustomText>
 
-        <div className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white px-3 py-1.5 shadow-sm sm:min-w-[150px]">
+        <div className="flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-white px-2.5 py-1.5 shadow-sm sm:min-w-[130px]">
           <SvgIcon size="xs" Icon={META_ICONS.zimFlag} />
           <CustomText as="span" textSize="xs" className="text-neutral-700">
             Zimbabwe
           </CustomText>
         </div>
 
+        {showClear && onClearSearch ? (
+          <Button
+            type="button"
+            cornerRadiusClass="rounded-full"
+            variant="ghost"
+            size="xs"
+            onClick={onClearSearch}
+            className="inline-flex shrink-0 items-center justify-center border border-primary-200 bg-white px-3 text-primary-600 hover:bg-primary-50"
+          >
+            <CustomText textSize="sm" className="text-primary-600">
+              Clear
+            </CustomText>
+          </Button>
+        ) : null}
+
         <Button
           type="submit"
           cornerRadiusClass="rounded-full"
           variant="primary"
           size="xs"
-          className="flex w-full items-center justify-center gap-2 sm:max-w-[200px]"
+          className="inline-flex shrink-0 items-center justify-center gap-2 px-3"
           leadingIcon={
             <SvgIcon color="onDark" size="sm" Icon={META_ICONS.searchIcon} />
           }
@@ -160,53 +180,5 @@ export default function Search({
         </Button>
       </div>
     </form>
-  );
-}
-
-type SearchResultsProps = {
-  isSearchActive: boolean;
-  searchResults: number;
-  onClick: () => void;
-};
-
-export function SearchResults({
-  isSearchActive,
-  searchResults,
-  onClick,
-}: SearchResultsProps) {
-  return (
-    <AnimatePresence>
-      {isSearchActive && (
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
-          className="flex items-center gap-10"
-        >
-          <span className="inline-flex gap-2 items-center">
-            <CustomText
-              as="p"
-              textSize="sm"
-              textVariant="primary"
-              className="font-medium"
-            >
-              ({searchResults})
-            </CustomText>
-            <CustomText as="p" textSize="xs" textVariant="secondary">
-              {searchResults === 1 ? "result" : "results"} found
-            </CustomText>
-          </span>
-
-          <button
-            onClick={onClick}
-            type="button"
-            className="text-sm font-medium text-primary-500 hover:underline"
-          >
-            Clear search
-          </button>
-        </motion.div>
-      )}
-    </AnimatePresence>
   );
 }

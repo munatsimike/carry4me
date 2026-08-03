@@ -1,6 +1,6 @@
 import { FilterOptionsRow, sortTrips } from "@/app/components/FilterOptionsRow";
 import PageSection from "@/app/components/PageSection";
-import Search, { SearchResults } from "@/app/components/Search";
+import Search from "@/app/components/Search";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import {
   filterByCountryCity,
@@ -173,6 +173,8 @@ export function MyFavouritesPage() {
       setSearchCountry={setSearchCountry}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
+      showClear={isSearchActive && displayedFavourites.length > 0}
+      onClearSearch={() => setClearResults(true)}
     />
   );
   return (
@@ -198,12 +200,6 @@ export function MyFavouritesPage() {
         </AnimatePresence>
       </div>
       <PageSection>
-        <SearchResults
-          isSearchActive={isSearchActive}
-          searchResults={displayedFavourites.length}
-          onClick={() => setClearResults(true)}
-        />
-
         {!isMobile && searchContent}
         <AnimatePresence>
           {isMobile && mobileFilter && (

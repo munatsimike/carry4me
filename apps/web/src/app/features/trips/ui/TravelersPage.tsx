@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CustomModal from "@/app/components/CustomModal";
 import RequestSummary from "@/app/components/RequestSummary";
 import PageSection from "@/app/components/PageSection";
-import Search, { SearchResults } from "@/app/components/Search";
+import Search from "@/app/components/Search";
 import type { TripListing } from "../domain/Trip";
 import { AnimatePresence, motion } from "framer-motion";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
@@ -223,6 +223,8 @@ export default function TravelersPage() {
       setSearchCity={setSearchCity}
       setClearResults={() => setClearResults(false)}
       clearResults={clearSearchResults}
+      showClear={isSearchActive && totalTrips > 0}
+      onClearSearch={() => setClearResults(true)}
     />
   );
 
@@ -276,11 +278,6 @@ export default function TravelersPage() {
             </CustomModal>
           )}
         </AnimatePresence>
-        <SearchResults
-          isSearchActive={isSearchActive}
-          searchResults={totalTrips}
-          onClick={() => setClearResults(true)}
-        />
       </PageSection>
       <DefaultContainer outerClassName="bg-canvas min-h-screen">
         {displayedTrips.length === 0 &&
@@ -318,8 +315,23 @@ export default function TravelersPage() {
           displayedTrips.length === 0 &&
           isFetched && (
             <EmptyState
-              title="No matching travelers"
-              description="Try adjusting your search or filters to find more travelers."
+              title="No matching trips"
+              description="Try adjusting your search or filters to find more trips."
+              action={
+                isSearchActive ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setClearResults(true)}
+                    className="mt-1 border border-primary-200 bg-white text-primary-600 hover:bg-primary-50"
+                  >
+                    <CustomText textSize="sm" className="text-primary-600">
+                      Clear search
+                    </CustomText>
+                  </Button>
+                ) : undefined
+              }
             />
           )}
 
