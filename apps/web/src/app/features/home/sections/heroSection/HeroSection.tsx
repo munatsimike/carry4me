@@ -4,6 +4,38 @@ import ActionButtons from "./ActionButtons";
 import DefualtContianer from "@/components/ui/DefualtContianer";
 import { motion } from "framer-motion";
 
+const DESKTOP_MASK =
+  "linear-gradient(115deg, transparent 0%, transparent 18%, rgba(0, 0, 0, 0.35) 28%, black 42%)";
+
+const MOBILE_MASK =
+  "linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.35) 16%, black 38%)";
+
+const WHITE_WASH_DESKTOP =
+  "linear-gradient(115deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 30%, rgba(255,255,255,0.4) 55%, rgba(255,255,255,0.38) 100%)";
+
+const WHITE_WASH_MOBILE =
+  "linear-gradient(to bottom, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 35%, rgba(255,255,255,0.4) 100%)";
+
+const dissolveIn = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  transition: {
+    duration: 1.8,
+    delay: 0.15,
+    ease: [0.22, 1, 0.36, 1] as const,
+  },
+};
+
+const dissolveBreathe = {
+  animate: { opacity: [0.85, 1, 0.85] },
+  transition: {
+    duration: 7,
+    ease: "easeInOut" as const,
+    repeat: Infinity,
+    repeatType: "mirror" as const,
+  },
+};
+
 export function HeroSection() {
   const heading = "Send parcels home with trusted travelers.";
   const subHeading =
@@ -33,41 +65,25 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden bg-white">
+      {/* Desktop: side image with diagonal dissolve */}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute inset-y-0 right-0 hidden w-[35%] overflow-hidden lg:block"
         style={{
-          WebkitMaskImage:
-            "linear-gradient(115deg, transparent 0%, transparent 18%, rgba(0, 0, 0, 0.35) 28%, black 42%)",
-          maskImage:
-            "linear-gradient(115deg, transparent 0%, transparent 18%, rgba(0, 0, 0, 0.35) 28%, black 42%)",
+          WebkitMaskImage: DESKTOP_MASK,
+          maskImage: DESKTOP_MASK,
         }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{
-          duration: 1.8,
-          delay: 0.15,
-          ease: [0.22, 1, 0.36, 1],
-        }}
+        {...dissolveIn}
       >
         <motion.img
           src="/images/hero-image.png"
           alt=""
           className="h-full w-full object-cover object-[22%_42%] brightness-[0.98] contrast-[0.96] saturate-[0.92]"
-          animate={{ opacity: [0.85, 1, 0.85] }}
-          transition={{
-            duration: 7,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "mirror",
-          }}
+          {...dissolveBreathe}
         />
         <div
           className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(115deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 30%, rgba(255,255,255,0.4) 55%, rgba(255,255,255,0.38) 100%)",
-          }}
+          style={{ background: WHITE_WASH_DESKTOP }}
         />
       </motion.div>
 
@@ -104,6 +120,28 @@ export function HeroSection() {
             {subHeading}
           </SubHeading>
           <ActionButtons />
+
+          {/* Mobile + tablet: image below copy so text stays clear */}
+          <motion.div
+            aria-hidden
+            className="relative mt-2 h-44 w-full max-w-3xl overflow-hidden sm:h-56 lg:hidden"
+            style={{
+              WebkitMaskImage: MOBILE_MASK,
+              maskImage: MOBILE_MASK,
+            }}
+            {...dissolveIn}
+          >
+            <motion.img
+              src="/images/hero-image.png"
+              alt=""
+              className="h-full w-full object-cover object-[28%_40%] brightness-[0.98] contrast-[0.96] saturate-[0.92]"
+              {...dissolveBreathe}
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: WHITE_WASH_MOBILE }}
+            />
+          </motion.div>
         </div>
       </DefualtContianer>
     </section>
