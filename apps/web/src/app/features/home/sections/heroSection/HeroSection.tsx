@@ -33,7 +33,7 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden bg-white">
-      <div
+      <motion.div
         aria-hidden
         className="pointer-events-none absolute inset-y-0 right-0 hidden w-[35%] overflow-hidden lg:block"
         style={{
@@ -42,11 +42,25 @@ export function HeroSection() {
           maskImage:
             "linear-gradient(115deg, transparent 0%, transparent 18%, rgba(0, 0, 0, 0.35) 28%, black 42%)",
         }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{
+          duration: 1.8,
+          delay: 0.15,
+          ease: [0.22, 1, 0.36, 1],
+        }}
       >
-        <img
+        <motion.img
           src="/images/hero-image.png"
           alt=""
           className="h-full w-full object-cover object-[22%_42%] brightness-[0.98] contrast-[0.96] saturate-[0.92]"
+          animate={{ opacity: [0.85, 1, 0.85] }}
+          transition={{
+            duration: 7,
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatType: "mirror",
+          }}
         />
         <div
           className="absolute inset-0"
@@ -55,7 +69,7 @@ export function HeroSection() {
               "linear-gradient(115deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 30%, rgba(255,255,255,0.4) 55%, rgba(255,255,255,0.38) 100%)",
           }}
         />
-      </div>
+      </motion.div>
 
       <DefualtContianer className="relative z-10 pt-8 sm:pt-12 lg:pt-16">
         <div className="flex flex-col items-center px-4 py-8 text-center sm:px-6 sm:py-10 lg:px-8">
