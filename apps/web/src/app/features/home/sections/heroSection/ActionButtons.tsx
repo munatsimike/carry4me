@@ -31,6 +31,31 @@ const itemVariants = {
   show: { opacity: 1, y: 0 },
 };
 
+function HoverFillIcon({
+  Outlined,
+  Filled,
+  className,
+}: {
+  Outlined: React.FC<React.SVGProps<SVGSVGElement>>;
+  Filled: React.FC<React.SVGProps<SVGSVGElement>>;
+  className?: string;
+}) {
+  return (
+    <span className={cn("relative inline-flex", className)}>
+      <SvgIcon
+        size="xl"
+        Icon={Outlined}
+        className="transition-opacity duration-200 group-hover:opacity-0"
+      />
+      <SvgIcon
+        size="xl"
+        Icon={Filled}
+        className="absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+      />
+    </span>
+  );
+}
+
 export default function ActionButtons() {
   const size = "xl";
   const titleSize = "lg";
@@ -47,7 +72,7 @@ export default function ActionButtons() {
         <Link to="/parcels" className="block w-full">
           <Button
             className={cn(
-              "w-full min-w-0 px-4",
+              "group w-full min-w-0 px-4",
               browseMarketplaceSurfaceClass.parcels,
             )}
             subtitle={
@@ -65,9 +90,9 @@ export default function ActionButtons() {
             variant="ghost"
             size={size}
             leadingIcon={
-              <SvgIcon
-                size="xl"
-                Icon={META_ICONS.parcelBoxOutlined}
+              <HoverFillIcon
+                Outlined={META_ICONS.parcelBoxOutlined}
+                Filled={META_ICONS.parcelBox}
                 className={browseMarketplaceIconClass.parcels}
               />
             }
@@ -95,7 +120,7 @@ export default function ActionButtons() {
         <Link to="/travelers" className="block w-full">
           <Button
             className={cn(
-              "w-full min-w-0 px-4",
+              "group w-full min-w-0 px-4",
               browseMarketplaceSurfaceClass.trips,
             )}
             subtitle={
@@ -113,9 +138,9 @@ export default function ActionButtons() {
             variant="ghost"
             size={size}
             leadingIcon={
-              <SvgIcon
-                size="xl"
-                Icon={META_ICONS.planeIcon}
+              <HoverFillIcon
+                Outlined={META_ICONS.planeIcon}
+                Filled={META_ICONS.planeFilled}
                 className={browseMarketplaceIconClass.trips}
               />
             }
