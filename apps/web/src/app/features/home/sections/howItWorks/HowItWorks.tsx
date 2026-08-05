@@ -1,13 +1,24 @@
 import DefaultContainer from "@/components/ui/DefualtContianer";
-import type { StepsPros } from "@/types/Ui";
+import type { StepsPros, SvgIconComponent } from "@/types/Ui";
 import SectionTitle from "../SectionTitle";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
-import SvgIcon from "@/components/ui/SvgIcon";
-import { META_ICONS } from "@/app/icons/MetaIcon";
+import HoverFillIcon from "@/app/components/HoverFillIcon";
 import { motion } from "framer-motion";
 import type { Step } from "@/types/Ui";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
+import { createElement } from "react";
+import { UserPlus } from "lucide-react";
+
+const UserPlusOutlined: SvgIconComponent = (props) =>
+  createElement(UserPlus, { ...props, fill: "none", strokeWidth: 1.75 });
+
+const UserPlusFilled: SvgIconComponent = (props) =>
+  createElement(UserPlus, {
+    ...props,
+    fill: "currentColor",
+    strokeWidth: 1.75,
+  });
 
 export default function HowItWorks({ steps }: StepsPros) {
   const { openSignUpModal } = useSignInModal();
@@ -40,27 +51,21 @@ export default function HowItWorks({ steps }: StepsPros) {
         initial="hidden"
         animate="show"
       >
-        {/* Title */}
         <motion.div variants={howItWorksItem}>
           <SectionTitle title="How it works" />
         </motion.div>
 
-        {/* Steps timeline */}
         <motion.section
           variants={howItWorksContainer}
           className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-0"
         >
           {steps.map((step, index) => (
             <motion.div key={index} variants={howItWorksItem}>
-              <StepItem
-                step={step}
-                isLast={index === steps.length - 1}
-              />
+              <StepItem step={step} isLast={index === steps.length - 1} />
             </motion.div>
           ))}
         </motion.section>
 
-        {/* CTA */}
         <motion.div
           className="flex justify-center pt-6 sm:pt-8"
           variants={howItWorksItem}
@@ -69,14 +74,15 @@ export default function HowItWorks({ steps }: StepsPros) {
             <Button
               type="button"
               onClick={() => openSignUpModal({ redirectTo: "/dashboard" })}
-              className="w-full border border-primary-200 sm:w-[250px]"
+              className="group w-full border border-primary-200 sm:w-[250px]"
               variant="secondary"
               size="lg"
               leadingIcon={
-                <SvgIcon
-                  color="primary"
+                <HoverFillIcon
+                  Outlined={UserPlusOutlined}
+                  Filled={UserPlusFilled}
                   size="lg"
-                  Icon={META_ICONS.addAccount}
+                  className="text-primary-500"
                 />
               }
             >
@@ -96,7 +102,7 @@ type StepProps = {
 
 function StepItem({ step, isLast = false }: StepProps) {
   return (
-    <div className="relative flex gap-4 rounded-3xl bg-white/80 px-4 pb-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md lg:h-full lg:flex-col lg:rounded-none lg:bg-transparent  lg:shadow-none lg:ring-0 lg:hover:bg-transparent lg:hover:shadow-none">
+    <div className="relative flex gap-4 rounded-3xl bg-white/80 px-4 pb-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md lg:h-full lg:flex-col lg:rounded-none lg:bg-transparent lg:shadow-none lg:ring-0 lg:hover:bg-transparent lg:hover:shadow-none">
       {!isLast && (
         <>
           <span className="absolute left-9 top-14 h-[calc(100%-3rem)] w-px bg-slate-200 lg:left-[calc(50%+1.25rem)] lg:top-[22px] lg:h-px lg:w-[calc(100%-2.5rem)]" />

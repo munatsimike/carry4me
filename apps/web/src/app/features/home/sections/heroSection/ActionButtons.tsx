@@ -6,6 +6,7 @@ import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import HoverFillIcon from "@/app/components/HoverFillIcon";
 import {
   browseMarketplaceArrowClass,
   browseMarketplaceIconClass,
@@ -30,31 +31,6 @@ const itemVariants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0 },
 };
-
-function HoverFillIcon({
-  Outlined,
-  Filled,
-  className,
-}: {
-  Outlined: React.FC<React.SVGProps<SVGSVGElement>>;
-  Filled: React.FC<React.SVGProps<SVGSVGElement>>;
-  className?: string;
-}) {
-  return (
-    <span className={cn("relative inline-flex", className)}>
-      <SvgIcon
-        size="xl"
-        Icon={Outlined}
-        className="transition-opacity duration-200 group-hover:opacity-0"
-      />
-      <SvgIcon
-        size="xl"
-        Icon={Filled}
-        className="absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-      />
-    </span>
-  );
-}
 
 export default function ActionButtons() {
   const size = "xl";

@@ -10,6 +10,7 @@ import { META_ICONS } from "@/app/icons/MetaIcon";
 import type { SvgIconComponent } from "@/types/Ui";
 import { motion } from "framer-motion";
 import { Card } from "@/app/components/card/Card";
+import HoverFillIcon from "@/app/components/HoverFillIcon";
 import PageLoadingSpinner from "@/app/components/PageLoadingSpinner";
 import StatsSection from "./components/StatsSection";
 import SuggestedMatchesTabs, {
@@ -446,11 +447,12 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
             btnText="Browse trips"
             btnVariant="ghost"
             icon={META_ICONS.planeIcon}
+            filledIcon={META_ICONS.planeFilled}
             iconColor="primary"
             iconSize="lg"
             textVariant="primary"
             showArrow
-            buttonClassName={browseMarketplaceSurfaceClass.trips}
+            buttonClassName={cn("group", browseMarketplaceSurfaceClass.trips)}
             iconClassName={browseMarketplaceIconClass.trips}
             textClassName={browseMarketplaceTitleClass.trips}
           />
@@ -463,11 +465,12 @@ function ActionButtonRow({ onPostParcel, onPostTrip }: ActionButtonRowProps) {
             btnText="Browse parcels"
             btnVariant="ghost"
             icon={META_ICONS.parcelBoxOutlined}
+            filledIcon={META_ICONS.parcelBox}
             iconColor="dark"
             iconSize="lg"
             textVariant="primary"
             showArrow
-            buttonClassName={browseMarketplaceSurfaceClass.parcels}
+            buttonClassName={cn("group", browseMarketplaceSurfaceClass.parcels)}
             iconClassName={browseMarketplaceIconClass.parcels}
             textClassName={browseMarketplaceTitleClass.parcels}
           />
@@ -486,6 +489,8 @@ type ActionButtonsProps = {
   btnText: string;
   iconSize?: "lg" | "xl";
   icon?: SvgIconComponent;
+  /** When set, outlined `icon` fills to this on hover. */
+  filledIcon?: SvgIconComponent;
   buttonClassName?: string;
   iconClassName?: string;
   textClassName?: string;
@@ -500,6 +505,7 @@ function ActionButton({
   iconSize = "xl",
   btnText,
   icon = META_ICONS.parcelBox,
+  filledIcon,
   buttonClassName,
   iconClassName,
   textClassName,
@@ -522,12 +528,21 @@ function ActionButton({
       }
     >
       <span className="flex flex-col items-center gap-1.5">
-        <SvgIcon
-          color={iconColor}
-          size={iconSize}
-          Icon={icon}
-          className={iconClassName}
-        />
+        {filledIcon ? (
+          <HoverFillIcon
+            Outlined={icon}
+            Filled={filledIcon}
+            size={iconSize}
+            className={iconClassName}
+          />
+        ) : (
+          <SvgIcon
+            color={iconColor}
+            size={iconSize}
+            Icon={icon}
+            className={iconClassName}
+          />
+        )}
         <CustomText
           as="span"
           textVariant={textVariant}
