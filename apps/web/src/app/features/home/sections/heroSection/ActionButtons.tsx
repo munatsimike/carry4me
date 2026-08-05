@@ -67,7 +67,7 @@ export default function ActionButtons() {
             leadingIcon={
               <SvgIcon
                 size="xl"
-                Icon={META_ICONS.parcelBox}
+                Icon={META_ICONS.parcelBoxOutlined}
                 className={browseMarketplaceIconClass.parcels}
               />
             }
@@ -115,7 +115,7 @@ export default function ActionButtons() {
             leadingIcon={
               <SvgIcon
                 size="xl"
-                Icon={META_ICONS.planeFilled}
+                Icon={META_ICONS.planeIcon}
                 className={browseMarketplaceIconClass.trips}
               />
             }
