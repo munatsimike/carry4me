@@ -47,6 +47,8 @@ const FRIENDLY_BY_REASON: Record<string, string> = {
     "Payment is still being confirmed. Verify the delivery code again.",
   MISSING_CHARGE: "Payment is still processing. Try again in a moment.",
   MISSING_PAYMENT_INTENT: "No payment was found for this request.",
+  TRAVEL_DATE_NOT_PASSED:
+    "Payout can only be released on or after the travel date.",
   INVALID_PAYOUT_AMOUNT: "Payout amount looks wrong. Contact support.",
 };
 

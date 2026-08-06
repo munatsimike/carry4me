@@ -25,6 +25,10 @@ import {
   verifyDeliveryOtp,
 } from "../application/deliveryOtp";
 import {
+  hasTravelDatePassedForPayout,
+  payoutBlockedBeforeTravelDateMessage,
+} from "../application/payoutTravelDate";
+import {
   cancelCarryRequest,
 } from "../application/cancelCarryRequest";
 import { completeCarryRequestPayment } from "../application/completeCarryRequestPayment";
@@ -493,6 +497,21 @@ export default function CarryRequestsPage() {
       return;
     }
 
+    if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
+      if (
+        !hasTravelDatePassedForPayout(carryRequest.tripSnapshot.departure_date)
+      ) {
+        openInfo({
+          title: "Travel date not reached",
+          message: payoutBlockedBeforeTravelDateMessage(
+            carryRequest.tripSnapshot.departure_date,
+          ),
+          label: "Close",
+        });
+        return;
+      }
+    }
+
     const accepterIsTraveler =
       actions.primary.key === UIACTIONKEYS.ACCEPT &&
       user.id === carryRequest.travelerUserId;
@@ -604,6 +623,16 @@ export default function CarryRequestsPage() {
             message:
               response.message ??
               "Traveler payout has not been confirmed yet. Verify the delivery code again.",
+            label: "Close",
+          });
+        } else if (response.reason === "TRAVEL_DATE_NOT_PASSED") {
+          openInfo({
+            title: "Travel date not reached",
+            message:
+              response.message ??
+              payoutBlockedBeforeTravelDateMessage(
+                carryRequest.tripSnapshot.departure_date,
+              ),
             label: "Close",
           });
         }

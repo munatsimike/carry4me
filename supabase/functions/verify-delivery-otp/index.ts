@@ -7,6 +7,7 @@ import {
 import { getStripe } from "../_shared/stripe/client.ts";
 import { verifyDeliveryOtpRpc } from "../_shared/deliveryOtp.ts";
 import { releaseTravelerPayoutAfterDeliveryVerification } from "../_shared/stripe/travelerTransfer.ts";
+import { isPayoutAllowedForTravelDate } from "../_shared/payoutTravelDate.ts";
 
 type RequestBody = {
   carry_request_id?: string;
@@ -34,6 +35,8 @@ const REASON_MESSAGES: Record<string, string> = {
   MISSING_CHARGE: "Payment charge is not ready yet. Try again in a moment.",
   MISSING_PAYMENT_INTENT: "No payment was found for this request.",
   INVALID_PAYOUT_AMOUNT: "Payout amount is invalid. Contact support.",
+  TRAVEL_DATE_NOT_PASSED:
+    "Payout can only be released on or after the travel date.",
 };
 
 Deno.serve(async (req) => {
@@ -54,6 +57,32 @@ Deno.serve(async (req) => {
     }
 
     const { supabaseUser, supabaseAdmin } = await getAuthenticatedUser(req);
+
+    const { data: carryForDate, error: carryForDateError } = await supabaseAdmin
+      .from("carry_requests")
+      .select("trip_snapshot")
+      .eq("id", carryRequestId)
+      .maybeSingle();
+
+    if (carryForDateError || !carryForDate) {
+      return jsonResponse({
+        ok: false,
+        reason: "NOT_FOUND",
+        message: REASON_MESSAGES.NOT_FOUND,
+      });
+    }
+
+    const departureRaw = (
+      carryForDate.trip_snapshot as { departure_date?: string } | null
+    )?.departure_date?.trim();
+
+    if (!isPayoutAllowedForTravelDate(departureRaw)) {
+      return jsonResponse({
+        ok: false,
+        reason: "TRAVEL_DATE_NOT_PASSED",
+        message: REASON_MESSAGES.TRAVEL_DATE_NOT_PASSED,
+      });
+    }
 
     const result = await verifyDeliveryOtpRpc(supabaseUser, carryRequestId, otp);
 
