@@ -11,10 +11,10 @@ const MOBILE_MASK =
   "linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.35) 16%, black 38%)";
 
 const WHITE_WASH_DESKTOP =
-  "linear-gradient(115deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 30%, rgba(255,255,255,0.4) 55%, rgba(255,255,255,0.38) 100%)";
+  "linear-gradient(115deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 55%, rgba(255,255,255,0) 100%)";
 
 const WHITE_WASH_MOBILE =
-  "linear-gradient(to bottom, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 35%, rgba(255,255,255,0.4) 100%)";
+  "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 100%)";
 
 const dissolveIn = {
   initial: { opacity: 0 },
