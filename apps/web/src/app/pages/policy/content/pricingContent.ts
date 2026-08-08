@@ -4,7 +4,8 @@ export const pricingContent: PolicyPageContent = {
   title: "Pricing",
   description:
     "How prices are set on Carry4Me, which rate applies when you match, and how the platform service fee is calculated.",
-  watermarkSrc: "/images/pricing-tag.png",
+  imageSrc: "/images/pricing-calculator.png",
+  imageMuted: true,
   sections: [
     {
       id: "set-your-price",
