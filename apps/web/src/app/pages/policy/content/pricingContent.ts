@@ -1,11 +1,11 @@
 import type { PolicyPageContent } from "../types";
-import { POLICY_LAST_UPDATED } from "./policyLastUpdated";
 
 export const pricingContent: PolicyPageContent = {
   title: "Pricing",
   description:
     "How prices are set on Carry4Me, which rate applies when you match, and how the platform service fee is calculated.",
-  lastUpdated: POLICY_LAST_UPDATED,
+  imageSrc: "/images/pricing-calculator.png",
+  imageMuted: true,
   sections: [
     {
       id: "set-your-price",

@@ -1,11 +1,10 @@
 import type { PolicyPageContent } from "../types";
-import { POLICY_LAST_UPDATED } from "./policyLastUpdated";
 
 export const safetyContent: PolicyPageContent = {
   title: "Safety Center",
   description:
     "Practical guidance for senders and travelers using Carry4Me. Follow these tips to protect yourself, your packages, and the community.",
-  lastUpdated: POLICY_LAST_UPDATED,
+  watermarkSrc: "/images/safety-shield.png",
   sections: [
     {
       id: "sender-tips",

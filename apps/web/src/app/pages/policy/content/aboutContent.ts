@@ -1,11 +1,10 @@
 import type { PolicyPageContent } from "../types";
-import { POLICY_LAST_UPDATED } from "./policyLastUpdated";
 
 export const aboutContent: PolicyPageContent = {
   title: "About Carry4Me",
   description:
     "Carry4Me connects people who need to send parcels with travelers who have spare luggage space—making cross-border delivery more affordable, personal, and community-driven.",
-  lastUpdated: POLICY_LAST_UPDATED,
+  imageSrc: "/images/about-image.png",
   sections: [
     {
       id: "mission",
@@ -34,35 +33,10 @@ export const aboutContent: PolicyPageContent = {
       ],
     },
     {
-      id: "trust",
-      title: "Built on trust and safety",
-      bullets: [
-        "Verified phone numbers and profile checks where required.",
-        "Travelers may inspect packages before acceptance.",
-        "Payments held securely until delivery is confirmed.",
-        "Clear rules on prohibited items and platform-only payments.",
-        "See our Safety Center and Terms for full guidance.",
-      ],
-    },
-    {
-      id: "pricing",
-      title: "Fair, transparent pricing",
-      paragraphs: [
-        "Users set their own rates per kilogram. When a request is sent, the recipient’s listed price applies. A 20% platform service fee is added to the delivery subtotal and shown before checkout.",
-      ],
-    },
-    {
       id: "where",
       title: "Where we operate",
       paragraphs: [
         "Carry4Me is growing across routes between the United Kingdom, United States, Zimbabwe, and surrounding regions. We continue to expand corridors based on community demand and compliance requirements.",
-      ],
-    },
-    {
-      id: "contact",
-      title: "Get in touch",
-      paragraphs: [
-        "Questions, feedback, or partnership ideas? Email info@carry4me.uk or reach us via WhatsApp from the site footer. Visit the Help Center for common questions.",
       ],
     },
   ],
