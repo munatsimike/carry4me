@@ -98,7 +98,7 @@ export function HeroSection() {
             <Heading
               textSize="display"
               textVariant="primary"
-              className="pb-1 font-medium leading-[1.08] sm:pb-2"
+              className="pb-1 !text-4xl font-medium leading-[1.08] sm:pb-2 sm:!text-4xl"
             >
               {heading.split(" ").map((w, i) => (
                 <motion.span
