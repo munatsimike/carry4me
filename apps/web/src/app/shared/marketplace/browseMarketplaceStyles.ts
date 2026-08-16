@@ -58,9 +58,9 @@ export const LISTING_CARD_HOVER_STYLE = 1 as 1 | 2;
 const listingCardTransition =
   "transition-[background-color,border-color,box-shadow,ring-color] duration-200 ease-out";
 
-/** Parcel card hover: lighter than browse button (/15), still visible on white. */
+/** Parcel card hover: same border/shadow emphasis as trips, slate tone. */
 const listingCardParcelHoverClass =
-  "hover:border-slate-700/18 hover:bg-slate-700/10 hover:shadow-md hover:shadow-slate-200/50";
+  "hover:border-slate-700/40 hover:bg-slate-700/10 hover:shadow-lg hover:shadow-slate-200/50";
 
 const listingCardHoverTinted: Record<BrowseMarketplaceTone, string> = {
   trips: cn(
