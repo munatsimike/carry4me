@@ -160,6 +160,28 @@ function OurLocation() {
       <ul className="space-y-3.5">
         <li>
           <span className="inline-flex items-center gap-1.5">
+            <SvgIcon size={"sm"} Icon={META_ICONS.nlFlag} />
+            <p className="text-sm font-semibold text-slate-900">
+              Netherlands
+            </p>
+          </span>
+
+          <p className="mt-0.5 text-sm leading-5 text-slate-500">
+            45 Parklaan, Haarlem
+            <br />
+            <a
+              href="tel:+31640020022"
+              className="text-slate-600 transition hover:text-slate-900"
+            >
+              0640020022
+            </a>
+            <br />
+            <span className="text-[12px]">(Head office)</span>
+          </p>
+        </li>
+
+        <li>
+          <span className="inline-flex items-center gap-1.5">
             <SvgIcon size={"sm"} Icon={META_ICONS.ukFlag} />
             <p className="text-sm font-semibold text-slate-900">
               United Kingdom
@@ -169,7 +191,7 @@ function OurLocation() {
           <p className="mt-0.5 text-sm leading-5 text-slate-500">
             84 Victoria Road, Surbiton, London
             <br />
-            <span className="text-[12px]">(Head office)</span>
+            <span className="text-[12px]">Local representative</span>
           </p>
         </li>
 

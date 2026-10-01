@@ -63,7 +63,7 @@ export default function RequestSummary({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, refreshProfile, profile } = useAuth();
   const { guardAction } = useMarketplaceActionGuard();
-  const { showSupabaseError, openInfo, confirm } = useUniversalModal();
+  const { showSupabaseError, openInfo } = useUniversalModal();
   const navigate = useNavigate();
 
   const routeMismatch = useMemo(() => {
@@ -128,57 +128,6 @@ export default function RequestSummary({
     destinationCity: parcel.route.destinationCity,
   };
   const parcelItems = parcel.goodsCategory.map((item) => item.name).join(", ");
-
-  const confirmResendAfterEndedRequest = async (): Promise<boolean> => {
-    try {
-      const senderUserId = parcel.user.id;
-      const travelerUserId = trip.user.id;
-      if (!senderUserId || !travelerUserId) {
-        return true;
-      }
-
-      const priorRequest =
-        await carryRequestRepository.findLatestEndedRequestBetweenParties(
-          senderUserId,
-          travelerUserId,
-        );
-
-      if (!priorRequest) {
-        return true;
-      }
-
-      const counterpartLabel = isSenderRequesting ? "traveler" : "sender";
-      const endedByCurrentUser =
-        priorRequest.endedByUserId === loggedInUserId;
-
-      let message: string;
-      if (endedByCurrentUser) {
-        if (priorRequest.status === "REJECTED") {
-          message = `You rejected a request from this ${counterpartLabel}. Do you want to proceed?`;
-        } else if (priorRequest.status === "CANCELLED") {
-          message = `You cancelled a request from this ${counterpartLabel}. Do you want to proceed?`;
-        } else {
-          message = `A previous request with this ${counterpartLabel} expired. Do you want to proceed?`;
-        }
-      } else if (priorRequest.status === "REJECTED") {
-        message = `A previous request with this ${counterpartLabel} was declined. Do you want to proceed?`;
-      } else if (priorRequest.status === "CANCELLED") {
-        message = `A previous request with this ${counterpartLabel} was cancelled. Do you want to proceed?`;
-      } else {
-        message = `A previous request with this ${counterpartLabel} expired. Do you want to proceed?`;
-      }
-
-      return await confirm({
-        title: "Send another request?",
-        message,
-        confirmText: "Proceed",
-        cancelText: "Cancel",
-      });
-    } catch (err) {
-      showSupabaseError(err);
-      return false;
-    }
-  };
 
   const handleSendRequest = async () => {
     if (requestLoaded || !canSendRequest) return;
@@ -251,9 +200,6 @@ export default function RequestSummary({
               return;
             }
           }
-
-          const shouldSend = await confirmResendAfterEndedRequest();
-          if (!shouldSend) return;
 
           await handleSendRequest();
         } finally {

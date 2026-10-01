@@ -14,14 +14,4 @@ export interface CarryRequestRepository {
     carryRequestId: string,
     newStatus: CarryRequestStatus,
   ): Promise<string>;
-
-  findLatestEndedRequestBetweenParties(
-    senderUserId: string,
-    travelerUserId: string,
-  ): Promise<EndedRequestBetweenParties | null>;
 }
-
-export type EndedRequestBetweenParties = {
-  status: "REJECTED" | "CANCELLED" | "EXPIRED";
-  endedByUserId: string | null;
-};
