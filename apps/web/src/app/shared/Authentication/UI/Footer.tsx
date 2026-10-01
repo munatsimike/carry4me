@@ -169,13 +169,6 @@ function OurLocation() {
           <p className="mt-0.5 text-sm leading-5 text-slate-500">
             45 Parklaan, Haarlem
             <br />
-            <a
-              href="tel:+31640020022"
-              className="text-slate-600 transition hover:text-slate-900"
-            >
-              0640020022
-            </a>
-            <br />
             <span className="text-[12px]">(Head office)</span>
           </p>
         </li>
@@ -189,8 +182,6 @@ function OurLocation() {
           </span>
 
           <p className="mt-0.5 text-sm leading-5 text-slate-500">
-            84 Victoria Road, Surbiton, London
-            <br />
             <span className="text-[12px]">Local representative</span>
           </p>
         </li>
@@ -252,12 +243,20 @@ function ContactSection() {
         <li>
           <div>
             <p className="font-semibold text-slate-800">Phone</p>
-            <a
-              href="tel:+44 7471366706"
-              className="text-slate-600 transition hover:text-slate-900"
-            >
-              +44 7471366706
-            </a>
+            <div className="flex flex-col">
+              <a
+                href="tel:+31640020022"
+                className="text-slate-600 transition hover:text-slate-900"
+              >
+                +31 640020022
+              </a>
+              <a
+                href="tel:+447471366706"
+                className="text-slate-600 transition hover:text-slate-900"
+              >
+                +44 7471366706
+              </a>
+            </div>
           </div>
         </li>
 
