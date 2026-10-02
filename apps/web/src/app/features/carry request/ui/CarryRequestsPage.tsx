@@ -909,7 +909,7 @@ function CarryRequestCard({
         borderClass=""
         shadowClass=""
         enableHover={false}
-        animateOnMount={false}
+        enterAnimation="fadeUp"
         className={cn(
           "group/card flex w-full min-w-0 flex-col gap-3 px-3 py-3.5 sm:gap-3.5 sm:px-5 sm:py-4",
           carryRequestCardHoverClass,
@@ -974,7 +974,7 @@ function CarryRequestCard({
         sizeClass="max-w-3xl"
         key={request.carryRequestId}
         enableHover={false}
-        animateOnMount={false}
+        enterAnimation="fadeUp"
         className={cn(
           "group/card mx-auto w-full flex flex-col gap-3 px-4 sm:px-6",
           carryRequestCardHoverClass,
