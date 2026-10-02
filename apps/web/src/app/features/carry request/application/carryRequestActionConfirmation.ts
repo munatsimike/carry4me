@@ -83,8 +83,8 @@ function getConfirmOptions(
         title: "Confirm handover?",
         message:
           context.viewerRole === ROLES.SENDER
-            ? "Confirm that you have handed over the package to the traveler. Both parties must confirm."
-            : "Confirm that you received the package from sender. Both parties must confirm.",
+            ? "Confirm that you have handed over the package to the traveler."
+            : "Confirm that you received the package from sender.",
         confirmText: "Yes, confirm handover",
         cancelText: "Not yet",
       };
