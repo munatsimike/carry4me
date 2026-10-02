@@ -165,7 +165,7 @@ function primaryActionSuccessMessage(
       "Parcel accepted. Waiting for payment from the sender.",
     [UIACTIONKEYS.PAY]: "Payment completed. You can now proceed to handover.",
     [UIACTIONKEYS.CONFIRM_HANDOVER]:
-      "Handover confirmed successfully. The parcel is now in transit.",
+      "Handover confirmed successfully.",
     [UIACTIONKEYS.MARK_DELIVERED]: "Delivery confirmed successfully.",
     [UIACTIONKEYS.RELEASE_PAYMENT]: "Payment released successfully.",
   };
