@@ -497,7 +497,7 @@ export default function CarryRequestsPage() {
       return;
     }
 
-    if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
+    if (actions.primary.key === UIACTIONKEYS.MARK_DELIVERED) {
       if (
         !hasTravelDatePassedForPayout(carryRequest.tripSnapshot.departure_date)
       ) {
@@ -908,6 +908,8 @@ function CarryRequestCard({
         sizeClass="max-w-none"
         borderClass=""
         shadowClass=""
+        enableHover={false}
+        animateOnMount={false}
         className={cn(
           "group/card flex w-full min-w-0 flex-col gap-3 px-3 py-3.5 sm:gap-3.5 sm:px-5 sm:py-4",
           carryRequestCardHoverClass,
@@ -971,6 +973,8 @@ function CarryRequestCard({
       <Card
         sizeClass="max-w-3xl"
         key={request.carryRequestId}
+        enableHover={false}
+        animateOnMount={false}
         className={cn(
           "group/card mx-auto w-full flex flex-col gap-3 px-4 sm:px-6",
           carryRequestCardHoverClass,

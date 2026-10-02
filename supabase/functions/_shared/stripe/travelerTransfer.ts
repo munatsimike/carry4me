@@ -2,7 +2,6 @@ import type Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { resolveTravelerConnectAccountForPayment } from "./connectAccount.ts";
 import { stripeErrorMessage } from "./errors.ts";
-import { isPayoutAllowedForTravelDate } from "../payoutTravelDate.ts";
 
 type TransferResult =
   | { ok: true; transferId: string }
@@ -473,7 +472,7 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
   const { data: carryRequest, error } = await supabaseAdmin
     .from("carry_requests")
     .select(
-      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id, payment_status, delivery_otp_verified_at, status, stripe_transfer_id, trip_snapshot",
+      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id, payment_status, delivery_otp_verified_at, status, stripe_transfer_id",
     )
     .eq("id", carryRequestId)
     .maybeSingle();
@@ -489,17 +488,6 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
   const existingTransferId = carryRequest.stripe_transfer_id?.trim();
   if (existingTransferId) {
     return { ok: true, transferId: existingTransferId };
-  }
-
-  const departureRaw = (
-    carryRequest.trip_snapshot as { departure_date?: string } | null
-  )?.departure_date?.trim();
-  if (!isPayoutAllowedForTravelDate(departureRaw)) {
-    return {
-      ok: false,
-      reason: "TRAVEL_DATE_NOT_PASSED",
-      message: "Payout can only be released on or after the travel date.",
-    };
   }
 
   if (!carryRequest.delivery_otp_verified_at) {

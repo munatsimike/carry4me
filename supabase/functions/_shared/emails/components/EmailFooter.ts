@@ -65,11 +65,16 @@ export function renderEmailFooter(): string {
           ${escapeHtml(config.supportEmail)}
         </a>
       </div>
+      ${config.phones
+        .map(
+          (phone) => `
       <div style="margin-top:10px;">
-        <a href="tel:${escapeHtml(config.phone.replace(/\s/g, ""))}" style="color:#2563eb;text-decoration:none;">
-          ${escapeHtml(config.phone)}
+        <a href="tel:${escapeHtml(phone.replace(/\s/g, ""))}" style="color:#2563eb;text-decoration:none;">
+          ${escapeHtml(phone)}
         </a>
-      </div>
+      </div>`,
+        )
+        .join("")}
       ${whatsappHtml}
     </div>`;
 
@@ -151,7 +156,7 @@ export function renderEmailFooterText(): string {
     config.headOfficeAddressLine,
     `(${config.headOfficeLabel})`,
     `Email: ${config.supportEmail}`,
-    `Phone: ${config.phone}`,
+    ...config.phones.map((phone) => `Phone: ${phone}`),
   ];
 
   if (config.whatsappUrl) {

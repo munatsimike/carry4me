@@ -1,5 +1,4 @@
 import { cn } from "@/app/lib/cn";
-import { motion } from "framer-motion";
 
 type ContainerProps = {
   children: React.ReactNode;
@@ -17,7 +16,7 @@ export default function DefaultContainer({
   id,
 }: ContainerProps) {
   return (
-    <motion.section id={id} layout className={`${outerClassName} py-2 sm:py-3`}>
+    <section id={id} className={`${outerClassName} py-2 sm:py-3`}>
       <div
         className={cn(
           "mx-auto w-full max-w-container px-4 sm:px-5 lg:px-6",
@@ -27,6 +26,6 @@ export default function DefaultContainer({
       >
         {children}
       </div>
-    </motion.section>
+    </section>
   );
 }

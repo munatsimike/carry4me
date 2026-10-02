@@ -8,6 +8,7 @@ export type EmailCompanyConfig = {
   companyName: string;
   supportEmail: string;
   phone: string;
+  phones: string[];
   address: string;
   headOfficeCountry: string;
   headOfficeAddressLine: string;
@@ -23,9 +24,14 @@ export type EmailCompanyConfig = {
   copyrightText: string;
 };
 
-export const HEAD_OFFICE_COUNTRY = "United Kingdom";
-export const HEAD_OFFICE_ADDRESS_LINE = "84 Victoria Road, Surbiton, London";
+export const HEAD_OFFICE_COUNTRY = "Netherlands";
+export const HEAD_OFFICE_ADDRESS_LINE = "45 Parklaan, Haarlem";
 export const HEAD_OFFICE_LABEL = "Head office";
+export const CONTACT_PHONES = ["+31 640020022", "+44 7471366706"] as const;
+
+function getContactPhones(): string[] {
+  return [...CONTACT_PHONES];
+}
 
 function trimTrailingSlash(url: string): string {
   return url.replace(/\/$/, "");
@@ -49,14 +55,8 @@ export function getEmailCompanyConfig(): EmailCompanyConfig {
   const year = new Date().getFullYear();
   const companyName = Deno.env.get("EMAIL_COMPANY_NAME")?.trim() || "Carry4Me";
 
-  const configuredPhone = Deno.env.get("EMAIL_PHONE")?.trim() || null;
-  const normalizedConfiguredPhone = configuredPhone?.replace(/\s+/g, "") ?? null;
-  const phone =
-    !configuredPhone ||
-      normalizedConfiguredPhone === "+31622528250" ||
-      normalizedConfiguredPhone === "31622528250"
-      ? "+44 7471366706"
-      : configuredPhone;
+  const phones = getContactPhones();
+  const phone = phones[0] ?? CONTACT_PHONES[0];
 
   const configuredWhatsappUrl =
     Deno.env.get("EMAIL_WHATSAPP_URL")?.trim() || null;
@@ -72,6 +72,7 @@ export function getEmailCompanyConfig(): EmailCompanyConfig {
     supportEmail:
       Deno.env.get("EMAIL_SUPPORT_EMAIL")?.trim() || "info@carry4me.uk",
     phone,
+    phones,
     address:
       Deno.env.get("EMAIL_ADDRESS")?.trim() ||
       `${HEAD_OFFICE_ADDRESS_LINE} (${HEAD_OFFICE_LABEL})`,

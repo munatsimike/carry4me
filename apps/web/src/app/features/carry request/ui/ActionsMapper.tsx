@@ -209,7 +209,6 @@ function pendingPayout(viewerRole: Role): UIActions {
         kind: ACTIONKINDS.PAYOUT,
         variant: VARIANTS.PRIMARY,
         label: "Release payout",
-        helperText: "Available on or after the travel date.",
         key: "RELEASE_PAYMENT",
       },
     };
