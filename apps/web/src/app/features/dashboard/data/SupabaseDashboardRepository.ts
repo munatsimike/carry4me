@@ -21,7 +21,7 @@ export class SubabaseDashboardRepository implements DashboardDataRepository {
         pendingAproval: overview.pending_matches,
         awaitingPayment: overview.pending_payment,
         awaitingHandover: overview.pending_handover,
-        inProgress: overview.in_transit,
+        inProgress: overview.in_transit + overview.pending_payout,
         delivered: overview.completed,
       },
     };
