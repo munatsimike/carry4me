@@ -147,7 +147,7 @@ export default function actionsMapper(
     case CARRY_REQUEST_STATUSES.PAID_OUT:
       return paidOut();
     case CARRY_REQUEST_STATUSES.REJECTED:
-      return requestRejected(viewerRole);
+      return requestRejected();
     case CARRY_REQUEST_STATUSES.CANCELLED:
      return {};
     case CARRY_REQUEST_STATUSES.EXPIRED:
@@ -157,18 +157,8 @@ export default function actionsMapper(
   }
 }
 
-function requestRejected(viewerRole: Role): UIActions {
-  const label = viewerRole === ROLES.SENDER ? "Browse trips" : "Browse parcels";
-  return {
-    primary: {
-      kind: ACTIONKINDS.NAVIGATE,
-      variant: VARIANTS.PRIMARY,
-      label,
-      key: viewerRole === ROLES.SENDER
-        ? UIACTIONKEYS.BROWSE_TRIPS
-        : UIACTIONKEYS.BROWSE_PARCELS,
-    },
-  };
+function requestRejected(): UIActions {
+  return {};
 }
 
 /**function requestCanceled(viewerRole: Role): UIActions {
