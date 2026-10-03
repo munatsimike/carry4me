@@ -99,7 +99,7 @@ export function mapCarryRequestToUI(
       title = viewerRole === ROLES.SENDER ? "In transit" : "Pending delivery";
       description =
         viewerRole === ROLES.SENDER
-          ? "Check your email or in-app notifications for the payment code."
+          ? "Check your email for the payment code."
           : "Deliver the parcel to the recipient, then confirm delivery.";
       break;
 
@@ -108,7 +108,7 @@ export function mapCarryRequestToUI(
       title = "Pending payout";
       description =
         viewerRole === ROLES.SENDER
-          ? "Check your email or in-app notifications for the payment code."
+          ? "Check your email for the payment code."
           : "Enter the payment code to receive your payout.";
       break;
 

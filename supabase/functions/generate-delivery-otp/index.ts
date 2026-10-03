@@ -44,19 +44,19 @@ async function ensureDeliveryOtpNotification(
     return;
   }
 
-  const otpText = input.otp
-    ? `Share this 6-digit code with the recipient. They must provide it to the traveler when receiving the package: ${input.otp}.`
-    : "Your payment release code is ready. Open Carry4Me to view and share it with the recipient.";
-
   const { error: insertError } = await supabaseAdmin
     .from("notifications")
     .insert({
       user_id: input.senderUserId,
       type: "DELIVERY_OTP",
       title: "Payment release code",
-      body: otpText,
+      body:
+        "Check your email for the payment code. Give it to the traveler only after the items have been received to release payment.",
       link: "/requests",
-      metadata: { carry_request_id: input.carryRequestId },
+      metadata: {
+        carry_request_id: input.carryRequestId,
+        ...(input.otp ? { otp: input.otp } : {}),
+      },
     });
 
   if (insertError) {

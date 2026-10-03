@@ -159,6 +159,21 @@ export async function enrichNotificationForEmail(
     return { ...base, ctaLabel: null };
   }
 
+  if (type === "DELIVERY_OTP") {
+    const otpRaw = notification.metadata?.otp;
+    const otp = typeof otpRaw === "string" ? otpRaw.trim() : "";
+    if (/^\d{6}$/.test(otp)) {
+      return {
+        ...base,
+        body:
+          `Share this 6-digit code with the recipient. They must provide it to the traveler when receiving the package: ${otp}.`,
+        ctaLabel: null,
+      };
+    }
+
+    return { ...base, ctaLabel: null };
+  }
+
   if (type === "PARCEL_RECEIVED") {
     return { ...base, ctaLabel: null };
   }

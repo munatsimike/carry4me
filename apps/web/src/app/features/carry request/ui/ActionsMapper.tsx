@@ -123,7 +123,7 @@ function displayPaymentCodeReady(): InfoBlock {
     mode: INFOMODES.DISPLAY,
     label: "Payment code",
     helperText:
-      "Check your email or in-app notifications for the payment code.",
+      "Check your email for the payment code. Give it to the traveler only after the items have been received to release payment.",
   };
 }
 
@@ -184,7 +184,7 @@ function pendingPayout(viewerRole: Role): UIActions {
         mode: INFOMODES.DISPLAY,
         label: "Payment code",
         helperText:
-          "Check your email or in-app notifications for the payment code.",
+          "Check your email for the payment code. Give it to the traveler only after the items have been received to release payment.",
       },
     };
   } else {

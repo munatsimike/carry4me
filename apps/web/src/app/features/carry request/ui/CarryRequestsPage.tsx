@@ -64,7 +64,7 @@ import {
   type EmptyStateConfig,
 } from "../application/toEmptyStateForMapper";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Ban, CheckCircle2, Clock, Hourglass, Package, XCircle, type LucideIcon } from "lucide-react";
+import { Ban, CheckCircle2, Clock, Hourglass, KeyRound, Package, XCircle, type LucideIcon } from "lucide-react";
 import {
   getProgressStageLabel,
   progressStepIcons,
@@ -1366,29 +1366,42 @@ function InfoBlockDisplay({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex w-full justify-end">
-      <div className="flex w-full flex-col gap-2 sm:w-auto">
-        <div className="flex w-full items-center gap-3 justify-start">
-          <CustomText textSize="xs" className="font-medium">
+    <div className="flex w-full flex-col gap-3 rounded-2xl border border-primary-100 bg-primary-50/90 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="flex min-w-0 items-start gap-3">
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-primary-600 shadow-sm"
+          aria-hidden
+        >
+          <KeyRound className="h-5 w-5" strokeWidth={1.75} />
+        </div>
+        <div className="min-w-0">
+          <CustomText
+            textSize="md"
+            textVariant="primary"
+            className="font-semibold font-heading leading-snug"
+          >
             {actions.infoBlock?.label}
           </CustomText>
           {actions.infoBlock?.value ? (
             <CustomText
-              className="rounded-md bg-secondary-100 px-3 py-1"
+              className="mt-1 inline-flex rounded-md bg-white px-3 py-1"
               textVariant="primary"
             >
               {actions.infoBlock.value}
             </CustomText>
           ) : null}
-        </div>
-
-        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
-          <CustomText textVariant="secondary" textSize="xs">
-            {actions.infoBlock?.helperText}
-          </CustomText>
-          {action}
+          {actions.infoBlock?.helperText ? (
+            <CustomText
+              textVariant="secondary"
+              textSize="xs"
+              className="mt-0.5 leading-snug"
+            >
+              {actions.infoBlock.helperText}
+            </CustomText>
+          ) : null}
         </div>
       </div>
+      {action ? <div className="shrink-0 sm:self-center">{action}</div> : null}
     </div>
   );
 }
