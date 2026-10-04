@@ -23,6 +23,7 @@ import {
   listingCardPreviewClass,
   type BrowseMarketplaceTone,
 } from "@/app/shared/marketplace/browseMarketplaceStyles";
+import { calculateCarryRequestPricing } from "@/app/features/carry request/domain/carryRequestPricing";
 
 function CardSectionFade({
   className,
@@ -185,9 +186,15 @@ export function ListingCard<T extends Listing>({
             : undefined
         }
         priceLabel={isTripListing ? "Price per kg" : "Budget per kg"}
-        price={listing.pricePerKg}
+        price={
+          isTripListing
+            ? calculateCarryRequestPricing(listing.pricePerKg, 1).totalWithFee
+            : listing.pricePerKg
+        }
         country={listing.route.originCountry}
         showTotalPrice={!isTripListing}
+        priceCaption={isTripListing ? "Incl. VAT & platform fee" : undefined}
+        priceFractionDigits={isTripListing ? 2 : undefined}
       />
       {showMarketplaceActions ? (
         <>

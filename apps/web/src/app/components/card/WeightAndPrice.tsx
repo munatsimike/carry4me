@@ -19,6 +19,8 @@ type WeightAndPriceProps = {
   capacityKg?: number;
   /** Parcel listings: show weight × price as total. */
   showTotalPrice?: boolean;
+  priceCaption?: string;
+  priceFractionDigits?: number;
 };
 
 export function WeightAndPrice({
@@ -29,6 +31,8 @@ export function WeightAndPrice({
   country,
   capacityKg,
   showTotalPrice = false,
+  priceCaption,
+  priceFractionDigits,
 }: WeightAndPriceProps) {
   const labelColor = "neutral";
   const baseLabel = "flex justify-end";
@@ -158,11 +162,17 @@ export function WeightAndPrice({
           textSize={showTotalPrice ? textSize : "md"}
         >
           {formatCurrencyByCountry(country, price, {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2,
+            minimumFractionDigits: priceFractionDigits ?? 0,
+            maximumFractionDigits: priceFractionDigits ?? 2,
           })}
         </CustomText>
       </div>
+
+      {priceCaption ? (
+        <p className="-mt-1 text-right text-[11px] leading-snug text-neutral-400">
+          {priceCaption}
+        </p>
+      ) : null}
 
       {showTotalPrice && totalPrice > 0 ? (
         <div className="flex justify-between items-center">
