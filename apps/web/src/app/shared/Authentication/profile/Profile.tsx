@@ -27,7 +27,7 @@ import { isAdminProfile } from "../domain/profileType";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 import { toDialCode, toflag } from "@/app/Mapper";
-import { Lock, MapPin, Pencil, ShieldHalf, User2 } from "lucide-react";
+import { BadgeCheck, Lock, MapPin, Pencil, ShieldHalf, User2 } from "lucide-react";
 import SvgIcon from "@/components/ui/SvgIcon";
 import { META_ICONS } from "@/app/icons/MetaIcon";
 import { UpdateProfileUseCase } from "../application/UpdateProfileUseCase";
@@ -63,7 +63,7 @@ import {
 } from "../application/passkeyAuth";
 import { TravelerPayoutStatusRow } from "../UI/TravelerPayoutStatusRow";
 import { useMyTrips } from "@/app/hooks/queries/useTripsQueries";
-import { shouldShowTravelerPayoutSetup } from "@/app/features/carry request/application/travelerStripeConnectStatus";
+import { shouldShowTravelerPayoutSetup, isTravelerStripeVerifiedInProfile, isTravelerStripePayoutReady } from "@/app/features/carry request/application/travelerStripeConnectStatus";
 
 type AvatarProps = {
   onDelete: () => void;
@@ -540,6 +540,10 @@ export default function ProfilePage() {
           preview={preview}
           fullName={profile.fullName ?? ""}
           email={getProfileEmail(profile, user.email)}
+          stripeVerified={
+            isTravelerStripeVerifiedInProfile(profile) ||
+            isTravelerStripePayoutReady(profile)
+          }
           setFile={setFile}
           setPreview={setPreview}
           localPreviewUrlRef={localAvatarPreviewUrlRef}
@@ -1689,6 +1693,7 @@ type CardHeaderSectionProps = {
   file: File | null;
   fullName: string;
   email: string;
+  stripeVerified?: boolean;
   setFile: (s: File | null) => void;
   setPreview: (p: string) => void;
   localPreviewUrlRef: React.MutableRefObject<string | null>;
@@ -1702,6 +1707,7 @@ function CardHeaderSection({
   file,
   fullName,
   email,
+  stripeVerified = false,
   setFile,
   setPreview,
   localPreviewUrlRef,
@@ -1724,13 +1730,21 @@ function CardHeaderSection({
 
       <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center sm:items-start sm:text-left">
         <div className="min-w-0">
-          <CustomText
-            textSize="lg"
-            textVariant="primary"
-            className="font-medium"
-          >
-            {formatProfileDisplayName(fullName) || "Your profile"}
-          </CustomText>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <CustomText
+              textSize="lg"
+              textVariant="primary"
+              className="font-medium"
+            >
+              {formatProfileDisplayName(fullName) || "Your profile"}
+            </CustomText>
+            {stripeVerified ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                Stripe verified
+              </span>
+            ) : null}
+          </div>
           <CustomText
             textSize="sm"
             textVariant="secondary"
