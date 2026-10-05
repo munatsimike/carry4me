@@ -182,6 +182,8 @@ function OurLocation() {
           </span>
 
           <p className="mt-0.5 text-sm leading-5 text-slate-500">
+            London
+            <br />
             <span className="text-[12px]">Local representative</span>
           </p>
         </li>
