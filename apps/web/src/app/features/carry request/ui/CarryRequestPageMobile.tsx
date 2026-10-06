@@ -155,6 +155,7 @@ export function MobileDetailsSection({
           weightKg={parcel.weight_kg}
           pricePerKg={parcel.price_per_kg}
           priceCountry={parcel.origin.country}
+          capacityUnit={trip.capacity_unit}
           className="px-0"
         />
       </div>

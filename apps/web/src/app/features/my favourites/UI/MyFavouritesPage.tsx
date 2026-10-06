@@ -11,6 +11,7 @@ import {
 } from "@/app/util/filters";
 import DefaultContainer from "@/components/ui/DefualtContianer";
 import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
+import type { TripCapacityUnit } from "@/app/features/trips/domain/tripCapacityUnit";
 import { useMemo, useState } from "react";
 import EmptyState from "@/app/components/EmptyState";
 import BrowseMarketplaceActions from "@/app/components/BrowseMarketplaceActions";
@@ -64,6 +65,7 @@ export function MyFavouritesPage() {
     min: 0,
     max: 0,
   });
+  const [capacityUnit, setCapacityUnit] = useState<TripCapacityUnit>("kg");
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
@@ -79,6 +81,7 @@ export function MyFavouritesPage() {
     setSelectedDate: setFilterByDate,
     setPriceRange,
     setWeightRange,
+    setCapacityUnit,
     setGoodsCategory,
     setOriginCountries,
     setSortOption,
@@ -107,7 +110,7 @@ export function MyFavouritesPage() {
     }
 
     if (weightRange.max > 0 || weightRange.min > 0) {
-      result = filterByWeightRange(weightRange, result);
+      result = filterByWeightRange(weightRange, result, capacityUnit);
     }
 
     if (goodsCategory.length > 0) {
@@ -132,6 +135,7 @@ export function MyFavouritesPage() {
     filterByDate,
     priceRange,
     weightRange,
+    capacityUnit,
     goodsCategory,
     sortOption,
     selectedTab,

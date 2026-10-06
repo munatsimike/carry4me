@@ -24,6 +24,9 @@ type CarryRequestRow = {
     weight_kg?: number;
     origin?: { country?: string };
   };
+  trip_snapshot?: {
+    capacity_unit?: string;
+  };
   stripe_payment_intent_id: string | null;
   payment_status: string | null;
 };
@@ -120,7 +123,7 @@ Deno.serve(async (req) => {
     const { data: carryRequest, error: loadError } = await supabaseAdmin
       .from("carry_requests")
       .select(
-        "id, sender_user_id, traveler_user_id, status, payment_expires_at, parcel_snapshot, stripe_payment_intent_id, payment_status",
+        "id, sender_user_id, traveler_user_id, status, payment_expires_at, parcel_snapshot, trip_snapshot, stripe_payment_intent_id, payment_status",
       )
       .eq("id", carryRequestId)
       .maybeSingle<CarryRequestRow>();
@@ -164,7 +167,9 @@ Deno.serve(async (req) => {
     }
 
     const pricePerKg = Number(carryRequest.parcel_snapshot?.price_per_kg ?? 0);
-    const weightKg = Number(carryRequest.parcel_snapshot?.weight_kg ?? 0);
+    const parcelWeightKg = Number(carryRequest.parcel_snapshot?.weight_kg ?? 0);
+    const isBagTrip = carryRequest.trip_snapshot?.capacity_unit === "bag";
+    const weightKg = isBagTrip ? 1 : parcelWeightKg;
     const originCountry = carryRequest.parcel_snapshot?.origin?.country ?? null;
 
     if (!Number.isFinite(pricePerKg) || !Number.isFinite(weightKg) || weightKg <= 0) {

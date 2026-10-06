@@ -20,6 +20,10 @@ import {
 } from "@/app/components/forms/FormReviewSection";
 import type { Step } from "@/app/components/forms/formStepper";
 import { format, isValid, parseISO } from "date-fns";
+import {
+  isTripCapacityBags,
+  type TripCapacityUnit,
+} from "@/app/features/trips/domain/tripCapacityUnit";
 
 type TripFormReviewProps = {
   originCountry: string;
@@ -31,6 +35,7 @@ type TripFormReviewProps = {
   goodsCategory: GoodsCategory[];
   weight: number;
   pricePerKg: number;
+  capacityUnit: TripCapacityUnit;
   onEditStep?: (step: Step) => void;
 };
 
@@ -59,11 +64,13 @@ export default function TripFormReview({
   goodsCategory,
   weight,
   pricePerKg,
+  capacityUnit,
   onEditStep,
 }: TripFormReviewProps) {
   const categoryNames = formatTripAcceptedCategoryLabels(
     goodsCategory.filter((category) => selectedIds.includes(category.id)),
   );
+  const isBags = isTripCapacityBags(capacityUnit);
   const maxEarnings = pricePerKg * weight;
   const originLabel = formatOriginCity(originCity, originCustomCity);
   const originFlag = toflag(originCountry);
@@ -116,11 +123,15 @@ export default function TripFormReview({
       <LineDivider heightClass="my-0" />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <FormReviewSection label="Available space">
-          <FormReviewPrimaryValue>{weight} Kg</FormReviewPrimaryValue>
+        <FormReviewSection label={isBags ? "Bags" : "Available space"}>
+          <FormReviewPrimaryValue>
+            {isBags
+              ? `${weight} ${weight === 1 ? "bag" : "bags"}`
+              : `${weight} Kg`}
+          </FormReviewPrimaryValue>
         </FormReviewSection>
         <FormReviewSection
-          label="Price per kg"
+          label={isBags ? "Price per bag" : "Price per kg"}
           onEdit={onEditStep ? () => editStep(2) : undefined}
         >
           <FormReviewPrimaryValue textSize="md">{priceLabel}</FormReviewPrimaryValue>

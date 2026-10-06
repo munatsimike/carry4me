@@ -6,3 +6,6 @@ export const PARCEL_WEIGHT_MIN_HINT =
 
 export const TRIP_PRICE_PER_KG_HINT =
   "Minimum price is 12 per kg. A competitive rate can help attract senders to your trip.";
+
+export const TRIP_PRICE_PER_BAG_HINT =
+  "Minimum price is 100 per bag. A competitive rate can help attract senders to your trip.";

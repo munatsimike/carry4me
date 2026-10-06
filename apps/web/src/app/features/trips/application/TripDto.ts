@@ -9,4 +9,5 @@ export type TripDto = {
   destination_city: string;
   capacity_kg: number;
   price_per_kg: number;
+  capacity_unit: "kg" | "bag";
 };

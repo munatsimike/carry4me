@@ -1,4 +1,5 @@
 import type { Listing } from "@/app/shared/Authentication/domain/Listing";
+import type { TripCapacityUnit } from "./tripCapacityUnit";
 
 export const TRIPSTATUSES = {
   ARCHIVED: "ARCHIVED",
@@ -13,6 +14,8 @@ export interface TripListing extends Listing {
   arriveDate?: string;
   /** Total trip capacity — used when prefilling the edit form. */
   capacityKg?: number;
+  /** `kg` (default) or `bag`. Bag trips store bag count in capacityKg. */
+  capacityUnit?: TripCapacityUnit;
 }
 
 export function getTripsWithAvailableSpace<T extends { weightKg: number }>(

@@ -63,6 +63,8 @@ export type FormValues = {
   itemDescriptions: GoodsItem[];
   weight: number;
   pricePerKg: number;
+  /** Trip listings only. Parcels stay kg-based. */
+  capacityUnit?: "kg" | "bag";
   /** Parcel review confirmations */
   confirmNoProhibitedItems?: boolean;
   understandTravelerInspection?: boolean;

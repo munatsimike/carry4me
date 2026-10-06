@@ -19,6 +19,7 @@ export type AdminListingPostedDetails = {
   travelDate?: string;
   availableSpaceKg?: number;
   pricePerKg?: number;
+  capacityUnit?: "kg" | "bag";
   currencySymbol: string;
 };
 
@@ -39,9 +40,19 @@ function formatWeightKg(value: number): string {
   return `${rounded} kg`;
 }
 
+function formatBags(value: number): string {
+  const amount = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+  return value === 1 ? "1 bag" : `${amount} bags`;
+}
+
 function formatMoneyPerKg(value: number, currencySymbol: string): string {
   const rounded = Number.isInteger(value) ? value.toString() : value.toFixed(2);
   return `${currencySymbol}${rounded}/kg`;
+}
+
+function formatMoneyPerBag(value: number, currencySymbol: string): string {
+  const rounded = Number.isInteger(value) ? value.toString() : value.toFixed(2);
+  return `${currencySymbol}${rounded}/bag`;
 }
 
 function formatTravelDate(value: string): string {
@@ -84,14 +95,20 @@ function buildDetailRows(details: AdminListingPostedDetails): string {
     }
     if (details.availableSpaceKg != null) {
       rows.push({
-        label: "Available space",
-        value: formatWeightKg(details.availableSpaceKg),
+        label: details.capacityUnit === "bag" ? "Bags" : "Available space",
+        value:
+          details.capacityUnit === "bag"
+            ? formatBags(details.availableSpaceKg)
+            : formatWeightKg(details.availableSpaceKg),
       });
     }
     if (details.pricePerKg != null) {
       rows.push({
-        label: "Price per kg",
-        value: formatMoneyPerKg(details.pricePerKg, details.currencySymbol),
+        label: details.capacityUnit === "bag" ? "Price per bag" : "Price per kg",
+        value:
+          details.capacityUnit === "bag"
+            ? formatMoneyPerBag(details.pricePerKg, details.currencySymbol)
+            : formatMoneyPerKg(details.pricePerKg, details.currencySymbol),
       });
     }
   }
@@ -155,12 +172,16 @@ export function buildAdminListingPostedEmail(
     }
     if (details.availableSpaceKg != null) {
       textLines.push(
-        `Available space: ${formatWeightKg(details.availableSpaceKg)}`,
+        details.capacityUnit === "bag"
+          ? `Bags: ${formatBags(details.availableSpaceKg)}`
+          : `Available space: ${formatWeightKg(details.availableSpaceKg)}`,
       );
     }
     if (details.pricePerKg != null) {
       textLines.push(
-        `Price per kg: ${formatMoneyPerKg(details.pricePerKg, details.currencySymbol)}`,
+        details.capacityUnit === "bag"
+          ? `Price per bag: ${formatMoneyPerBag(details.pricePerKg, details.currencySymbol)}`
+          : `Price per kg: ${formatMoneyPerKg(details.pricePerKg, details.currencySymbol)}`,
       );
     }
   }

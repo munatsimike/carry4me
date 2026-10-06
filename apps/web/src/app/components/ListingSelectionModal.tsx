@@ -4,6 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import type { Listing } from "../shared/Authentication/domain/Listing";
 import type { User } from "@supabase/supabase-js";
 import { MoveRight } from "lucide-react";
+import { formatTripSpace } from "@/app/features/trips/domain/tripCapacityUnit";
 
 interface TripSelectionModalProps<T, U extends Listing> {
   listingSelectionOpen: boolean; // decide when to open the selection modal
@@ -102,7 +103,12 @@ export default function ListingSelectionModal<T, U extends Listing>({
                           Available space
                         </CustomText>
                         <CustomText as="p" textVariant="primary">
-                          {listing.weightKg}kg
+                          {formatTripSpace(
+                            listing.weightKg,
+                            listing.type === "trip"
+                              ? listing.capacityUnit
+                              : undefined,
+                          )}
                         </CustomText>
                       </span>
                     </div>

@@ -1,5 +1,6 @@
 import type { ParcelListing } from "../../parcels/domain/Parcel";
 import type { TripListing } from "../../trips/domain/Trip";
+import { isTripCapacityBags } from "../../trips/domain/tripCapacityUnit";
 import {
   type CreateCarryRequest,
   type Role,
@@ -13,8 +14,11 @@ export function toCreateCarryRequestMapper(
   initiatorRole: Role,
   status: CarryRequestStatus,
 ): CreateCarryRequest {
-  const pricePerKg =
-    initiatorRole === ROLES.SENDER ? trip.pricePerKg : parcel.pricePerKg;
+  const pricePerKg = isTripCapacityBags(trip.capacityUnit)
+    ? trip.pricePerKg
+    : initiatorRole === ROLES.SENDER
+      ? trip.pricePerKg
+      : parcel.pricePerKg;
   return {
     parcelId: parcel.id,
     tripId: trip.id,
@@ -40,6 +44,7 @@ export function toCreateCarryRequestMapper(
     tripSnapshot: {
       traveler_name: trip.user.fullName,
       departure_date: trip.departDate,
+      capacity_unit: trip.capacityUnit ?? "kg",
       origin: {
         country: trip.route.originCountry,
         city: trip.route.originCity,

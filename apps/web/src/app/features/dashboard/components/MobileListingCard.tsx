@@ -10,6 +10,7 @@ import { Card } from "@/app/components/card/Card";
 import LineDivider from "@/app/components/LineDivider";
 import CategoryRow from "@/app/components/CategoryRow";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
+import { formatTripSpace } from "@/app/features/trips/domain/tripCapacityUnit";
 import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 import {
   canManageOwnListing,
@@ -100,9 +101,15 @@ export function MobileListingCard<T extends Listing>({
             <LineDivider heightClass="my-0" />
             {/* Quick summary */}
             <div className="grid grid-cols-2 gap-2 justify-items-start">
-              <SummaryPill label="Space" value={`${row.weightKg} kg`} />
               <SummaryPill
-                label="Price per kg"
+                label="Space"
+                value={formatTripSpace(
+                  row.weightKg,
+                  isTrip ? row.capacityUnit : undefined,
+                )}
+              />
+              <SummaryPill
+                label={isTrip && row.capacityUnit === "bag" ? "Price per bag" : "Price per kg"}
                 value={formatCurrencyByCountry(
                   row.route.originCountry,
                   row.pricePerKg,
@@ -148,8 +155,9 @@ export function MobileListingCard<T extends Listing>({
                       (x: GoodsCategory) => x.id,
                     ),
                     itemDescriptions: row.items,
-                    weight: row.weightKg,
+                    weight: isTrip ? (row.capacityKg ?? row.weightKg) : row.weightKg,
                     pricePerKg: row.pricePerKg,
+                    capacityUnit: isTrip ? row.capacityUnit ?? "kg" : undefined,
                     confirmNoProhibitedItems: false,
                     understandTravelerInspection: false,
                     senderId: row.user.id ?? "",

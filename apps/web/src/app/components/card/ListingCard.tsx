@@ -24,6 +24,7 @@ import {
   type BrowseMarketplaceTone,
 } from "@/app/shared/marketplace/browseMarketplaceStyles";
 import { calculateCarryRequestPricing } from "@/app/features/carry request/domain/carryRequestPricing";
+import { isTripCapacityBags } from "@/app/features/trips/domain/tripCapacityUnit";
 
 function CardSectionFade({
   className,
@@ -78,6 +79,7 @@ export function ListingCard<T extends Listing>({
   const isOwnerPreview = hideSendRequest;
   const showMarketplaceActions = isDisplayMode && !hideSendRequest;
   const isTripListing = listing.type === "trip";
+  const isBagTrip = isTripListing && isTripCapacityBags(listing.capacityUnit);
   const cardTone: BrowseMarketplaceTone = isTripListing ? "trips" : "parcels";
   const goodsCategories = isTripListing
     ? formatTripAcceptedCategoryLabels(listing.goodsCategory)
@@ -178,14 +180,21 @@ export function ListingCard<T extends Listing>({
       </Stack>
       <CardSectionFade className={sectionFadeClass} />
       <WeightAndPrice
-        weightLabel={isTripListing ? "Luggage space" : "Parcel weight"}
+        weightLabel={isTripListing ? "Available space" : "Parcel weight"}
         weight={listing.weightKg}
         capacityKg={
           isTripListing && typeof listing.capacityKg === "number"
             ? listing.capacityKg
             : undefined
         }
-        priceLabel={isTripListing ? "Price per kg" : "Budget per kg"}
+        capacityUnit={isTripListing ? listing.capacityUnit : undefined}
+        priceLabel={
+          isBagTrip
+            ? "Total"
+            : isTripListing
+              ? "Price per kg"
+              : "Budget per kg"
+        }
         price={
           isTripListing
             ? calculateCarryRequestPricing(listing.pricePerKg, 1).totalWithFee

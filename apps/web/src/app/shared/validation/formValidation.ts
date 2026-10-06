@@ -75,10 +75,24 @@ export const listingWeightSchema = z
   .min(1, "Weight must be at least 1kg")
   .max(200, "Weight cannot be more than 200kg");
 
+export const listingBagsSchema = z
+  .number({ error: "Enter a valid number of bags" })
+  .finite("Enter a valid number of bags")
+  .int("Bags must be a whole number")
+  .min(1, "Add at least 1 bag")
+  .max(20, "You can list up to 20 bags");
+
+export const tripCapacityUnitSchema = z.enum(["kg", "bag"]);
+
 export const pricePerKgSchema = z
   .number({ error: "Enter a valid price" })
   .finite("Enter a valid price")
   .min(12, "Minimum is 12");
+
+export const pricePerBagSchema = z
+  .number({ error: "Enter a valid price" })
+  .finite("Enter a valid price")
+  .min(100, "Minimum is 100");
 
 export const budgetPerKgSchema = z
   .number({ error: "Enter a valid budget" })

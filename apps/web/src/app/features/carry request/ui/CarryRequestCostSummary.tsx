@@ -2,6 +2,10 @@ import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { cn } from "@/app/lib/cn";
 import CustomText from "@/components/ui/CustomText";
 import { calculateCarryRequestPricing } from "../domain/carryRequestPricing";
+import {
+  formatTripSpace,
+  isTripCapacityBags,
+} from "@/app/features/trips/domain/tripCapacityUnit";
 
 export function ServiceFeeRow({
   priceCountry,
@@ -32,6 +36,7 @@ type CarryRequestCostSummaryProps = {
   weightKg: number;
   pricePerKg: number;
   priceCountry: string;
+  capacityUnit?: string | null;
   /** When false, only shows weight, price/kg, and delivery total. */
   showServiceFee?: boolean;
   totalLabel?: string;
@@ -39,6 +44,21 @@ type CarryRequestCostSummaryProps = {
   variant?: "default" | "embedded" | "receipt";
   className?: string;
 };
+
+function quantityLabel(weightKg: number, capacityUnit?: string | null) {
+  if (isTripCapacityBags(capacityUnit)) {
+    return formatTripSpace(weightKg, capacityUnit);
+  }
+  return `${weightKg} kg`;
+}
+
+function rateLabel(capacityUnit?: string | null) {
+  return isTripCapacityBags(capacityUnit) ? "Price per bag" : "Price per kg";
+}
+
+function quantityRowLabel(capacityUnit?: string | null) {
+  return isTripCapacityBags(capacityUnit) ? "Bags" : "Parcel weight";
+}
 
 /**
  * Traveler-facing payout breakdown for completed requests.
@@ -48,18 +68,20 @@ export function TravelerPaymentDetailsSummary({
   weightKg,
   pricePerKg,
   priceCountry,
+  capacityUnit,
   className,
 }: {
   weightKg: number;
   pricePerKg: number;
   priceCountry: string;
+  capacityUnit?: string | null;
   className?: string;
 }) {
   const { deliveryTotal, serviceFee, totalWithFee } = calculateCarryRequestPricing(
     pricePerKg,
     weightKg,
   );
-  const rateLabel = `${formatCurrencyByCountry(priceCountry, pricePerKg)}/kg`;
+  const unitRateLabel = `${formatCurrencyByCountry(priceCountry, pricePerKg)}/${isTripCapacityBags(capacityUnit) ? "bag" : "kg"}`;
   const feeLabel = `-${formatCurrencyByCountry(priceCountry, serviceFee)}`;
 
   return (
@@ -71,10 +93,10 @@ export function TravelerPaymentDetailsSummary({
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1.5 overflow-visible">
         <CustomText textVariant="secondary" textSize="sm">
-          Parcel weight
+          {quantityRowLabel(capacityUnit)}
         </CustomText>
         <CustomText textVariant="primary" textSize="sm" className="text-right">
-          {weightKg} kg
+          {quantityLabel(weightKg, capacityUnit)}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
@@ -85,7 +107,7 @@ export function TravelerPaymentDetailsSummary({
           textSize="sm"
           className="text-right tabular-nums"
         >
-          {rateLabel}
+          {unitRateLabel}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm" className="pt-2.5">
@@ -134,11 +156,13 @@ export function SenderPaymentDetailsSummary({
   weightKg,
   pricePerKg,
   priceCountry,
+  capacityUnit,
   className,
 }: {
   weightKg: number;
   pricePerKg: number;
   priceCountry: string;
+  capacityUnit?: string | null;
   className?: string;
 }) {
   const { deliveryTotal, serviceFee, totalWithFee } = calculateCarryRequestPricing(
@@ -155,14 +179,14 @@ export function SenderPaymentDetailsSummary({
     >
       <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-1.5 overflow-visible">
         <CustomText textVariant="secondary" textSize="sm">
-          Parcel weight
+          {quantityRowLabel(capacityUnit)}
         </CustomText>
         <CustomText textVariant="primary" textSize="sm" className="text-right">
-          {weightKg} kg
+          {quantityLabel(weightKg, capacityUnit)}
         </CustomText>
 
         <CustomText textVariant="secondary" textSize="sm">
-          Rate per kg
+          {rateLabel(capacityUnit)}
         </CustomText>
         <CustomText
           textVariant="primary"
@@ -216,6 +240,7 @@ export function CarryRequestCostSummary({
   weightKg,
   pricePerKg,
   priceCountry,
+  capacityUnit,
   showServiceFee = true,
   totalLabel,
   size = "default",
@@ -238,14 +263,14 @@ export function CarryRequestCostSummary({
   const lineItems = (
     <>
       <CustomText textVariant="secondary" textSize={labelSize}>
-        Parcel weight
+        {quantityRowLabel(capacityUnit)}
       </CustomText>
       <CustomText textVariant="primary" textSize={valueSize} className="text-right">
-        {weightKg} kg
+        {quantityLabel(weightKg, capacityUnit)}
       </CustomText>
 
       <CustomText textVariant="secondary" textSize={labelSize}>
-        Price per kg
+        {rateLabel(capacityUnit)}
       </CustomText>
       <CustomText
         textVariant="primary"

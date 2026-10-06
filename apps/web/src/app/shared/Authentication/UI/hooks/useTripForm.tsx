@@ -46,7 +46,10 @@ import {
   departureDateSchema,
   goodsCategoriesSchema,
   listingWeightSchema,
+  listingBagsSchema,
+  tripCapacityUnitSchema,
   pricePerKgSchema,
+  pricePerBagSchema,
 } from "@/app/shared/validation/formValidation";
 
 export const tripSchema = z
@@ -57,8 +60,9 @@ export const tripSchema = z
     destinationCountry: countrySchema,
     destinationCity: citySchema,
     departureDate: departureDateSchema,
-    weight: listingWeightSchema,
-    pricePerKg: pricePerKgSchema,
+    capacityUnit: tripCapacityUnitSchema,
+    weight: z.number({ error: "Enter a valid amount" }).finite("Enter a valid amount"),
+    pricePerKg: z.number({ error: "Enter a valid price" }).finite("Enter a valid price"),
     goodsCategoryIds: goodsCategoriesSchema,
   })
   .superRefine((data, ctx) => {
@@ -72,10 +76,38 @@ export const tripSchema = z
         message: "Enter your city",
       });
     }
+
+    const capacityResult =
+      data.capacityUnit === "bag"
+        ? listingBagsSchema.safeParse(data.weight)
+        : listingWeightSchema.safeParse(data.weight);
+
+    if (!capacityResult.success) {
+      const issue = capacityResult.error.issues[0];
+      ctx.addIssue({
+        code: "custom",
+        path: ["weight"],
+        message: issue?.message ?? "Enter a valid amount",
+      });
+    }
+
+    const priceResult =
+      data.capacityUnit === "bag"
+        ? pricePerBagSchema.safeParse(data.pricePerKg)
+        : pricePerKgSchema.safeParse(data.pricePerKg);
+
+    if (!priceResult.success) {
+      const issue = priceResult.error.issues[0];
+      ctx.addIssue({
+        code: "custom",
+        path: ["pricePerKg"],
+        message: issue?.message ?? "Enter a valid price",
+      });
+    }
   });
 export type TripFormFields = z.infer<typeof tripSchema>;
 
-const emptyDefaultsValues = {
+const emptyDefaultsValues: TripFormFields = {
   originCountry: "",
   originCity: "",
   originCustomCity: "",
@@ -83,9 +115,26 @@ const emptyDefaultsValues = {
   destinationCity: FIXED_DESTINATION_CITY,
   departureDate: "",
   pricePerKg: 12,
+  capacityUnit: "kg",
   weight: 0,
   goodsCategoryIds: [],
 };
+
+function toTripFormValues(values?: FormValues): TripFormFields {
+  if (!values) return emptyDefaultsValues;
+  return {
+    originCountry: values.originCountry,
+    originCity: values.originCity,
+    originCustomCity: values.originCustomCity,
+    destinationCountry: values.destinationCountry,
+    destinationCity: values.destinationCity,
+    departureDate: values.departureDate ?? "",
+    pricePerKg: values.pricePerKg,
+    capacityUnit: values.capacityUnit === "bag" ? "bag" : "kg",
+    weight: values.weight,
+    goodsCategoryIds: values.goodsCategoryIds,
+  };
+}
 
 type ListingFormProps = {
   initialFormValues?: FormValues;
@@ -106,7 +155,7 @@ export function useTripForm({
   const { user, profile, refreshProfile } = useAuth();
   const { data: locations } = useLocations();
   const createDefaultValues = useMemo(
-    () => ({
+    (): TripFormFields => ({
       ...emptyDefaultsValues,
       ...getDestinationDefaultsFromProfile(),
       ...getOriginDefaultsFromProfile(profile, locations),
@@ -128,7 +177,9 @@ export function useTripForm({
     formState: { errors, isSubmitting, dirtyFields, touchedFields },
   } = useForm<TripFormFields>({
     resolver: zodResolver(tripSchema),
-    defaultValues: initialFormValues ?? createDefaultValues,
+    defaultValues: initialFormValues
+      ? toTripFormValues(initialFormValues)
+      : createDefaultValues,
     mode: "onTouched",
   });
 
@@ -143,7 +194,7 @@ export function useTripForm({
 
   useEffect(() => {
     if (isEditMode && initialFormValues) {
-      reset(initialFormValues, { keepDefaultValues: false });
+      reset(toTripFormValues(initialFormValues), { keepDefaultValues: false });
       return;
     }
     if (mode === "create") {
@@ -319,6 +370,7 @@ function isEdited(
     dirtyFields.originCustomCity,
     dirtyFields.originCountry,
     dirtyFields.pricePerKg,
+    dirtyFields.capacityUnit,
     dirtyFields.departureDate,
   ].some(Boolean);
 }

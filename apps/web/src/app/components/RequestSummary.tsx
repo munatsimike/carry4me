@@ -33,6 +33,11 @@ import {
 } from "../features/carry request/application/formatCarryRequestPartyDisplay";
 import { ROLES } from "../features/carry request/domain/CreateCarryRequest";
 import { tripAcceptsParcelCategories } from "../features/goods/domain/goodsCategoryConstants";
+import {
+  isTripCapacityBags,
+  parcelFitsTripCapacity,
+  tripPricingQuantity,
+} from "../features/trips/domain/tripCapacityUnit";
 
 type RequestSummaryProps = {
   loggedInUserId: string;
@@ -85,8 +90,14 @@ export default function RequestSummary({
     if (routeMismatch.hasMismatch) {
       issues.push(getRouteMismatchIssue(routeMismatch));
     } else {
-      if (parcel.weightKg > trip.weightKg) {
-        issues.push(getWeightCapacityIssue(isSenderRequesting));
+      if (
+        !parcelFitsTripCapacity(
+          parcel.weightKg,
+          trip.weightKg,
+          trip.capacityUnit,
+        )
+      ) {
+        issues.push(getWeightCapacityIssue(isSenderRequesting, trip.capacityUnit));
       }
 
       const categoriesAccepted = tripAcceptsParcelCategories(
@@ -109,12 +120,20 @@ export default function RequestSummary({
     parcel.goodsCategory,
     trip.weightKg,
     trip.goodsCategory,
+    trip.capacityUnit,
     isSenderRequesting,
   ]);
 
   const canSendRequest = sendValidation.canSend;
 
-  const pricePerKg = isSenderRequesting ? trip.pricePerKg : parcel.pricePerKg;
+  const pricePerKg =
+    isTripCapacityBags(trip.capacityUnit) || isSenderRequesting
+      ? trip.pricePerKg
+      : parcel.pricePerKg;
+  const billedQuantity = tripPricingQuantity(
+    trip.capacityUnit,
+    parcel.weightKg,
+  );
   const tripRoute = {
     originCountry: trip.route.originCountry,
     destinationCountry: trip.route.destinationCountry,
@@ -272,9 +291,10 @@ export default function RequestSummary({
           highlightOrigin={routeMismatch.originMismatch}
         />
         <CarryRequestCostSummary
-          weightKg={parcel.weightKg}
+          weightKg={billedQuantity}
           pricePerKg={pricePerKg}
           priceCountry={parcel.route.originCountry}
+          capacityUnit={trip.capacityUnit}
           showServiceFee
         />
       </RequestDetailsGrid>
@@ -351,13 +371,23 @@ function getRouteMismatchIssue(routeMismatch: RouteMismatchState): RequestFormIs
   };
 }
 
-function getWeightCapacityIssue(isSenderRequesting: boolean): RequestFormIssue {
+function getWeightCapacityIssue(
+  isSenderRequesting: boolean,
+  capacityUnit?: string,
+): RequestFormIssue {
+  const isBags = isTripCapacityBags(capacityUnit);
   return {
     id: "weight",
     headline: isSenderRequesting
-      ? "This traveler doesn’t have enough space for your parcel."
-      : "You do not have enough space to carry this parcel.",
-    detail: "Reduce the parcel weight or choose a trip with more available capacity.",
+      ? isBags
+        ? "This traveler doesn’t have a bag left for your parcel."
+        : "This traveler doesn’t have enough space for your parcel."
+      : isBags
+        ? "You do not have a bag left to carry this parcel."
+        : "You do not have enough space to carry this parcel.",
+    detail: isBags
+      ? "Choose a trip with a free bag, or free up space on this trip."
+      : "Reduce the parcel weight or choose a trip with more available capacity.",
   };
 }
 

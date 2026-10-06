@@ -1,4 +1,5 @@
 import type { CustomRange, SortOption } from "./Ui";
+import type { TripCapacityUnit } from "@/app/features/trips/domain/tripCapacityUnit";
 
 export type ListingFilters = {
   searchCountry: string;
@@ -6,6 +7,8 @@ export type ListingFilters = {
   departDate?: string;
   priceRange: CustomRange;
   weightRange: CustomRange;
+  /** When set with a space range, trips are filtered by kg or bags. */
+  capacityUnit?: TripCapacityUnit;
   goodsCategories: string[];
   /** Origin country codes to include (e.g. ["NL", "UK"]). Empty = no country filter. */
   originCountries: string[];

@@ -237,6 +237,7 @@ export class SupabaseTripsRepository implements TripsRepository {
         arrive_date: input.arrivalDate ?? null,
         capacity_kg: input.capacityKg,
         price_per_kg: input.pricePerKg,
+        capacity_unit: input.capacityUnit,
         status: input.status,
       })
       .select("id")
@@ -312,6 +313,9 @@ export class SupabaseTripsRepository implements TripsRepository {
     }
 
     if (filters.weightRange.max > 0) {
+      if (filters.capacityUnit) {
+        query.eq("capacity_unit", filters.capacityUnit);
+      }
       query.gte("capacity_kg", filters.weightRange.min);
       query.lte("capacity_kg", filters.weightRange.max);
     }

@@ -55,6 +55,7 @@ export function tripListingToFormValues(data: TripListing): FormValues {
     itemDescriptions: [],
     weight: data.capacityKg ?? data.weightKg,
     pricePerKg: data.pricePerKg,
+    capacityUnit: data.capacityUnit ?? "kg",
     senderId: data.user.id ?? "",
     departureDate: normalizeDepartureDate(data.departDate),
   };

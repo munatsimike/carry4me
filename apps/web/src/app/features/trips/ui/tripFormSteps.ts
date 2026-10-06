@@ -10,6 +10,7 @@ export const tripStep1Fields = [
 
 export const tripStep2Fields = [
   "goodsCategoryIds",
+  "capacityUnit",
   "weight",
   "pricePerKg",
 ] as const;

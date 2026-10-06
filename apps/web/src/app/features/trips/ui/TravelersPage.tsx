@@ -15,6 +15,7 @@ import { useUniversalModal } from "@/app/shared/Authentication/application/Dialo
 import { FilterOptionsRow } from "@/app/components/FilterOptionsRow";
 import ListingSelectionModal from "@/app/components/ListingSelectionModal";
 import type { CustomRange, LayoutContext, SortOption } from "@/types/Ui";
+import type { TripCapacityUnit } from "@/app/features/trips/domain/tripCapacityUnit";
 import EmptyState from "@/app/components/EmptyState";
 import { Button } from "@/components/ui/Button";
 import CustomText from "@/components/ui/CustomText";
@@ -78,6 +79,7 @@ export default function TravelersPage() {
     min: 0,
     max: 0,
   });
+  const [capacityUnit, setCapacityUnit] = useState<TripCapacityUnit>("kg");
   const [filterByDate, setFilterByDate] = useState<string>("");
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [page, setPage] = useState(1);
@@ -93,6 +95,7 @@ export default function TravelersPage() {
         departDate: filterByDate,
         priceRange,
         weightRange,
+        capacityUnit,
         goodsCategories: goodsCategory,
         originCountries,
         sortOption,
@@ -105,6 +108,7 @@ export default function TravelersPage() {
       filterByDate,
       priceRange,
       weightRange,
+      capacityUnit,
       goodsCategory,
       originCountries,
       sortOption,
@@ -132,6 +136,7 @@ export default function TravelersPage() {
     filterByDate,
     priceRange,
     weightRange,
+    capacityUnit,
     goodsCategory,
     originCountries,
     sortOption,
@@ -202,6 +207,7 @@ export default function TravelersPage() {
     setSelectedDate: setFilterByDate,
     setPriceRange,
     setWeightRange,
+    setCapacityUnit,
     setGoodsCategory,
     setOriginCountries,
     setSortOption,

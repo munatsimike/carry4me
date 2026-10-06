@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useGoodsCategories } from "@/app/hooks/queries/useGoodsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import type { CustomRange, SortOption } from "@/types/Ui";
+import type { TripCapacityUnit } from "@/app/features/trips/domain/tripCapacityUnit";
 
 export type FiltersFormValues = {
   date: string;
@@ -12,6 +13,7 @@ export type FiltersFormValues = {
   maxPrice: string;
   minSpace: string;
   maxSpace: string;
+  spaceUnit: "kg" | "bag";
   categories: string[];
   countries: string[];
   sort: SortOption | undefined;
@@ -23,6 +25,7 @@ type FilterState = {
   maxPrice: string;
   minSpace: string;
   maxSpace: string;
+  spaceUnit: "kg" | "bag";
   categories: string[];
   countries: string[];
   sort?: SortOption;
@@ -32,6 +35,7 @@ type UseFiltersFormProps = {
   setSelectedDate: (s: string) => void;
   setPriceRange: (v: CustomRange) => void;
   setWeightRange: (v: CustomRange) => void;
+  setCapacityUnit?: (v: TripCapacityUnit) => void;
   setGoodsCategory: (s: string[]) => void;
   setOriginCountries: (s: string[]) => void;
   setSortOption: (v: SortOption | undefined) => void;
@@ -43,6 +47,7 @@ export function useFiltersForm({
   setSelectedDate,
   setPriceRange,
   setWeightRange,
+  setCapacityUnit,
   setGoodsCategory,
   setOriginCountries,
   setSortOption,
@@ -65,6 +70,7 @@ export function useFiltersForm({
       maxPrice: "",
       minSpace: "1",
       maxSpace: "",
+      spaceUnit: "kg",
       categories: [],
       countries: defaultCountries,
       sort: undefined,
@@ -137,11 +143,12 @@ export function useFiltersForm({
       });
     }
 
-    if (dirtyFields.maxSpace) {
+    if (dirtyFields.maxSpace || dirtyFields.spaceUnit) {
       setWeightRange({
         min: Number(formValues.minSpace),
         max: Number(formValues.maxSpace),
       });
+      setCapacityUnit?.(formValues.spaceUnit);
     }
 
     if (dirtyFields.categories) {
@@ -162,6 +169,7 @@ export function useFiltersForm({
     setSelectedDate("");
     setPriceRange({ min: 0, max: 0 });
     setWeightRange({ min: 0, max: 0 });
+    setCapacityUnit?.("kg");
     setGoodsCategory([]);
     setOriginCountries(defaultCountries);
     setSortOption(undefined);

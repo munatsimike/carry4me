@@ -25,6 +25,7 @@ interface RawParcelSnapshot {
 interface RawTripSnapshot {
   traveler_name: string;
   departure_date: string;
+  capacity_unit?: "kg" | "bag";
   origin: RawLocation;
   destination: RawLocation;
 }
@@ -147,6 +148,7 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
     tripSnapshot: {
       traveler_name: row.trip_snapshot.traveler_name,
       departure_date: row.trip_snapshot.departure_date,
+      capacity_unit: row.trip_snapshot.capacity_unit,
       origin: {
         country: row.trip_snapshot.origin.country,
         city: row.trip_snapshot.origin.city,

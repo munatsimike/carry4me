@@ -3,6 +3,10 @@ import { expandOriginCountryFilterValues } from "@/app/Mapper";
 import type { TripListing } from "../features/trips/domain/Trip";
 import type { Listing } from "../shared/Authentication/domain/Listing";
 import { tripAcceptsAllCategories } from "../features/goods/domain/goodsCategoryConstants";
+import {
+  isTripCapacityBags,
+  type TripCapacityUnit,
+} from "../features/trips/domain/tripCapacityUnit";
 
 export function filterByCountryCity<T extends Listing>(
   city: string,
@@ -74,10 +78,19 @@ export function filterByPriceRange<T extends Listing>(
 export function filterByWeightRange<T extends Listing>(
   weightRange: CustomRange,
   listings: T[],
+  capacityUnit?: TripCapacityUnit,
 ): T[] {
   const { min, max } = weightRange;
+  const filterBags = isTripCapacityBags(capacityUnit);
 
   return listings.filter((listing) => {
+    if (listing.type === "trip") {
+      const listingIsBags = isTripCapacityBags(listing.capacityUnit);
+      if (filterBags !== listingIsBags) return false;
+    } else if (filterBags) {
+      return false;
+    }
+
     const weight = Number(listing.weightKg);
 
     const meetsMin = min === undefined || weight >= min;

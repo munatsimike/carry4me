@@ -31,5 +31,6 @@ export function toTripDtoMapper(
 
     price_per_kg: dirtyFields.pricePerKg ? values.pricePerKg : undefined,
     capacity_kg: dirtyFields.weight ? values.weight : undefined,
+    capacity_unit: dirtyFields.capacityUnit ? values.capacityUnit : undefined,
   };
 }

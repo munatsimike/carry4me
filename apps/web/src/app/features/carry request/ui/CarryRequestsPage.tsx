@@ -35,6 +35,7 @@ import { completeCarryRequestPayment } from "../application/completeCarryRequest
 import { applyCarryRequestActionResult, refreshAfterCarryRequestAction } from "../application/refreshAfterCarryRequestAction";
 import { syncCarryRequestPayment } from "../application/carryRequestPayment";
 import { calculateCarryRequestPricing } from "../domain/carryRequestPricing";
+import { tripPricingQuantity } from "@/app/features/trips/domain/tripCapacityUnit";
 import statusColor from "./StatustColorMapper";
 import actionsMapper, {
   UIACTIONKEYS,
@@ -890,7 +891,10 @@ function CarryRequestCard({
 
   const { totalWithFee } = calculateCarryRequestPricing(
     request.parcelSnapshot.price_per_kg,
-    request.parcelSnapshot.weight_kg,
+    tripPricingQuantity(
+      request.tripSnapshot.capacity_unit,
+      request.parcelSnapshot.weight_kg,
+    ),
   );
 
   const isArchived = isArchivedCarryRequestStatus(effectiveStatus);

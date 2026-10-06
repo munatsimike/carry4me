@@ -24,6 +24,7 @@ type TripRow = {
   depart_date: string;
   capacity_kg: number;
   price_per_kg: number;
+  capacity_unit?: string;
 };
 
 type ParcelRow = {
@@ -92,7 +93,7 @@ Deno.serve(async (req) => {
       const { data: trip, error } = await supabaseAdmin
         .from("trips")
         .select(
-          "id, traveler_user_id, origin_city, destination_city, origin_country, depart_date, capacity_kg, price_per_kg",
+          "id, traveler_user_id, origin_city, destination_city, origin_country, depart_date, capacity_kg, price_per_kg, capacity_unit",
         )
         .eq("id", listingId)
         .maybeSingle<TripRow>();
@@ -121,6 +122,7 @@ Deno.serve(async (req) => {
           travelDate: trip.depart_date,
           availableSpaceKg: Number(trip.capacity_kg),
           pricePerKg: Number(trip.price_per_kg),
+          capacityUnit: trip.capacity_unit === "bag" ? "bag" : "kg",
           currencySymbol: currencySymbolForCountry(trip.origin_country),
         },
         resendApiKey,

@@ -12,5 +12,6 @@ export type CreateTripListing = {
   arrivalDate?: string | null;
   capacityKg: number;
   pricePerKg: number;
+  capacityUnit: "kg" | "bag";
   status: TripStatuses;
 };

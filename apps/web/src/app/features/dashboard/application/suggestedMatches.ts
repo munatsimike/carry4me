@@ -4,6 +4,7 @@ import { PARCELSTATUSES } from "@/app/features/parcels/domain/Parcel";
 import type { TripListing } from "@/app/features/trips/domain/Trip";
 import { TRIPSTATUSES } from "@/app/features/trips/domain/Trip";
 import { tripAcceptsAnyParcelCategory } from "@/app/features/goods/domain/goodsCategoryConstants";
+import { parcelFitsTripCapacity } from "@/app/features/trips/domain/tripCapacityUnit";
 
 export type DashboardSuggestedMatches = {
   activeParcels: ParcelListing[];
@@ -83,7 +84,11 @@ function categoriesMatch(parcel: ParcelListing, trip: TripListing) {
 
 /** Parcel weight must fit within the trip's available capacity. */
 function weightFits(parcel: ParcelListing, trip: TripListing) {
-  return parcel.weightKg <= trip.weightKg;
+  return parcelFitsTripCapacity(
+    parcel.weightKg,
+    trip.weightKg,
+    trip.capacityUnit,
+  );
 }
 
 export function isSuggestedMatch(source: Listing, candidate: Listing) {

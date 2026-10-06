@@ -17,6 +17,7 @@ import type { SvgIconComponent } from "@/types/Ui";
 import { AnimatePresence } from "framer-motion";
 import { ChevronDown, Clock, MoveRight } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { tripPricingQuantity } from "@/app/features/trips/domain/tripCapacityUnit";
 import {
   CarryRequestCostSummary,
   RequestCostSummarySection,
@@ -230,15 +231,18 @@ export function PaymentDetailsButton({
   weightKg,
   pricePerKg,
   priceCountry,
+  capacityUnit,
   className,
 }: {
   viewerRole: Role;
   weightKg: number;
   pricePerKg: number;
   priceCountry: string;
+  capacityUnit?: string | null;
   className?: string;
 }) {
   const [costModalOpen, setCostModalOpen] = useState(false);
+  const billedWeight = tripPricingQuantity(capacityUnit, weightKg);
 
   return (
     <>
@@ -272,15 +276,17 @@ export function PaymentDetailsButton({
             </CustomText>
             {viewerRole === ROLES.TRAVELER ? (
               <TravelerPaymentDetailsSummary
-                weightKg={weightKg}
+                weightKg={billedWeight}
                 pricePerKg={pricePerKg}
                 priceCountry={priceCountry}
+                capacityUnit={capacityUnit}
               />
             ) : (
               <SenderPaymentDetailsSummary
-                weightKg={weightKg}
+                weightKg={billedWeight}
                 pricePerKg={pricePerKg}
                 priceCountry={priceCountry}
+                capacityUnit={capacityUnit}
               />
             )}
           </CustomModal>
@@ -302,7 +308,7 @@ export function ArchivedCarryRequestDetails({
   statusDateValue,
   statusDateHoverValue,
 }: {
-  trip: { traveler_name: string };
+  trip: { traveler_name: string; capacity_unit?: "kg" | "bag" };
   parcel: {
     sender_name: string;
     origin: { country: string; city?: string };
@@ -375,6 +381,7 @@ export function ArchivedCarryRequestDetails({
             weightKg={parcel.weight_kg}
             pricePerKg={parcel.price_per_kg}
             priceCountry={parcel.origin.country}
+            capacityUnit={trip.capacity_unit}
           />
         </div>
       </div>

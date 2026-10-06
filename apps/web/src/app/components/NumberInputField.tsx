@@ -94,12 +94,16 @@ export function NumberInputField<TFieldValues extends FieldValues>({
   return (
     <ErrorText error={fieldError}>
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-1.5">
-          <CustomText textSize="sm" textVariant="label">
-            {label}
-          </CustomText>
-          {labelHint ? <InfoTooltip content={labelHint} /> : null}
-        </div>
+        {label || labelHint ? (
+          <div className="flex items-center gap-1.5">
+            {label ? (
+              <CustomText textSize="sm" textVariant="label">
+                {label}
+              </CustomText>
+            ) : null}
+            {labelHint ? <InfoTooltip content={labelHint} /> : null}
+          </div>
+        ) : null}
         <div className="flex items-center gap-2">
           {prefix ? (
             <CustomText as="span" textSize="sm" className="text-neutral-600">

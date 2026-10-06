@@ -1,3 +1,5 @@
+import { formatTripSpaceLeft } from "./tripCapacityUnit";
+
 export type TripCapacityUrgency = "comfortable" | "low" | "critical";
 
 export function getTripBookedWeightKg(
@@ -50,8 +52,11 @@ export function getTripCapacityUrgency(
   return "comfortable";
 }
 
-export function getTripRemainingLabel(availableKg: number): string {
-  return `${availableKg} kg left`;
+export function getTripRemainingLabel(
+  availableKg: number,
+  unit?: string | null,
+): string {
+  return formatTripSpaceLeft(availableKg, unit);
 }
 
 export const tripCapacityUrgencyStyles: Record<

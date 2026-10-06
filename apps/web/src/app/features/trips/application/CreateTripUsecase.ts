@@ -20,5 +20,11 @@ export class CreateTripUseCase {
         code: "VALIDATION_ERROR",
       });
     }
+    if (input.capacityUnit === "bag" && !Number.isInteger(input.capacityKg)) {
+      throw new AppError({
+        message: "Bags must be a whole number",
+        code: "VALIDATION_ERROR",
+      });
+    }
   }
 }

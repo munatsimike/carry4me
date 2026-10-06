@@ -4,6 +4,7 @@ import type { GoodsCategory } from "../../goods/domain/GoodsCategory";
 import type { Listing } from "@/app/shared/Authentication/domain/Listing";
 import type { FormValues } from "@/types/Ui";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
+import { formatTripSpace } from "@/app/features/trips/domain/tripCapacityUnit";
 import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 import {
   canManageOwnListing,
@@ -142,7 +143,12 @@ export function ListingTable<T extends Listing>({
               ) : null}
 
               <TableTd className={bodyCellClass}>
-                <TableText text={`${row.weightKg.toString()}kg`} />
+                <TableText
+                  text={formatTripSpace(
+                    row.weightKg,
+                    row.type === "trip" ? row.capacityUnit : undefined,
+                  )}
+                />
               </TableTd>
 
               <TableTd className={bodyCellClass}>
@@ -217,8 +223,10 @@ export function ListingTable<T extends Listing>({
                           (x: GoodsCategory) => x.id,
                         ),
                         itemDescriptions: row.items,
-                        weight: row.weightKg,
+                        weight: row.type === "trip" ? (row.capacityKg ?? row.weightKg) : row.weightKg,
                         pricePerKg: row.pricePerKg,
+                        capacityUnit:
+                          row.type === "trip" ? row.capacityUnit ?? "kg" : undefined,
                         confirmNoProhibitedItems: false,
                         understandTravelerInspection: false,
                         senderId: row.user.id ?? "",

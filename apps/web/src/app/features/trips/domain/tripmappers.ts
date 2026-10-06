@@ -1,5 +1,6 @@
 import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
 import type { TripListing } from "./Trip";
+import { normalizeTripCapacityUnit } from "./tripCapacityUnit";
 // features/trips/domain/trip.mappers.ts
 export type TripRow = {
   id: string;
@@ -15,6 +16,7 @@ export type TripRow = {
   destination_city: string;
   price_per_kg: number;
   capacity_kg: number;
+  capacity_unit?: "kg" | "bag" | null;
   reserved_weight_kg: number;
   used_weight_kg: number;
   depart_date: string;
@@ -64,6 +66,7 @@ export function mapTripRowToTrip(
     pricePerKg: row.price_per_kg,
     weightKg: row.capacity_kg - (row.reserved_weight_kg + row.used_weight_kg),
     capacityKg: row.capacity_kg,
+    capacityUnit: normalizeTripCapacityUnit(row.capacity_unit),
     departDate: row.depart_date,
     arriveDate: row.arrive_date,
     status: row.status,

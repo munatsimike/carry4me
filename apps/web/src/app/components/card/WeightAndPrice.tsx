@@ -9,6 +9,11 @@ import {
   tripCapacityUrgencyStyles,
   tripCapacityUnusedStyles,
 } from "@/app/features/trips/domain/tripCapacityUsage";
+import {
+  formatTripBooked,
+  formatTripSpace,
+  isTripCapacityBags,
+} from "@/app/features/trips/domain/tripCapacityUnit";
 
 type WeightAndPriceProps = {
   weightLabel?: string;
@@ -17,6 +22,7 @@ type WeightAndPriceProps = {
   price: number;
   country?: string | null;
   capacityKg?: number;
+  capacityUnit?: string | null;
   /** Parcel listings: show weight × price as total. */
   showTotalPrice?: boolean;
   priceCaption?: string;
@@ -24,12 +30,13 @@ type WeightAndPriceProps = {
 };
 
 export function WeightAndPrice({
-  weightLabel = "Luggage space",
+  weightLabel = "Available space",
   weight,
   priceLabel = "Price per kg",
   price,
   country,
   capacityKg,
+  capacityUnit,
   showTotalPrice = false,
   priceCaption,
   priceFractionDigits,
@@ -47,8 +54,12 @@ export function WeightAndPrice({
       ? tripCapacityUrgencyStyles[urgency]
       : tripCapacityUnusedStyles;
   const weightDisplay = isTripCapacityMode
-    ? getTripRemainingLabel(weight)
-    : `${weight}kg`;
+    ? getTripRemainingLabel(weight, capacityUnit)
+    : formatTripSpace(weight, capacityUnit);
+  const bookedLabel = formatTripBooked(bookedKg, capacityUnit);
+  const remainingAria = isTripCapacityBags(capacityUnit)
+    ? `${weight} bags remaining, ${bookedKg} bags booked`
+    : `${weight} kg remaining, ${bookedKg} kg booked`;
   const totalPrice = weight * price;
   const bookedTooltipClass =
     "pointer-events-none absolute left-1/2 bottom-full z-50 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-md opacity-0 translate-y-1 scale-95 transition-all duration-200 ease-out group-hover/capacity:translate-y-0 group-hover/capacity:scale-100 group-hover/capacity:opacity-100";
@@ -68,7 +79,7 @@ export function WeightAndPrice({
 
           <div
             className="w-[90px] shrink-0 rounded-full"
-            aria-label={`${weight} kg remaining, ${bookedKg} kg booked`}
+            aria-label={remainingAria}
             role="progressbar"
             aria-valuenow={bookedKg}
             aria-valuemin={0}
@@ -121,7 +132,7 @@ export function WeightAndPrice({
           </CustomText>
 
           <span className={bookedTooltipClass} role="tooltip">
-            {bookedKg} kg booked
+            {bookedLabel}
           </span>
         </div>
       ) : (

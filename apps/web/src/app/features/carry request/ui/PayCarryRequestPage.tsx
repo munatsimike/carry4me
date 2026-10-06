@@ -29,6 +29,11 @@ import {
 } from "@/app/shared/stripe/stripeClient";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import {
+  formatTripSpace,
+  isTripCapacityBags,
+  tripPricingQuantity,
+} from "@/app/features/trips/domain/tripCapacityUnit";
+import {
   createCarryRequestPaymentIntent,
   paymentSetupErrorMessage,
   syncCarryRequestPayment,
@@ -705,6 +710,12 @@ export default function PayCarryRequestPage() {
   }
 
   const parcel = carryRequest.parcelSnapshot;
+  const trip = carryRequest.tripSnapshot;
+  const billedQuantity = tripPricingQuantity(
+    trip.capacity_unit,
+    Number(parcel.weight_kg) || 0,
+  );
+  const isBagTrip = isTripCapacityBags(trip.capacity_unit);
 
   return (
     <DefaultContainer className="max-w-none">
@@ -745,14 +756,16 @@ export default function PayCarryRequestPage() {
 
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-2">
                   <CustomText textSize="sm" textVariant="secondary">
-                    Parcel weight
+                    {isBagTrip ? "Bags" : "Parcel weight"}
                   </CustomText>
                   <CustomText textSize="sm" textVariant="primary" className="text-right tabular-nums">
-                    {formatParcelWeight(parcel.weight_kg)}
+                    {isBagTrip
+                      ? formatTripSpace(billedQuantity, trip.capacity_unit)
+                      : formatParcelWeight(parcel.weight_kg)}
                   </CustomText>
 
                   <CustomText textSize="sm" textVariant="secondary">
-                    Price per kg
+                    {isBagTrip ? "Price per bag" : "Price per kg"}
                   </CustomText>
                   <CustomText textSize="sm" textVariant="primary" className="text-right tabular-nums">
                     {formatCurrencyByCountry(originCountry, Number(parcel.price_per_kg) || 0)}
@@ -766,8 +779,7 @@ export default function PayCarryRequestPage() {
                       originCountry,
                       paymentAmount !== null && platformFeeAmount !== null
                         ? (paymentAmount - platformFeeAmount) / 100
-                        : (Number(parcel.price_per_kg) || 0) *
-                            (Number(parcel.weight_kg) || 0),
+                        : (Number(parcel.price_per_kg) || 0) * billedQuantity,
                     )}
                   </CustomText>
 

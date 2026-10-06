@@ -3,9 +3,18 @@ import { AnimatePresence, motion } from "framer-motion";
 import CustomText from "@/components/ui/CustomText";
 import { PriceField } from "../../dashboard/components/PriceField";
 import { formatCurrencyByCountry, getCurrencySymbolByCountry } from "@/app/lib/currency";
-import { TRIP_PRICE_PER_KG_HINT } from "@/app/shared/listingFormHints";
+import {
+  TRIP_PRICE_PER_BAG_HINT,
+  TRIP_PRICE_PER_KG_HINT,
+} from "@/app/shared/listingFormHints";
 import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { WeightField } from "../../dashboard/components/WeightField";
+import { CapacityUnitToggle } from "../../dashboard/components/CapacityUnitToggle";
+import {
+  TRIP_CAPACITY_UNITS,
+  isTripCapacityBags,
+  type TripCapacityUnit,
+} from "@/app/features/trips/domain/tripCapacityUnit";
 import GoodsCategoryGrid from "../../dashboard/components/GoodsCategoryGrid";
 import { DateField } from "../../dashboard/components/DateField";
 import RouteFieldRow from "../../dashboard/components/RouteFieldRow";
@@ -103,6 +112,7 @@ export function CreateTripForm({
 
   const weightValue = watch("weight");
   const priceValue = watch("pricePerKg");
+  const capacityUnit = watch("capacityUnit") ?? "kg";
   const originCountry = watch("originCountry");
   const originCity = watch("originCity");
   const originCustomCity = watch("originCustomCity");
@@ -114,6 +124,28 @@ export function CreateTripForm({
   const hasWeight = Number.isFinite(weight) && weight > 0;
   const hasPrice = Number.isFinite(price) && price > 0;
   const totalEarnings = hasWeight && hasPrice ? weight * price : 0;
+  const isBags = isTripCapacityBags(capacityUnit);
+
+  const setCapacityUnit = (unit: TripCapacityUnit) => {
+    if (unit === capacityUnit) return;
+    setValue("capacityUnit", unit, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    setValue("weight", unit === TRIP_CAPACITY_UNITS.BAG ? 1 : 0, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    if (unit === TRIP_CAPACITY_UNITS.BAG && (!Number.isFinite(price) || price < 100)) {
+      setValue("pricePerKg", 100, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    }
+  };
 
   const dividerHeight = "my-0";
   const isEditMode = mode === "edit";
@@ -217,10 +249,17 @@ export function CreateTripForm({
               }
             />
             <LineDivider heightClass={dividerHeight} />
+            <CapacityUnitToggle
+              value={capacityUnit}
+              onChange={setCapacityUnit}
+            />
             <div className="flex flex-col gap-6 sm:flex-row sm:flex-nowrap sm:items-start sm:gap-x-24">
               <div className="w-full shrink-0 sm:w-[13.5rem]">
                 <WeightField<TripFormFields>
                   id="weight"
+                  label=""
+                  suffix={isBags ? "bags" : "Kg"}
+                  min={isBags ? 1 : 0}
                   register={register("weight", { valueAsNumber: true })}
                   error={errors.weight?.message}
                   isDirty={!!dirtyFields.weight}
@@ -234,7 +273,9 @@ export function CreateTripForm({
                 <PriceField<TripFormFields>
                   id="price"
                   country={originCountry}
-                  hint={TRIP_PRICE_PER_KG_HINT}
+                  label={isBags ? "Price per bag" : "Price per kg"}
+                  hint={isBags ? TRIP_PRICE_PER_BAG_HINT : TRIP_PRICE_PER_KG_HINT}
+                  min={isBags ? 100 : 12}
                   register={register("pricePerKg", { valueAsNumber: true })}
                   error={errors.pricePerKg?.message}
                   isDirty={!!dirtyFields.pricePerKg}
@@ -244,8 +285,9 @@ export function CreateTripForm({
                   value={priceValue}
                 />
                 <CustomText as="p" textSize="xs" className="text-neutral-500">
-                  Most travelers charge {getCurrencySymbolByCountry(originCountry)}
-                  12–20 per kg.
+                  {isBags
+                    ? "Senders pay this price per bag."
+                    : `Most travelers charge ${getCurrencySymbolByCountry(originCountry)}12–20 per kg.`}
                 </CustomText>
               </div>
             </div>
@@ -258,15 +300,17 @@ export function CreateTripForm({
                   <dt className="text-neutral-600">
                     {hasWeight ? (
                       <>
-                        {weight} kg ×{" "}
+                        {weight} {isBags ? "bags" : "kg"} ×{" "}
                         {formatCurrencyByCountry(
                           originCountry,
                           hasPrice ? price : 0,
                         )}
-                        /kg
+                        /{isBags ? "bag" : "kg"}
                       </>
                     ) : (
-                      "Enter available weight to see your estimate"
+                      isBags
+                        ? "Enter bags to see your estimate"
+                        : "Enter available weight to see your estimate"
                     )}
                   </dt>
                 </div>
@@ -318,6 +362,7 @@ export function CreateTripForm({
               goodsCategory={goodsCategory}
               weight={weightValue}
               pricePerKg={priceValue}
+              capacityUnit={capacityUnit}
               onEditStep={goToStep}
             />
             <FormStepActions

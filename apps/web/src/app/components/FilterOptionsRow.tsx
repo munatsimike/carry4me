@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   Controller,
+  useWatch,
   type UseFormSetValue,
   type Control,
   type UseFormRegister,
@@ -23,6 +24,8 @@ import type { Listing } from "../shared/Authentication/domain/Listing";
 import CustomText from "@/components/ui/CustomText";
 import { Button } from "@/components/ui/Button";
 import { DateField } from "../features/dashboard/components/DateField";
+import { CapacityUnitToggle } from "../features/dashboard/components/CapacityUnitToggle";
+import type { TripCapacityUnit } from "@/app/features/trips/domain/tripCapacityUnit";
 import {
   useFiltersForm,
   type FiltersFormValues,
@@ -443,8 +446,13 @@ function FilterByWeightMenu({
     submitFilters,
     setValue,
     register,
+    control,
     clearFilters,
   } = baseProps;
+  const spaceUnit = useWatch({ control, name: "spaceUnit" }) ?? "kg";
+  const isBags = isTraveler && spaceUnit === "bag";
+  const unitLabel = isBags ? "bags" : "kg";
+
   return (
     <FilterMenuWrapper>
       <FilterChip
@@ -462,20 +470,36 @@ function FilterByWeightMenu({
               className="mb-2 block font-medium"
               textVariant="primary"
             >
-              {isTraveler ? "Available space (kg)" : "Parcel weight"}
+              {isTraveler
+                ? `Available space (${unitLabel})`
+                : "Parcel weight"}
             </CustomText>
+            {isTraveler ? (
+              <div className="mb-3">
+                <CapacityUnitToggle
+                  label=""
+                  value={spaceUnit}
+                  onChange={(unit: TripCapacityUnit) =>
+                    setValue("spaceUnit", unit, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
+                />
+              </div>
+            ) : null}
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="number"
                 min="0"
-                placeholder="Min kg"
+                placeholder={`Min ${unitLabel}`}
                 {...register("minSpace")}
                 className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
               />
               <input
                 type="number"
                 min="0"
-                placeholder="Max kg"
+                placeholder={`Max ${unitLabel}`}
                 {...register("maxSpace")}
                 className="w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
               />

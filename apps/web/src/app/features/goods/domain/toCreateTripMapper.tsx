@@ -22,6 +22,7 @@ export default function toCreateTrip(
     arrivalDate: null,
     capacityKg: formValues.weight,
     pricePerKg: formValues.pricePerKg,
+    capacityUnit: formValues.capacityUnit,
     status: TRIPSTATUSES.ACTIVE
   };
 }
