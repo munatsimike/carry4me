@@ -1,16 +1,16 @@
 import { format, parseISO } from "date-fns";
 
 const TRAVEL_DATE_NOT_REACHED_MESSAGE =
-  "Delivery can only be confirmed on or after the travel date.";
+  "Payout is possible on or after the departure date.";
 
 function utcCalendarDayMs(date: Date): number {
   return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
 
 /**
- * True when delivery confirmation may proceed for this trip departure date.
+ * True when traveler payout may proceed for this trip departure date.
  * Uses UTC calendar days to match edge/DB checks.
- * Fail-open on missing/invalid dates so valid confirmations are not bricked.
+ * Fail-open on missing/invalid dates so valid payouts are not bricked.
  */
 export function hasTravelDatePassedForPayout(
   departureDateIso: string | null | undefined,

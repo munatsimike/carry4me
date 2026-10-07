@@ -498,7 +498,7 @@ export default function CarryRequestsPage() {
       return;
     }
 
-    if (actions.primary.key === UIACTIONKEYS.MARK_DELIVERED) {
+    if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
       if (
         !hasTravelDatePassedForPayout(carryRequest.tripSnapshot.departure_date)
       ) {
