@@ -26,10 +26,11 @@ import {
 } from "@/app/shared/Authentication/UI/SegmentedTabs";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import CustomModal from "@/app/components/CustomModal";
 import { useOutletContext } from "react-router-dom";
 import Toolbar from "@/app/components/MobileFilterOptions";
+import { StickyMobileFilters } from "@/app/components/StickyMobileFilters";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 import type { MyFavTabs } from "../domain/types";
 import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
@@ -183,26 +184,15 @@ export function MyFavouritesPage() {
   );
   return (
     <>
-      <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4">
-        <AnimatePresence initial={false}>
-          {isMobile && scrollDirection === "up" && (
-            <motion.div
-              key="mobile-filters"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="py-2"
-            >
-              <Toolbar
-                hasActiveFilters={hasFilter}
-                onFilter={() => setMobileFilter(true)}
-                onClear={clearFilters}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {isMobile ? (
+        <StickyMobileFilters visible={scrollDirection === "up"}>
+          <Toolbar
+            hasActiveFilters={hasFilter}
+            onFilter={() => setMobileFilter(true)}
+            onClear={clearFilters}
+          />
+        </StickyMobileFilters>
+      ) : null}
       <PageSection>
         {!isMobile && searchContent}
         <AnimatePresence>

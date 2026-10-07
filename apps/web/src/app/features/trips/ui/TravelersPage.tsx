@@ -6,7 +6,7 @@ import RequestSummary from "@/app/components/RequestSummary";
 import PageSection from "@/app/components/PageSection";
 import Search from "@/app/components/Search";
 import type { TripListing } from "../domain/Trip";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import type { ParcelListing } from "../../parcels/domain/Parcel";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
@@ -22,6 +22,7 @@ import CustomText from "@/components/ui/CustomText";
 import PaginationControls from "@/app/components/PaginationControls";
 import { useMediaQuery } from "@/app/shared/Authentication/UI/hooks/useMediaQuery";
 import Toolbar from "@/app/components/MobileFilterOptions";
+import { StickyMobileFilters } from "@/app/components/StickyMobileFilters";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { useFiltersForm } from "@/app/shared/Authentication/UI/hooks/useFiltersForm";
@@ -247,26 +248,15 @@ export default function TravelersPage() {
 
   return (
     <>
-      <div className="sticky top-[50px] z-40 bg-white border-neutral-200 px-4">
-        <AnimatePresence initial={false}>
-          {isMobile && scrollDirection === "up" && (
-            <motion.div
-              key="mobile-filters"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="py-2"
-            >
-              <Toolbar
-                hasActiveFilters={hasFilter}
-                onFilter={() => setMobileFilter(true)}
-                onClear={clearFilters}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {isMobile ? (
+        <StickyMobileFilters visible={scrollDirection === "up"}>
+          <Toolbar
+            hasActiveFilters={hasFilter}
+            onFilter={() => setMobileFilter(true)}
+            onClear={clearFilters}
+          />
+        </StickyMobileFilters>
+      ) : null}
       <PageSection>
         {!isMobile && searchContent}
         <AnimatePresence>
