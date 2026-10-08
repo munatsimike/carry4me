@@ -29,6 +29,7 @@ type WeightAndPriceProps = {
   priceCaption?: string;
   priceFractionDigits?: number;
   paymentReleaseValue?: string;
+  paymentReleaseLabel?: string;
 };
 
 export function WeightAndPrice({
@@ -43,6 +44,7 @@ export function WeightAndPrice({
   priceCaption,
   priceFractionDigits,
   paymentReleaseValue,
+  paymentReleaseLabel = "Payment terms",
 }: WeightAndPriceProps) {
   const labelColor = "neutral";
   const baseLabel = "flex justify-end";
@@ -185,7 +187,7 @@ export function WeightAndPrice({
               textSize={textSize}
               textVariant={labelColor}
             >
-              Payment release
+              {paymentReleaseLabel}
             </CustomText>
           </div>
           <span className="flex-1" aria-hidden />

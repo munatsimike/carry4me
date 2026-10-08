@@ -25,7 +25,10 @@ import {
 } from "@/app/shared/marketplace/browseMarketplaceStyles";
 import { calculateCarryRequestPricing } from "@/app/features/carry request/domain/carryRequestPricing";
 import { isTripCapacityBags } from "@/app/features/trips/domain/tripCapacityUnit";
-import { paymentReleaseCardLabel } from "@/app/shared/listings/paymentPreference";
+import {
+  PAYMENT_TERMS_CARD_LABEL,
+  paymentReleaseCardLabel,
+} from "@/app/shared/listings/paymentPreference";
 
 function CardSectionFade({
   className,
@@ -205,6 +208,7 @@ export function ListingCard<T extends Listing>({
         showTotalPrice={!isTripListing}
         priceCaption={isTripListing ? "Incl. VAT & platform fee" : undefined}
         priceFractionDigits={isTripListing ? 2 : undefined}
+        paymentReleaseLabel={PAYMENT_TERMS_CARD_LABEL}
         paymentReleaseValue={paymentReleaseCardLabel(listing.paymentPreference)}
       />
       {showMarketplaceActions ? (

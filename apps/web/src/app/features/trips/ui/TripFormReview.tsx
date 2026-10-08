@@ -144,7 +144,7 @@ export default function TripFormReview({
       <LineDivider heightClass="my-0" />
 
       <FormReviewSection
-        label="Payment release preferences"
+        label="Payment terms"
         onEdit={onEditStep ? () => editStep(2) : undefined}
       >
         <FormReviewValue>

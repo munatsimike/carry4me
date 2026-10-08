@@ -18,7 +18,10 @@ import {
   getListingStatusToggleLabel,
   statusBadgeClass,
 } from "@/app/shared/listings/listingStatusPresentation";
-import { paymentReleaseCardLabel } from "@/app/shared/listings/paymentPreference";
+import {
+  PAYMENT_TERMS_CARD_LABEL,
+  paymentReleaseCardLabel,
+} from "@/app/shared/listings/paymentPreference";
 
 export function MobileListingCard<T extends Listing>({
   data,
@@ -122,7 +125,7 @@ export function MobileListingCard<T extends Listing>({
               />
               <SummaryPill
                 className="col-span-2"
-                label="Payment release"
+                label={PAYMENT_TERMS_CARD_LABEL}
                 value={paymentReleaseCardLabel(row.paymentPreference)}
               />
             </div>

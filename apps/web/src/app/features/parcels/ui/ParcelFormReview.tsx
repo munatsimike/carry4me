@@ -133,7 +133,7 @@ export default function ParcelFormReview({
       <LineDivider heightClass="my-0" />
 
       <FormReviewSection
-        label="Payment release preferences"
+        label="Payment terms"
         onEdit={onEditStep ? () => editStep(3) : undefined}
       >
         <FormReviewValue>

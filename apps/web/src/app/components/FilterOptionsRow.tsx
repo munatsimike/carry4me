@@ -36,6 +36,7 @@ import { toflag } from "../Mapper";
 import SvgIcon from "@/components/ui/SvgIcon";
 import {
   PAYMENT_RELEASE_FILTER_OPTIONS,
+  PAYMENT_TERMS_CARD_LABEL,
   type PaymentPreference,
 } from "@/app/shared/listings/paymentPreference";
 
@@ -782,7 +783,7 @@ function FilterByPaymentReleaseMenu({
   return (
     <FilterMenuWrapper>
       <FilterChip
-        label="Payment release"
+        label={PAYMENT_TERMS_CARD_LABEL}
         icon={<Wallet className="h-4 w-4" />}
         active={hasPaymentRelease}
         isOpen={openMenu === "paymentRelease"}
@@ -796,7 +797,7 @@ function FilterByPaymentReleaseMenu({
               className="mb-3 block font-medium"
               as="label"
             >
-              Payment release
+              {PAYMENT_TERMS_CARD_LABEL}
             </CustomText>
 
             <Controller

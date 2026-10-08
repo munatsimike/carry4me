@@ -7,13 +7,14 @@ export const PAYMENT_PREFERENCES = {
 export type PaymentPreference =
   (typeof PAYMENT_PREFERENCES)[keyof typeof PAYMENT_PREFERENCES];
 
-export const PAYMENT_PREFERENCE_HEADING = "Payment release preferences";
+export const PAYMENT_PREFERENCE_HEADING = "Payment terms";
+export const PAYMENT_TERMS_CARD_LABEL = "Payment terms";
 
 export const SENDER_PAYMENT_PREFERENCE_DESCRIPTION =
   "Your payment will be held securely. Choose when you'd like the payment to be released";
 
 export const TRAVELER_PAYMENT_PREFERENCE_DESCRIPTION =
-  "Your payment will be held securely. Choose when you'd like the payment to be released";
+  "Choose when you'd like to be paid";
 
 export const SENDER_PAYMENT_PREFERENCE_OPTIONS = [
   {
