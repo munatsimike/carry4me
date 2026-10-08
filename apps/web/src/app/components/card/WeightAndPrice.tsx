@@ -1,6 +1,7 @@
 import CustomText from "@/components/ui/CustomText";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { cn } from "@/app/lib/cn";
+import { Luggage } from "lucide-react";
 import {
   getTripBookedWeightKg,
   getTripCapacityBookedPercent,
@@ -68,14 +69,20 @@ export function WeightAndPrice({
     <div className={`flex flex-col gap-2`}>
       {isTripCapacityMode ? (
         <div className="group/capacity relative flex items-center gap-2">
-          <CustomText
-            className={`${baseLabel} shrink-0 whitespace-nowrap`}
-            as="div"
-            textSize={textSize}
-            textVariant={labelColor}
-          >
-            {weightLabel}
-          </CustomText>
+          <div className={`${baseLabel} shrink-0 items-center gap-1.5 whitespace-nowrap`}>
+            <Luggage
+              className="h-5 w-5 shrink-0 text-[#72777C]"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+            <CustomText
+              as="div"
+              textSize={textSize}
+              textVariant={labelColor}
+            >
+              {weightLabel}
+            </CustomText>
+          </div>
 
           <div
             className="w-[90px] shrink-0 rounded-full"
