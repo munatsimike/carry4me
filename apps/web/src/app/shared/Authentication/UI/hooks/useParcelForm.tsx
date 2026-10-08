@@ -52,6 +52,7 @@ import {
   listingWeightSchema,
   parcelItemSchema,
   budgetPerKgSchema,
+  paymentPreferenceSchema,
 } from "@/app/shared/validation/formValidation";
 
 const parcelSchema = z
@@ -69,6 +70,7 @@ const parcelSchema = z
     pricePerKg: budgetPerKgSchema,
     confirmNoProhibitedItems: confirmNoProhibitedItemsSchema,
     understandTravelerInspection: understandTravelerInspectionSchema,
+    paymentPreference: paymentPreferenceSchema,
   })
   .superRefine((data, ctx) => {
     if (
@@ -99,6 +101,7 @@ const emptyDefaultsValues = {
   pricePerKg: 12,
   confirmNoProhibitedItems: false,
   understandTravelerInspection: false,
+  paymentPreference: "flexible" as const,
 };
 
 type UseParcelFormProps = {
@@ -272,6 +275,7 @@ export default function useParcelForm({
             initialFormValues.confirmNoProhibitedItems ?? false,
           understandTravelerInspection:
             initialFormValues.understandTravelerInspection ?? false,
+          paymentPreference: initialFormValues.paymentPreference ?? "flexible",
         },
         { keepDefaultValues: false },
       );

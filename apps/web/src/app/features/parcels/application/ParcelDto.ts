@@ -12,4 +12,5 @@ export type ParcelDto = {
   weight_kg: number;
   items: GoodsItem[];
   price: number;
+  payment_preference: "handover" | "delivery" | "flexible";
 };

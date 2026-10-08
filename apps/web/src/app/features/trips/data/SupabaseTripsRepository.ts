@@ -238,6 +238,7 @@ export class SupabaseTripsRepository implements TripsRepository {
         capacity_kg: input.capacityKg,
         price_per_kg: input.pricePerKg,
         capacity_unit: input.capacityUnit,
+        payment_preference: input.paymentPreference,
         status: input.status,
       })
       .select("id")
@@ -322,6 +323,10 @@ export class SupabaseTripsRepository implements TripsRepository {
 
     if (categoryTripIds) {
       query.in("id", categoryTripIds);
+    }
+
+    if (filters.paymentPreferences && filters.paymentPreferences.length > 0) {
+      query.in("payment_preference", filters.paymentPreferences);
     }
 
     switch (filters.sortOption) {

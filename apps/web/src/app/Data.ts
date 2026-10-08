@@ -33,14 +33,14 @@ export const steps = [
     step: 3,
     title: "Secure payment",
     description:
-      "If there is a match, the sender makes payment. We securely hold the payment until delivery is confirmed.",
+      "If there is a match, the sender makes payment. We securely hold the payment until it is released after handover or delivery.",
   },
 
   {
     step: 4,
     title: "Deliver and get paid",
     description:
-      "The traveler delivers the parcel. Payment is released after successful delivery.",
+      "The traveler delivers the parcel. Payment is released after handover or successful delivery.",
   },
 ];
 

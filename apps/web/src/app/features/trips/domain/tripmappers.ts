@@ -1,4 +1,5 @@
 import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
+import { normalizePaymentPreference } from "@/app/shared/listings/paymentPreference";
 import type { TripListing } from "./Trip";
 import { normalizeTripCapacityUnit } from "./tripCapacityUnit";
 // features/trips/domain/trip.mappers.ts
@@ -17,6 +18,7 @@ export type TripRow = {
   price_per_kg: number;
   capacity_kg: number;
   capacity_unit?: "kg" | "bag" | null;
+  payment_preference?: "handover" | "delivery" | "flexible" | null;
   reserved_weight_kg: number;
   used_weight_kg: number;
   depart_date: string;
@@ -67,6 +69,7 @@ export function mapTripRowToTrip(
     weightKg: row.capacity_kg - (row.reserved_weight_kg + row.used_weight_kg),
     capacityKg: row.capacity_kg,
     capacityUnit: normalizeTripCapacityUnit(row.capacity_unit),
+    paymentPreference: normalizePaymentPreference(row.payment_preference),
     departDate: row.depart_date,
     arriveDate: row.arrive_date,
     status: row.status,

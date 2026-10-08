@@ -6,6 +6,7 @@ import {
   type Role,
 } from "../domain/CreateCarryRequest";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
+import { senderPaymentCodeHelperText } from "@/app/shared/listings/paymentPreference";
 
 export const UIACTIONKEYS = {
   ACCEPT: "ACCEPT",
@@ -118,12 +119,11 @@ function confirmDelivery(): UIAction {
   };
 }
 
-function displayPaymentCodeReady(): InfoBlock {
+function displayPaymentCodeReady(paymentPreference?: string): InfoBlock {
   return {
     mode: INFOMODES.DISPLAY,
     label: "Payment code",
-    helperText:
-      "Check your email for the payment code. Give it to the traveler only after the items have been received to release payment.",
+    helperText: senderPaymentCodeHelperText(paymentPreference),
   };
 }
 
@@ -132,6 +132,7 @@ export default function actionsMapper(
   status: CarryRequestStatus,
   requestIniator: Role,
   handoverState?: HandoverConfirmationState,
+  paymentPreference?: string,
 ): UIActions {
   switch (status) {
     case CARRY_REQUEST_STATUSES.PENDING_ACCEPTANCE:
@@ -141,9 +142,9 @@ export default function actionsMapper(
     case CARRY_REQUEST_STATUSES.PENDING_HANDOVER:
       return pendingHandover(handoverState, viewerRole);
     case CARRY_REQUEST_STATUSES.IN_TRANSIT:
-      return intransit(viewerRole);
+      return intransit(viewerRole, paymentPreference);
     case CARRY_REQUEST_STATUSES.PENDING_PAYOUT:
-      return pendingPayout(viewerRole);
+      return pendingPayout(viewerRole, paymentPreference);
     case CARRY_REQUEST_STATUSES.PAID_OUT:
       return paidOut();
     case CARRY_REQUEST_STATUSES.REJECTED:
@@ -176,15 +177,17 @@ function requestRejected(): UIActions {
 function paidOut(): UIActions {
   return {};
 }
-function pendingPayout(viewerRole: Role): UIActions {
+function pendingPayout(
+  viewerRole: Role,
+  paymentPreference?: string,
+): UIActions {
   if (viewerRole === ROLES.SENDER) {
     return {
       secondary: resendDeliveryCode,
       infoBlock: {
         mode: INFOMODES.DISPLAY,
         label: "Payment code",
-        helperText:
-          "Check your email for the payment code. Give it to the traveler only after the items have been received to release payment.",
+        helperText: senderPaymentCodeHelperText(paymentPreference),
       },
     };
   } else {
@@ -205,10 +208,13 @@ function pendingPayout(viewerRole: Role): UIActions {
   }
 }
 
-function intransit(viewerRole: Role): UIActions {
+function intransit(
+  viewerRole: Role,
+  paymentPreference?: string,
+): UIActions {
   if (viewerRole === ROLES.SENDER) {
     return {
-      infoBlock: displayPaymentCodeReady(),
+      infoBlock: displayPaymentCodeReady(paymentPreference),
       secondary: resendDeliveryCode,
     };
   }

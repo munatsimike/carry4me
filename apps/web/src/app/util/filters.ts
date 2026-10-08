@@ -7,6 +7,10 @@ import {
   isTripCapacityBags,
   type TripCapacityUnit,
 } from "../features/trips/domain/tripCapacityUnit";
+import {
+  normalizePaymentPreference,
+  type PaymentPreference,
+} from "@/app/shared/listings/paymentPreference";
 
 export function filterByCountryCity<T extends Listing>(
   city: string,
@@ -115,4 +119,17 @@ export function filterByGoodsCategory<T extends Listing>(
       goodsCategories.some((selected) => selected === item.name),
     );
   });
+}
+
+export function filterByPaymentPreference<T extends Listing>(
+  paymentPreferences: PaymentPreference[],
+  listings: T[],
+): T[] {
+  if (paymentPreferences.length === 0) return listings;
+
+  const allowed = new Set(paymentPreferences);
+
+  return listings.filter((listing) =>
+    allowed.has(normalizePaymentPreference(listing.paymentPreference)),
+  );
 }

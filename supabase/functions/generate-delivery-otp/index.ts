@@ -9,6 +9,7 @@ import {
   isDeliveryOtpDevMode,
   issueDeliveryOtp,
 } from "../_shared/deliveryOtp.ts";
+import { senderPaymentCodeHelperText } from "../_shared/paymentPreference.ts";
 
 type RequestBody = {
   carry_request_id?: string;
@@ -44,17 +45,30 @@ async function ensureDeliveryOtpNotification(
     return;
   }
 
+  const { data: carryRequest } = await supabaseAdmin
+    .from("carry_requests")
+    .select("parcel:parcels(payment_preference)")
+    .eq("id", input.carryRequestId)
+    .maybeSingle<{
+      parcel: { payment_preference: string | null } | { payment_preference: string | null }[] | null;
+    }>();
+
+  const parcel = Array.isArray(carryRequest?.parcel)
+    ? carryRequest.parcel[0]
+    : carryRequest?.parcel;
+  const paymentPreference = parcel?.payment_preference ?? null;
+
   const { error: insertError } = await supabaseAdmin
     .from("notifications")
     .insert({
       user_id: input.senderUserId,
       type: "DELIVERY_OTP",
       title: "Payment release code",
-      body:
-        "Check your email for the payment code. Give it to the traveler only after the items have been received to release payment.",
+      body: senderPaymentCodeHelperText(paymentPreference),
       link: "/requests",
       metadata: {
         carry_request_id: input.carryRequestId,
+        payment_preference: paymentPreference ?? "flexible",
         ...(input.otp ? { otp: input.otp } : {}),
       },
     });

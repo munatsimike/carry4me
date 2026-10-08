@@ -1,5 +1,6 @@
 import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { resolveOriginCityForSave } from "@/app/shared/locations/cityOptions";
+import { normalizePaymentPreference } from "@/app/shared/listings/paymentPreference";
 import type { CreateTripListing } from "../../trips/domain/CreateTrip";
 import { TRIPSTATUSES } from "../../trips/domain/Trip";
 
@@ -23,6 +24,7 @@ export default function toCreateTrip(
     capacityKg: formValues.weight,
     pricePerKg: formValues.pricePerKg,
     capacityUnit: formValues.capacityUnit,
+    paymentPreference: normalizePaymentPreference(formValues.paymentPreference),
     status: TRIPSTATUSES.ACTIVE
   };
 }

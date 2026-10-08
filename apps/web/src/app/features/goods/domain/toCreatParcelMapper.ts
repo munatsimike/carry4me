@@ -1,6 +1,7 @@
 
 import type { ParcelFormFields } from "@/app/shared/Authentication/UI/hooks/useParcelForm";
 import { resolveOriginCityForSave } from "@/app/shared/locations/cityOptions";
+import { normalizePaymentPreference } from "@/app/shared/listings/paymentPreference";
 import type { CreateParcel } from "../../parcels/domain/CreateParcel";
 import { PARCELSTATUSES } from "../../parcels/domain/Parcel";
 
@@ -24,5 +25,6 @@ export default function toCreateParcelMapper(
     weightKg: values.weight,
     items: values.itemDescriptions,
     price: values.pricePerKg,
+    paymentPreference: normalizePaymentPreference(values.paymentPreference),
   };
 }

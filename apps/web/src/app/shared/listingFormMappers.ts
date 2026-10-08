@@ -4,6 +4,7 @@ import type { TripListing } from "@/app/features/trips/domain/Trip";
 import { normalizeGoodsItem } from "@/app/components/GoodsManifestTable";
 import { toOriginCityFormFields } from "@/app/shared/locations/cityOptions";
 import { format, isValid, parseISO } from "date-fns";
+import { normalizePaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 const emptyParcelItem = {
   quantity: 1,
@@ -37,6 +38,7 @@ export function parcelListingToFormValues(data: ParcelListing): FormValues {
     pricePerKg: data.pricePerKg,
     confirmNoProhibitedItems: false,
     understandTravelerInspection: false,
+    paymentPreference: normalizePaymentPreference(data.paymentPreference),
     senderId: data.user.id ?? "",
   };
 }
@@ -56,6 +58,7 @@ export function tripListingToFormValues(data: TripListing): FormValues {
     weight: data.capacityKg ?? data.weightKg,
     pricePerKg: data.pricePerKg,
     capacityUnit: data.capacityUnit ?? "kg",
+    paymentPreference: normalizePaymentPreference(data.paymentPreference),
     senderId: data.user.id ?? "",
     departureDate: normalizeDepartureDate(data.departDate),
   };

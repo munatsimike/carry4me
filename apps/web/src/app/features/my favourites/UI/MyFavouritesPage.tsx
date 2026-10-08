@@ -5,6 +5,7 @@ import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import {
   filterByCountryCity,
   filterByGoodsCategory,
+  filterByPaymentPreference,
   filterByOriginCountries,
   filterByPriceRange,
   filterByWeightRange,
@@ -34,6 +35,7 @@ import { StickyMobileFilters } from "@/app/components/StickyMobileFilters";
 import { useScrollDirection } from "@/app/shared/Authentication/UI/hooks/useScrollDirection";
 import type { MyFavTabs } from "../domain/types";
 import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
+import type { PaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 export type { MyFavTabs };
 
@@ -71,6 +73,9 @@ export function MyFavouritesPage() {
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
   const [originCountries, setOriginCountries] = useState<string[]>([]);
+  const [paymentPreferences, setPaymentPreferences] = useState<
+    PaymentPreference[]
+  >([]);
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
   const { data: favListing = [], isLoading, error } = useFavourites(user?.id);
   useQueryErrorEffect(error);
@@ -85,6 +90,7 @@ export function MyFavouritesPage() {
     setCapacityUnit,
     setGoodsCategory,
     setOriginCountries,
+    setPaymentPreferences,
     setSortOption,
     defaultCountries,
   });
@@ -118,6 +124,10 @@ export function MyFavouritesPage() {
       result = filterByGoodsCategory(goodsCategory, result);
     }
 
+    if (paymentPreferences.length > 0) {
+      result = filterByPaymentPreference(paymentPreferences, result);
+    }
+
     if (sortOption) {
       result = sortTrips(result, sortOption);
     }
@@ -138,6 +148,7 @@ export function MyFavouritesPage() {
     weightRange,
     capacityUnit,
     goodsCategory,
+    paymentPreferences,
     sortOption,
     selectedTab,
   ]);

@@ -1,6 +1,7 @@
 import type { ParcelListing } from "./Parcel";
 import { fetchPublicUrl } from "@/app/shared/data/SupabaseAuthRepository";
 import { normalizeGoodsCondition } from "@/app/shared/goodsCondition";
+import { normalizePaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 type ParcelRow = {
   id: string;
@@ -20,6 +21,7 @@ type ParcelRow = {
   destination_city: string;
   destination_country: string;
   weight_kg: number;
+  payment_preference?: "handover" | "delivery" | "flexible" | null;
   items: {
     quantity: number;
     description: string;
@@ -59,6 +61,7 @@ export function toParcelMapper(row: ParcelRow,  likedTripIds: Set<string> = new 
       destinationCountry: row.destination_country,
     },
     weightKg: row.weight_kg,
+    paymentPreference: normalizePaymentPreference(row.payment_preference),
     items: row.items.map((x) => ({
       quantity: x.quantity,
       description: x.description,

@@ -13,4 +13,5 @@ export const tripStep2Fields = [
   "capacityUnit",
   "weight",
   "pricePerKg",
+  "paymentPreference",
 ] as const;

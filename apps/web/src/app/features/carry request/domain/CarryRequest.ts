@@ -3,6 +3,7 @@ import type { CarryRequestEvent, CarryRequestEventType } from "./CarryRequestEve
 import type { CarryRequestStatus, Role } from "./CreateCarryRequest";
 import type { ParcelSnapshot } from "./ParcelSnapShot";
 import type { TripSnapshot } from "./TripSnapshot";
+import type { PaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 export type CarryRequestEventHistoryItem = {
   type: CarryRequestEventType;
@@ -25,6 +26,7 @@ export type CarryRequest = {
   expiredAt: string | null;
   parcelSnapshot: ParcelSnapshot;
   tripSnapshot: TripSnapshot;
+  paymentPreference?: PaymentPreference;
   events: CarryRequestEvent;
   eventHistory: CarryRequestEventHistoryItem[];
  

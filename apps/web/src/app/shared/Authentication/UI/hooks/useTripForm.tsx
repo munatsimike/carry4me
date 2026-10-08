@@ -50,6 +50,7 @@ import {
   tripCapacityUnitSchema,
   pricePerKgSchema,
   pricePerBagSchema,
+  paymentPreferenceSchema,
 } from "@/app/shared/validation/formValidation";
 
 export const tripSchema = z
@@ -64,6 +65,7 @@ export const tripSchema = z
     weight: z.number({ error: "Enter a valid amount" }).finite("Enter a valid amount"),
     pricePerKg: z.number({ error: "Enter a valid price" }).finite("Enter a valid price"),
     goodsCategoryIds: goodsCategoriesSchema,
+    paymentPreference: paymentPreferenceSchema,
   })
   .superRefine((data, ctx) => {
     if (
@@ -118,6 +120,7 @@ const emptyDefaultsValues: TripFormFields = {
   capacityUnit: "kg",
   weight: 0,
   goodsCategoryIds: [],
+  paymentPreference: "flexible",
 };
 
 function toTripFormValues(values?: FormValues): TripFormFields {
@@ -133,6 +136,12 @@ function toTripFormValues(values?: FormValues): TripFormFields {
     capacityUnit: values.capacityUnit === "bag" ? "bag" : "kg",
     weight: values.weight,
     goodsCategoryIds: values.goodsCategoryIds,
+    paymentPreference:
+      values.paymentPreference === "handover" ||
+      values.paymentPreference === "delivery" ||
+      values.paymentPreference === "flexible"
+        ? values.paymentPreference
+        : "flexible",
   };
 }
 

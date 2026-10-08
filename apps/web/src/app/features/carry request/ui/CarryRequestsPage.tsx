@@ -883,6 +883,7 @@ function CarryRequestCard({
     effectiveStatus,
     request.initiatorRole,
     request.handoverState,
+    request.paymentPreference,
   );
 
   const toggleSection = (section: MobileSection) => {

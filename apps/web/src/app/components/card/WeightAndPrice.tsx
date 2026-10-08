@@ -1,7 +1,7 @@
 import CustomText from "@/components/ui/CustomText";
 import { formatCurrencyByCountry } from "@/app/lib/currency";
 import { cn } from "@/app/lib/cn";
-import { Luggage } from "lucide-react";
+import { Luggage, Scale, Wallet } from "lucide-react";
 import {
   getTripBookedWeightKg,
   getTripCapacityBookedPercent,
@@ -28,6 +28,7 @@ type WeightAndPriceProps = {
   showTotalPrice?: boolean;
   priceCaption?: string;
   priceFractionDigits?: number;
+  paymentReleaseValue?: string;
 };
 
 export function WeightAndPrice({
@@ -41,6 +42,7 @@ export function WeightAndPrice({
   showTotalPrice = false,
   priceCaption,
   priceFractionDigits,
+  paymentReleaseValue,
 }: WeightAndPriceProps) {
   const labelColor = "neutral";
   const baseLabel = "flex justify-end";
@@ -144,14 +146,20 @@ export function WeightAndPrice({
         </div>
       ) : (
         <div className="flex items-center gap-2">
-          <CustomText
-            className={`${baseLabel} shrink-0 whitespace-nowrap`}
-            as="div"
-            textSize={textSize}
-            textVariant={labelColor}
-          >
-            {weightLabel}
-          </CustomText>
+          <div className={`${baseLabel} shrink-0 items-center gap-1.5 whitespace-nowrap`}>
+            <Scale
+              className="h-5 w-5 shrink-0 text-[#72777C]"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+            <CustomText
+              as="div"
+              textSize={textSize}
+              textVariant={labelColor}
+            >
+              {weightLabel}
+            </CustomText>
+          </div>
           <span className="flex-1" aria-hidden />
           <CustomText
             as="div"
@@ -163,6 +171,34 @@ export function WeightAndPrice({
           </CustomText>
         </div>
       )}
+
+      {paymentReleaseValue ? (
+        <div className="flex items-center gap-2">
+          <div className={`${baseLabel} shrink-0 items-center gap-1.5 whitespace-nowrap`}>
+            <Wallet
+              className="h-5 w-5 shrink-0 text-[#72777C]"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+            <CustomText
+              as="div"
+              textSize={textSize}
+              textVariant={labelColor}
+            >
+              Payment release
+            </CustomText>
+          </div>
+          <span className="flex-1" aria-hidden />
+          <CustomText
+            as="div"
+            textVariant={labelColor}
+            className={`${baseLabel} shrink-0 whitespace-nowrap`}
+            textSize={textSize}
+          >
+            {paymentReleaseValue}
+          </CustomText>
+        </div>
+      ) : null}
 
       <div className="flex justify-between items-center">
         <CustomText

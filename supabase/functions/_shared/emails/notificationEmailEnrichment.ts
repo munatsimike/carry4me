@@ -1,10 +1,12 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import type { NotificationRow } from "../notificationEmail.ts";
 import type { NotificationEmailInput } from "./utils.ts";
+import { senderPaymentCodeEmailBody } from "../paymentPreference.ts";
 
 type CarryRequestRow = {
   sender_user_id: string;
   traveler_user_id: string;
+  parcel_id?: string;
 };
 
 type ProfileContactRow = {
@@ -80,7 +82,7 @@ async function loadCarryRequest(
 ): Promise<CarryRequestRow | null> {
   const { data, error } = await supabaseAdmin
     .from("carry_requests")
-    .select("sender_user_id, traveler_user_id")
+    .select("sender_user_id, traveler_user_id, parcel_id")
     .eq("id", carryRequestId)
     .maybeSingle<CarryRequestRow>();
 
@@ -163,10 +165,32 @@ export async function enrichNotificationForEmail(
     const otpRaw = notification.metadata?.otp;
     const otp = typeof otpRaw === "string" ? otpRaw.trim() : "";
     if (/^\d{6}$/.test(otp)) {
+      let preference =
+        typeof notification.metadata?.payment_preference === "string"
+          ? notification.metadata.payment_preference
+          : null;
+
+      if (!preference) {
+        const carryRequestId = getCarryRequestId(notification.metadata);
+        if (carryRequestId) {
+          const carryRequest = await loadCarryRequest(
+            supabaseAdmin,
+            carryRequestId,
+          );
+          if (carryRequest?.parcel_id) {
+            const { data: parcel } = await supabaseAdmin
+              .from("parcels")
+              .select("payment_preference")
+              .eq("id", carryRequest.parcel_id)
+              .maybeSingle<{ payment_preference: string | null }>();
+            preference = parcel?.payment_preference ?? null;
+          }
+        }
+      }
+
       return {
         ...base,
-        body:
-          `Share this 6-digit code with the recipient. They must provide it to the traveler when receiving the package: ${otp}.`,
+        body: senderPaymentCodeEmailBody(otp, preference),
         ctaLabel: null,
       };
     }

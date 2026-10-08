@@ -6,6 +6,7 @@ import { useGoodsCategories } from "@/app/hooks/queries/useGoodsQueries";
 import { useQueryErrorEffect } from "@/app/hooks/useQueryErrorEffect";
 import type { CustomRange, SortOption } from "@/types/Ui";
 import type { TripCapacityUnit } from "@/app/features/trips/domain/tripCapacityUnit";
+import type { PaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 export type FiltersFormValues = {
   date: string;
@@ -16,6 +17,7 @@ export type FiltersFormValues = {
   spaceUnit: "kg" | "bag";
   categories: string[];
   countries: string[];
+  paymentPreferences: PaymentPreference[];
   sort: SortOption | undefined;
 };
 
@@ -28,6 +30,7 @@ type FilterState = {
   spaceUnit: "kg" | "bag";
   categories: string[];
   countries: string[];
+  paymentPreferences: PaymentPreference[];
   sort?: SortOption;
 };
 
@@ -38,6 +41,7 @@ type UseFiltersFormProps = {
   setCapacityUnit?: (v: TripCapacityUnit) => void;
   setGoodsCategory: (s: string[]) => void;
   setOriginCountries: (s: string[]) => void;
+  setPaymentPreferences?: (s: PaymentPreference[]) => void;
   setSortOption: (v: SortOption | undefined) => void;
   /** Profile country codes checked by default (e.g. ["NL"]). */
   defaultCountries?: string[];
@@ -50,6 +54,7 @@ export function useFiltersForm({
   setCapacityUnit,
   setGoodsCategory,
   setOriginCountries,
+  setPaymentPreferences,
   setSortOption,
   defaultCountries = [],
 }: UseFiltersFormProps) {
@@ -73,6 +78,7 @@ export function useFiltersForm({
       spaceUnit: "kg",
       categories: [],
       countries: defaultCountries,
+      paymentPreferences: [],
       sort: undefined,
     }),
     [defaultCountries],
@@ -111,6 +117,7 @@ export function useFiltersForm({
   const hasPrice = !!values.maxPrice;
   const hasSpace = !!values.maxSpace;
   const hasCategory = values.categories.length > 0;
+  const hasPaymentRelease = (values.paymentPreferences?.length ?? 0) > 0;
   const defaultCountryKey = defaultCountries.slice().sort().join("|");
   const selectedCountryKey = (values.countries ?? []).slice().sort().join("|");
   const hasCountry = (values.countries?.length ?? 0) > 0;
@@ -122,6 +129,7 @@ export function useFiltersForm({
     hasPrice ||
     hasSpace ||
     hasCategory ||
+    hasPaymentRelease ||
     hasCountryFilter ||
     hasSort;
 
@@ -155,6 +163,10 @@ export function useFiltersForm({
       setGoodsCategory(formValues.categories);
     }
 
+    if (dirtyFields.paymentPreferences) {
+      setPaymentPreferences?.(formValues.paymentPreferences ?? []);
+    }
+
     // Always apply — country defaults are set without dirtying the field.
     setOriginCountries(formValues.countries ?? []);
 
@@ -171,6 +183,7 @@ export function useFiltersForm({
     setWeightRange({ min: 0, max: 0 });
     setCapacityUnit?.("kg");
     setGoodsCategory([]);
+    setPaymentPreferences?.([]);
     setOriginCountries(defaultCountries);
     setSortOption(undefined);
     reset({
@@ -210,6 +223,7 @@ export function useFiltersForm({
     hasPrice,
     hasSpace,
     hasCategory,
+    hasPaymentRelease,
     hasCountry,
     hasSort,
     hasFilter,

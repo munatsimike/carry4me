@@ -14,6 +14,7 @@ import {
   Package,
   Scale,
   ArrowUpDown,
+  Wallet,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -33,6 +34,10 @@ import {
 import { useLocations } from "../hookes/useLocation";
 import { toflag } from "../Mapper";
 import SvgIcon from "@/components/ui/SvgIcon";
+import {
+  PAYMENT_RELEASE_FILTER_OPTIONS,
+  type PaymentPreference,
+} from "@/app/shared/listings/paymentPreference";
 
 type FilterChipProps = {
   label: string;
@@ -147,6 +152,7 @@ export function FilterOptionsRow({
     hasPrice,
     hasSpace,
     hasCategory,
+    hasPaymentRelease,
     hasCountry,
     hasSort,
     hasFilter,
@@ -221,6 +227,18 @@ export function FilterOptionsRow({
       <FilterByGoodsMenu
         hasCategory={hasCategory}
         goodsCategory={goodsCategory}
+        baseProps={{
+          register: register,
+          openMenu: openMenu,
+          toggleMenu: toggleMenu,
+          submitFilters: submitFilters,
+          control: control,
+          setValue: setValue,
+          clearFilters: handleClearAndClose,
+        }}
+      />
+      <FilterByPaymentReleaseMenu
+        hasPaymentRelease={hasPaymentRelease}
         baseProps={{
           register: register,
           openMenu: openMenu,
@@ -737,6 +755,106 @@ function FilterByCountryMenu({
               Apply
             </Button>
           </div>
+        </form>
+      </Popover>
+    </FilterMenuWrapper>
+  );
+}
+
+type FilterByPaymentReleaseMenuProps = {
+  hasPaymentRelease: boolean;
+  baseProps: BaseProps;
+};
+
+function FilterByPaymentReleaseMenu({
+  hasPaymentRelease,
+  baseProps,
+}: FilterByPaymentReleaseMenuProps) {
+  const {
+    openMenu,
+    toggleMenu,
+    submitFilters,
+    control,
+    setValue,
+    clearFilters,
+  } = baseProps;
+
+  return (
+    <FilterMenuWrapper>
+      <FilterChip
+        label="Payment release"
+        icon={<Wallet className="h-4 w-4" />}
+        active={hasPaymentRelease}
+        isOpen={openMenu === "paymentRelease"}
+        onClick={() => toggleMenu("paymentRelease")}
+      />
+      <Popover open={openMenu === "paymentRelease"}>
+        <form onSubmit={submitFilters} className="space-y-4">
+          <div>
+            <CustomText
+              textVariant="primary"
+              className="mb-3 block font-medium"
+              as="label"
+            >
+              Payment release
+            </CustomText>
+
+            <Controller
+              control={control}
+              name="paymentPreferences"
+              render={({ field }) => (
+                <div className="space-y-2">
+                  {PAYMENT_RELEASE_FILTER_OPTIONS.map((option) => {
+                    const checked = field.value?.includes(option.id);
+
+                    return (
+                      <label
+                        key={option.id}
+                        className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 hover:bg-neutral-50"
+                      >
+                        <span className="relative inline-flex">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const current = field.value ?? [];
+                              if (e.target.checked) {
+                                field.onChange([...current, option.id]);
+                              } else {
+                                field.onChange(
+                                  current.filter(
+                                    (item: PaymentPreference) =>
+                                      item !== option.id,
+                                  ),
+                                );
+                              }
+                            }}
+                            className={checkBox}
+                          />
+                          <svg
+                            viewBox="0 0 24 24"
+                            className={checkBoxSvg}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </span>
+                        <CustomText textVariant="primary">
+                          {option.label}
+                        </CustomText>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            />
+          </div>
+
+          <ActionButton setValue={setValue} onClear={clearFilters} />
         </form>
       </Popover>
     </FilterMenuWrapper>

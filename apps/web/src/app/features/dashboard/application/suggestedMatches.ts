@@ -5,6 +5,7 @@ import type { TripListing } from "@/app/features/trips/domain/Trip";
 import { TRIPSTATUSES } from "@/app/features/trips/domain/Trip";
 import { tripAcceptsAnyParcelCategory } from "@/app/features/goods/domain/goodsCategoryConstants";
 import { parcelFitsTripCapacity } from "@/app/features/trips/domain/tripCapacityUnit";
+import { paymentPreferencesCompatible } from "@/app/shared/listings/paymentPreference";
 
 export type DashboardSuggestedMatches = {
   activeParcels: ParcelListing[];
@@ -91,6 +92,13 @@ function weightFits(parcel: ParcelListing, trip: TripListing) {
   );
 }
 
+function paymentPreferencesMatch(parcel: ParcelListing, trip: TripListing) {
+  return paymentPreferencesCompatible(
+    parcel.paymentPreference,
+    trip.paymentPreference,
+  );
+}
+
 export function isSuggestedMatch(source: Listing, candidate: Listing) {
   if (source.type === candidate.type) {
     return false;
@@ -108,7 +116,8 @@ export function isSuggestedMatch(source: Listing, candidate: Listing) {
     isListingEligibleForMatching(candidate) &&
     countriesMatch(source, candidate) &&
     categoriesMatch(parcel, trip) &&
-    weightFits(parcel, trip)
+    weightFits(parcel, trip) &&
+    paymentPreferencesMatch(parcel, trip)
   );
 }
 

@@ -38,6 +38,7 @@ import { getParcelUseCase } from "@/app/lib/useCases";
 import type { ListingPageParams } from "@/types/Pagination";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
+import type { PaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 const PAGE_SIZE = 9;
 
@@ -70,6 +71,9 @@ export default function TravelersPage() {
   const isSearchActive = !!country && !!city;
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
   const [originCountries, setOriginCountries] = useState<string[]>([]);
+  const [paymentPreferences, setPaymentPreferences] = useState<
+    PaymentPreference[]
+  >([]);
 
   const [priceRange, setPriceRange] = useState<CustomRange>({
     min: 0,
@@ -99,6 +103,7 @@ export default function TravelersPage() {
         capacityUnit,
         goodsCategories: goodsCategory,
         originCountries,
+        paymentPreferences,
         sortOption,
       },
     }),
@@ -112,6 +117,7 @@ export default function TravelersPage() {
       capacityUnit,
       goodsCategory,
       originCountries,
+      paymentPreferences,
       sortOption,
     ],
   );
@@ -140,6 +146,7 @@ export default function TravelersPage() {
     capacityUnit,
     goodsCategory,
     originCountries,
+    paymentPreferences,
     sortOption,
   ]);
 
@@ -211,6 +218,7 @@ export default function TravelersPage() {
     setCapacityUnit,
     setGoodsCategory,
     setOriginCountries,
+    setPaymentPreferences,
     setSortOption,
     defaultCountries,
   });

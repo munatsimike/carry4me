@@ -22,6 +22,7 @@ import { isOtherCitySelection } from "@/app/shared/locations/cityOptions";
 import { FIXED_DESTINATION_COUNTRY } from "@/app/shared/locations/fixedDestination";
 import SvgIcon from "@/components/ui/SvgIcon";
 import CustomText from "@/components/ui/CustomText";
+import { paymentPreferenceLabel } from "@/app/shared/listings/paymentPreference";
 
 type ParcelFormReviewProps = {
   originCountry: string;
@@ -33,6 +34,7 @@ type ParcelFormReviewProps = {
   goodsCategory: GoodsCategory[];
   weight: number;
   pricePerKg: number;
+  paymentPreference?: string;
   onEditStep?: (step: Step) => void;
 };
 
@@ -54,6 +56,7 @@ export default function ParcelFormReview({
   goodsCategory,
   weight,
   pricePerKg,
+  paymentPreference,
   onEditStep,
 }: ParcelFormReviewProps) {
   const categoryNames = goodsCategory
@@ -113,8 +116,8 @@ export default function ParcelFormReview({
 
       <LineDivider heightClass="my-0" />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-nowrap sm:items-start sm:gap-x-24">
-        <div className="shrink-0 sm:min-w-[6rem]">
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-8">
+        <div className="min-w-0">
           <FormReviewSection label="Weight" labelHint={PARCEL_WEIGHT_MIN_HINT}>
             <FormReviewPrimaryValue>{weight} kg</FormReviewPrimaryValue>
           </FormReviewSection>
@@ -126,6 +129,17 @@ export default function ParcelFormReview({
           <FormReviewPrimaryValue textSize="md">{priceLabel}</FormReviewPrimaryValue>
         </FormReviewSection>
       </div>
+
+      <LineDivider heightClass="my-0" />
+
+      <FormReviewSection
+        label="Payment release preferences"
+        onEdit={onEditStep ? () => editStep(3) : undefined}
+      >
+        <FormReviewValue>
+          {paymentPreferenceLabel(paymentPreference, "sender")}
+        </FormReviewValue>
+      </FormReviewSection>
 
       <LineDivider heightClass="my-0" />
 

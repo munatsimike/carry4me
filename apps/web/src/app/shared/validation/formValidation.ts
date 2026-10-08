@@ -84,6 +84,11 @@ export const listingBagsSchema = z
 
 export const tripCapacityUnitSchema = z.enum(["kg", "bag"]);
 
+export const paymentPreferenceSchema = z.enum(
+  ["handover", "delivery", "flexible"],
+  { error: "Select a payment preference" },
+);
+
 export const pricePerKgSchema = z
   .number({ error: "Enter a valid price" })
   .finite("Enter a valid price")

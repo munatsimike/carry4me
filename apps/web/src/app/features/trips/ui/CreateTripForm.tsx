@@ -10,6 +10,13 @@ import {
 import type { TripFormFields } from "@/app/shared/Authentication/UI/hooks/useTripForm";
 import { WeightField } from "../../dashboard/components/WeightField";
 import { CapacityUnitToggle } from "../../dashboard/components/CapacityUnitToggle";
+import { PaymentPreferenceField } from "../../dashboard/components/PaymentPreferenceField";
+import {
+  PAYMENT_PREFERENCE_HEADING,
+  TRAVELER_PAYMENT_PREFERENCE_DESCRIPTION,
+  TRAVELER_PAYMENT_PREFERENCE_OPTIONS,
+  type PaymentPreference,
+} from "@/app/shared/listings/paymentPreference";
 import {
   TRIP_CAPACITY_UNITS,
   isTripCapacityBags,
@@ -113,6 +120,7 @@ export function CreateTripForm({
   const weightValue = watch("weight");
   const priceValue = watch("pricePerKg");
   const capacityUnit = watch("capacityUnit") ?? "kg";
+  const paymentPreference = watch("paymentPreference");
   const originCountry = watch("originCountry");
   const originCity = watch("originCity");
   const originCustomCity = watch("originCustomCity");
@@ -230,7 +238,7 @@ export function CreateTripForm({
         {step === 2 && (
           <motion.div
             key="trip-step-2"
-            className="flex flex-col gap-4"
+            className="flex min-w-0 flex-col gap-4"
             {...stepMotion}
           >
             <LineDivider heightClass={dividerHeight} />
@@ -253,8 +261,8 @@ export function CreateTripForm({
               value={capacityUnit}
               onChange={setCapacityUnit}
             />
-            <div className="flex flex-col gap-6 sm:flex-row sm:flex-nowrap sm:items-start sm:gap-x-24">
-              <div className="w-full shrink-0 sm:w-[13.5rem]">
+            <div className="grid min-w-0 grid-cols-1 items-start gap-6 sm:grid-cols-[minmax(10rem,13.5rem)_minmax(0,1fr)] sm:gap-x-8 lg:gap-x-16">
+              <div className="min-w-0 w-full">
                 <WeightField<TripFormFields>
                   id="weight"
                   label=""
@@ -269,7 +277,7 @@ export function CreateTripForm({
                   value={weightValue}
                 />
               </div>
-              <div className="flex shrink-0 flex-col gap-2">
+              <div className="flex min-w-0 flex-col gap-2">
                 <PriceField<TripFormFields>
                   id="price"
                   country={originCountry}
@@ -328,6 +336,21 @@ export function CreateTripForm({
                 </div>
               </dl>
             </div>
+            <PaymentPreferenceField
+              heading={PAYMENT_PREFERENCE_HEADING}
+              description={TRAVELER_PAYMENT_PREFERENCE_DESCRIPTION}
+              name="traveler-payment-preference"
+              value={paymentPreference}
+              options={TRAVELER_PAYMENT_PREFERENCE_OPTIONS}
+              error={errors.paymentPreference?.message}
+              onChange={(value: PaymentPreference) =>
+                setValue("paymentPreference", value, {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: true,
+                })
+              }
+            />
             <LineDivider heightClass={dividerHeight} />
             <FormStepActions
               primaryLabel={isEditMode ? undefined : "Review"}
@@ -363,6 +386,7 @@ export function CreateTripForm({
               weight={weightValue}
               pricePerKg={priceValue}
               capacityUnit={capacityUnit}
+              paymentPreference={paymentPreference}
               onEditStep={goToStep}
             />
             <FormStepActions

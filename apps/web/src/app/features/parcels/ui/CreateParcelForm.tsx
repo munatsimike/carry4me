@@ -27,6 +27,13 @@ import ParcelReviewConfirmations from "./ParcelReviewConfirmations";
 import ParcelFormReview from "./ParcelFormReview";
 import GoodsManifestFields from "./GoodsManifestFields";
 import ParcelPricingSection from "./ParcelPricingSection";
+import { PaymentPreferenceField } from "../../dashboard/components/PaymentPreferenceField";
+import {
+  PAYMENT_PREFERENCE_HEADING,
+  SENDER_PAYMENT_PREFERENCE_DESCRIPTION,
+  SENDER_PAYMENT_PREFERENCE_OPTIONS,
+  type PaymentPreference,
+} from "@/app/shared/listings/paymentPreference";
 import {
   parcelStep1Fields,
   parcelStep2Fields,
@@ -94,6 +101,7 @@ export default function CreateParcelForm({
   const originCustomCity = watch("originCustomCity");
   const destinationCountry = watch("destinationCountry");
   const itemDescriptions = watch("itemDescriptions");
+  const paymentPreference = watch("paymentPreference");
 
   const dividerHeight = "my-0";
   const [internalStep, setInternalStep] = useState<Step>(1);
@@ -226,10 +234,9 @@ export default function CreateParcelForm({
         {step === 3 && (
           <motion.div
             key="parcel-step-3"
-            className="flex flex-col gap-4"
+            className="flex min-w-0 flex-col gap-3"
             {...stepMotion}
           >
-            <LineDivider heightClass={dividerHeight} />
             <ParcelPricingSection
               originCountry={originCountry}
               weightValue={weightValue}
@@ -239,6 +246,21 @@ export default function CreateParcelForm({
               errors={errors}
               dirtyFields={dirtyFields}
               touchedFields={touchedFields}
+            />
+            <PaymentPreferenceField
+              heading={PAYMENT_PREFERENCE_HEADING}
+              description={SENDER_PAYMENT_PREFERENCE_DESCRIPTION}
+              name="sender-payment-preference"
+              value={paymentPreference}
+              options={SENDER_PAYMENT_PREFERENCE_OPTIONS}
+              error={errors.paymentPreference?.message}
+              onChange={(value: PaymentPreference) =>
+                setValue("paymentPreference", value, {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: true,
+                })
+              }
             />
             {isEditMode ? (
               <>
@@ -279,6 +301,7 @@ export default function CreateParcelForm({
               goodsCategory={goodsCategory}
               weight={weightValue}
               pricePerKg={priceValue}
+              paymentPreference={paymentPreference}
               onEditStep={goToStep}
             />
             <ParcelReviewConfirmations register={register} errors={errors} />

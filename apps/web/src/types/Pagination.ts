@@ -1,5 +1,6 @@
 import type { CustomRange, SortOption } from "./Ui";
 import type { TripCapacityUnit } from "@/app/features/trips/domain/tripCapacityUnit";
+import type { PaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 export type ListingFilters = {
   searchCountry: string;
@@ -12,6 +13,8 @@ export type ListingFilters = {
   goodsCategories: string[];
   /** Origin country codes to include (e.g. ["NL", "UK"]). Empty = no country filter. */
   originCountries: string[];
+  /** Empty = any payment release preference. */
+  paymentPreferences?: PaymentPreference[];
   sortOption?: SortOption;
 };
 

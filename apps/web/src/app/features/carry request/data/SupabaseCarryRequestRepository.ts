@@ -134,7 +134,8 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
         delivery_otp_verified_at,
         delivery_otp_last_sent_at,
         events:carry_request_events(*),
-        handover_confirmations:carry_request_handover_confirmations(role, confirmed_at)
+        handover_confirmations:carry_request_handover_confirmations(role, confirmed_at),
+        parcel:parcels(payment_preference)
       `,
       )
       .in("status", [

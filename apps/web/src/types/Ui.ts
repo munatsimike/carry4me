@@ -68,6 +68,7 @@ export type FormValues = {
   /** Parcel review confirmations */
   confirmNoProhibitedItems?: boolean;
   understandTravelerInspection?: boolean;
+  paymentPreference?: "handover" | "delivery" | "flexible";
   senderId: string;
   departureDate?: string;
 };

@@ -1,5 +1,6 @@
 import type { GoodsItem } from "@/types/Ui";
 import type { ParcelStatuses } from "./Parcel";
+import type { PaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 export type CreateParcel = {
   senderUserId: string;
@@ -11,6 +12,7 @@ export type CreateParcel = {
   weightKg: number;
   price: number;
   items: GoodsItem[];
+  paymentPreference: PaymentPreference;
   status: ParcelStatuses
 };
 

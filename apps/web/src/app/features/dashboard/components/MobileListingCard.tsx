@@ -18,6 +18,7 @@ import {
   getListingStatusToggleLabel,
   statusBadgeClass,
 } from "@/app/shared/listings/listingStatusPresentation";
+import { paymentReleaseCardLabel } from "@/app/shared/listings/paymentPreference";
 
 export function MobileListingCard<T extends Listing>({
   data,
@@ -119,6 +120,11 @@ export function MobileListingCard<T extends Listing>({
                   },
                 )}
               />
+              <SummaryPill
+                className="col-span-2"
+                label="Payment release"
+                value={paymentReleaseCardLabel(row.paymentPreference)}
+              />
             </div>
 
             {/* Footer actions */}
@@ -200,9 +206,17 @@ export function MobileListingCard<T extends Listing>({
   );
 }
 
-function SummaryPill({ label, value }: { label: string; value: string }) {
+function SummaryPill({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
   return (
-    <div className="rounded-xl py-1 text-center">
+    <div className={`rounded-xl py-1 text-center ${className ?? ""}`}>
       <CustomText
         textVariant="label"
         textSize="sm"

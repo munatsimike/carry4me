@@ -195,6 +195,7 @@ export class SupabaseParcelRepository implements ParcelRepository {
         price: parcel.price,
         status: parcel.status,
         items: parcel.items,
+        payment_preference: parcel.paymentPreference,
       })
       .select("id")
       .single();
@@ -258,6 +259,10 @@ export class SupabaseParcelRepository implements ParcelRepository {
 
     if (categoryParcelIds) {
       query.in("id", categoryParcelIds);
+    }
+
+    if (filters.paymentPreferences && filters.paymentPreferences.length > 0) {
+      query.in("payment_preference", filters.paymentPreferences);
     }
 
     switch (filters.sortOption) {

@@ -10,7 +10,11 @@ export const parcelStep1Fields = [
 
 export const parcelStep2Fields = ["itemDescriptions"] as const;
 
-export const parcelStep3Fields = ["weight", "pricePerKg"] as const;
+export const parcelStep3Fields = [
+  "weight",
+  "pricePerKg",
+  "paymentPreference",
+] as const;
 
 export const parcelStep4Fields = [
   "confirmNoProhibitedItems",

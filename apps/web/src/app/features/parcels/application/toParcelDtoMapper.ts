@@ -33,5 +33,8 @@ export function toParcelDtoMapper(
     items: dirtyFields.itemDescriptions ? values.itemDescriptions : undefined                        ,
     price: dirtyFields.pricePerKg ? values.pricePerKg : undefined,
     weight_kg: dirtyFields.weight ? values.weight : undefined,
+    payment_preference: dirtyFields.paymentPreference
+      ? values.paymentPreference
+      : undefined,
   };
 }

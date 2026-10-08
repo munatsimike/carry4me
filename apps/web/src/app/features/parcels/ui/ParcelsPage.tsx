@@ -40,6 +40,7 @@ import FAB from "@/app/components/FAB";
 import type { ListingPageParams } from "@/types/Pagination";
 import { useMarketplaceActionGuard } from "@/app/shared/Authentication/UI/hooks/useMarketplaceActionGuard";
 import { getProfileOriginCountryCode } from "@/app/shared/locations/profileDestinationDefaults";
+import type { PaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 const PAGE_SIZE = 9;
 
@@ -84,6 +85,9 @@ export default function ParcelsPage() {
   const [sortOption, setSortOption] = useState<SortOption | undefined>();
   const [goodsCategory, setGoodsCategory] = useState<string[]>([]);
   const [originCountries, setOriginCountries] = useState<string[]>([]);
+  const [paymentPreferences, setPaymentPreferences] = useState<
+    PaymentPreference[]
+  >([]);
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
@@ -97,6 +101,7 @@ export default function ParcelsPage() {
       weightRange,
       goodsCategories: goodsCategory,
       originCountries,
+      paymentPreferences,
       sortOption,
     },
   }), [
@@ -107,6 +112,7 @@ export default function ParcelsPage() {
     weightRange,
     goodsCategory,
     originCountries,
+    paymentPreferences,
     sortOption,
   ]);
   const {
@@ -131,6 +137,7 @@ export default function ParcelsPage() {
     weightRange,
     goodsCategory,
     originCountries,
+    paymentPreferences,
     sortOption,
   ]);
   //
@@ -206,6 +213,7 @@ export default function ParcelsPage() {
     setWeightRange,
     setGoodsCategory,
     setOriginCountries,
+    setPaymentPreferences,
     setSortOption,
     defaultCountries,
   });

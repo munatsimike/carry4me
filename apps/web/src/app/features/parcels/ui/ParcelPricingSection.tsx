@@ -57,62 +57,66 @@ export default function ParcelPricingSection({
         </CustomText>
       </div>
 
-      <WeightField<ParcelFormFields>
-        label="Total weight"
-        labelHint={PARCEL_WEIGHT_MIN_HINT}
-        register={register("weight", { valueAsNumber: true })}
-        id="weight"
-        error={errors.weight?.message}
-        isTouched={!!touchedFields.weight}
-        isDirty={!!dirtyFields.weight}
-        setValue={setValue}
-        value={weightValue}
-        name="weight"
-      />
-
-      <div className="flex flex-col gap-3">
-        <PriceField<ParcelFormFields>
-          id="price"
-          label="Budget per kg"
-          hint={PARCEL_BUDGET_PER_KG_HINT}
-          country={originCountry}
-          error={errors.pricePerKg?.message}
-          register={register("pricePerKg", { valueAsNumber: true })}
-          isTouched={!!touchedFields.pricePerKg}
-          isDirty={!!dirtyFields.pricePerKg}
-          value={priceValue}
-          setValue={setValue}
-          name="pricePerKg"
-        />
-
-        <div className="flex flex-wrap gap-2">
-          {SUGGESTED_PRICES.map((price) => (
-            <button
-              key={price}
-              type="button"
-              onClick={() =>
-                setValue("pricePerKg", price, {
-                  shouldDirty: true,
-                  shouldTouch: true,
-                  shouldValidate: true,
-                })
-              }
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                priceValue === price
-                  ? "border-primary-500 bg-primary-50 text-primary-700"
-                  : "border-neutral-200 bg-white text-neutral-600 hover:border-primary-200 hover:bg-primary-50/50",
-              )}
-            >
-              {currencySymbol}
-              {price}/kg
-            </button>
-          ))}
+      <div className="grid min-w-0 grid-cols-1 items-start gap-6 sm:grid-cols-[minmax(10rem,13.5rem)_minmax(0,1fr)] sm:gap-x-8 lg:gap-x-16">
+        <div className="min-w-0 w-full">
+          <WeightField<ParcelFormFields>
+            label="Total weight"
+            labelHint={PARCEL_WEIGHT_MIN_HINT}
+            register={register("weight", { valueAsNumber: true })}
+            id="weight"
+            error={errors.weight?.message}
+            isTouched={!!touchedFields.weight}
+            isDirty={!!dirtyFields.weight}
+            setValue={setValue}
+            value={weightValue}
+            name="weight"
+          />
         </div>
 
-        <CustomText as="p" textSize="xs" className="text-neutral-500">
-          Typical offers start from {currencySymbol}12 per kg.
-        </CustomText>
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <PriceField<ParcelFormFields>
+            id="price"
+            label="Budget per kg"
+            hint={PARCEL_BUDGET_PER_KG_HINT}
+            country={originCountry}
+            error={errors.pricePerKg?.message}
+            register={register("pricePerKg", { valueAsNumber: true })}
+            isTouched={!!touchedFields.pricePerKg}
+            isDirty={!!dirtyFields.pricePerKg}
+            value={priceValue}
+            setValue={setValue}
+            name="pricePerKg"
+          />
+
+          <div className="flex flex-wrap gap-2">
+            {SUGGESTED_PRICES.map((price) => (
+              <button
+                key={price}
+                type="button"
+                onClick={() =>
+                  setValue("pricePerKg", price, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: true,
+                  })
+                }
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  priceValue === price
+                    ? "border-primary-500 bg-primary-50 text-primary-700"
+                    : "border-neutral-200 bg-white text-neutral-600 hover:border-primary-200 hover:bg-primary-50/50",
+                )}
+              >
+                {currencySymbol}
+                {price}/kg
+              </button>
+            ))}
+          </div>
+
+          <CustomText as="p" textSize="xs" className="text-neutral-500">
+            Typical offers start from {currencySymbol}12 per kg.
+          </CustomText>
+        </div>
       </div>
 
       <div className="rounded-xl border border-neutral-200 bg-neutral-50/60 p-4">
@@ -120,23 +124,23 @@ export default function ParcelPricingSection({
           Cost breakdown
         </CustomText>
         <dl className="flex flex-col gap-2 text-sm">
-          <div className="flex items-center justify-between gap-4">
-            <dt className="text-neutral-600">Delivery ({weightValue || 0} kg)</dt>
-            <dd className="font-medium text-ink-primary">
+          <div className="flex items-center justify-between gap-3">
+            <dt className="min-w-0 text-neutral-600">Delivery ({weightValue || 0} kg)</dt>
+            <dd className="shrink-0 font-medium text-ink-primary">
               {formatCurrencyByCountry(originCountry, deliveryTotal)}
             </dd>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <dt className="text-neutral-600">
+          <div className="flex items-center justify-between gap-3">
+            <dt className="min-w-0 text-neutral-600">
               Service fee
             </dt>
-            <dd className="font-medium text-ink-primary">
+            <dd className="shrink-0 font-medium text-ink-primary">
               {formatCurrencyByCountry(originCountry, serviceFee)}
             </dd>
           </div>
-          <div className="mt-1 flex items-center justify-between gap-4 border-t border-neutral-200 pt-2">
-            <dt className="font-medium text-ink-primary">Total you&apos;ll pay</dt>
-            <dd className="font-semibold text-primary-700">
+          <div className="mt-1 flex items-center justify-between gap-3 border-t border-neutral-200 pt-2">
+            <dt className="min-w-0 font-medium text-ink-primary">Total you&apos;ll pay</dt>
+            <dd className="shrink-0 font-semibold text-primary-700">
               {formatCurrencyByCountry(originCountry, totalWithFee)}
             </dd>
           </div>

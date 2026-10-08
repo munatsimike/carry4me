@@ -10,4 +10,5 @@ export type TripDto = {
   capacity_kg: number;
   price_per_kg: number;
   capacity_unit: "kg" | "bag";
+  payment_preference: "handover" | "delivery" | "flexible";
 };

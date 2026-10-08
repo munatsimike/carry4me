@@ -24,6 +24,7 @@ import {
   isTripCapacityBags,
   type TripCapacityUnit,
 } from "@/app/features/trips/domain/tripCapacityUnit";
+import { paymentPreferenceLabel } from "@/app/shared/listings/paymentPreference";
 
 type TripFormReviewProps = {
   originCountry: string;
@@ -36,6 +37,7 @@ type TripFormReviewProps = {
   weight: number;
   pricePerKg: number;
   capacityUnit: TripCapacityUnit;
+  paymentPreference?: string;
   onEditStep?: (step: Step) => void;
 };
 
@@ -65,6 +67,7 @@ export default function TripFormReview({
   weight,
   pricePerKg,
   capacityUnit,
+  paymentPreference,
   onEditStep,
 }: TripFormReviewProps) {
   const categoryNames = formatTripAcceptedCategoryLabels(
@@ -137,6 +140,17 @@ export default function TripFormReview({
           <FormReviewPrimaryValue textSize="md">{priceLabel}</FormReviewPrimaryValue>
         </FormReviewSection>
       </div>
+
+      <LineDivider heightClass="my-0" />
+
+      <FormReviewSection
+        label="Payment release preferences"
+        onEdit={onEditStep ? () => editStep(2) : undefined}
+      >
+        <FormReviewValue>
+          {paymentPreferenceLabel(paymentPreference, "traveler")}
+        </FormReviewValue>
+      </FormReviewSection>
 
       <LineDivider heightClass="my-0" />
 

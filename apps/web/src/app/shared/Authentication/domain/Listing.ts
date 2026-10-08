@@ -9,6 +9,7 @@ import type {
 } from "@/app/features/trips/domain/Trip";
 import type { UserProfile } from "./authTypes";
 import type { GoodsItem } from "@/types/Ui";
+import type { PaymentPreference } from "@/app/shared/listings/paymentPreference";
 
 export type ListingType = "parcel" | "trip";
 
@@ -30,6 +31,7 @@ export interface Listing {
   };
   pricePerKg: number;
   weightKg: number;
+  paymentPreference?: PaymentPreference;
   status: TripStatuses | ParcelStatuses;
   isLiked: boolean
 }
