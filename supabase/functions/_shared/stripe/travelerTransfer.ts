@@ -185,7 +185,7 @@ export async function retryPendingTravelerTransfersForUser(
     .not("stripe_payment_intent_id", "is", null)
     .not("delivery_otp_verified_at", "is", null)
     .is("stripe_transfer_id", null)
-    .in("status", ["PENDING_PAYOUT", "PAID_OUT"]);
+    .in("status", ["IN_TRANSIT", "PENDING_PAYOUT", "PAID_OUT"]);
 
   if (error) {
     console.warn(
@@ -520,12 +520,13 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
 
   if (
     carryRequest.status !== "PENDING_PAYOUT" &&
+    carryRequest.status !== "IN_TRANSIT" &&
     carryRequest.status !== "PAID_OUT"
   ) {
     return {
       ok: false,
       reason: "INVALID_STATUS",
-      message: `Request status is ${carryRequest.status}, expected PENDING_PAYOUT.`,
+      message: `Request status is ${carryRequest.status}, expected PENDING_PAYOUT or IN_TRANSIT.`,
     };
   }
 

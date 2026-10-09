@@ -8,6 +8,7 @@ import {
   type Role,
 } from "../domain/CreateCarryRequest";
 import { getEffectiveCarryRequestStatus } from "../domain/carryRequestEffectiveStatus";
+import { canReleasePayoutAtHandover } from "@/app/shared/listings/paymentPreference";
 
 export type CarryRequestUI = {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
@@ -95,12 +96,21 @@ export function mapCarryRequestToUI(
     }
 
     case CARRY_REQUEST_STATUSES.IN_TRANSIT:
-      currentStep = 4;
-      title = viewerRole === ROLES.SENDER ? "In transit" : "Pending delivery";
-      description =
-        viewerRole === ROLES.SENDER
-          ? "Check your email for the payment code."
-          : "Deliver the parcel to the recipient, then confirm delivery.";
+      if (canReleasePayoutAtHandover(request.paymentPreference)) {
+        currentStep = 5;
+        title = "Pending payout";
+        description =
+          viewerRole === ROLES.SENDER
+            ? "Check your email for the payment code."
+            : "Enter the payment code to receive your payout.";
+      } else {
+        currentStep = 4;
+        title = viewerRole === ROLES.SENDER ? "In transit" : "Pending delivery";
+        description =
+          viewerRole === ROLES.SENDER
+            ? "Check your email for the payment code."
+            : "Deliver the parcel to the recipient, then confirm delivery.";
+      }
       break;
 
     case CARRY_REQUEST_STATUSES.PENDING_PAYOUT:

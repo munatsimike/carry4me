@@ -6,7 +6,10 @@ import {
   type Role,
 } from "../domain/CreateCarryRequest";
 import type { HandoverConfirmationState } from "../handover confirmations/domain/HandoverConfirmationState";
-import { senderPaymentCodeHelperText } from "@/app/shared/listings/paymentPreference";
+import {
+  canReleasePayoutAtHandover,
+  senderPaymentCodeHelperText,
+} from "@/app/shared/listings/paymentPreference";
 
 export const UIACTIONKEYS = {
   ACCEPT: "ACCEPT",
@@ -212,6 +215,10 @@ function intransit(
   viewerRole: Role,
   paymentPreference?: string,
 ): UIActions {
+  if (canReleasePayoutAtHandover(paymentPreference)) {
+    return pendingPayout(viewerRole, paymentPreference);
+  }
+
   if (viewerRole === ROLES.SENDER) {
     return {
       infoBlock: displayPaymentCodeReady(paymentPreference),

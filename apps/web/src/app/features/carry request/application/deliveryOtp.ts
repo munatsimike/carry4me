@@ -31,7 +31,7 @@ const FRIENDLY_BY_REASON: Record<string, string> = {
   OTP_ATTEMPTS_EXCEEDED:
     "Too many failed attempts. Ask the sender for a new code.",
   OTP_NOT_GENERATED:
-    "No delivery code is active yet. Wait for delivery confirmation.",
+    "No payment code is active yet. Wait until handover is complete.",
   INVALID_STATUS: "This request is not ready for payout release.",
   FORBIDDEN: "Only the traveler can verify the delivery code.",
   NOT_FOUND: "Carry request not found.",

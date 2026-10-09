@@ -217,7 +217,7 @@ export function RequestDetailsGrid({
   return (
     <div
       className={cn(
-        "grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[0.8fr_minmax(0,1fr)_0.5fr] lg:gap-8",
+        "grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(14rem,0.95fr)] lg:gap-8",
         className,
       )}
     >

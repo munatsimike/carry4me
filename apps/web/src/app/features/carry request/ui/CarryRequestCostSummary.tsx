@@ -262,14 +262,26 @@ export function CarryRequestCostSummary({
 
   const lineItems = (
     <>
-      <CustomText textVariant="secondary" textSize={labelSize}>
+      <CustomText
+        textVariant="secondary"
+        textSize={labelSize}
+        className="!whitespace-nowrap"
+      >
         {quantityRowLabel(capacityUnit)}
       </CustomText>
-      <CustomText textVariant="primary" textSize={valueSize} className="text-right">
+      <CustomText
+        textVariant="primary"
+        textSize={valueSize}
+        className="!whitespace-nowrap text-right"
+      >
         {quantityLabel(weightKg, capacityUnit)}
       </CustomText>
 
-      <CustomText textVariant="secondary" textSize={labelSize}>
+      <CustomText
+        textVariant="secondary"
+        textSize={labelSize}
+        className="!whitespace-nowrap"
+      >
         {rateLabel(capacityUnit)}
       </CustomText>
       <CustomText
@@ -311,7 +323,10 @@ export function CarryRequestCostSummary({
       <CustomText
         textVariant="primary"
         textSize={isReceipt ? "sm" : totalSize}
-        className={cn("font-semibold", !isReceipt && isEmbedded && "pt-0.5")}
+        className={cn(
+          "!whitespace-nowrap font-semibold",
+          !isReceipt && isEmbedded && "pt-0.5",
+        )}
       >
         {resolvedTotalLabel}
       </CustomText>
@@ -371,7 +386,7 @@ export function CarryRequestCostSummary({
   }
 
   return (
-    <section className={cn("min-w-0 space-y-3 overflow-visible", className)}>
+    <section className={cn("min-w-[14rem] space-y-3 overflow-visible", className)}>
       <span
         className={cn(
           "inline-flex items-center justify-center rounded-full border border-neutral-100 bg-neutral-100 text-ink-primary",

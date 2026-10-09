@@ -73,6 +73,26 @@ export function paymentPreferencesCompatible(
   );
 }
 
+/** Resolved timing for a matched pair: flexible defers to the other listing. */
+export function agreedPaymentPreference(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): PaymentPreference {
+  const left = normalizePaymentPreference(a);
+  const right = normalizePaymentPreference(b);
+  if (left === PAYMENT_PREFERENCES.FLEXIBLE) return right;
+  if (right === PAYMENT_PREFERENCES.FLEXIBLE) return left;
+  if (left === right) return left;
+  return PAYMENT_PREFERENCES.FLEXIBLE;
+}
+
+/** Handover and flexible can release payout after handover; delivery waits. */
+export function canReleasePayoutAtHandover(
+  value: string | null | undefined,
+): boolean {
+  return normalizePaymentPreference(value) !== PAYMENT_PREFERENCES.DELIVERY;
+}
+
 export function paymentCodeGiveWhenCopy(
   value: string | null | undefined,
 ): string {

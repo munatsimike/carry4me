@@ -18,7 +18,7 @@ const REASON_MESSAGES: Record<string, string> = {
   OTP_INVALID: "Incorrect code. Please try again.",
   OTP_ATTEMPTS_EXCEEDED:
     "Too many failed attempts. Request a new code from the sender.",
-  OTP_NOT_GENERATED: "No delivery code is active yet. Wait for delivery confirmation.",
+  OTP_NOT_GENERATED: "No payment code is active yet. Wait until handover is complete.",
   INVALID_STATUS: "This request is not ready for payout release.",
   FORBIDDEN: "Only the traveler can verify the delivery code.",
   NOT_FOUND: "Carry request not found.",

@@ -9,6 +9,24 @@ export function normalizePaymentPreference(
   return "flexible";
 }
 
+export function agreedPaymentPreference(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): PaymentPreference {
+  const left = normalizePaymentPreference(a);
+  const right = normalizePaymentPreference(b);
+  if (left === "flexible") return right;
+  if (right === "flexible") return left;
+  if (left === right) return left;
+  return "flexible";
+}
+
+export function canReleasePayoutAtHandover(
+  value: string | null | undefined,
+): boolean {
+  return normalizePaymentPreference(value) !== "delivery";
+}
+
 export function paymentCodeGiveWhenCopy(
   value: string | null | undefined,
 ): string {
