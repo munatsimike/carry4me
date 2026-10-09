@@ -19,11 +19,11 @@ export const TRAVELER_PAYMENT_PREFERENCE_DESCRIPTION =
 export const SENDER_PAYMENT_PREFERENCE_OPTIONS = [
   {
     id: PAYMENT_PREFERENCES.HANDOVER,
-    label: "I want to pay after parcel handover",
+    label: "I want payment released after handover",
   },
   {
     id: PAYMENT_PREFERENCES.DELIVERY,
-    label: "I want to pay after successful delivery",
+    label: "I want payment released after successful delivery",
   },
   {
     id: PAYMENT_PREFERENCES.FLEXIBLE,
