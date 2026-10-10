@@ -136,6 +136,8 @@ export default function actionsMapper(
   requestIniator: Role,
   handoverState?: HandoverConfirmationState,
   paymentPreference?: string,
+  paymentReleased = false,
+  deliveryConfirmed = false,
 ): UIActions {
   switch (status) {
     case CARRY_REQUEST_STATUSES.PENDING_ACCEPTANCE:
@@ -145,11 +147,11 @@ export default function actionsMapper(
     case CARRY_REQUEST_STATUSES.PENDING_HANDOVER:
       return pendingHandover(handoverState, viewerRole);
     case CARRY_REQUEST_STATUSES.IN_TRANSIT:
-      return intransit(viewerRole, paymentPreference);
+      return intransit(viewerRole, paymentPreference, paymentReleased);
     case CARRY_REQUEST_STATUSES.PENDING_PAYOUT:
       return pendingPayout(viewerRole, paymentPreference);
     case CARRY_REQUEST_STATUSES.PAID_OUT:
-      return paidOut();
+      return paidOut(viewerRole, paymentPreference, deliveryConfirmed);
     case CARRY_REQUEST_STATUSES.REJECTED:
       return requestRejected();
     case CARRY_REQUEST_STATUSES.CANCELLED:
@@ -177,7 +179,25 @@ function requestRejected(): UIActions {
   };
 }**/
 
-function paidOut(): UIActions {
+function awaitingDeliveryAfterPayout(viewerRole: Role): UIActions {
+  if (viewerRole === ROLES.TRAVELER) {
+    return {
+      primary: confirmDelivery(),
+    };
+  }
+
+  return {};
+}
+
+function paidOut(
+  viewerRole: Role,
+  paymentPreference?: string,
+  deliveryConfirmed = false,
+): UIActions {
+  if (canReleasePayoutAtHandover(paymentPreference) && !deliveryConfirmed) {
+    return awaitingDeliveryAfterPayout(viewerRole);
+  }
+
   return {};
 }
 function pendingPayout(
@@ -214,8 +234,13 @@ function pendingPayout(
 function intransit(
   viewerRole: Role,
   paymentPreference?: string,
+  paymentReleased = false,
 ): UIActions {
   if (canReleasePayoutAtHandover(paymentPreference)) {
+    if (paymentReleased) {
+      return awaitingDeliveryAfterPayout(viewerRole);
+    }
+
     return pendingPayout(viewerRole, paymentPreference);
   }
 

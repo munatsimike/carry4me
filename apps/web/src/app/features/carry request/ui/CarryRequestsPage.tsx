@@ -28,6 +28,7 @@ import {
   hasTravelDatePassedForPayout,
   payoutBlockedBeforeTravelDateMessage,
 } from "../application/payoutTravelDate";
+import { canReleasePayoutAtHandover } from "@/app/shared/listings/paymentPreference";
 import {
   cancelCarryRequest,
 } from "../application/cancelCarryRequest";
@@ -67,8 +68,11 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Ban, CheckCircle2, Clock, Hourglass, KeyRound, Package, XCircle, type LucideIcon } from "lucide-react";
 import {
-  getProgressStageLabel,
-  progressStepIcons,
+  getCarryRequestProgressStages,
+  isCarryRequestAwaitingDeliveryAfterPayout,
+  isCarryRequestDelivered,
+  isCarryRequestPaymentReleased,
+  type CarryRequestProgressStage,
 } from "./progressStepIcon";
 import { cn, dialogIconStyle } from "@/app/lib/cn";
 import {
@@ -224,7 +228,9 @@ export default function CarryRequestsPage() {
     };
 
     for (const request of carryRequestsList) {
-      const tab = statusToTab[getEffectiveCarryRequestStatus(request)];
+      const tab = isCarryRequestAwaitingDeliveryAfterPayout(request)
+        ? "ongoing"
+        : statusToTab[getEffectiveCarryRequestStatus(request)];
       if (tab) counts[tab]++;
     }
 
@@ -248,20 +254,24 @@ export default function CarryRequestsPage() {
     let result = carryRequestsList;
 
     if (selectedTab === statusToTab.IN_TRANSIT) {
-      result = result.filter((item) =>
-        new Set([
-          "PENDING_ACCEPTANCE",
-          "PENDING_PAYMENT",
-          "PENDING_HANDOVER",
-          "IN_TRANSIT",
-          "PENDING_PAYOUT",
-        ]).has(getEffectiveCarryRequestStatus(item)),
+      result = result.filter(
+        (item) =>
+          isCarryRequestAwaitingDeliveryAfterPayout(item) ||
+          new Set([
+            "PENDING_ACCEPTANCE",
+            "PENDING_PAYMENT",
+            "PENDING_HANDOVER",
+            "IN_TRANSIT",
+            "PENDING_PAYOUT",
+          ]).has(getEffectiveCarryRequestStatus(item)),
       );
     }
 
     if (selectedTab === statusToTab.PAID_OUT) {
       result = result.filter(
-        (item) => item.status === CARRY_REQUEST_STATUSES.PAID_OUT,
+        (item) =>
+          item.status === CARRY_REQUEST_STATUSES.PAID_OUT &&
+          !isCarryRequestAwaitingDeliveryAfterPayout(item),
       );
     }
 
@@ -500,6 +510,7 @@ export default function CarryRequestsPage() {
 
     if (actions.primary.key === UIACTIONKEYS.RELEASE_PAYMENT) {
       if (
+        !canReleasePayoutAtHandover(carryRequest.paymentPreference) &&
         !hasTravelDatePassedForPayout(carryRequest.tripSnapshot.departure_date)
       ) {
         openInfo({
@@ -884,6 +895,8 @@ function CarryRequestCard({
     request.initiatorRole,
     request.handoverState,
     request.paymentPreference,
+    isCarryRequestPaymentReleased(request),
+    isCarryRequestDelivered(request),
   );
 
   const toggleSection = (section: MobileSection) => {
@@ -898,7 +911,9 @@ function CarryRequestCard({
     ),
   );
 
-  const isArchived = isArchivedCarryRequestStatus(effectiveStatus);
+  const isArchived =
+    isArchivedCarryRequestStatus(effectiveStatus) &&
+    !isCarryRequestAwaitingDeliveryAfterPayout(request);
 
   if (isArchived) {
     const hasFooter =
@@ -1015,9 +1030,11 @@ function CarryRequestCard({
 
         <div className="hidden md:block md:flex md:flex-col gap-2">
           <ProgressRow
-            currentStep={requestUI.currentStep}
-            isInitiator={viewerRole === request.initiatorRole}
-            viewerRole={viewerRole}
+            stages={getCarryRequestProgressStages(
+              request,
+              viewerRole,
+              viewerRole === request.initiatorRole,
+            )}
           />
 
           <DetailsSection
@@ -1060,9 +1077,11 @@ function CarryRequestCard({
       {openSection === "timeline" && (
         <MobileProgressSection
           setOpenSection={() => setOpenSection(null)}
-          currentStep={requestUI.currentStep}
-          isInitiator={viewerRole === request.initiatorRole}
-          viewerRole={viewerRole}
+          stages={getCarryRequestProgressStages(
+            request,
+            viewerRole,
+            viewerRole === request.initiatorRole,
+          )}
         />
       )}
     </>
@@ -1515,32 +1534,18 @@ function Header({
   );
 }
 function ProgressRow({
-  currentStep,
-  isInitiator,
-  viewerRole,
+  stages,
 }: {
-  currentStep: 1 | 2 | 3 | 4 | 5 | 6;
-  isInitiator: boolean;
-  viewerRole: Role;
+  stages: CarryRequestProgressStage[];
 }) {
-  const steps = [2, 3, 4, 5, 6] as const;
-
   return (
     <div className="inline-flex flex-wrap items-center gap-x-8 gap-y-3 rounded-lg bg-secondary-50 px-3 py-4">
-      {isInitiator && (
+      {stages.map((stage) => (
         <Step
-          isCompleted
-          stage={getProgressStageLabel(1, viewerRole)}
-          Icon={progressStepIcons[1]}
-        />
-      )}
-
-      {steps.map((step) => (
-        <Step
-          key={step}
-          isCompleted={step - 1 < currentStep && currentStep !== 1}
-          stage={getProgressStageLabel(step, viewerRole)}
-          Icon={progressStepIcons[step]}
+          key={stage.id}
+          isCompleted={stage.completed}
+          stage={stage.label}
+          Icon={stage.Icon}
         />
       ))}
     </div>

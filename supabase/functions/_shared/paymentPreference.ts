@@ -15,16 +15,48 @@ export function agreedPaymentPreference(
 ): PaymentPreference {
   const left = normalizePaymentPreference(a);
   const right = normalizePaymentPreference(b);
-  if (left === "flexible") return right;
-  if (right === "flexible") return left;
-  if (left === right) return left;
+  if (left === "handover" && right === "handover") return "handover";
+  if (left === "delivery" || right === "delivery") return "delivery";
   return "flexible";
 }
 
 export function canReleasePayoutAtHandover(
   value: string | null | undefined,
 ): boolean {
-  return normalizePaymentPreference(value) !== "delivery";
+  return normalizePaymentPreference(value) === "handover";
+}
+
+function nestedPaymentPreference(
+  value:
+    | { payment_preference?: string | null }
+    | { payment_preference?: string | null }[]
+    | null
+    | undefined,
+): string | null {
+  if (Array.isArray(value)) {
+    return value[0]?.payment_preference ?? null;
+  }
+  return value?.payment_preference ?? null;
+}
+
+export function canReleasePayoutAtHandoverFromListings(
+  parcel:
+    | { payment_preference?: string | null }
+    | { payment_preference?: string | null }[]
+    | null
+    | undefined,
+  trip:
+    | { payment_preference?: string | null }
+    | { payment_preference?: string | null }[]
+    | null
+    | undefined,
+): boolean {
+  return canReleasePayoutAtHandover(
+    agreedPaymentPreference(
+      nestedPaymentPreference(parcel),
+      nestedPaymentPreference(trip),
+    ),
+  );
 }
 
 export function paymentCodeGiveWhenCopy(

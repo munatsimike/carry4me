@@ -121,6 +121,7 @@ export class SupabaseCarryRequestRepository implements CarryRequestRepository {
         traveler_user_id,
         initiator_role,
         status,
+        payment_preference,
         parcel_snapshot,
         trip_snapshot,
         payment_expires_at,

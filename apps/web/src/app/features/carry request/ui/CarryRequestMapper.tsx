@@ -9,6 +9,10 @@ import {
 } from "../domain/CreateCarryRequest";
 import { getEffectiveCarryRequestStatus } from "../domain/carryRequestEffectiveStatus";
 import { canReleasePayoutAtHandover } from "@/app/shared/listings/paymentPreference";
+import {
+  isCarryRequestDelivered,
+  isCarryRequestPaymentReleased,
+} from "./progressStepIcon";
 
 export type CarryRequestUI = {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;
@@ -97,12 +101,21 @@ export function mapCarryRequestToUI(
 
     case CARRY_REQUEST_STATUSES.IN_TRANSIT:
       if (canReleasePayoutAtHandover(request.paymentPreference)) {
-        currentStep = 5;
-        title = "Pending payout";
-        description =
-          viewerRole === ROLES.SENDER
-            ? "Check your email for the payment code."
-            : "Enter the payment code to receive your payout.";
+        if (isCarryRequestPaymentReleased(request)) {
+          currentStep = 5;
+          title = viewerRole === ROLES.SENDER ? "In transit" : "Pending delivery";
+          description =
+            viewerRole === ROLES.SENDER
+              ? "Payment released. Waiting for the traveler to confirm delivery."
+              : "Deliver the parcel to the recipient, then confirm delivery.";
+        } else {
+          currentStep = 4;
+          title = "Pending payout";
+          description =
+            viewerRole === ROLES.SENDER
+              ? "Check your email for the payment code."
+              : "Enter the payment code to receive your payout.";
+        }
       } else {
         currentStep = 4;
         title = viewerRole === ROLES.SENDER ? "In transit" : "Pending delivery";
@@ -114,7 +127,7 @@ export function mapCarryRequestToUI(
       break;
 
     case CARRY_REQUEST_STATUSES.PENDING_PAYOUT:
-      currentStep = 5;
+      currentStep = 4;
       title = "Pending payout";
       description =
         viewerRole === ROLES.SENDER
@@ -124,16 +137,27 @@ export function mapCarryRequestToUI(
 
     case CARRY_REQUEST_STATUSES.PAID_OUT: {
       currentStep = 6;
-      title = "Request complete";
-      const payoutDate = formatPayoutReleasedDate(request);
-      description =
-        viewerRole === ROLES.SENDER
-          ? payoutDate
-            ? `Payment released on ${payoutDate}.`
-            : "Payment released. Request complete."
-          : payoutDate
-            ? `Payout released on ${payoutDate}.`
-            : "Payout was released. This request is now complete.";
+      if (
+        canReleasePayoutAtHandover(request.paymentPreference) &&
+        !isCarryRequestDelivered(request)
+      ) {
+        title = viewerRole === ROLES.SENDER ? "In transit" : "Pending delivery";
+        description =
+          viewerRole === ROLES.SENDER
+            ? "Payment released. Waiting for the traveler to confirm delivery."
+            : "Deliver the parcel to the recipient, then confirm delivery.";
+      } else {
+        title = "Request complete";
+        const payoutDate = formatPayoutReleasedDate(request);
+        description =
+          viewerRole === ROLES.SENDER
+            ? payoutDate
+              ? `Payment released on ${payoutDate}.`
+              : "Payment released. Request complete."
+            : payoutDate
+              ? `Payout released on ${payoutDate}.`
+              : "Payout was released. This request is now complete.";
+      }
       break;
     }
 

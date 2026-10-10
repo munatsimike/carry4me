@@ -1,4 +1,5 @@
 import { type Role } from "../domain/CreateCarryRequest";
+import type { CarryRequestProgressStage } from "./progressStepIcon";
 import CustomText from "@/components/ui/CustomText";
 import CardLabel from "@/app/components/card/CardLabel";
 import type { ParcelSnapshot } from "../domain/ParcelSnapShot";
@@ -17,10 +18,6 @@ import {
   formatTravelerPartyDisplay,
 } from "../application/formatCarryRequestPartyDisplay";
 import { PaymentDetailsButton } from "./RequestDetailsLayout";
-import {
-  getProgressStageLabel,
-  progressStepIcons,
-} from "./progressStepIcon";
 export type MobileSection = "details" | "timeline";
 
 function countryLabel(country: string): string {
@@ -267,34 +264,23 @@ export function ParcelDetailsMobile({
 }
 
 export function MobileProgressSection({
-  currentStep,
-  isInitiator,
-  viewerRole,
+  stages,
   setOpenSection,
 }: {
-  currentStep: 1 | 2 | 3 | 4 | 5 | 6;
-  isInitiator: boolean;
-  viewerRole: Role;
+  stages: CarryRequestProgressStage[];
   setOpenSection: () => void;
 }) {
-  const allSteps = isInitiator ? [1, 2, 3, 4, 5, 6] : [2, 3, 4, 5, 6];
-
   return (
     <CustomModal onClose={setOpenSection}>
       <div className="flex flex-col gap-3">
-        {allSteps.map((step) => {
-          const stepKey = step as 1 | 2 | 3 | 4 | 5 | 6;
-          const completed =
-            step === 1
-              ? isInitiator && currentStep >= 1
-              : step - 1 < currentStep && currentStep !== 1;
-          const Icon = progressStepIcons[stepKey];
+        {stages.map((stage) => {
+          const Icon = stage.Icon;
 
           return (
-            <div key={step} className="flex items-center gap-3">
+            <div key={stage.id} className="flex items-center gap-3">
               <Icon
                 className={
-                  completed
+                  stage.completed
                     ? "h-5 w-5 shrink-0 text-success-500"
                     : "h-5 w-5 shrink-0 text-neutral-300"
                 }
@@ -302,9 +288,9 @@ export function MobileProgressSection({
               />
               <CustomText
                 textSize="sm"
-                textVariant={completed ? "primary" : "secondary"}
+                textVariant={stage.completed ? "primary" : "secondary"}
               >
-                {getProgressStageLabel(stepKey, viewerRole)}
+                {stage.label}
               </CustomText>
             </div>
           );

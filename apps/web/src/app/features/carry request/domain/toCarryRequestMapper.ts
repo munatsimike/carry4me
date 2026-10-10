@@ -1,5 +1,8 @@
 import type { CarryRequest } from "./CarryRequest";
-import { agreedPaymentPreference } from "@/app/shared/listings/paymentPreference";
+import {
+  agreedPaymentPreference,
+  normalizePaymentPreference,
+} from "@/app/shared/listings/paymentPreference";
 
 type ConfirmationRole = "SENDER" | "TRAVELER";
 
@@ -49,6 +52,7 @@ interface RawCarryRequestRow {
   traveler_user_id: string;
   initiator_role: CarryRequest["initiatorRole"];
   status: CarryRequest["status"];
+  payment_preference?: string | null;
   payment_expires_at?: string | null;
   expired_at?: string | null;
   created_at?: string;
@@ -174,10 +178,12 @@ export function toCarryRequestMapper(row: RawCarryRequestRow): CarryRequest {
         city: row.trip_snapshot.destination.city,
       },
     },
-    paymentPreference: agreedPaymentPreference(
-      nestedPaymentPreference(row.parcel),
-      nestedPaymentPreference(row.trip),
-    ),
+    paymentPreference: row.payment_preference
+      ? normalizePaymentPreference(row.payment_preference)
+      : agreedPaymentPreference(
+          nestedPaymentPreference(row.parcel),
+          nestedPaymentPreference(row.trip),
+        ),
     parcelSnapshot: {
       sender_name: row.parcel_snapshot.sender_name,
       items: row.parcel_snapshot.items,

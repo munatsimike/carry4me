@@ -3,6 +3,7 @@ import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { resolveTravelerConnectAccountForPayment } from "./connectAccount.ts";
 import { stripeErrorMessage } from "./errors.ts";
 import { isPayoutAllowedForTravelDate } from "../payoutTravelDate.ts";
+import { canReleasePayoutAtHandoverFromListings } from "../paymentPreference.ts";
 
 type TransferResult =
   | { ok: true; transferId: string }
@@ -473,7 +474,7 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
   const { data: carryRequest, error } = await supabaseAdmin
     .from("carry_requests")
     .select(
-      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id, payment_status, delivery_otp_verified_at, status, stripe_transfer_id, trip_snapshot",
+      "id, traveler_user_id, traveler_payout_amount, payment_currency, stripe_payment_intent_id, payment_status, delivery_otp_verified_at, status, stripe_transfer_id, trip_snapshot, parcel:parcels(payment_preference), trip:trips(payment_preference)",
     )
     .eq("id", carryRequestId)
     .maybeSingle();
@@ -491,10 +492,22 @@ export async function releaseTravelerPayoutAfterDeliveryVerification(
     return { ok: true, transferId: existingTransferId };
   }
 
+  const skipTravelDateGate = canReleasePayoutAtHandoverFromListings(
+    (
+      carryRequest as {
+        parcel?: { payment_preference?: string | null } | { payment_preference?: string | null }[] | null;
+      }
+    ).parcel,
+    (
+      carryRequest as {
+        trip?: { payment_preference?: string | null } | { payment_preference?: string | null }[] | null;
+      }
+    ).trip,
+  );
   const departureRaw = (
     carryRequest.trip_snapshot as { departure_date?: string } | null
   )?.departure_date?.trim();
-  if (!isPayoutAllowedForTravelDate(departureRaw)) {
+  if (!skipTravelDateGate && !isPayoutAllowedForTravelDate(departureRaw)) {
     return {
       ok: false,
       reason: "TRAVEL_DATE_NOT_PASSED",

@@ -8,6 +8,7 @@ import { getStripe } from "../_shared/stripe/client.ts";
 import { verifyDeliveryOtpRpc } from "../_shared/deliveryOtp.ts";
 import { releaseTravelerPayoutAfterDeliveryVerification } from "../_shared/stripe/travelerTransfer.ts";
 import { isPayoutAllowedForTravelDate } from "../_shared/payoutTravelDate.ts";
+import { canReleasePayoutAtHandoverFromListings } from "../_shared/paymentPreference.ts";
 
 type RequestBody = {
   carry_request_id?: string;
@@ -60,7 +61,9 @@ Deno.serve(async (req) => {
 
     const { data: carryForDate, error: carryForDateError } = await supabaseAdmin
       .from("carry_requests")
-      .select("trip_snapshot")
+      .select(
+        "trip_snapshot, parcel:parcels(payment_preference), trip:trips(payment_preference)",
+      )
       .eq("id", carryRequestId)
       .maybeSingle();
 
@@ -72,11 +75,24 @@ Deno.serve(async (req) => {
       });
     }
 
+    const skipTravelDateGate = canReleasePayoutAtHandoverFromListings(
+      (
+        carryForDate as {
+          parcel?: { payment_preference?: string | null } | { payment_preference?: string | null }[] | null;
+        }
+      ).parcel,
+      (
+        carryForDate as {
+          trip?: { payment_preference?: string | null } | { payment_preference?: string | null }[] | null;
+        }
+      ).trip,
+    );
+
     const departureRaw = (
       carryForDate.trip_snapshot as { departure_date?: string } | null
     )?.departure_date?.trim();
 
-    if (!isPayoutAllowedForTravelDate(departureRaw)) {
+    if (!skipTravelDateGate && !isPayoutAllowedForTravelDate(departureRaw)) {
       return jsonResponse({
         ok: false,
         reason: "TRAVEL_DATE_NOT_PASSED",

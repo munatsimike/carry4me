@@ -73,24 +73,36 @@ export function paymentPreferencesCompatible(
   );
 }
 
-/** Resolved timing for a matched pair: flexible defers to the other listing. */
+/**
+ * Request payout timing: handover only when both listings want handover.
+ * Flexible and after-delivery both wait until delivery, then payout.
+ */
 export function agreedPaymentPreference(
   a: string | null | undefined,
   b: string | null | undefined,
 ): PaymentPreference {
   const left = normalizePaymentPreference(a);
   const right = normalizePaymentPreference(b);
-  if (left === PAYMENT_PREFERENCES.FLEXIBLE) return right;
-  if (right === PAYMENT_PREFERENCES.FLEXIBLE) return left;
-  if (left === right) return left;
+  if (
+    left === PAYMENT_PREFERENCES.HANDOVER &&
+    right === PAYMENT_PREFERENCES.HANDOVER
+  ) {
+    return PAYMENT_PREFERENCES.HANDOVER;
+  }
+  if (
+    left === PAYMENT_PREFERENCES.DELIVERY ||
+    right === PAYMENT_PREFERENCES.DELIVERY
+  ) {
+    return PAYMENT_PREFERENCES.DELIVERY;
+  }
   return PAYMENT_PREFERENCES.FLEXIBLE;
 }
 
-/** Handover and flexible can release payout after handover; delivery waits. */
+/** Only explicit after-handover terms pay out before delivery. Flexible waits for delivery. */
 export function canReleasePayoutAtHandover(
   value: string | null | undefined,
 ): boolean {
-  return normalizePaymentPreference(value) !== PAYMENT_PREFERENCES.DELIVERY;
+  return normalizePaymentPreference(value) === PAYMENT_PREFERENCES.HANDOVER;
 }
 
 export function paymentCodeGiveWhenCopy(
