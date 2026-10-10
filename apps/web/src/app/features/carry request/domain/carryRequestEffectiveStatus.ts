@@ -5,6 +5,12 @@ import {
   type CarryRequestStatus,
 } from "./CreateCarryRequest";
 
+function isOneSidedHandover(request: CarryRequest): boolean {
+  const { senderConfirmed, travelerConfirmed, bothConfirmed } =
+    request.handoverState;
+  return (senderConfirmed || travelerConfirmed) && !bothConfirmed;
+}
+
 export function isCarryRequestPaymentExpired(request: CarryRequest): boolean {
   if (request.status !== CARRY_REQUEST_STATUSES.PENDING_PAYMENT) {
     return false;
@@ -22,6 +28,14 @@ export function getEffectiveCarryRequestStatus(
 ): CarryRequestStatus {
   if (isCarryRequestPaymentExpired(request)) {
     return CARRY_REQUEST_STATUSES.EXPIRED;
+  }
+
+  if (
+    isOneSidedHandover(request) &&
+    (request.status === CARRY_REQUEST_STATUSES.IN_TRANSIT ||
+      request.status === CARRY_REQUEST_STATUSES.PENDING_PAYOUT)
+  ) {
+    return CARRY_REQUEST_STATUSES.PENDING_HANDOVER;
   }
 
   return request.status;

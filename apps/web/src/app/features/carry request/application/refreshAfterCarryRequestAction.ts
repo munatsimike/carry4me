@@ -38,7 +38,11 @@ export function patchCarryRequestFromActionResponse(
   let next = request;
   const newStatus = response.new_status as CarryRequestStatus | undefined;
 
-  if (newStatus) {
+  const handoverStillWaiting =
+    response.action === UIACTIONKEYS.CONFIRM_HANDOVER &&
+    response.progressed === false;
+
+  if (newStatus && !handoverStillWaiting) {
     next = {
       ...next,
       status: newStatus,
@@ -51,22 +55,34 @@ export function patchCarryRequestFromActionResponse(
     next = { ...next, status: CARRY_REQUEST_STATUSES.CANCELLED };
   }
 
-  if (
-    response.action === UIACTIONKEYS.CONFIRM_HANDOVER &&
-    response.progressed === false &&
-    response.waiting_for
-  ) {
-    next = {
-      ...next,
-      handoverState: {
-        senderConfirmed: response.waiting_for === ROLES.TRAVELER,
-        travelerConfirmed: response.waiting_for === ROLES.SENDER,
-        bothConfirmed: false,
-      },
-    };
+  if (response.action === UIACTIONKEYS.CONFIRM_HANDOVER) {
+    if (handoverStillWaiting) {
+      next = {
+        ...next,
+        status: CARRY_REQUEST_STATUSES.PENDING_HANDOVER,
+        handoverState: {
+          senderConfirmed:
+            response.waiting_for === ROLES.TRAVELER ||
+            request.handoverState.senderConfirmed,
+          travelerConfirmed:
+            response.waiting_for === ROLES.SENDER ||
+            request.handoverState.travelerConfirmed,
+          bothConfirmed: false,
+        },
+      };
+    } else if (response.progressed === true) {
+      next = {
+        ...next,
+        handoverState: {
+          senderConfirmed: true,
+          travelerConfirmed: true,
+          bothConfirmed: true,
+        },
+      };
+    }
   }
 
-  if (response.event_type) {
+  if (response.event_type && !handoverStillWaiting) {
     next = {
       ...next,
       events: {
