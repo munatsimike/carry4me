@@ -67,17 +67,6 @@ export function isCarryRequestAwaitingDeliveryAfterPayout(
   );
 }
 
-export function isCarryRequestCollected(request: CarryRequest): boolean {
-  if (request.handoverState.bothConfirmed) return true;
-
-  const oneSidedHandover =
-    request.handoverState.senderConfirmed ||
-    request.handoverState.travelerConfirmed;
-  if (oneSidedHandover) return false;
-
-  return hasEvent(request, CARRY_REQUEST_EVENT_TYPES.PARCEL_RECEIVED);
-}
-
 export function isCarryRequestDelivered(request: CarryRequest): boolean {
   if (hasEvent(request, CARRY_REQUEST_EVENT_TYPES.PARCEL_DELIVERED)) {
     return true;
@@ -109,7 +98,11 @@ export function getCarryRequestProgressStages(
     accepted &&
     status !== CARRY_REQUEST_STATUSES.PENDING_PAYMENT &&
     status !== CARRY_REQUEST_STATUSES.EXPIRED;
-  const collected = isCarryRequestCollected(request);
+  const collected =
+    status === CARRY_REQUEST_STATUSES.IN_TRANSIT ||
+    status === CARRY_REQUEST_STATUSES.PENDING_PAYOUT ||
+    status === CARRY_REQUEST_STATUSES.PAID_OUT ||
+    hasEvent(request, CARRY_REQUEST_EVENT_TYPES.PARCEL_RECEIVED);
   const paymentReleased = isCarryRequestPaymentReleased(request);
   const delivered = isCarryRequestDelivered(request);
 
