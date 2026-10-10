@@ -10,7 +10,7 @@ import type {
 import { ChevronDown } from "lucide-react";
 import FloatingInputField from "@/app/components/CustomInputField";
 import { useLocations } from "@/app/hookes/useLocation";
-import { toDialCode, toflag } from "@/app/Mapper";
+import { toCountryName, toDialCode, toflag } from "@/app/Mapper";
 import CustomText from "@/components/ui/CustomText";
 import SvgIcon from "@/components/ui/SvgIcon";
 import type { PhoneWithCountryFields } from "../../validation/phoneWithCountrySchema";
@@ -125,6 +125,7 @@ export default function PhoneNumberWithCountryFields({
       >
         {countryOptions.map((option) => {
           const flagIcon = toflag(option);
+          const dialCode = toDialCode(option);
           return (
             <button
               key={option}
@@ -141,9 +142,14 @@ export default function PhoneNumberWithCountryFields({
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
             >
               {flagIcon && <SvgIcon size="xs" Icon={flagIcon} />}
-              <span className="truncate">
-                {option} {toDialCode(option) ?? ""}
+              <span className="shrink-0 font-medium">
+                {dialCode ?? option}
               </span>
+              {dialCode ? (
+                <span className="min-w-0 truncate text-slate-500">
+                  {toCountryName(option) ?? option}
+                </span>
+              ) : null}
             </button>
           );
         })}
@@ -181,10 +187,8 @@ export default function PhoneNumberWithCountryFields({
             >
               <span className="flex min-w-0 items-center gap-2">
                 {selectedFlagIcon && <SvgIcon size="xs" Icon={selectedFlagIcon} />}
-                <span className="truncate">
-                  {selectedCountry
-                    ? `${selectedCountry} ${selectedDialCode ?? ""}`
-                    : "Select"}
+                <span className="min-w-0 truncate">
+                  {selectedDialCode ?? selectedCountry ?? "Select"}
                 </span>
               </span>
               <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />

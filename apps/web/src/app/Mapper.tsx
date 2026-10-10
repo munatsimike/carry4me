@@ -7,6 +7,7 @@ const SUPPORTED_PHONE_COUNTRIES = [
   { countryCode: "IE", dialCode: "+353", name: "Ireland" },
   { countryCode: "NL", dialCode: "+31", name: "Netherlands" },
   { countryCode: "FR", dialCode: "+33", name: "France" },
+  { countryCode: "JP", dialCode: "+81", name: "Japan" },
   { countryCode: "ZW", dialCode: "+263", name: "Zimbabwe" },
 ] as const;
 
@@ -23,6 +24,8 @@ export const FALLBACK_CITIES_BY_COUNTRY_CODE: Record<string, string[]> = {
   NL: ["Amsterdam", "Rotterdam", "The Hague", "Utrecht", "Eindhoven"],
   FR: ["Paris", "Lyon", "Marseille", "Mulhouse"],
   France: ["Paris", "Lyon", "Marseille"],
+  JP: ["Tokyo", "Osaka", "Kyoto", "Yokohama", "Nagoya", "Fukuoka"],
+  Japan: ["Tokyo", "Osaka", "Kyoto", "Yokohama", "Nagoya", "Fukuoka"],
   Zimbabwe: ["Harare", "Mutare", "Bulawayo", "Gweru", "Masvingo"],
   ZW: ["Harare", "Mutare", "Bulawayo", "Gweru", "Masvingo"],
 };
@@ -32,94 +35,56 @@ export const tagToVariant = {
   traveler: "success",
 } as const;
 
-export function toflag(country: string | null | undefined) {
-  if (!country?.trim()) return null;
+function phoneCountryEntry(country: string | null | undefined) {
+  const normalized = normalizeCountryCode(country);
+  if (!normalized) return null;
+  return (
+    SUPPORTED_PHONE_COUNTRIES.find((entry) => entry.countryCode === normalized) ??
+    null
+  );
+}
 
-  switch (country.trim()) {
+export function toflag(country: string | null | undefined) {
+  switch (normalizeCountryCode(country)) {
     case "UK":
-    case "GB":
-    case "United Kingdom":
       return META_ICONS.ukFlag;
     case "USA":
-    case "US":
-    case "United States":
-    case "United States of America":
       return META_ICONS.uSFlagIcon;
     case "IE":
-    case "Ireland":
       return META_ICONS.ieFlag;
-    case "Zimbabwe":
     case "ZW":
       return META_ICONS.zimFlag;
     case "NL":
-    case "Netherlands":
       return META_ICONS.nlFlag;
     case "FR":
-    case "France":
       return META_ICONS.frFlag;
-    default: {
-      const normalized = normalizeCountryCode(country.trim());
-      if (!normalized || normalized === country.trim()) return null;
-      return toflag(normalized);
-    }
-  }
-}
-
-export function toDialCode(country: string | null | undefined): string | null {
-  if (!country?.trim()) return null;
-
-  switch (country.trim()) {
-    case "UK":
-    case "GB":
-    case "United Kingdom":
-      return "+44";
-    case "USA":
-    case "US":
-    case "United States":
-    case "United States of America":
-      return "+1";
-    case "IE":
-    case "Ireland":
-      return "+353";
-    case "Zimbabwe":
-    case "ZW":
-      return "+263";
-    case "NL":
-    case "Netherlands":
-      return "+31";
-    case "FR":
-    case "France":
-      return "+33";
+    case "JP":
+      return META_ICONS.jpFlag;
     default:
       return null;
   }
 }
 
-export function toIsoCountryCode(country: string | null | undefined) {
-  if (!country?.trim()) return null;
+export function toDialCode(country: string | null | undefined): string | null {
+  return phoneCountryEntry(country)?.dialCode ?? null;
+}
 
-  switch (country.trim()) {
+export function toIsoCountryCode(country: string | null | undefined) {
+  switch (normalizeCountryCode(country)) {
     case "UK":
-    case "GB":
-    case "United Kingdom":
       return "GB";
     case "USA":
-    case "US":
-    case "United States":
-    case "United States of America":
       return "US";
     case "IE":
-    case "Ireland":
       return "IE";
-    case "Zimbabwe":
     case "ZW":
       return "ZW";
     case "NL":
-    case "Netherlands":
       return "NL";
     case "FR":
-    case "France":
       return "FR";
+    case "JP":
+      return "JP";
     default:
       return null;
   }
@@ -128,33 +93,7 @@ export function toIsoCountryCode(country: string | null | undefined) {
 export function toCountryName(
   country: string | null | undefined,
 ): string | null {
-  if (!country?.trim()) return null;
-
-  switch (country.trim()) {
-    case "UK":
-    case "GB":
-    case "United Kingdom":
-      return "United Kingdom";
-    case "USA":
-    case "US":
-    case "United States":
-    case "United States of America":
-      return "United States of America";
-    case "IE":
-    case "Ireland":
-      return "Ireland";
-    case "Zimbabwe":
-    case "ZW":
-      return "Zimbabwe";
-    case "NL":
-    case "Netherlands":
-      return "Netherlands";
-    case "FR":
-    case "France":
-      return "France";
-    default:
-      return null;
-  }
+  return phoneCountryEntry(country)?.name ?? null;
 }
 
 /** Maps profile DB values, ISO codes, and display names to app country codes. */
@@ -164,30 +103,33 @@ export function normalizeCountryCode(
   if (!country?.trim()) return null;
 
   const value = country.trim();
+  const compact = value.toLowerCase().replace(/\s+/g, " ");
 
-  switch (value) {
-    case "GB":
-    case "United Kingdom":
+  switch (compact) {
+    case "gb":
+    case "uk":
+    case "united kingdom":
       return "UK";
-    case "US":
-    case "United States":
-    case "United States of America":
+    case "us":
+    case "usa":
+    case "united states":
+    case "united states of america":
       return "USA";
-    case "Ireland":
+    case "ie":
+    case "ireland":
       return "IE";
-    case "Netherlands":
+    case "nl":
+    case "netherlands":
       return "NL";
-    case "France":
+    case "fr":
+    case "france":
       return "FR";
-    case "Zimbabwe":
+    case "jp":
+    case "japan":
+      return "JP";
+    case "zw":
+    case "zimbabwe":
       return "ZW";
-    case "UK":
-    case "USA":
-    case "IE":
-    case "NL":
-    case "FR":
-    case "ZW":
-      return value;
     default:
       return value;
   }

@@ -40,6 +40,9 @@ function toDialCode(country: string | null | undefined): string | null {
     case "FR":
     case "France":
       return "+33";
+    case "JP":
+    case "Japan":
+      return "+81";
     default:
       return null;
   }

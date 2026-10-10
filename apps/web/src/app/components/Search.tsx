@@ -62,7 +62,8 @@ export default function Search({
   const countryValue = watch("country");
   const cityValue = watch("city");
 
-  const { countryOptions, cityOptions } = useLocations(countryValue);
+  const { countryOptions, cityOptions, getCountryName } =
+    useLocations(countryValue);
 
   const handleSearch = () => {
     if (!countryValue || !cityValue) return;
@@ -89,6 +90,7 @@ export default function Search({
                 className="w-full rounded-xl"
                 placeholder="Select country"
                 menuItems={countryOptions}
+                getItemLabel={getCountryName}
                 value={field.value}
                 onValueChange={(nextCountry) => {
                   field.onChange(nextCountry);

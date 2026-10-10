@@ -21,6 +21,7 @@ type ComboBoxProps = {
   roundedClass?: string;
   disabledMessage?: string;
   borderless?: boolean;
+  getItemLabel?: (item: string) => string;
 };
 
 export default function ComboBox({
@@ -40,6 +41,7 @@ export default function ComboBox({
   searchable = false,
   disabledMessage,
   borderless = false,
+  getItemLabel,
 }: ComboBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState(value);
@@ -50,12 +52,20 @@ export default function ComboBox({
   const textVariant = `${isPlaceholder ? "text-neutral-400" : "text-ink-primary"} ${textSize}`;
   const showSuccess = (isDirty || isTouched) && !error;
 
+  const itemLabel = (item: string) => getItemLabel?.(item) ?? item;
+  const displayValue = value ? itemLabel(value) : "";
+
   const filteredItems = useMemo(() => {
     if (!searchable || !query.trim()) return menuItems;
-    return menuItems.filter((item) =>
-      item.toLowerCase().includes(query.toLowerCase()),
-    );
-  }, [menuItems, query, searchable]);
+    const needle = query.toLowerCase();
+    return menuItems.filter((item) => {
+      const label = getItemLabel?.(item) ?? item;
+      return (
+        item.toLowerCase().includes(needle) ||
+        label.toLowerCase().includes(needle)
+      );
+    });
+  }, [getItemLabel, menuItems, query, searchable]);
 
   useEffect(() => {
     setQuery(value);
@@ -163,7 +173,7 @@ export default function ComboBox({
 
           {menuItems.map((item) => (
             <option key={item} value={item}>
-              {item}
+              {itemLabel(item)}
             </option>
           ))}
         </select>
@@ -192,7 +202,7 @@ export default function ComboBox({
       <input
         type="text"
         disabled={disabled}
-        value={isOpen ? query : value}
+        value={isOpen ? query : displayValue}
         placeholder={placeholder}
         onFocus={openDropdown}
         onChange={(e) => {
@@ -250,7 +260,7 @@ export default function ComboBox({
                 >
                   <span className="flex truncate items-center">
                     {flagIcon && <SvgIcon size={"xs"} Icon={flagIcon} />}
-                    <span className="ml-3 min-w-0 truncate">{item}</span>
+                    <span className="ml-3 min-w-0 truncate">{itemLabel(item)}</span>
                   </span>
                   {isSelected && <Check className="h-4 w-4 text-slate-500" />}
                 </button>

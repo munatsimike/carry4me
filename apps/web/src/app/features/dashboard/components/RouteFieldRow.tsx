@@ -176,6 +176,7 @@ export default function RouteFieldRow<T extends FieldValues>({
                     className="rounded-lg"
                     placeholder="Select country"
                     menuItems={countryOptions}
+                    getItemLabel={getCountryName}
                     value={field.value}
                     onValueChange={(nextCountry) => {
                       field.onChange(nextCountry);
