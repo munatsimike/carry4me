@@ -8,7 +8,21 @@ import { motion } from "framer-motion";
 import type { Step } from "@/types/Ui";
 import { useSignInModal } from "@/app/shared/Authentication/SignInModalContext";
 import { createElement } from "react";
-import { UserPlus } from "lucide-react";
+import {
+  CreditCard,
+  FilePlus2,
+  Truck,
+  UserPlus,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+
+const STEP_ICONS: Record<number, LucideIcon> = {
+  1: FilePlus2,
+  2: Users,
+  3: CreditCard,
+  4: Truck,
+};
 
 const UserPlusOutlined: SvgIconComponent = (props) =>
   createElement(UserPlus, { ...props, fill: "none", strokeWidth: 1.75 });
@@ -57,20 +71,24 @@ export default function HowItWorks({ steps }: StepsPros) {
 
         <motion.section
           variants={howItWorksContainer}
-          className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-0"
+          className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:gap-3 xl:grid-cols-4 xl:gap-2"
         >
           {steps.map((step, index) => (
-            <motion.div key={index} variants={howItWorksItem}>
-              <StepItem step={step} isLast={index === steps.length - 1} />
+            <motion.div
+              key={index}
+              variants={howItWorksItem}
+              className="h-full min-w-0"
+            >
+              <StepItem step={step} />
             </motion.div>
           ))}
         </motion.section>
 
         <motion.div
-          className="flex justify-center pt-6 sm:pt-8"
+          className="flex w-full justify-center pt-6 sm:pt-8"
           variants={howItWorksItem}
         >
-          <motion.div>
+          <motion.div className="w-full sm:w-auto">
             <Button
               type="button"
               onClick={() => openSignUpModal({ redirectTo: "/dashboard" })}
@@ -97,31 +115,30 @@ export default function HowItWorks({ steps }: StepsPros) {
 
 type StepProps = {
   step: Step;
-  isLast?: boolean;
 };
 
-function StepItem({ step, isLast = false }: StepProps) {
-  return (
-    <div className="relative flex gap-4 rounded-3xl bg-white/80 px-4 pb-4 shadow-sm ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md lg:h-full lg:flex-col lg:rounded-none lg:bg-transparent lg:shadow-none lg:ring-0 lg:hover:bg-transparent lg:hover:shadow-none">
-      {!isLast && (
-        <>
-          <span className="absolute left-9 top-14 h-[calc(100%-3rem)] w-px bg-slate-200 lg:left-[calc(50%+1.25rem)] lg:top-[22px] lg:h-px lg:w-[calc(100%-2.5rem)]" />
-          <span className="absolute left-9 top-14 h-10 w-px bg-primary-200 lg:left-[calc(50%+1.25rem)] lg:top-[22px] lg:h-px lg:w-10" />
-        </>
-      )}
+function StepItem({ step }: StepProps) {
+  const StepIcon = STEP_ICONS[step.step] ?? FilePlus2;
 
-      <div className="relative z-10 shrink-0">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary-200 bg-white text-lg font-semibold text-primary-600 shadow-sm">
+  return (
+    <div className="flex h-full min-w-0 w-full flex-col gap-2.5 rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-slate-200/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:gap-3 sm:px-5 sm:py-5">
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-600">
           {step.step}
         </div>
+        <StepIcon
+          className="h-8 w-8 shrink-0 text-primary-500"
+          strokeWidth={1.75}
+          aria-hidden
+        />
       </div>
 
-      <div className="flex min-w-0 flex-col gap-1 lg:pt-1">
+      <div className="flex min-w-0 flex-col gap-1">
         <CustomText
           as="h3"
           textVariant="primary"
-          textSize="lg"
-          className="font-medium"
+          textSize="md"
+          className="font-semibold"
         >
           {step.title}
         </CustomText>

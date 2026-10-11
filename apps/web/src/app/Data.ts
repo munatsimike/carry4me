@@ -20,27 +20,27 @@ export const steps = [
     step: 1,
     title: "Post a parcel or a trip",
     description:
-      "Senders list what they want to send. Travelers share their upcoming trips and available space.",
+      "Senders list their parcels. Travelers share their trips and available luggage space.",
   },
   {
     step: 2,
     title: "Get matched",
     description:
-      "Senders or travelers send a carry request based on listed details and price. Both sides confirm before proceeding.",
+      "Send a carry request and agree on the details and price before proceeding.",
   },
 
   {
     step: 3,
     title: "Secure payment",
     description:
-      "If there is a match, the sender makes payment. We securely hold the payment until it is released after handover or delivery.",
+      "The sender pays. Payment is held until the agreed handover or delivery is confirmed.",
   },
 
   {
     step: 4,
-    title: "Deliver and get paid",
+    title: "Deliver",
     description:
-      "The traveler delivers the parcel. Payment is released after handover or successful delivery.",
+      "The traveler delivers the parcel. Payment is released after confirmed handover or delivery, as agreed when matching.",
   },
 ];
 
