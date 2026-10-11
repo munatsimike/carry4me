@@ -6,7 +6,6 @@ import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import HoverFillIcon from "@/app/components/HoverFillIcon";
 import {
   browseMarketplaceArrowClass,
   browseMarketplaceIconClass,
@@ -60,23 +59,29 @@ export default function ActionButtons() {
                   browseMarketplaceSubtitleClass,
                 )}
               >
-                See what people need sent home.
+                Find a parcel to carry on your trip.
               </CustomText>
             }
             variant="ghost"
             size={size}
             leadingIcon={
-              <HoverFillIcon
-                Outlined={META_ICONS.parcelBoxOutlined}
-                Filled={META_ICONS.parcelBox}
-                className={browseMarketplaceIconClass.parcels}
+              <SvgIcon
+                size="xl"
+                Icon={META_ICONS.parcelBox}
+                className={cn(
+                  browseMarketplaceIconClass.parcels,
+                  "transition-colors duration-200 group-hover:text-slate-800",
+                )}
               />
             }
             trailingIcon={
               <SvgIcon
                 size="sm"
                 Icon={ArrowIcon}
-                className={browseMarketplaceArrowClass.parcels}
+                className={cn(
+                  browseMarketplaceArrowClass.parcels,
+                  "transition-colors duration-200 group-hover:text-slate-800",
+                )}
               />
             }
           >
@@ -108,23 +113,29 @@ export default function ActionButtons() {
                   browseMarketplaceSubtitleClass,
                 )}
               >
-                See who is traveling home soon.
+                Find a traveler to carry your parcel.
               </CustomText>
             }
             variant="ghost"
             size={size}
             leadingIcon={
-              <HoverFillIcon
-                Outlined={META_ICONS.planeIcon}
-                Filled={META_ICONS.planeFilled}
-                className={browseMarketplaceIconClass.trips}
+              <SvgIcon
+                size="xl"
+                Icon={META_ICONS.planeFilled}
+                className={cn(
+                  browseMarketplaceIconClass.trips,
+                  "transition-colors duration-200 group-hover:text-primary-700",
+                )}
               />
             }
             trailingIcon={
               <SvgIcon
                 size="sm"
                 Icon={ArrowIcon}
-                className={browseMarketplaceArrowClass.trips}
+                className={cn(
+                  browseMarketplaceArrowClass.trips,
+                  "transition-colors duration-200 group-hover:text-primary-700",
+                )}
               />
             }
           >
