@@ -16,6 +16,8 @@ import { supabase } from "./client";
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
+  /** True only until the first session restore finishes. */
+  initializing: boolean;
   error: string | null;
   profile: UserProfile | null;
   profileIncomplete: boolean;
@@ -51,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(true);
 
   // Prevent setState after unmount
   const mountedRef = useRef(true);
@@ -112,7 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setError(null);
         }
       } finally {
-        if (mountedRef.current) setLoading(false);
+        if (mountedRef.current) {
+          setLoading(false);
+          setInitializing(false);
+        }
       }
     };
 
@@ -167,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         loading,
+        initializing,
         error,
         profile,
         profileIncomplete: !!user && isProfileIncomplete(profile),

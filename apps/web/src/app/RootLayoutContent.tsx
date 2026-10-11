@@ -25,7 +25,7 @@ import { useStripeConnectReturnSync } from "./hooks/useStripeConnectReturnSync";
 const PATHS = ["/travelers", "/parcels", "/favourites"];
 
 export default function RootLayoutContent() {
-  const { loading, user, profile } = useAuth();
+  const { loading, initializing, user, profile } = useAuth();
   const { state: authModalState } = useSignInModal();
   const location = useLocation();
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ export default function RootLayoutContent() {
     }
   }, [authModalState, loading, profile, user?.id, location.pathname, navigate]);
 
-  if (loading && !user) {
+  if (initializing) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
         <div className="relative h-10 w-10">

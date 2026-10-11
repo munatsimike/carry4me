@@ -6,7 +6,7 @@ import Benefits from "./sections/benefits/Benefits";
 import FaqSection from "./sections/faqSection/FaqSection";
 import { useEffect, useState } from "react";
 import { useToast } from "@/app/components/Toast";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useLocation, useSearchParams } from "react-router-dom";
 import CustomModal from "@/app/components/CustomModal";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
@@ -31,22 +31,18 @@ export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSignup = searchParams.get("signup") === "success";
-  const navigate = useNavigate();
   const location = useLocation();
   const { user, loading, profile } = useAuth();
   const showTempDeleteStripe =
     isAdminProfile(profile) &&
     (TEMP_DELETE_STRIPE_ENABLED ||
       searchParams.get(TEMP_DELETE_STRIPE_PARAM) === "1");
-
-  useEffect(() => {
-    if (showTempDeleteStripe) return;
-    if (isSuspended(profile)) return;
-
-    if (user && !loading && profile) {
-      navigate(getAuthenticatedLandingPath(profile), { replace: true });
-    }
-  }, [user, loading, profile, navigate, showTempDeleteStripe]);
+  const shouldSendAuthedUserToApp =
+    !!user &&
+    !!profile &&
+    !loading &&
+    !showTempDeleteStripe &&
+    !isSuspended(profile);
 
   useEffect(() => {
     if (location.hash !== "#how-it-works") return;
@@ -79,6 +75,11 @@ export default function HomePage() {
     next.delete(param); // THIS is what matters
     setSearchParams(next);
   };
+
+  if (shouldSendAuthedUserToApp) {
+    return <Navigate to={getAuthenticatedLandingPath(profile)} replace />;
+  }
+
   return (
     <>
       {showTempDeleteStripe ? (
