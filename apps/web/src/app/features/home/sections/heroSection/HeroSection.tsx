@@ -37,9 +37,9 @@ const dissolveBreathe = {
 };
 
 export function HeroSection() {
-  const heading = "Send Parcels Home with Fellow Zimbabweans.";
+  const heading = "Send Parcels Home with Fellow Zimbabweans";
   const subHeading =
-    "Post a parcel or trip and connect with travelers or senders.";
+    "Travelers earn from spare luggage space. Senders save.";
 
   const container = {
     hidden: {},
