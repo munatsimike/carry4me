@@ -587,7 +587,7 @@ function FormContents({ formProps, locationProps }: SigupFormProps) {
             render={({ field, fieldState }) => (
               <ComboBox
                 wrapperClassName="w-full sm:max-w-[260px]"
-                placeholder="Select city"
+                placeholder="Select city or state"
                 menuItems={cityOptions}
                 disabled={!countryCodeForCities}
                 disabledMessage="Select a country first"

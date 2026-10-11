@@ -118,7 +118,7 @@ export default function Search({
               <ComboBox
                 heightClass="py-1.5"
                 className="w-full rounded-xl"
-                placeholder="Select city"
+                placeholder="Select city or state"
                 menuItems={cityOptions}
                 disabled={!countryValue}
                 disabledMessage="Select a country first"

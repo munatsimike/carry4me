@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   FieldErrors,
@@ -16,8 +16,11 @@ import SvgIcon from "@/components/ui/SvgIcon";
 import type { PhoneWithCountryFields } from "../../validation/phoneWithCountrySchema";
 
 /** Shared by sign-in, complete profile, phone entry, and profile phone change. */
+const COUNTRY_CODE_MENU_GUTTER_PX = 12;
+const COUNTRY_CODE_FIELDS_CLASSNAME =
+  "grid grid-cols-1 gap-3 sm:grid-cols-[minmax(132px,140px)_minmax(0,1fr)]";
 const COUNTRY_CODE_MENU_CLASSNAME =
-  "fixed z-[120] max-h-[min(50vh,12rem)] overflow-y-auto overscroll-y-contain rounded-xl border border-slate-200 bg-white shadow-lg";
+  "fixed z-[120] w-max max-h-[min(50vh,12rem)] overflow-y-auto overscroll-y-contain rounded-xl border border-slate-200 bg-white shadow-lg";
 
 type PhoneNumberWithCountryFieldsProps = {
   register: UseFormRegister<PhoneWithCountryFields>;
@@ -54,18 +57,40 @@ export default function PhoneNumberWithCountryFields({
   const [countryMenuPosition, setCountryMenuPosition] = useState<{
     top: number;
     left: number;
-    width: number;
+    minWidth: number;
+    maxWidth: number;
   } | null>(null);
+  const fieldsRowRef = useRef<HTMLDivElement | null>(null);
   const countryMenuRef = useRef<HTMLDivElement | null>(null);
   const countryMenuListRef = useRef<HTMLDivElement | null>(null);
 
   const updateCountryMenuPosition = useCallback(() => {
     if (!countryMenuRef.current) return;
-    const rect = countryMenuRef.current.getBoundingClientRect();
+    const trigger = countryMenuRef.current.getBoundingClientRect();
+    const row = fieldsRowRef.current?.getBoundingClientRect();
+    const maxWidth = Math.max(
+      trigger.width,
+      window.innerWidth - COUNTRY_CODE_MENU_GUTTER_PX * 2,
+    );
+    const minWidth = Math.min(
+      maxWidth,
+      Math.max(trigger.width, row?.width ?? 0),
+    );
+    const measuredWidth =
+      countryMenuListRef.current?.getBoundingClientRect().width ?? minWidth;
+    const width = Math.min(maxWidth, Math.max(minWidth, measuredWidth));
+    const left = Math.min(
+      Math.max(COUNTRY_CODE_MENU_GUTTER_PX, trigger.left),
+      Math.max(
+        COUNTRY_CODE_MENU_GUTTER_PX,
+        window.innerWidth - width - COUNTRY_CODE_MENU_GUTTER_PX,
+      ),
+    );
     setCountryMenuPosition({
-      top: rect.bottom + 8,
-      left: rect.left,
-      width: rect.width,
+      top: trigger.bottom + 8,
+      left,
+      minWidth,
+      maxWidth,
     });
   }, []);
 
@@ -80,16 +105,27 @@ export default function PhoneNumberWithCountryFields({
     });
   }, [countryOptions, defaultCountryCode, selectedCountry, setValue]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!countryMenuOpen) {
       setCountryMenuPosition(null);
       return;
     }
 
     updateCountryMenuPosition();
+    const frame = requestAnimationFrame(updateCountryMenuPosition);
+    const viewport = window.visualViewport;
     window.addEventListener("resize", updateCountryMenuPosition);
+    window.addEventListener("scroll", updateCountryMenuPosition, true);
+    viewport?.addEventListener("resize", updateCountryMenuPosition);
+    viewport?.addEventListener("scroll", updateCountryMenuPosition);
 
-    return () => window.removeEventListener("resize", updateCountryMenuPosition);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateCountryMenuPosition);
+      window.removeEventListener("scroll", updateCountryMenuPosition, true);
+      viewport?.removeEventListener("resize", updateCountryMenuPosition);
+      viewport?.removeEventListener("scroll", updateCountryMenuPosition);
+    };
   }, [countryMenuOpen, updateCountryMenuPosition]);
 
   useEffect(() => {
@@ -120,7 +156,8 @@ export default function PhoneNumberWithCountryFields({
         style={{
           top: countryMenuPosition.top,
           left: countryMenuPosition.left,
-          width: countryMenuPosition.width,
+          minWidth: countryMenuPosition.minWidth,
+          maxWidth: countryMenuPosition.maxWidth,
         }}
       >
         {countryOptions.map((option) => {
@@ -146,7 +183,7 @@ export default function PhoneNumberWithCountryFields({
                 {dialCode ?? option}
               </span>
               {dialCode ? (
-                <span className="min-w-0 truncate text-slate-500">
+                <span className="whitespace-nowrap text-slate-500">
                   {toCountryName(option) ?? option}
                 </span>
               ) : null}
@@ -161,7 +198,8 @@ export default function PhoneNumberWithCountryFields({
     <>
       {countryMenuPortal}
       <div
-        className={className ?? "grid grid-cols-[minmax(132px,140px)_minmax(0,1fr)] gap-3"}
+        ref={fieldsRowRef}
+        className={className ?? COUNTRY_CODE_FIELDS_CLASSNAME}
       >
         <div className="flex min-w-0 flex-col gap-1.5">
           <CustomText as="label" textVariant="label" textSize="xs">

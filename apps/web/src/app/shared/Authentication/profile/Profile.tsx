@@ -757,7 +757,7 @@ function LocationSection({
                 ) : undefined
               }
             />
-            <InfoRow label="City" value={formProps.watch("city")} />
+            <InfoRow label="City or state" value={formProps.watch("city")} />
           </motion.div>
         ) : (
           <motion.div
@@ -1233,7 +1233,7 @@ function LocationEditForm({
           render={({ field, fieldState }) => (
             <ComboBox
               wrapperClassName="w-full"
-              placeholder="Select city"
+              placeholder="Select city or state"
               menuItems={cities}
               disabled={!selectedCountry}
               disabledMessage="Select a country first"
