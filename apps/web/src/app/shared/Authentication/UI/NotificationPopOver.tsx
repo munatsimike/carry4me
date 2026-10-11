@@ -37,7 +37,7 @@ function NotificationRow({
   return (
     <div
       className={cn(
-        "min-w-0 w-full rounded-lg p-3",
+        "min-w-0 w-full rounded-lg p-3 transition-colors hover:bg-neutral-50",
         item.readAt === null && "bg-primary-50/50",
       )}
     >
