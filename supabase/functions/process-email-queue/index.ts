@@ -1,16 +1,24 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import {
+  isServiceRoleDrainToken,
+  parseJwksJson,
+  probeServiceRoleWithProjectJwt,
+  projectRefFromSupabaseUrl,
+} from "../_shared/drainAuth.ts";
+import {
   assertCarryRequestParticipant,
   assertListingMatchPoster,
   loadExactQueueRow,
   loadQueueRowsByCarryRequestEvent,
   loadQueueRowsByListingMatchEvent,
+  processDueEmailQueue,
   processQueueRow,
   USER_PROCESSABLE_STATUSES,
 } from "../_shared/emailQueueProcessor.ts";
 
 type RequestBody = {
+  drain?: boolean;
   emailQueueId?: string;
   notificationId?: string;
   carryRequestId?: string;
@@ -51,169 +59,205 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Email service is not configured" }, 500);
     }
 
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
+    const authHeader = req.headers.get("Authorization") ??
+      req.headers.get("authorization") ??
+      "";
     if (!authHeader) {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const isServiceRole = await isServiceRoleDrainToken(token, {
+      serviceRoleKey,
+      jwtSecret: Deno.env.get("JWT_SECRET") ??
+        Deno.env.get("SUPABASE_JWT_SECRET") ??
+        Deno.env.get("SUPABASE_INTERNAL_JWT_SECRET"),
+      jwks: parseJwksJson(Deno.env.get("SUPABASE_JWKS")),
+      projectRef: projectRefFromSupabaseUrl(supabaseUrl),
+      supabaseUrl,
+      privilegedProbe: body.drain === true
+        ? (value) => probeServiceRoleWithProjectJwt(supabaseUrl, value)
+        : undefined,
     });
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data: authData, error: authError } = await supabaseUser.auth.getUser();
-    if (authError || !authData.user) {
-      return jsonResponse({ error: "Unauthorized" }, 401);
+    if (isServiceRole && body.drain === true) {
+      const drained = await processDueEmailQueue(supabaseAdmin, resendApiKey);
+      return jsonResponse({
+        ok: true,
+        mode: "drain",
+        processed: drained.processed,
+        results: drained.results,
+      });
     }
 
-    const emailQueueId = body.emailQueueId?.trim();
-    const notificationId = body.notificationId?.trim();
-    const carryRequestId = body.carryRequestId?.trim();
-    const matchedListingType = body.matchedListingType?.trim();
-    const matchedListingId = body.matchedListingId?.trim();
-    const eventType = body.eventType?.trim();
+    if (!isServiceRole) {
+      const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
 
-    if (matchedListingType && matchedListingId && eventType) {
-      const isPoster = await assertListingMatchPoster(
-        supabaseAdmin,
-        matchedListingType,
-        matchedListingId,
-        authData.user.id,
-      );
-
-      if (!isPoster) {
-        return jsonResponse({ error: "Forbidden" }, 403);
+      const { data: authData, error: authError } = await supabaseUser.auth
+        .getUser();
+      if (authError || !authData.user) {
+        return jsonResponse({ error: "Unauthorized" }, 401);
       }
 
-      const rows = await loadQueueRowsByListingMatchEvent(
-        supabaseAdmin,
-        matchedListingType,
-        matchedListingId,
-        eventType,
-      );
+      const emailQueueId = body.emailQueueId?.trim();
+      const notificationId = body.notificationId?.trim();
+      const carryRequestId = body.carryRequestId?.trim();
+      const matchedListingType = body.matchedListingType?.trim();
+      const matchedListingId = body.matchedListingId?.trim();
+      const eventType = body.eventType?.trim();
 
-      if (rows.length === 0) {
-        return jsonResponse({
-          ok: true,
-          mode: "listing_match",
-          processed: 0,
-          results: [],
-          hint: "No email_queue rows found for the given listing match event.",
-        });
-      }
+      if (matchedListingType && matchedListingId && eventType) {
+        const isPoster = await assertListingMatchPoster(
+          supabaseAdmin,
+          matchedListingType,
+          matchedListingId,
+          authData.user.id,
+        );
 
-      const results = [];
-      for (const row of rows) {
-        results.push(
-          await processQueueRow(supabaseAdmin, row, resendApiKey, {
-            allowedStatuses: USER_PROCESSABLE_STATUSES,
-          }),
+        if (!isPoster) {
+          return jsonResponse({ error: "Forbidden" }, 403);
+        }
+
+        return await processTargetedRows(
+          supabaseAdmin,
+          resendApiKey,
+          await loadQueueRowsByListingMatchEvent(
+            supabaseAdmin,
+            matchedListingType,
+            matchedListingId,
+            eventType,
+          ),
+          "listing_match",
+          "No email_queue rows found for the given listing match event.",
         );
       }
 
-      const processed = results.filter((result) => result.processed === true).length;
+      if (!emailQueueId && !notificationId && carryRequestId && eventType) {
+        const isParticipant = await assertCarryRequestParticipant(
+          supabaseAdmin,
+          carryRequestId,
+          authData.user.id,
+        );
 
-      return jsonResponse({
-        ok: true,
-        mode: "listing_match",
-        processed,
-        results,
-      });
-    }
+        if (!isParticipant) {
+          return jsonResponse({ error: "Forbidden" }, 403);
+        }
 
-    let row = await loadExactQueueRow(supabaseAdmin, {
-      emailQueueId,
-      notificationId,
-    });
-
-    if (
-      !emailQueueId &&
-      !notificationId &&
-      carryRequestId &&
-      eventType
-    ) {
-      const isParticipant = await assertCarryRequestParticipant(
-        supabaseAdmin,
-        carryRequestId,
-        authData.user.id,
-      );
-
-      if (!isParticipant) {
-        return jsonResponse({ error: "Forbidden" }, 403);
-      }
-
-      const carryRequestRows = await loadQueueRowsByCarryRequestEvent(
-        supabaseAdmin,
-        carryRequestId,
-        eventType,
-      );
-
-      if (carryRequestRows.length === 0) {
-        return jsonResponse({
-          ok: true,
-          mode: "carry_request",
-          processed: 0,
-          results: [],
-          hint: "No email_queue rows found for the given carry request event.",
-        });
-      }
-
-      const results = [];
-      for (const carryRow of carryRequestRows) {
-        results.push(
-          await processQueueRow(supabaseAdmin, carryRow, resendApiKey, {
-            allowedStatuses: USER_PROCESSABLE_STATUSES,
-          }),
+        return await processTargetedRows(
+          supabaseAdmin,
+          resendApiKey,
+          await loadQueueRowsByCarryRequestEvent(
+            supabaseAdmin,
+            carryRequestId,
+            eventType,
+          ),
+          "carry_request",
+          "No email_queue rows found for the given carry request event.",
         );
       }
 
-      const processed = results.filter((result) => result.processed === true)
-        .length;
+      if (!emailQueueId && !notificationId && !(carryRequestId && eventType)) {
+        return jsonResponse({
+          error:
+            "emailQueueId, notificationId, carryRequestId+eventType, or matchedListingType+matchedListingId+eventType is required",
+        }, 400);
+      }
+
+      const row = await loadExactQueueRow(supabaseAdmin, {
+        emailQueueId,
+        notificationId,
+      });
+
+      if (!row) {
+        return jsonResponse({
+          ok: true,
+          processed: 0,
+          results: [],
+          hint: "No email_queue row found for the given target.",
+        });
+      }
+
+      const result = await processQueueRow(supabaseAdmin, row, resendApiKey, {
+        allowedStatuses: USER_PROCESSABLE_STATUSES,
+      });
 
       return jsonResponse({
         ok: true,
-        mode: "carry_request",
-        processed,
-        results,
+        mode: "targeted",
+        processed: result.processed === true ? 1 : 0,
+        results: [result],
       });
     }
 
-    if (
-      !emailQueueId &&
-      !notificationId &&
-      !(carryRequestId && eventType)
-    ) {
-      return jsonResponse({
-        error:
-          "emailQueueId, notificationId, carryRequestId+eventType, or matchedListingType+matchedListingId+eventType is required",
-      }, 400);
-    }
-
-    if (!row) {
+    if (body.emailQueueId || body.notificationId) {
+      const row = await loadExactQueueRow(supabaseAdmin, {
+        emailQueueId: body.emailQueueId?.trim(),
+        notificationId: body.notificationId?.trim(),
+      });
+      if (!row) {
+        return jsonResponse({
+          ok: true,
+          processed: 0,
+          results: [],
+          hint: "No email_queue row found for the given target.",
+        });
+      }
+      const result = await processQueueRow(supabaseAdmin, row, resendApiKey, {
+        allowedStatuses: USER_PROCESSABLE_STATUSES,
+      });
       return jsonResponse({
         ok: true,
-        processed: 0,
-        results: [],
-        hint: "No email_queue row found for the given target.",
+        mode: "targeted",
+        processed: result.processed === true ? 1 : 0,
+        results: [result],
       });
     }
-
-    const result = await processQueueRow(supabaseAdmin, row, resendApiKey, {
-      allowedStatuses: USER_PROCESSABLE_STATUSES,
-    });
 
     return jsonResponse({
-      ok: true,
-      mode: "targeted",
-      processed: result.processed === true ? 1 : 0,
-      results: [result],
-    });
+      error: "drain:true or a targeted email_queue id is required",
+    }, 400);
   } catch (error) {
     console.error("process-email-queue error:", error);
     return jsonResponse({ error: "Internal server error" }, 500);
   }
 });
+
+async function processTargetedRows(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  resendApiKey: string,
+  rows: Awaited<ReturnType<typeof loadQueueRowsByCarryRequestEvent>>,
+  mode: string,
+  emptyHint: string,
+) {
+  if (rows.length === 0) {
+    return jsonResponse({
+      ok: true,
+      mode,
+      processed: 0,
+      results: [],
+      hint: emptyHint,
+    });
+  }
+
+  const results = [];
+  for (const row of rows) {
+    results.push(
+      await processQueueRow(supabaseAdmin, row, resendApiKey, {
+        allowedStatuses: USER_PROCESSABLE_STATUSES,
+      }),
+    );
+  }
+
+  return jsonResponse({
+    ok: true,
+    mode,
+    processed: results.filter((result) => result.processed === true).length,
+    results,
+  });
+}
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

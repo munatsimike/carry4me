@@ -1,5 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import {
+  loadExactQueueRow,
+  processQueueRow,
+  USER_PROCESSABLE_STATUSES,
+} from "../_shared/emailQueueProcessor.ts";
 import { enrichNotificationForEmail } from "../_shared/emails/notificationEmailEnrichment.ts";
 import {
   sendNotificationEmailViaResend,
@@ -67,6 +72,28 @@ Deno.serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
+    const queued = await loadExactQueueRow(supabaseAdmin, { notificationId });
+    if (queued) {
+      const result = await processQueueRow(
+        supabaseAdmin,
+        queued,
+        resendApiKey,
+        { allowedStatuses: USER_PROCESSABLE_STATUSES },
+      );
+      if (result.sent === true) {
+        return jsonResponse({
+          ok: true,
+          sent: true,
+          messageId: result.messageId ?? null,
+        });
+      }
+      return jsonResponse({
+        ok: true,
+        sent: false,
+        reason: result.error ?? result.hint ?? "not_sent",
+      });
+    }
+
     const { data: notification, error: notificationError } = await supabaseAdmin
       .from("notifications")
       .select("id, user_id, type, title, body, link, metadata")
@@ -80,6 +107,13 @@ Deno.serve(async (req) => {
 
     if (!notification) {
       return jsonResponse({ error: "Notification not found" }, 404);
+    }
+
+    if (notification.type?.trim().toUpperCase() === "DELIVERY_OTP") {
+      return jsonResponse(
+        { error: "Delivery code emails must be sent through the email queue" },
+        409,
+      );
     }
 
     const { data: profile, error: profileError } = await supabaseAdmin

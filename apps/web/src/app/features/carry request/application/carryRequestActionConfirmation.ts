@@ -111,7 +111,7 @@ function getConfirmOptions(
       return {
         title: "Resend payment code?",
         message:
-          "A new 6-digit code will be sent to your email. Any previous code will stop working.",
+          "A new 6-digit code will be emailed to you. Any previous code will stop working.",
         confirmText: "Send new code",
         cancelText: "Cancel",
       };

@@ -1,4 +1,26 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  EMAIL_QUEUE_MAX_ATTEMPTS,
+  OTP_SECRET_MISSING_ERROR,
+  OTP_SUPERSEDED_ERROR,
+  resendIdempotencyKey,
+  shouldSendAfterPreSendCheck,
+} from "./emailQueueClaim.ts";
+import {
+  claimDueEmailQueue,
+  claimEmailQueueRow,
+  cleanupDeliveryOtpSecrets,
+  emailQueueLeaseIsActive,
+  finishEmailQueueFailed,
+  finishEmailQueueSent,
+  isTerminalQueueFailure,
+  reclaimStaleEmailQueueLeases,
+} from "./emailQueueLeaseRpc.ts";
+import {
+  deleteDeliveryOtpSecret,
+  peekDeliveryOtpSecret,
+  redactOtpDigits,
+} from "./deliveryOtpMail.ts";
 import { enrichNotificationForEmail } from "./emails/notificationEmailEnrichment.ts";
 import {
   sendNotificationEmailViaResend,
@@ -13,6 +35,9 @@ export type EmailQueueRow = {
   status: string;
   attempts: number;
   last_error: string | null;
+  lease_token?: string | null;
+  lease_expires_at?: string | null;
+  next_attempt_at?: string | null;
   created_at?: string;
   notifications?: { type: string } | null;
 };
@@ -37,9 +62,14 @@ export const EMAIL_PROCESSABLE_NOTIFICATION_TYPES = [
 export type EmailProcessableNotificationType =
   (typeof EMAIL_PROCESSABLE_NOTIFICATION_TYPES)[number];
 
-export const USER_PROCESSABLE_STATUSES = ["pending", "skipped", "failed"] as const;
+export const USER_PROCESSABLE_STATUSES = [
+  "pending",
+  "skipped",
+  "failed",
+  "processing",
+] as const;
 
-export const MAX_EMAIL_ATTEMPTS = 5;
+export const MAX_EMAIL_ATTEMPTS = EMAIL_QUEUE_MAX_ATTEMPTS;
 
 export function isEmailProcessableNotificationType(
   type: string | null | undefined,
@@ -59,7 +89,7 @@ export async function loadExactQueueRow(
   let query = supabaseAdmin
     .from("email_queue")
     .select(
-      "id, notification_id, user_id, status, attempts, last_error, created_at, notifications!inner(type)",
+      "id, notification_id, user_id, status, attempts, last_error, lease_token, lease_expires_at, next_attempt_at, created_at, notifications!inner(type)",
     );
 
   if (target.emailQueueId) {
@@ -136,7 +166,7 @@ export async function loadQueueRowsByCarryRequestEvent(
   const { data, error } = await supabaseAdmin
     .from("email_queue")
     .select(
-      "id, notification_id, user_id, status, attempts, last_error, created_at, notifications!inner(type, metadata)",
+      "id, notification_id, user_id, status, attempts, last_error, lease_token, lease_expires_at, next_attempt_at, created_at, notifications!inner(type, metadata)",
     )
     .eq("notifications.type", eventType)
     .filter(
@@ -144,7 +174,7 @@ export async function loadQueueRowsByCarryRequestEvent(
       "eq",
       carryRequestId,
     )
-    .in("status", ["pending", "failed"])
+    .in("status", ["pending", "failed", "processing"])
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -226,7 +256,7 @@ export async function loadQueueRowsByListingMatchEvent(
   const { data, error } = await supabaseAdmin
     .from("email_queue")
     .select(
-      "id, notification_id, user_id, status, attempts, last_error, created_at, notifications!inner(type, metadata)",
+      "id, notification_id, user_id, status, attempts, last_error, lease_token, lease_expires_at, next_attempt_at, created_at, notifications!inner(type, metadata)",
     )
     .eq("notifications.type", eventType)
     .filter(
@@ -239,7 +269,7 @@ export async function loadQueueRowsByListingMatchEvent(
       "eq",
       matchedListingId,
     )
-    .in("status", ["pending", "failed"])
+    .in("status", ["pending", "failed", "processing"])
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -250,154 +280,219 @@ export async function loadQueueRowsByListingMatchEvent(
   return (data as EmailQueueRow[] | null) ?? [];
 }
 
+export async function processDueEmailQueue(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  resendApiKey: string,
+  limit = 20,
+) {
+  await reclaimStaleEmailQueueLeases(supabaseAdmin);
+  await cleanupDeliveryOtpSecrets(supabaseAdmin);
+  const claimed = await claimDueEmailQueue(supabaseAdmin, limit);
+  const results = [];
+  for (const row of claimed) {
+    results.push(
+      await processQueueRow(supabaseAdmin, {
+        ...row,
+        user_id: row.user_id ?? "",
+        notifications: null,
+      }, resendApiKey, {
+        allowedStatuses: USER_PROCESSABLE_STATUSES,
+        alreadyClaimed: true,
+      }),
+    );
+  }
+  return {
+    processed: results.filter((result) => result.processed === true).length,
+    results,
+  };
+}
+
 export async function processQueueRow(
   supabaseAdmin: ReturnType<typeof createClient>,
   row: EmailQueueRow,
   resendApiKey: string,
-  options: { allowedStatuses: readonly string[] },
+  options: { allowedStatuses: readonly string[]; alreadyClaimed?: boolean },
 ) {
-  const nextAttempts = row.attempts + 1;
-  const updateFromStatuses = [...new Set([...options.allowedStatuses, row.status])];
-
-  if (!options.allowedStatuses.includes(row.status)) {
-    const hint = row.status === "sent"
-      ? `Already sent${row.last_error ? ` (${row.last_error})` : ""}.`
-      : `Row status "${row.status}" is not processable.`;
-
+  if (row.status === "sent") {
     return {
       emailQueueId: row.id,
       notificationId: row.notification_id,
       processed: false,
       ok: true,
       status: row.status,
-      hint,
+      hint: "Already sent.",
     };
   }
 
-  if (row.attempts >= MAX_EMAIL_ATTEMPTS) {
-    const errorMessage = `max_attempts_reached:${MAX_EMAIL_ATTEMPTS}`;
-    await markQueueFailed(
-      supabaseAdmin,
-      row.id,
-      row.attempts,
-      errorMessage,
-      updateFromStatuses,
-    );
+  if (
+    row.last_error === OTP_SUPERSEDED_ERROR ||
+    !options.allowedStatuses.includes(row.status)
+  ) {
+    return {
+      emailQueueId: row.id,
+      notificationId: row.notification_id,
+      processed: false,
+      ok: true,
+      status: row.status,
+      hint: row.last_error === OTP_SUPERSEDED_ERROR
+        ? "otp_superseded"
+        : `Row status "${row.status}" is not processable.`,
+    };
+  }
 
-    return buildResult(row, null, null, {
+  let leaseToken = options.alreadyClaimed && row.lease_token
+    ? row.lease_token
+    : crypto.randomUUID();
+  let held = row;
+
+  if (!options.alreadyClaimed || !row.lease_token) {
+    const claimed = await claimEmailQueueRow(supabaseAdmin, row.id, leaseToken);
+    if (!claimed) {
+      return {
+        emailQueueId: row.id,
+        notificationId: row.notification_id,
+        processed: false,
+        ok: true,
+        status: row.status,
+        hint: "not_claimed",
+      };
+    }
+    held = {
+      ...row,
+      ...claimed,
+      user_id: claimed.user_id ?? row.user_id,
+      lease_token: claimed.lease_token,
+    };
+    leaseToken = claimed.lease_token ?? leaseToken;
+  }
+
+  const failHeld = async (
+    errorMessage: string,
+    notification: NotificationRow | null,
+    recipientEmail: string | null,
+    terminal = false,
+  ) => {
+    const redacted = redactOtpDigits(errorMessage);
+    const isTerminal = terminal || isTerminalQueueFailure(held.attempts, redacted);
+    await finishEmailQueueFailed(
+      supabaseAdmin,
+      held.id,
+      leaseToken,
+      redacted,
+      isTerminal,
+    );
+    if (isTerminal) {
+      await deleteDeliveryOtpSecret(supabaseAdmin, held.notification_id);
+    }
+    return buildResult(held, notification, recipientEmail, {
       processed: false,
       ok: false,
       status: "failed",
-      error: errorMessage,
+      error: redacted,
     });
-  }
+  };
 
   const { data: notification, error: notificationError } = await supabaseAdmin
     .from("notifications")
     .select("id, user_id, type, title, body, link, metadata")
-    .eq("id", row.notification_id)
+    .eq("id", held.notification_id)
     .maybeSingle<NotificationRow>();
 
   if (notificationError || !notification) {
-    const errorMessage = notificationError?.message ?? "Notification not found";
-    await markQueueFailed(
-      supabaseAdmin,
-      row.id,
-      nextAttempts,
-      errorMessage,
-      updateFromStatuses,
+    return await failHeld(
+      notificationError?.message ?? "Notification not found",
+      notification ?? null,
+      null,
     );
-
-    return buildResult(row, notification ?? null, null, {
-      processed: false,
-      ok: false,
-      status: "failed",
-      error: errorMessage,
-    });
   }
 
   if (!isEmailProcessableNotificationType(notification.type)) {
-    const errorMessage = `notification_type_not_processable:${notification.type}`;
-
-    await markQueueFailed(
-      supabaseAdmin,
-      row.id,
-      nextAttempts,
-      errorMessage,
-      updateFromStatuses,
+    return await failHeld(
+      `notification_type_not_processable:${notification.type}`,
+      notification,
+      null,
+      true,
     );
-
-    return buildResult(row, notification, null, {
-      processed: false,
-      ok: false,
-      status: "failed",
-      error: errorMessage,
-    });
   }
 
   if (!notification.title?.trim() || !notification.body?.trim()) {
-    const errorMessage = "notification_template_missing:title_or_body_empty";
-    await markQueueFailed(
-      supabaseAdmin,
-      row.id,
-      nextAttempts,
-      errorMessage,
-      updateFromStatuses,
+    return await failHeld(
+      "notification_template_missing:title_or_body_empty",
+      notification,
+      null,
     );
-
-    return buildResult(row, notification, null, {
-      processed: false,
-      ok: false,
-      status: "failed",
-      error: errorMessage,
-    });
   }
 
   const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
     .select("email, email_verified")
-    .eq("id", row.user_id)
+    .eq("id", held.user_id)
     .maybeSingle<ProfileRow>();
 
   if (profileError || !profile) {
-    const errorMessage = profileError?.message ?? "Recipient profile not found";
-    await markQueueFailed(
-      supabaseAdmin,
-      row.id,
-      nextAttempts,
-      errorMessage,
-      updateFromStatuses,
+    return await failHeld(
+      profileError?.message ?? "Recipient profile not found",
+      notification,
+      null,
     );
-
-    return buildResult(row, notification, null, {
-      processed: false,
-      ok: false,
-      status: "failed",
-      error: errorMessage,
-    });
   }
 
   const recipientEmail = await resolveRecipientEmail(
     supabaseAdmin,
-    row.user_id,
+    held.user_id,
     profile,
   );
 
   if (!recipientEmail) {
-    const errorMessage = "email_missing: no email on profile or auth user";
-    await markQueueFailed(
-      supabaseAdmin,
-      row.id,
-      nextAttempts,
-      errorMessage,
-      updateFromStatuses,
+    return await failHeld(
+      "email_missing: no email on profile or auth user",
+      notification,
+      null,
     );
+  }
 
-    return buildResult(row, notification, null, {
+  const notificationType = notification.type?.trim().toUpperCase() ?? "";
+  let deliveryOtp: string | null = null;
+  if (notificationType === "DELIVERY_OTP") {
+    deliveryOtp = await peekDeliveryOtpSecret(supabaseAdmin, notification.id);
+    if (!deliveryOtp) {
+      return await failHeld(OTP_SECRET_MISSING_ERROR, notification, recipientEmail, true);
+    }
+  }
+
+  const leaseStillHeld = await emailQueueLeaseIsActive(
+    supabaseAdmin,
+    held.id,
+    leaseToken,
+  );
+  const { data: preSendRow } = await supabaseAdmin
+    .from("email_queue")
+    .select("last_error")
+    .eq("id", held.id)
+    .maybeSingle<{ last_error: string | null }>();
+  const superseded = preSendRow?.last_error === OTP_SUPERSEDED_ERROR;
+  if (
+    !shouldSendAfterPreSendCheck({
+      leaseStillHeld,
+      superseded,
+      secretPresent: notificationType !== "DELIVERY_OTP" || Boolean(deliveryOtp),
+      notificationType,
+    })
+  ) {
+    if (superseded || !deliveryOtp) {
+      return await failHeld(
+        superseded ? OTP_SUPERSEDED_ERROR : OTP_SECRET_MISSING_ERROR,
+        notification,
+        recipientEmail,
+        true,
+      );
+    }
+    return buildResult(held, notification, recipientEmail, {
       processed: false,
       ok: false,
       status: "failed",
-      error: errorMessage,
+      error: "lease_lost_before_provider",
+      sent: false,
     });
   }
 
@@ -405,30 +500,39 @@ export async function processQueueRow(
     const enrichedNotification = await enrichNotificationForEmail(
       supabaseAdmin,
       notification,
+      { deliveryOtp },
     );
 
     const outcome = await sendNotificationEmailViaResend(
       enrichedNotification,
       { email: recipientEmail, email_verified: profile.email_verified },
       resendApiKey,
-      { requireEmailVerified: false },
+      {
+        requireEmailVerified: false,
+        idempotencyKey: resendIdempotencyKey(held.id),
+      },
     );
 
     if (!outcome.sent) {
-      const errorMessage = `precheck_failed:${outcome.reason}`;
-      await markQueueFailed(
-        supabaseAdmin,
-        row.id,
-        nextAttempts,
-        errorMessage,
-        updateFromStatuses,
+      return await failHeld(
+        `precheck_failed:${outcome.reason}`,
+        notification,
+        recipientEmail,
       );
+    }
 
-      return buildResult(row, notification, recipientEmail, {
+    const stillHeld = await emailQueueLeaseIsActive(
+      supabaseAdmin,
+      held.id,
+      leaseToken,
+    );
+    if (!stillHeld) {
+      return buildResult(held, notification, recipientEmail, {
         processed: false,
         ok: false,
         status: "failed",
-        error: errorMessage,
+        error: "lease_lost_after_provider",
+        sent: false,
       });
     }
 
@@ -436,41 +540,42 @@ export async function processQueueRow(
       ? `resend:${outcome.messageId}`
       : JSON.stringify(outcome.providerResponse).slice(0, 500);
 
-    await markQueueSent(
+    const finishWon = await finishEmailQueueSent(
       supabaseAdmin,
-      row.id,
-      nextAttempts,
+      held.id,
+      leaseToken,
       providerNote,
-      updateFromStatuses,
     );
 
-    return buildResult(row, notification, recipientEmail, {
+    if (finishWon && notificationType === "DELIVERY_OTP") {
+      await deleteDeliveryOtpSecret(supabaseAdmin, notification.id);
+    }
+
+    if (!finishWon) {
+      return buildResult(held, notification, recipientEmail, {
+        processed: false,
+        ok: false,
+        status: "failed",
+        error: "lease_lost_after_provider",
+        sent: false,
+      });
+    }
+
+    return buildResult(held, notification, recipientEmail, {
       processed: true,
       ok: true,
       status: "sent",
       sent: true,
+      email_status: "sent",
       messageId: outcome.messageId,
       providerResponse: outcome.providerResponse,
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    console.error("process-email-queue provider error:", errorMessage);
-
-    await markQueueFailed(
-      supabaseAdmin,
-      row.id,
-      nextAttempts,
-      errorMessage,
-      updateFromStatuses,
+    const errorMessage = redactOtpDigits(
+      error instanceof Error ? error.message : String(error),
     );
-
-    return buildResult(row, notification, recipientEmail, {
-      processed: false,
-      ok: false,
-      status: "failed",
-      error: errorMessage,
-    });
+    console.error("process-email-queue provider error:", errorMessage);
+    return await failHeld(errorMessage, notification, recipientEmail);
   }
 }
 
@@ -510,50 +615,20 @@ async function resolveRecipientEmail(
   return authData.user?.email?.trim() ?? null;
 }
 
-async function markQueueSent(
-  supabaseAdmin: ReturnType<typeof createClient>,
-  emailQueueId: string,
-  attempts: number,
-  providerNote: string,
-  allowedStatuses: readonly string[],
-) {
-  const { error } = await supabaseAdmin
-    .from("email_queue")
-    .update({
-      status: "sent",
-      attempts,
-      sent_at: new Date().toISOString(),
-      last_error: providerNote,
-    })
-    .eq("id", emailQueueId)
-    .in("status", [...allowedStatuses]);
-
-  if (error) {
-    console.error("Failed to mark email queue sent:", error);
-    throw error;
+export function emailStatusFromQueueResult(
+  result: { sent?: unknown; status?: unknown; error?: unknown },
+): "queued" | "sent" | "failed" {
+  if (result.sent === true && result.status === "sent") {
+    return "sent";
   }
-}
-
-async function markQueueFailed(
-  supabaseAdmin: ReturnType<typeof createClient>,
-  emailQueueId: string,
-  attempts: number,
-  errorMessage: string,
-  allowedStatuses: readonly string[],
-) {
-  const { error } = await supabaseAdmin
-    .from("email_queue")
-    .update({
-      status: "failed",
-      attempts,
-      last_error: errorMessage,
-      sent_at: null,
-    })
-    .eq("id", emailQueueId)
-    .in("status", [...allowedStatuses]);
-
-  if (error) {
-    console.error("Failed to mark email queue failed:", error);
-    throw error;
+  const error = typeof result.error === "string" ? result.error : "";
+  if (
+    error === OTP_SUPERSEDED_ERROR ||
+    error === OTP_SECRET_MISSING_ERROR ||
+    error.startsWith("max_attempts_reached") ||
+    error.startsWith("notification_type_not_processable")
+  ) {
+    return "failed";
   }
+  return "queued";
 }

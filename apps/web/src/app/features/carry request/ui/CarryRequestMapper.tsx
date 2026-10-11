@@ -113,7 +113,7 @@ export function mapCarryRequestToUI(
           title = "Pending payout";
           description =
             viewerRole === ROLES.SENDER
-              ? "Check your email for the payment code."
+              ? "We're sending a delivery code to your email."
               : "Enter the payment code to receive your payout.";
         }
       } else {
@@ -121,7 +121,7 @@ export function mapCarryRequestToUI(
         title = viewerRole === ROLES.SENDER ? "In transit" : "Pending delivery";
         description =
           viewerRole === ROLES.SENDER
-            ? "Check your email for the payment code."
+            ? "We're sending a delivery code to your email."
             : "Deliver the parcel to the recipient, then confirm delivery.";
       }
       break;
@@ -131,7 +131,7 @@ export function mapCarryRequestToUI(
       title = "Pending payout";
       description =
         viewerRole === ROLES.SENDER
-          ? "Check your email for the payment code."
+          ? "We're sending a delivery code to your email."
           : "Enter the payment code to receive your payout.";
       break;
 

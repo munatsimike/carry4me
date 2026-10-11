@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { parseIssueDeliveryOtpRpc } from "./deliveryOtpMailLogic.ts";
 
 export type DeliveryOtpVerifyResult = {
   ok: boolean;
@@ -7,21 +8,10 @@ export type DeliveryOtpVerifyResult = {
   attempts_remaining?: number;
 };
 
-export function isDeliveryOtpDevMode(): boolean {
-  const flag = Deno.env.get("DELIVERY_OTP_DEV_MODE")?.trim().toLowerCase();
-  if (flag === "true" || flag === "1") return true;
-  const appUrl = Deno.env.get("APP_URL")?.trim() ?? "";
-  return (
-    appUrl.includes("localhost") ||
-    appUrl.includes("127.0.0.1") ||
-    appUrl.includes("192.168.")
-  );
-}
-
 export async function issueDeliveryOtp(
   supabaseAdmin: SupabaseClient,
   carryRequestId: string,
-): Promise<{ ok: boolean; otp?: string; reason?: string }> {
+): Promise<{ ok: boolean; reason?: string; notification_id?: string }> {
   const { data, error } = await supabaseAdmin.rpc("issue_delivery_otp", {
     p_request_id: carryRequestId,
   });
@@ -31,12 +21,7 @@ export async function issueDeliveryOtp(
     return { ok: false, reason: "ISSUE_FAILED" };
   }
 
-  const result = data as { ok?: boolean; otp?: string; reason?: string };
-  if (!result?.ok) {
-    return { ok: false, reason: result?.reason ?? "ISSUE_FAILED" };
-  }
-
-  return { ok: true, otp: result.otp };
+  return parseIssueDeliveryOtpRpc(data);
 }
 
 export async function verifyDeliveryOtpRpc(

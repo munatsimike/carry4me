@@ -150,6 +150,7 @@ function browseCtaForRecipient(recipientIsSender: boolean): {
 export async function enrichNotificationForEmail(
   supabaseAdmin: ReturnType<typeof createClient>,
   notification: NotificationRow,
+  options?: { deliveryOtp?: string | null },
 ): Promise<NotificationEmailInput> {
   const base: NotificationEmailInput = {
     title: notification.title,
@@ -165,40 +166,40 @@ export async function enrichNotificationForEmail(
   }
 
   if (type === "DELIVERY_OTP") {
-    const otpRaw = notification.metadata?.otp;
-    const otp = typeof otpRaw === "string" ? otpRaw.trim() : "";
-    if (/^\d{6}$/.test(otp)) {
-      let preference =
-        typeof notification.metadata?.payment_preference === "string"
-          ? notification.metadata.payment_preference
-          : null;
-
-      if (!preference) {
-        const carryRequestId = getCarryRequestId(notification.metadata);
-        if (carryRequestId) {
-          const carryRequest = await loadCarryRequest(
-            supabaseAdmin,
-            carryRequestId,
-          );
-          if (carryRequest?.parcel_id) {
-            const { data: parcel } = await supabaseAdmin
-              .from("parcels")
-              .select("payment_preference")
-              .eq("id", carryRequest.parcel_id)
-              .maybeSingle<{ payment_preference: string | null }>();
-            preference = parcel?.payment_preference ?? null;
-          }
-        }
-      }
-
-      return {
-        ...base,
-        body: senderPaymentCodeEmailBody(otp, preference),
-        ctaLabel: null,
-      };
+    // Digits come from delivery_otp_email_secrets, never from notification metadata.
+    const otp = options?.deliveryOtp?.trim() ?? "";
+    if (!/^\d{6}$/.test(otp)) {
+      return { ...base, ctaLabel: null };
     }
 
-    return { ...base, ctaLabel: null };
+    let preference =
+      typeof notification.metadata?.payment_preference === "string"
+        ? notification.metadata.payment_preference
+        : null;
+
+    if (!preference) {
+      const carryRequestId = getCarryRequestId(notification.metadata);
+      if (carryRequestId) {
+        const carryRequest = await loadCarryRequest(
+          supabaseAdmin,
+          carryRequestId,
+        );
+        if (carryRequest?.parcel_id) {
+          const { data: parcel } = await supabaseAdmin
+            .from("parcels")
+            .select("payment_preference")
+            .eq("id", carryRequest.parcel_id)
+            .maybeSingle<{ payment_preference: string | null }>();
+          preference = parcel?.payment_preference ?? null;
+        }
+      }
+    }
+
+    return {
+      ...base,
+      body: senderPaymentCodeEmailBody(otp, preference),
+      ctaLabel: null,
+    };
   }
 
   if (type === "PARCEL_RECEIVED") {

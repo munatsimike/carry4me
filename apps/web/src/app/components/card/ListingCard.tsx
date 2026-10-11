@@ -13,6 +13,7 @@ import { dateFormat, type CardMode } from "@/types/Ui";
 import type { GoodsCategory } from "@/app/features/goods/domain/GoodsCategory";
 import { formatTripAcceptedCategoryLabels } from "@/app/features/goods/domain/goodsCategoryConstants";
 import User from "./User";
+import { formatListingCardUserName } from "@/app/shared/avatar/personInitials";
 import { format } from "date-fns";
 import { useAuth } from "@/app/shared/supabase/AuthProvider";
 import { useToast } from "../Toast";
@@ -45,19 +46,6 @@ function CardSectionFade({
       )}
     />
   );
-}
-function formatListingCardUserName(fullName: string | null | undefined): string {
-  if (!fullName?.trim()) return "";
-
-  const parts = fullName.trim().split(/\s+/);
-  const firstInitial = parts[0].charAt(0).toUpperCase();
-
-  if (parts.length === 1) {
-    return `${firstInitial}.`;
-  }
-
-  const surname = parts.slice(1).join(" ");
-  return `${firstInitial}. ${surname}`;
 }
 
 interface ListingCardProps<T extends Listing> {
@@ -153,6 +141,7 @@ export function ListingCard<T extends Listing>({
       <User
         tag={isTripListing ? "Traveler" : "Sender"}
         userName={formatListingCardUserName(listing.user.fullName)}
+        fullName={listing.user.fullName}
         avatar={listing.user.avatarUrl}
       />
       <CardSectionFade className={sectionFadeClass} />

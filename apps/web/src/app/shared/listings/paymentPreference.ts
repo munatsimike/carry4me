@@ -120,8 +120,16 @@ export function paymentCodeGiveWhenCopy(
 
 export function senderPaymentCodeHelperText(
   value: string | null | undefined,
+  emailStatus: "queued" | "sent" | "failed" = "queued",
 ): string {
-  return `Check your email for the payment code. Give it to the traveler ${paymentCodeGiveWhenCopy(value)} to release payment.`;
+  const when = paymentCodeGiveWhenCopy(value);
+  if (emailStatus === "sent") {
+    return `A delivery code was sent to your email. Give it to the traveler ${when} to release payment.`;
+  }
+  if (emailStatus === "failed") {
+    return `We couldn't email your delivery code. Tap Resend, then give the new code to the traveler ${when} to release payment.`;
+  }
+  return `We're sending a delivery code to your email. Give it to the traveler ${when} once it arrives to release payment.`;
 }
 
 export function senderPaymentCodeEmailBody(

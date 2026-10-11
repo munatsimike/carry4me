@@ -6,82 +6,30 @@ import {
 } from "../_shared/stripe/auth.ts";
 import {
   assertCarryRequestParticipant,
-  isDeliveryOtpDevMode,
   issueDeliveryOtp,
 } from "../_shared/deliveryOtp.ts";
-import { senderPaymentCodeHelperText } from "../_shared/paymentPreference.ts";
+import {
+  emailStatusFromQueueResult,
+  loadExactQueueRow,
+  processQueueRow,
+  USER_PROCESSABLE_STATUSES,
+} from "../_shared/emailQueueProcessor.ts";
 
 type RequestBody = {
   carry_request_id?: string;
 };
 
-async function ensureDeliveryOtpNotification(
-  supabaseAdmin: Parameters<typeof issueDeliveryOtp>[0],
-  input: {
-    carryRequestId: string;
-    senderUserId: string;
-    otp: string | undefined;
-  },
-) {
-  const { data: existing, error: existingError } = await supabaseAdmin
-    .from("notifications")
-    .select("id")
-    .eq("user_id", input.senderUserId)
-    .eq("type", "DELIVERY_OTP")
-    .filter("metadata->>carry_request_id", "eq", input.carryRequestId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (existingError) {
-    console.error(
-      "generate-delivery-otp: failed checking existing notification",
-      existingError.message,
-    );
-    return;
+function deliveryOtpIssueMessage(status: "queued" | "sent" | "failed"): string {
+  if (status === "sent") {
+    return "A new delivery code was sent to your email.";
   }
-
-  if (existing?.id) {
-    return;
+  if (status === "failed") {
+    return "We couldn't email your delivery code. Try Resend again in a moment.";
   }
-
-  const { data: carryRequest } = await supabaseAdmin
-    .from("carry_requests")
-    .select("parcel:parcels(payment_preference)")
-    .eq("id", input.carryRequestId)
-    .maybeSingle<{
-      parcel: { payment_preference: string | null } | { payment_preference: string | null }[] | null;
-    }>();
-
-  const parcel = Array.isArray(carryRequest?.parcel)
-    ? carryRequest.parcel[0]
-    : carryRequest?.parcel;
-  const paymentPreference = parcel?.payment_preference ?? null;
-
-  const { error: insertError } = await supabaseAdmin
-    .from("notifications")
-    .insert({
-      user_id: input.senderUserId,
-      type: "DELIVERY_OTP",
-      title: "Payment release code",
-      body: senderPaymentCodeHelperText(paymentPreference),
-      link: "/requests",
-      metadata: {
-        carry_request_id: input.carryRequestId,
-        payment_preference: paymentPreference ?? "flexible",
-        ...(input.otp ? { otp: input.otp } : {}),
-      },
-    });
-
-  if (insertError) {
-    console.error(
-      "generate-delivery-otp: failed inserting fallback notification",
-      insertError.message,
-    );
-  }
+  return "A new delivery code is being emailed to you.";
 }
 
-/** Resend delivery OTP to the sender (issued on handover confirm, reusable in transit). */
+/** Resend delivery OTP to the sender by email (issued on handover, reusable in transit). */
 Deno.serve(async (req) => {
   const preflight = handleCorsPreflight(req);
   if (preflight) return preflight;
@@ -113,37 +61,56 @@ Deno.serve(async (req) => {
       access.row.status !== "PENDING_PAYOUT"
     ) {
       return jsonResponse(
-        { error: "OTP can only be resent while the parcel is in transit or awaiting payout" },
+        {
+          error:
+            "OTP can only be resent while the parcel is in transit or awaiting payout",
+        },
         400,
       );
     }
 
     if (user.id !== access.row.sender_user_id) {
-      return jsonResponse({ error: "Only the sender can resend the payment code" }, 403);
+      return jsonResponse(
+        { error: "Only the sender can resend the payment code" },
+        403,
+      );
     }
 
     const issued = await issueDeliveryOtp(supabaseAdmin, carryRequestId);
     if (!issued.ok) {
+      if (issued.reason === "RATE_LIMITED") {
+        return jsonResponse(
+          { error: "Please wait before requesting a new delivery code." },
+          429,
+        );
+      }
       return jsonResponse({ error: "Could not generate delivery OTP" }, 500);
     }
 
-    await ensureDeliveryOtpNotification(supabaseAdmin, {
-      carryRequestId,
-      senderUserId: access.row.sender_user_id,
-      otp: issued.otp,
-    });
+    const resendApiKey = Deno.env.get("RESEND_API_KEY")?.trim();
+    let emailStatus: "queued" | "sent" | "failed" = "queued";
 
-    const response: Record<string, unknown> = {
-      ok: true,
-      message: "A new delivery code was sent to the sender.",
-    };
-
-    // TODO: Remove dev-only OTP echo before production go-live.
-    if (isDeliveryOtpDevMode() && issued.otp) {
-      response.dev_otp = issued.otp;
+    if (resendApiKey && issued.notification_id) {
+      const row = await loadExactQueueRow(supabaseAdmin, {
+        notificationId: issued.notification_id,
+      });
+      if (row) {
+        const result = await processQueueRow(
+          supabaseAdmin,
+          row,
+          resendApiKey,
+          { allowedStatuses: USER_PROCESSABLE_STATUSES },
+        );
+        emailStatus = emailStatusFromQueueResult(result);
+      }
     }
 
-    return jsonResponse(response);
+    return jsonResponse({
+      ok: true,
+      email_status: emailStatus,
+      sent: emailStatus === "sent",
+      message: deliveryOtpIssueMessage(emailStatus),
+    });
   } catch (err) {
     if (isResponse(err)) return err;
     console.error("generate-delivery-otp error", err);

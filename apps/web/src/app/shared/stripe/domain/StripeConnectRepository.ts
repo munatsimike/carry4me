@@ -5,8 +5,13 @@ export type DeleteStripeAccountResponse = ConnectStatusResponse & {
   deleted: boolean;
   stripe_account_id: string;
   profile_cleared?: boolean;
+  error?: string;
+  code?: string;
 };
 
 export interface StripeConnectRepository {
-  deleteAccount(stripeAccountId: string): Promise<DeleteStripeAccountResponse>;
+  deleteAccount(
+    stripeAccountId: string,
+    confirmation: { confirm: true; confirmPhrase: string },
+  ): Promise<DeleteStripeAccountResponse>;
 }

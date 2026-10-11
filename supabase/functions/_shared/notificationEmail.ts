@@ -1,5 +1,6 @@
 export const RESEND_API_URL = "https://api.resend.com/emails";
 export const FROM_ADDRESS = "Carry4Me <notifications@carry4me.uk>";
+export const RESEND_FETCH_TIMEOUT_MS = 25_000;
 
 export { escapeHtml } from "./emails/escapeHtml.ts";
 export { renderNotificationEmail } from "./emails/renderNotificationEmail.ts";
@@ -49,6 +50,8 @@ export function buildNotificationEmailBodies(
 export type SendNotificationEmailOptions = {
   /** When false, send if profile has an email (carry-request transactional mail). */
   requireEmailVerified?: boolean;
+  /** Resend Idempotency-Key; retries of the same queue item reuse the provider result. */
+  idempotencyKey?: string;
 };
 
 export async function sendNotificationEmailViaResend(
@@ -69,12 +72,17 @@ export async function sendNotificationEmailViaResend(
 
   const { html: htmlBody, text: textBody } = buildNotificationEmailBodies(notification);
 
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${resendApiKey}`,
+    "Content-Type": "application/json",
+  };
+  if (options.idempotencyKey?.trim()) {
+    headers["Idempotency-Key"] = options.idempotencyKey.trim();
+  }
+
   const resendResponse = await fetch(RESEND_API_URL, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({
       from: FROM_ADDRESS,
       to: [profile.email],
@@ -82,6 +90,7 @@ export async function sendNotificationEmailViaResend(
       html: htmlBody,
       text: textBody,
     }),
+    signal: AbortSignal.timeout(RESEND_FETCH_TIMEOUT_MS),
   });
 
   const responseText = await resendResponse.text();

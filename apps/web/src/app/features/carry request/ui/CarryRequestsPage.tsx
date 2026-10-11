@@ -741,14 +741,23 @@ export default function CarryRequestsPage() {
         slot: "secondary",
       });
       try {
-        await resendDeliveryOtp(carryRequest.carryRequestId);
-        processEmailQueueInBackground({
-          carryRequestId: carryRequest.carryRequestId,
-          eventType: "DELIVERY_OTP",
-        });
-        toast("A new 6-digit code was sent to your email.", {
-          variant: "success",
-        });
+        const resent = await resendDeliveryOtp(carryRequest.carryRequestId);
+        if (resent.email_status !== "sent") {
+          processEmailQueueInBackground({
+            carryRequestId: carryRequest.carryRequestId,
+            eventType: "DELIVERY_OTP",
+          });
+        }
+        const status = resent.email_status ?? "queued";
+        toast(
+          resent.message ??
+            (status === "sent"
+              ? "A new delivery code was sent to your email."
+              : status === "failed"
+              ? "We couldn't email your delivery code. Try Resend again."
+              : "A new delivery code is being emailed to you."),
+          { variant: status === "failed" ? "error" : "success" },
+        );
       } catch (err) {
         showSupabaseError(err);
       } finally {
@@ -1368,9 +1377,17 @@ function InfoBlockInput({
           leadingIcon={undefined}
           disabled={isActionPending}
           isBusy={isPrimaryPending}
+          aria-label={releaseLabel}
         >
           <CustomText textVariant="primary" className="text-white">
-            {actionButtonLabel(releaseLabel, isPrimaryPending)}
+            {isPrimaryPending ? (
+              actionButtonLabel(releaseLabel, true)
+            ) : (
+              <>
+                <span className="sm:hidden">Payout</span>
+                <span className="hidden sm:inline">{releaseLabel}</span>
+              </>
+            )}
           </CustomText>
         </Button>
       </div>

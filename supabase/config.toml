@@ -410,7 +410,7 @@ entrypoint = "./functions/stripe-connect-status/index.ts"
 
 [functions.delete-stripe-account]
 enabled = true
-verify_jwt = false
+verify_jwt = true
 entrypoint = "./functions/delete-stripe-account/index.ts"
 
 [functions.create-payment-intent]

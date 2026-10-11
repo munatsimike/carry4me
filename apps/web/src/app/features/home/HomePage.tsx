@@ -16,8 +16,12 @@ import {
   isSuspended,
 } from "@/app/shared/Authentication/domain/accountStatus";
 import { getAuthenticatedLandingPath } from "@/app/shared/Authentication/application/postAuthNavigation";
-import { deleteStripeAccount } from "@/app/shared/stripe/application/deleteStripeAccount";
+import {
+  DELETE_STRIPE_CONFIRM_PHRASE,
+  deleteStripeAccount,
+} from "@/app/shared/stripe/application/deleteStripeAccount";
 import { AppError } from "@/app/shared/domain/AppError";
+import { isAdminProfile } from "@/app/shared/Authentication/domain/profileType";
 
 /** Temp Stripe delete panel on home. Set false before production deploys. */
 const TEMP_DELETE_STRIPE_ENABLED = false;
@@ -27,12 +31,13 @@ export default function HomePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSignup = searchParams.get("signup") === "success";
-  const showTempDeleteStripe =
-    TEMP_DELETE_STRIPE_ENABLED ||
-    searchParams.get(TEMP_DELETE_STRIPE_PARAM) === "1";
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading, profile } = useAuth();
+  const showTempDeleteStripe =
+    isAdminProfile(profile) &&
+    (TEMP_DELETE_STRIPE_ENABLED ||
+      searchParams.get(TEMP_DELETE_STRIPE_PARAM) === "1");
 
   useEffect(() => {
     if (showTempDeleteStripe) return;
@@ -105,6 +110,7 @@ function TempDeleteStripePanel({
 }: TempDeleteStripePanelProps) {
   const { toast } = useToast();
   const [stripeAccountId, setStripeAccountId] = useState(defaultAccountId);
+  const [confirmPhrase, setConfirmPhrase] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
 
@@ -121,11 +127,21 @@ function TempDeleteStripePanel({
       return;
     }
 
+    if (confirmPhrase.trim() !== DELETE_STRIPE_CONFIRM_PHRASE) {
+      toast(`Type ${DELETE_STRIPE_CONFIRM_PHRASE} to confirm.`, {
+        variant: "error",
+      });
+      return;
+    }
+
     setDeleting(true);
     setLastResult(null);
 
     try {
-      const result = await deleteStripeAccount(accountId);
+      const result = await deleteStripeAccount(accountId, {
+        confirm: true,
+        confirmPhrase: DELETE_STRIPE_CONFIRM_PHRASE,
+      });
       const message = JSON.stringify(result, null, 2);
       setLastResult(message);
       toast(result.deleted ? "Stripe account deleted" : "Profile cleared", {
@@ -153,6 +169,13 @@ function TempDeleteStripePanel({
             value={stripeAccountId}
             onChange={(event) => setStripeAccountId(event.target.value)}
             placeholder="acct_..."
+            className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+          />
+          <input
+            type="text"
+            value={confirmPhrase}
+            onChange={(event) => setConfirmPhrase(event.target.value)}
+            placeholder={DELETE_STRIPE_CONFIRM_PHRASE}
             className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
           />
           <Button

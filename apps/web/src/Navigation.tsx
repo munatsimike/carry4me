@@ -23,6 +23,7 @@ import NotificationPopover from "./app/shared/Authentication/UI/NotificationPopO
 import { AuthEntryButtons } from "./app/shared/Authentication/UI/AuthEntryButtons";
 
 import CustomText from "./components/ui/CustomText";
+import PersonAvatar from "./app/shared/avatar/PersonAvatar";
 
 import { cn } from "./app/lib/cn";
 
@@ -230,15 +231,17 @@ function Avatar({
   setShowPrfilePopOver,
 }: AvatarProps) {
   return (
-    <button ref={triggerProfRef} type="button" onClick={setShowPrfilePopOver}>
-      <img
-        src={
-          userProfile?.avatarUrl
-            ? userProfile.avatarUrl
-            : "/user-profile-icon.svg"
-        }
-        alt="User profile"
-        className="rounded-full h-8 w-8 sm:h-9 sm:w-9 border border-neutral-300"
+    <button
+      ref={triggerProfRef}
+      type="button"
+      onClick={setShowPrfilePopOver}
+      aria-label="User profile"
+    >
+      <PersonAvatar
+        fullName={userProfile?.fullName}
+        avatarUrl={userProfile?.avatarUrl}
+        alt=""
+        className="h-8 w-8 text-xs sm:h-9 sm:w-9 sm:text-sm"
       />
     </button>
   );

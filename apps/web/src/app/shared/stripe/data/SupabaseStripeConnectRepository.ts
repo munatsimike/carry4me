@@ -1,46 +1,28 @@
 import { AppError } from "@/app/shared/domain/AppError";
+import { invokeStripeFunction } from "@/app/shared/stripe/invokeStripeFunction";
 import type {
   DeleteStripeAccountResponse,
   StripeConnectRepository,
 } from "../domain/StripeConnectRepository";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
 export class SupabaseStripeConnectRepository implements StripeConnectRepository {
   async deleteAccount(
     stripeAccountId: string,
+    confirmation: { confirm: true; confirmPhrase: string },
   ): Promise<DeleteStripeAccountResponse> {
-    const response = await fetch(
-      `${supabaseUrl}/functions/v1/delete-stripe-account`,
+    const data = await invokeStripeFunction<DeleteStripeAccountResponse>(
+      "delete-stripe-account",
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseAnonKey,
-          Authorization: `Bearer ${supabaseAnonKey}`,
-        },
-        body: JSON.stringify({ stripe_account_id: stripeAccountId }),
+        stripe_account_id: stripeAccountId,
+        confirm: confirmation.confirm,
+        confirm_phrase: confirmation.confirmPhrase,
       },
     );
 
-    const data = (await response.json()) as DeleteStripeAccountResponse & {
-      error?: string;
-      code?: string;
-    };
-
-    if (!response.ok) {
+    if (data && typeof data === "object" && "ok" in data && data.ok === false) {
       throw new AppError({
         message: data.error ?? "Could not delete Stripe account",
-        status: response.status,
-        code: data.code,
-      });
-    }
-
-    if (data.error) {
-      throw new AppError({
-        message: data.error,
-        status: response.status,
+        status: 500,
         code: data.code,
       });
     }

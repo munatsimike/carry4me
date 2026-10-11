@@ -20,7 +20,12 @@ export async function verifyDeliveryOtp(
 
 export async function resendDeliveryOtp(
   carryRequestId: string,
-): Promise<{ ok: boolean; message?: string; dev_otp?: string }> {
+): Promise<{
+  ok: boolean;
+  message?: string;
+  email_status?: "queued" | "sent" | "failed";
+  sent?: boolean;
+}> {
   return invokeStripeFunction("generate-delivery-otp", {
     carry_request_id: carryRequestId,
   });
