@@ -26,6 +26,7 @@ import type { UserProfile } from "../domain/authTypes";
 import { isAdminProfile } from "../domain/profileType";
 import CustomText from "@/components/ui/CustomText";
 import { cn } from "@/app/lib/cn";
+import PersonAvatar from "@/app/shared/avatar/PersonAvatar";
 import { toDialCode, toflag } from "@/app/Mapper";
 import { BadgeCheck, Lock, MapPin, Pencil, ShieldHalf, User2 } from "lucide-react";
 import SvgIcon from "@/components/ui/SvgIcon";
@@ -68,6 +69,7 @@ import { shouldShowTravelerPayoutSetup, isTravelerStripeVerifiedInProfile, isTra
 type AvatarProps = {
   onDelete: () => void;
   preview: string | null;
+  fullName: string;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement, Element>) => void;
 };
 
@@ -1594,6 +1596,7 @@ function PhoneInfoRow({
 export function AvatarPicker({
   onDelete,
   preview,
+  fullName,
   handleFileChange,
 }: AvatarProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -1617,10 +1620,11 @@ export function AvatarPicker({
         onMouseLeave={() => setHover(false)}
         className="relative inline-flex justify-center items-center"
       >
-        <img
-          src={preview ?? "/user-profile-icon.svg"}
-          alt="Preview"
-          className={`${preview ? "h-16 w-16" : "h-12 w-12"} border border-neutral-300 rounded-full`}
+        <PersonAvatar
+          fullName={fullName}
+          avatarUrl={preview}
+          alt="Profile photo"
+          className="h-16 w-16 text-lg"
         />
 
         <AnimatePresence>
@@ -1718,6 +1722,7 @@ function CardHeaderSection({
       <AvatarPicker
         onDelete={onDelete}
         preview={preview}
+        fullName={fullName}
         handleFileChange={(event) =>
           handleFileChange(
             event,
