@@ -7,7 +7,6 @@ import CustomText from "@/components/ui/CustomText";
 import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 
 type PopoverProps = {
   notifications: CarryRequestNotification[];
@@ -19,10 +18,8 @@ const INITIAL_COUNT = 5;
 
 function NotificationRow({
   item,
-  onClosePopOver,
 }: {
   item: CarryRequestNotification;
-  onClosePopOver: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const bodyRef = useRef<HTMLParagraphElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -40,40 +37,34 @@ function NotificationRow({
   return (
     <div
       className={cn(
-        "min-w-0 w-full rounded-lg p-3 transition-colors hover:bg-neutral-50",
+        "min-w-0 w-full rounded-lg p-3",
         item.readAt === null && "bg-primary-50/50",
       )}
     >
-      <Link
-        to={item.link}
-        onClick={() => onClosePopOver(false)}
-        className="block min-w-0"
-      >
-        <span className="flex items-start justify-between gap-2">
-          <CustomText
-            textSize="md"
-            textVariant="primary"
-            className="line-clamp-2 font-medium"
-          >
-            {item.title}
-          </CustomText>
-          {item.readAt === null ? (
-            <span
-              aria-hidden
-              className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-500"
-            />
-          ) : null}
-        </span>
-        <p
-          ref={bodyRef}
-          className={cn(
-            "mt-1 text-sm leading-relaxed text-ink-secondary",
-            !isExpanded && "line-clamp-2",
-          )}
+      <span className="flex items-start justify-between gap-2">
+        <CustomText
+          textSize="md"
+          textVariant="primary"
+          className="line-clamp-2 font-medium"
         >
-          {item.body}
-        </p>
-      </Link>
+          {item.title}
+        </CustomText>
+        {item.readAt === null ? (
+          <span
+            aria-hidden
+            className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-500"
+          />
+        ) : null}
+      </span>
+      <p
+        ref={bodyRef}
+        className={cn(
+          "mt-1 text-sm leading-relaxed text-ink-secondary",
+          !isExpanded && "line-clamp-2",
+        )}
+      >
+        {item.body}
+      </p>
 
       {showToggle ? (
         <button
@@ -181,7 +172,7 @@ export default function NotificationPopover({
         ) : (
           visibleNotifications.map((item, index) => (
             <div key={item.id}>
-              <NotificationRow item={item} onClosePopOver={onClosePopOver} />
+              <NotificationRow item={item} />
               {index !== visibleNotifications.length - 1 ? (
                 <LineDivider heightClass="my-0" />
               ) : null}

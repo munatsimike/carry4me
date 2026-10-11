@@ -17,7 +17,7 @@ import {
   formatSenderPartyDisplay,
   formatTravelerPartyDisplay,
 } from "../application/formatCarryRequestPartyDisplay";
-import { PaymentDetailsButton } from "./RequestDetailsLayout";
+
 export type MobileSection = "details" | "timeline";
 
 function countryLabel(country: string): string {
@@ -145,15 +145,6 @@ export function MobileDetailsSection({
           viewerRole={viewerRole}
           viewerUserId={viewerUserId}
           senderUserId={senderUserId}
-        />
-        <LineDivider heightClass="" />
-        <PaymentDetailsButton
-          viewerRole={viewerRole}
-          weightKg={parcel.weight_kg}
-          pricePerKg={parcel.price_per_kg}
-          priceCountry={parcel.origin.country}
-          capacityUnit={trip.capacity_unit}
-          className="px-0"
         />
       </div>
     </CustomModal>
